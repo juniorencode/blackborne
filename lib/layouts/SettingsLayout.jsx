@@ -69,7 +69,7 @@ export const SettingsLayout = props => {
         Configuraciones
       </h1>
       <Card className="flex flex-col gap-8 py-2">
-        <div className="p-4 max-h-[calc(100vh-190px)] sm:max-h-[calc(100vh-130px)] overflow-auto">
+        <div className="p-4 space-y-8 max-h-[calc(100vh-190px)] sm:max-h-[calc(100vh-130px)] overflow-auto">
           <div>
             <h2 className="mb-2 w-min text-sm text-nowrap font-medium text-neutral-600 dark:text-neutral-300">
               Tema
