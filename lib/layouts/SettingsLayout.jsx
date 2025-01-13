@@ -1,17 +1,20 @@
 import PropTypes from 'prop-types';
 import { useState } from 'react';
+import { FaCheck } from 'react-icons/fa6';
 import { cn } from '../utilities/styles.utilities';
 import { primaryColors, secondaryColors } from '../utilities/theme.utilities';
 import { BaseLayout } from '../layouts/BaseLayout';
 import { Card } from '../components/Card';
 import { ThemePreview } from '../components/ThemePreview';
 import { Breadcrumb } from '../components/Breadcrumb';
-import { FaCheck } from 'react-icons/fa';
 
 export const SettingsLayout = props => {
   const { breadcrumb } = props;
-
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'system');
+  const [accent, setAccent] = useState(
+    localStorage.getItem('accent') || 'blue'
+  );
+  const [base, setBase] = useState(localStorage.getItem('base') || 'neutral');
 
   const handleChangeTheme = _theme => {
     switch (_theme) {
@@ -32,6 +35,29 @@ export const SettingsLayout = props => {
 
     localStorage.setItem('theme', _theme);
     setTheme(_theme);
+  };
+
+  const updateCSSVariables = (name, value) => {
+    document.documentElement.style.setProperty(name, value);
+  };
+
+  const changePrimaryColor = color => {
+    Object.keys(primaryColors[color]).map(weight =>
+      updateCSSVariables(`--primary-${weight}`, primaryColors[color][weight])
+    );
+    localStorage.setItem('accent', color);
+    setAccent(color);
+  };
+
+  const changeSecondaryColor = color => {
+    Object.keys(secondaryColors[color]).map(weight =>
+      updateCSSVariables(
+        `--secondary-${weight}`,
+        secondaryColors[color][weight]
+      )
+    );
+    localStorage.setItem('base', color);
+    setBase(color);
   };
 
   return (
@@ -124,10 +150,14 @@ export const SettingsLayout = props => {
                 <button
                   key={`${color}-primary`}
                   className={cn(
-                    'group relative w-10 h-10 border-4 rounded-full hover:scale-110 transition-all border-neutral-300 dark:border-neutral-700'
+                    'group relative w-10 h-10 border-4 rounded-full hover:scale-110 transition-all border-neutral-300 dark:border-neutral-700',
+                    {
+                      'border-black dark:border-white': accent === color
+                    }
                   )}
                   type="button"
                   style={{ background: `rgb(${primaryColors[color]['500']})` }}
+                  onClick={() => changePrimaryColor(color)}
                 >
                   <div className="absolute -top-full -translate-y-1 left-1/2 -translate-x-1/2 hidden group-hover:block px-2 py-1 text-sm rounded-lg cursor-default text-white bg-black">
                     {color}
@@ -145,12 +175,16 @@ export const SettingsLayout = props => {
                 <button
                   key={`${color}-secondary`}
                   className={cn(
-                    'group relative w-10 h-10 border-4 rounded-full hover:scale-110 transition-all border-neutral-300 dark:border-neutral-700'
+                    'group relative w-10 h-10 border-4 rounded-full hover:scale-110 transition-all border-neutral-300 dark:border-neutral-700',
+                    {
+                      'border-black dark:border-white': base === color
+                    }
                   )}
                   type="button"
                   style={{
                     background: `rgb(${secondaryColors[color]['500']})`
                   }}
+                  onClick={() => changeSecondaryColor(color)}
                 >
                   <div className="absolute -top-full -translate-y-1 left-1/2 -translate-x-1/2 hidden group-hover:block px-2 py-1 text-sm rounded-lg cursor-default text-white bg-black">
                     {color}
