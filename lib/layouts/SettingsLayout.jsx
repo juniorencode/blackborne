@@ -1,13 +1,38 @@
 import PropTypes from 'prop-types';
+import { useState } from 'react';
 import { cn } from '../utilities/styles.utilities';
 import { primaryColors, secondaryColors } from '../utilities/theme.utilities';
 import { BaseLayout } from '../layouts/BaseLayout';
 import { Card } from '../components/Card';
 import { ThemePreview } from '../components/ThemePreview';
 import { Breadcrumb } from '../components/Breadcrumb';
+import { FaCheck } from 'react-icons/fa';
 
 export const SettingsLayout = props => {
   const { breadcrumb } = props;
+
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'system');
+
+  const handleChangeTheme = _theme => {
+    switch (_theme) {
+      case 'dark':
+        document.body.classList.add('dark');
+        break;
+      case 'light':
+        document.body.classList.remove('dark');
+        break;
+      case 'system':
+        if (window.matchMedia('(prefers-color-scheme: dark)').matches)
+          document.body.classList.add('dark');
+        else document.body.classList.remove('dark');
+        break;
+      default:
+        break;
+    }
+
+    localStorage.setItem('theme', _theme);
+    setTheme(_theme);
+  };
 
   return (
     <BaseLayout>
@@ -27,34 +52,64 @@ export const SettingsLayout = props => {
               <div className="flex flex-col gap-2">
                 <button
                   className={cn(
-                    'relative border-4 rounded-lg overflow-hidden border-secondary-200 dark:border-secondary-700'
+                    'relative border-4 rounded-lg overflow-hidden border-secondary-200 dark:border-secondary-700',
+                    {
+                      'border-primary-500 dark:border-primary-500':
+                        theme === 'system'
+                    }
                   )}
+                  onClick={() => handleChangeTheme('system')}
                 >
                   <ThemePreview
                     isDarkMode={
                       window.matchMedia('(prefers-color-scheme: dark)').matches
                     }
                   />
+                  {theme === 'system' && (
+                    <div className="absolute top-2 right-2 flex items-center justify-center w-8 h-8 rounded-full text-white bg-primary-500">
+                      <FaCheck size={20} />
+                    </div>
+                  )}
                 </button>
                 <span className="dark:text-white font-semibold">Sistema</span>
               </div>
               <div className="flex flex-col gap-2">
                 <button
                   className={cn(
-                    'relative border-4 rounded-lg overflow-hidden border-secondary-200 dark:border-secondary-700'
+                    'relative border-4 rounded-lg overflow-hidden border-secondary-200 dark:border-secondary-700',
+                    {
+                      'border-primary-500 dark:border-primary-500':
+                        theme === 'light'
+                    }
                   )}
+                  onClick={() => handleChangeTheme('light')}
                 >
                   <ThemePreview />
+                  {theme === 'light' && (
+                    <div className="absolute top-2 right-2 flex items-center justify-center w-8 h-8 rounded-full text-white bg-primary-500">
+                      <FaCheck size={20} />
+                    </div>
+                  )}
                 </button>
                 <span className="dark:text-white font-semibold">Claro</span>
               </div>
               <div className="flex flex-col gap-2">
                 <button
                   className={cn(
-                    'relative border-4 rounded-lg overflow-hidden border-secondary-200 dark:border-secondary-700'
+                    'relative border-4 rounded-lg overflow-hidden border-secondary-200 dark:border-secondary-700',
+                    {
+                      'border-primary-500 dark:border-primary-500':
+                        theme === 'dark'
+                    }
                   )}
+                  onClick={() => handleChangeTheme('dark')}
                 >
                   <ThemePreview isDarkMode />
+                  {theme === 'dark' && (
+                    <div className="absolute top-2 right-2 flex items-center justify-center w-8 h-8 rounded-full text-white bg-primary-500">
+                      <FaCheck size={20} />
+                    </div>
+                  )}
                 </button>
                 <span className="dark:text-white font-semibold">Oscuro</span>
               </div>
