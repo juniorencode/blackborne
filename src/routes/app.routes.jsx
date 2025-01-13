@@ -8,6 +8,7 @@ import {
   setHandleLogout
 } from '../../lib/utilities/navigation.utilities.js';
 import { HomePage } from '../pages/HomePage';
+import { NotFoundPage } from '../pages/NotFoundPage/index.jsx';
 
 const AppRoutes = () => {
   setSystemName('Blackborne');
@@ -53,6 +54,8 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
+      <Route path="/not-found" element={<NotFoundPage />} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 };
