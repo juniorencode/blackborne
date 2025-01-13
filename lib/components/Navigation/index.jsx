@@ -1,18 +1,28 @@
 import PropTypes from 'prop-types';
 import { Default } from './Default';
+import { Responsive } from './Responsive';
 
 export const Navigation = props => {
   const { systemName, options, isCollapse, setIsCollapse, handleLogout } =
     props;
 
   return (
-    <Default
-      systemName={systemName}
-      options={options}
-      isCollapse={isCollapse}
-      setIsCollapse={setIsCollapse}
-      handleLogout={handleLogout}
-    />
+    <>
+      <Default
+        systemName={systemName}
+        options={options}
+        isCollapse={isCollapse}
+        setIsCollapse={setIsCollapse}
+        handleLogout={handleLogout}
+      />
+      <Responsive
+        systemName={systemName}
+        options={options}
+        isCollapse={isCollapse}
+        setIsCollapse={setIsCollapse}
+        handleLogout={handleLogout}
+      />
+    </>
   );
 };
 
