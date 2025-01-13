@@ -1,6 +1,20 @@
 {
   "name": "blackborne",
   "author": "Carlos Junior Ramos Vásquez",
+  "description": "A sleek and minimalistic React UI component library designed for flexibility and performance.",
+  "keywords": [
+    "react",
+    "react-components",
+    "ui-library",
+    "component-library",
+    "design-system",
+    "blackborne",
+    "ui-kit",
+    "frontend",
+    "responsive-design",
+    "modern-ui",
+    "accessibility"
+  ],
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -10,7 +24,7 @@
     "lint": "eslint .",
     "preview": "vite preview"
   },
-  "dependencies": {
+  "peerDependencies": {
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
@@ -19,13 +33,18 @@
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
+    "clsx": "^2.1.1",
     "eslint": "^9.17.0",
     "eslint-plugin-react": "^7.37.2",
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.16",
     "glob": "^11.0.1",
     "globals": "^15.14.0",
+    "postcss": "^8.4.49",
     "rollup-plugin-visualizer": "^5.14.0",
+    "tailwind-merge": "^2.6.0",
+    "tailwindcss": "^3.4.17",
     "vite": "^6.0.5",
     "vite-plugin-lib-inject-css": "^2.2.1"
   }
