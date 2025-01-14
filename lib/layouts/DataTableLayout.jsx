@@ -14,7 +14,9 @@ export const DataTableLayout = props => {
     data,
     loading,
     filter,
+    pagination,
     setDate,
+    setPage,
     setSearch,
     dndFunc,
     handleCreate,
@@ -58,7 +60,9 @@ export const DataTableLayout = props => {
           data={data}
           loading={loading}
           filter={filter}
+          pagination={pagination}
           setDate={setDate}
+          setPage={setPage}
           setSearch={setSearch}
           dndFunc={dndFunc}
           handleUpdate={handleUpdate}
@@ -84,7 +88,9 @@ DataTableLayout.propTypes = {
   data: PropTypes.array,
   loading: PropTypes.bool,
   filter: PropTypes.object,
+  pagination: PropTypes.object,
   setDate: PropTypes.func,
+  setPage: PropTypes.func,
   setSearch: PropTypes.func,
   dndFunc: PropTypes.func,
   handleCreate: PropTypes.func,

@@ -1,15 +1,18 @@
 import PropTypes from 'prop-types';
+import { Table } from '../Table';
 import { Search } from './Search';
 import { Filter } from './Filter';
-import { Table } from '../Table';
+import { Pagination } from '../Pagination';
 
 export const DataTable = props => {
   const {
     structure,
     data,
     loading,
+    pagination,
     filter,
     setDate,
+    setPage,
     setSearch,
     dndFunc,
     handleUpdate,
@@ -44,6 +47,14 @@ export const DataTable = props => {
         orderNumber={orderNumber}
         manageColumns={manageColumns}
       />
+      <div className="flex items-center justify-center sm:justify-between m-3 h-10 dark:text-white">
+        <p className="hidden sm:block text-sm text-secondary-400">{`${pagination.from} al ${pagination.to} de ${pagination.total}`}</p>
+        <Pagination
+          totalPages={Math.ceil(pagination.total / pagination.limit)}
+          currentPage={filter.page.number}
+          setCurrentPage={setPage}
+        />
+      </div>
     </>
   );
 };
@@ -53,7 +64,9 @@ DataTable.propTypes = {
   data: PropTypes.array,
   loading: PropTypes.bool,
   filter: PropTypes.object,
+  pagination: PropTypes.object,
   setDate: PropTypes.func,
+  setPage: PropTypes.func,
   setSearch: PropTypes.func,
   dndFunc: PropTypes.func,
   handleUpdate: PropTypes.func,

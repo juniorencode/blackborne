@@ -5,7 +5,7 @@ import Data from './data.json';
 
 export const TablePage = () => {
   const [loading, setLoading] = useState(true);
-  const { filter, setDate, setSearch } = useFilter({
+  const { filter, setDate, setPage, setSearch } = useFilter({
     page: { size: 20 },
     search: 'Hello World..!!'
   });
@@ -94,6 +94,15 @@ export const TablePage = () => {
     }
   ];
 
+  const pagination = {
+    currentPage: 1,
+    limit: 50,
+    from: 1,
+    to: 8,
+    total: 15000,
+    totalPages: 1
+  };
+
   useEffect(() => {
     setTimeout(() => {
       setLoading(false);
@@ -108,7 +117,9 @@ export const TablePage = () => {
       data={Data.data}
       loading={loading}
       filter={filter}
+      pagination={pagination}
       setDate={setDate}
+      setPage={setPage}
       setSearch={setSearch}
       dndFunc={() => console.log('drag and drop')}
       handleCreate={() => console.log('create')}
