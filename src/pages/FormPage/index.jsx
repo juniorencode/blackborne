@@ -1,13 +1,15 @@
 import { DataFormLayout } from '../../../lib/layouts';
 import { useForm } from '../../../lib/hooks';
-import { InputSelect, InputText } from '../../../lib/main';
+import { InputSearch, InputSelect, InputText } from '../../../lib/main';
 
 export const FormPage = () => {
   const Form = useForm({
     text: 'galaxy',
     textMultiple: ['apple', 'banana', 'cherry'],
     select: '2',
-    selectMultiple: ['3', '4', '5']
+    selectMultiple: ['3', '4', '5'],
+    search: '2',
+    searchMultiple: ['3', '4', '5']
   });
 
   const breadcrumb = [
@@ -47,7 +49,7 @@ export const FormPage = () => {
         />
         <InputText
           name="textMultiple"
-          label="Text"
+          label="Text Multiple"
           options={[
             { value: 'apple', label: 'Apple' },
             { value: 'banana', label: 'Banana' },
@@ -85,7 +87,7 @@ export const FormPage = () => {
         <InputSelect
           className="col-span-12"
           name="selectMultiple"
-          label="Select"
+          label="Select Multiple"
           options={[
             { value: '1', label: 'Lion' },
             { value: '2', label: 'Wolf' },
@@ -98,6 +100,39 @@ export const FormPage = () => {
             { value: '9', label: 'Visionary' }
           ]}
           funcDelete={id => console.log('delete item: ' + id)}
+          register={Form.register}
+          multiple
+        />
+        <InputSearch
+          name="search"
+          label="Search"
+          options={[
+            { value: '1', label: 'Lion' },
+            { value: '2', label: 'Wolf' },
+            { value: '3', label: 'Sunset' },
+            { value: '4', label: 'Moonlight' },
+            { value: '5', label: 'Galaxy' },
+            { value: '6', label: 'Ocean' },
+            { value: '7', label: 'Mountain Peak' },
+            { value: '8', label: 'Waterfall' },
+            { value: '9', label: 'Visionary' }
+          ]}
+          register={Form.register}
+        />
+        <InputSearch
+          name="searchMultiple"
+          label="Search Multiple"
+          options={[
+            { value: '1', label: 'Lion' },
+            { value: '2', label: 'Wolf' },
+            { value: '3', label: 'Sunset' },
+            { value: '4', label: 'Moonlight' },
+            { value: '5', label: 'Galaxy' },
+            { value: '6', label: 'Ocean' },
+            { value: '7', label: 'Mountain Peak' },
+            { value: '8', label: 'Waterfall' },
+            { value: '9', label: 'Visionary' }
+          ]}
           register={Form.register}
           multiple
         />
