@@ -11,6 +11,7 @@ import { HomePage } from '../pages/HomePage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 import { SettingsPage } from '../pages/SettingsPage';
 import { TablePage } from '../pages/TablePage/index.jsx';
+import { FormPage } from '../pages/FormPage/index.jsx';
 
 const AppRoutes = () => {
   setSystemName('Blackborne');
@@ -56,6 +57,7 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
+      <Route path="/form" element={<FormPage />} />
       <Route path="/table" element={<TablePage />} />
       <Route path="/settings" element={<SettingsPage />} />
       <Route path="/not-found" element={<NotFoundPage />} />
