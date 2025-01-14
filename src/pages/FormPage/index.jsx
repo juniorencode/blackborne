@@ -2,6 +2,7 @@ import { DataFormLayout } from '../../../lib/layouts';
 import { useForm } from '../../../lib/hooks';
 import {
   FormSection,
+  InputPassword,
   InputSearch,
   InputSelect,
   InputText
@@ -9,8 +10,10 @@ import {
 
 export const FormPage = () => {
   const Form = useForm({
-    text: 'galaxy',
+    text: '@juniorencode',
+    textOptions: 'galaxy',
     textMultiple: ['apple', 'banana', 'cherry'],
+    password: '1234ABCDC',
     select: '2',
     selectMultiple: ['3', '4', '5'],
     search: '2',
@@ -39,6 +42,14 @@ export const FormPage = () => {
             className="col-span-12"
             name="text"
             label="Text"
+            register={Form.register}
+            funcDelete={id => console.log('delete item: ' + id)}
+            minLength={2}
+          />
+          <InputText
+            className="col-span-12"
+            name="textOptions"
+            label="Text Options"
             options={[
               { value: 'apple', label: 'Apple' },
               { value: 'banana', label: 'Banana' },
@@ -73,6 +84,14 @@ export const FormPage = () => {
             register={Form.register}
             funcDelete={id => console.log('delete item: ' + id)}
             minLength={2}
+          />
+        </FormSection>
+        <FormSection title="Input Password">
+          <InputPassword
+            className="col-span-12"
+            name="password"
+            label="Password"
+            register={Form.register}
           />
         </FormSection>
         <FormSection title="Input Select">
