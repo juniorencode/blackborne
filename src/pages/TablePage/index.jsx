@@ -127,7 +127,7 @@ export const TablePage = () => {
       handleDelete={() => console.log('delete')}
       handleExport={() => console.log('export')}
       handleFeature={() => console.log('feature')}
-      orderNumber={true}
+      orderNumber={false}
       manageColumns={true}
     />
   );

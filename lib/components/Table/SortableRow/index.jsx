@@ -25,7 +25,7 @@ export const SortableRow = props => {
     handleDelete,
     handleFeature,
     highlighted,
-    noSeqNum,
+    orderNumber,
     shortFileName,
     structure,
     handleDeleteEvent,
@@ -57,7 +57,7 @@ export const SortableRow = props => {
           <PiDotsSixVerticalBold />
         </td>
       )}
-      {!noSeqNum && (
+      {orderNumber && (
         <td className="items-center px-4 py-1.5 font-semibold whitespace-nowrap text-secondary-900 dark:text-white">
           {(page - 1) * size + (index + 1)}
         </td>
@@ -462,7 +462,7 @@ SortableRow.propTypes = {
   handleDeleteEvent: PropTypes.func,
   shortFileName: PropTypes.func,
   highlighted: PropTypes.string,
-  noSeqNum: PropTypes.bool,
+  orderNumber: PropTypes.bool,
   dndFunc: PropTypes.func,
   isScrolling: PropTypes.bool
 };

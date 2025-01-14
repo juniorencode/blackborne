@@ -25,7 +25,7 @@ export const DataTableLayout = props => {
     handleExport,
     handleFeature,
     orderNumber,
-    manageColumns = true
+    manageColumns
   } = props;
 
   return (

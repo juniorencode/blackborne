@@ -33,12 +33,12 @@ export const Table = props => {
     loading,
     size = 50,
     page = 1,
-    noSeqNum,
     highlighted,
     dndFunc,
     handleUpdate,
     handleDelete,
     handleFeature,
+    orderNumber,
     manageColumns
   } = props;
 
@@ -215,7 +215,7 @@ export const Table = props => {
                 {dndFunc && (
                   <th className="px-4 py-3 w-1 tracking-wider font-medium border-l first:border-l-0 bg-secondary-100 dark:bg-secondary-700 sticky top-0 left-0 border-secondary-200 dark:border-secondary-600"></th>
                 )}
-                {!noSeqNum && (
+                {orderNumber && (
                   <th className="px-4 py-3 w-1 tracking-wider font-medium border-l first:border-l-0 bg-secondary-100 dark:bg-secondary-700 border-secondary-200 dark:border-secondary-600 sticky top-0 left-0">
                     #
                   </th>
@@ -294,7 +294,7 @@ export const Table = props => {
                   {dndFunc && (
                     <td className="border-l first:border-l-0 h-2 bg-secondary-100 dark:bg-secondary-700 border-secondary-200 dark:border-secondary-600"></td>
                   )}
-                  {!noSeqNum && (
+                  {orderNumber && (
                     <td className="h-2 border-l first:border-l-0 bg-secondary-100 dark:bg-secondary-700 border-secondary-200 dark:border-secondary-600"></td>
                   )}
                   {columns
@@ -329,7 +329,7 @@ export const Table = props => {
                   columns={columns.filter(
                     col => col.type !== 'line' && !col.hidden
                   )}
-                  noSeqNum={noSeqNum}
+                  orderNumber={orderNumber}
                   dndFunc={dndFunc}
                   actions={Boolean(handleUpdate || handleDelete)}
                 />
@@ -347,7 +347,7 @@ export const Table = props => {
                     handleDelete={handleDelete}
                     handleFeature={handleFeature}
                     highlighted={highlighted}
-                    noSeqNum={noSeqNum}
+                    orderNumber={orderNumber}
                     shortFileName={shortFileName}
                     handleDeleteEvent={handleDeleteEvent}
                     structure={columns.filter(
@@ -383,7 +383,7 @@ Table.propTypes = {
   loading: PropTypes.bool,
   size: PropTypes.number,
   page: PropTypes.number,
-  noSeqNum: PropTypes.bool,
+  orderNumber: PropTypes.bool,
   highlighted: PropTypes.string,
   dndFunc: PropTypes.func,
   handleUpdate: PropTypes.func,

@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import { cn } from '../../../utilities/styles.utilities';
 
 export const Skeleton = props => {
-  const { isScrolling, columns, noSeqNum, dndFunc, actions } = props;
+  const { isScrolling, columns, orderNumber, dndFunc, actions } = props;
 
   return (
     <>
@@ -20,7 +20,7 @@ export const Skeleton = props => {
               </svg>
             </td>
           )}
-          {!noSeqNum && (
+          {orderNumber && (
             <td className="px-4 py-1.5">
               <div className="w-8 h-4 bg-secondary-300 dark:bg-secondary-700 rounded"></div>
             </td>
@@ -178,7 +178,7 @@ export const Skeleton = props => {
 Skeleton.propTypes = {
   isScrolling: PropTypes.bool.isRequired,
   columns: PropTypes.array.isRequired,
-  noSeqNum: PropTypes.bool,
+  orderNumber: PropTypes.bool,
   dndFunc: PropTypes.func,
   actions: PropTypes.bool
 };

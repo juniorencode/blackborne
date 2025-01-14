@@ -18,8 +18,8 @@ export const DataTable = props => {
     handleUpdate,
     handleDelete,
     handleFeature,
-    orderNumber,
-    manageColumns
+    orderNumber = true,
+    manageColumns = true
   } = props;
 
   return (
