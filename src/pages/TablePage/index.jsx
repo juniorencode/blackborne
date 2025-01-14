@@ -2,7 +2,7 @@ import { useFilter } from '../../../lib/hooks';
 import { DataTableLayout } from '../../../lib/layouts';
 
 export const TablePage = () => {
-  const { setSearch } = useFilter({
+  const { filter, setDate, setSearch } = useFilter({
     page: { size: 20 },
     search: 'Hello World..!!'
   });
@@ -17,5 +17,12 @@ export const TablePage = () => {
     }
   ];
 
-  return <DataTableLayout breadcrumb={breadcrumb} setSearch={setSearch} />;
+  return (
+    <DataTableLayout
+      breadcrumb={breadcrumb}
+      filter={filter}
+      setDate={setDate}
+      setSearch={setSearch}
+    />
+  );
 };

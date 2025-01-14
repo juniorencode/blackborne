@@ -7,7 +7,7 @@ import { Breadcrumb } from '../components/Breadcrumb';
 import { DataTable } from '../components/DataTable';
 
 export const DataTableLayout = props => {
-  const { breadcrumb, setSearch } = props;
+  const { breadcrumb, filter, setDate, setSearch } = props;
 
   return (
     <BaseLayout>
@@ -28,7 +28,7 @@ export const DataTableLayout = props => {
         </div>
       </div>
       <Card>
-        <DataTable setSearch={setSearch} />
+        <DataTable filter={filter} setDate={setDate} setSearch={setSearch} />
       </Card>
     </BaseLayout>
   );
@@ -41,5 +41,7 @@ DataTableLayout.propTypes = {
       url: PropTypes.string
     })
   ),
+  filter: PropTypes.object,
+  setDate: PropTypes.func,
   setSearch: PropTypes.func
 };
