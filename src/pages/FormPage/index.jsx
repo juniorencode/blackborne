@@ -4,8 +4,8 @@ import { InputText } from '../../../lib/main';
 
 export const FormPage = () => {
   const Form = useForm({
-    text: 'perro',
-    textMultiple: ['gato', 'perro', 'mentalista']
+    text: 'galaxy',
+    textMultiple: ['apple', 'banana', 'cherry']
   });
 
   const breadcrumb = [
@@ -29,15 +29,15 @@ export const FormPage = () => {
           name="text"
           label="Text"
           options={[
-            { value: 'gato', label: 'gato' },
-            { value: 'perro', label: 'perro' },
-            { value: 'sol', label: 'sol' },
-            { value: 'luna', label: 'luna' },
-            { value: 'estrella', label: 'estrella' },
-            { value: 'mar', label: 'mar' },
-            { value: 'montaña', label: 'montaña' },
-            { value: 'río', label: 'río' },
-            { value: 'mentalista', label: 'mentalista' }
+            { value: 'apple', label: 'Apple' },
+            { value: 'banana', label: 'Banana' },
+            { value: 'cherry', label: 'Cherry' },
+            { value: 'dragon', label: 'Dragon' },
+            { value: 'eagle', label: 'Eagle' },
+            { value: 'forest', label: 'Forest' },
+            { value: 'galaxy', label: 'Galaxy' },
+            { value: 'horizon', label: 'Horizon' },
+            { value: 'island', label: 'Island' }
           ]}
           register={Form.register}
           funcDelete={id => console.log('delete item: ' + id)}
@@ -47,15 +47,15 @@ export const FormPage = () => {
           name="textMultiple"
           label="Text"
           options={[
-            { value: 'gato', label: 'gato' },
-            { value: 'perro', label: 'perro' },
-            { value: 'sol', label: 'sol' },
-            { value: 'luna', label: 'luna' },
-            { value: 'estrella', label: 'estrella' },
-            { value: 'mar', label: 'mar' },
-            { value: 'montaña', label: 'montaña' },
-            { value: 'río', label: 'río' },
-            { value: 'mentalista', label: 'mentalista' }
+            { value: 'apple', label: 'Apple' },
+            { value: 'banana', label: 'Banana' },
+            { value: 'cherry', label: 'Cherry' },
+            { value: 'dragon', label: 'Dragon' },
+            { value: 'eagle', label: 'Eagle' },
+            { value: 'forest', label: 'Forest' },
+            { value: 'galaxy', label: 'Galaxy' },
+            { value: 'horizon', label: 'Horizon' },
+            { value: 'island', label: 'Island' }
           ]}
           multiple
           register={Form.register}
