@@ -6,8 +6,7 @@ import Data from './data.json';
 export const TablePage = () => {
   const [loading, setLoading] = useState(true);
   const { filter, setDate, setPage, setSearch } = useFilter({
-    page: { size: 20 },
-    search: 'Hello World..!!'
+    page: { size: 20 }
   });
 
   const breadcrumb = [
