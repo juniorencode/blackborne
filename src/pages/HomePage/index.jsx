@@ -4,6 +4,7 @@ import {
   Accordion,
   AccordionItem,
   Avatar,
+  Badge,
   Card,
   CountBadge,
   Kbd,
@@ -50,14 +51,16 @@ export const HomePage = () => {
   return (
     <BaseLayout className="flex flex-col gap-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="px-4">
-          <CountBadge
-            title="Users"
-            count={12}
-            to="https://juniorencode.com/"
-            icon={<FaUser size={24} />}
-          />
-        </Card>
+        <Badge label="2" position="right" color="red">
+          <Card className="px-4">
+            <CountBadge
+              title="Users"
+              count={12}
+              to="https://juniorencode.com/"
+              icon={<FaUser size={24} />}
+            />
+          </Card>
+        </Badge>
         <Card className="px-4">
           <CountBadge
             title="Customers"
@@ -84,16 +87,14 @@ export const HomePage = () => {
         </Card>
       </div>
       <Card className="flex gap-4 p-4">
-        <div>
+        <Badge label="2" position="right">
           <Avatar name="Jane Doe" color="primary" />
-        </div>
-        <div>
-          <Avatar
-            src="https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg"
-            color="secondary"
-            name="Gloria"
-          />
-        </div>
+        </Badge>
+        <Avatar
+          src="https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg"
+          color="secondary"
+          name="Gloria"
+        />
       </Card>
       <Card className="flex flex-col gap-2 p-4 text-sm dark:text-white">
         <div>
