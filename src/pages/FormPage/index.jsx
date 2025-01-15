@@ -2,6 +2,7 @@ import { DataFormLayout } from '../../../lib/layouts';
 import { useForm } from '../../../lib/hooks';
 import {
   FormSection,
+  InputCheck,
   InputNumber,
   InputPassword,
   InputSearch,
@@ -197,6 +198,14 @@ export const FormPage = () => {
             ]}
             register={Form.register}
             multiple
+          />
+        </FormSection>
+        <FormSection title="Input Check">
+          <InputCheck
+            name="checkbox"
+            label="Checkbox"
+            labelCheck="Active"
+            register={Form.register}
           />
         </FormSection>
       </form>
