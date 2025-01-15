@@ -5,6 +5,7 @@ import {
   InputCheck,
   InputColor,
   InputDate,
+  InputFile,
   InputNumber,
   InputPassword,
   InputRichText,
@@ -47,6 +48,18 @@ export const FormPage = () => {
   Form.registerSubmit(form => {
     console.log(form);
   });
+
+  const postFile = () => {
+    console.log('postFile');
+  };
+
+  const putFile = () => {
+    console.log('putFile');
+  };
+
+  const removeFile = () => {
+    console.log('removeFile');
+  };
 
   return (
     <DataFormLayout breadcrumb={breadcrumb} title="Module" form={Form}>
@@ -215,7 +228,7 @@ export const FormPage = () => {
             register={Form.register}
           />
         </FormSection>
-        <FormSection title="Input Check">
+        <FormSection title="Input Switch">
           <InputSwitch
             name="switch"
             label="Switch"
@@ -231,7 +244,7 @@ export const FormPage = () => {
             register={Form.register}
           />
         </FormSection>
-        <FormSection title="Input Color">
+        <FormSection title="Input Date">
           <InputDate
             className="col-span-12"
             name="date"
@@ -239,12 +252,35 @@ export const FormPage = () => {
             register={Form.register}
           />
         </FormSection>
-        <FormSection title="Input Color">
+        <FormSection title="Input RichText">
           <InputRichText
             className="col-span-12"
             name="richtext"
             label="RichText"
             register={Form.register}
+          />
+        </FormSection>
+        <FormSection title="Input File">
+          <InputFile
+            className="col-span-12"
+            label="File"
+            name="file"
+            register={Form.register}
+            accept={['jpeg', 'jpg', 'png', 'webp', 'mp4']}
+            postFile={postFile}
+            putFile={putFile}
+            removeFile={removeFile}
+          />
+          <InputFile
+            className="col-span-12"
+            label="File"
+            name="file"
+            register={Form.register}
+            accept={['jpeg', 'jpg', 'png', 'webp', 'mp4']}
+            postFile={postFile}
+            putFile={putFile}
+            removeFile={removeFile}
+            multiple
           />
         </FormSection>
       </form>
