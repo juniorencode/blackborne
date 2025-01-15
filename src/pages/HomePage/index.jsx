@@ -1,4 +1,4 @@
-import { Card, CountBadge } from '../../../lib/main';
+import { Avatar, Card, CountBadge } from '../../../lib/main';
 import { BaseLayout } from '../../../lib/layouts';
 import { FaBoxOpen, FaUser, FaUserTie } from 'react-icons/fa';
 import { MdStickyNote2 } from 'react-icons/md';
@@ -40,6 +40,18 @@ export const HomePage = () => {
           />
         </Card>
       </div>
+      <Card className="flex gap-4 p-4">
+        <div>
+          <Avatar name="Jane Doe" color="primary" />
+        </div>
+        <div>
+          <Avatar
+            src="https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg"
+            color="secondary"
+            name="Gloria"
+          />
+        </div>
+      </Card>
     </BaseLayout>
   );
 };
