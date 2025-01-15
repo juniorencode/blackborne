@@ -6,7 +6,8 @@ import {
   InputPassword,
   InputSearch,
   InputSelect,
-  InputText
+  InputText,
+  InputTextarea
 } from '../../../lib/main';
 
 export const FormPage = () => {
@@ -17,6 +18,8 @@ export const FormPage = () => {
     password: '1234ABCDC',
     number: 200,
     numberOptions: 460,
+    textarea:
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla nec odio.',
     select: '2',
     selectMultiple: ['3', '4', '5'],
     search: '2',
@@ -103,7 +106,6 @@ export const FormPage = () => {
             name="number"
             label="Number"
             register={Form.register}
-            // required
           />
           <InputNumber
             className="col-span-12"
@@ -111,7 +113,14 @@ export const FormPage = () => {
             label="Number Options"
             options={[30, 50, 120, 10, 460, 1720, 2, 600]}
             register={Form.register}
-            // required
+          />
+        </FormSection>
+        <FormSection title="Input Textarea">
+          <InputTextarea
+            className="col-span-12"
+            name="textarea"
+            label="Textarea"
+            register={Form.register}
           />
         </FormSection>
         <FormSection title="Input Select">
