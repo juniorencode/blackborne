@@ -6,6 +6,7 @@ import {
   InputColor,
   InputDate,
   InputFile,
+  InputMedia,
   InputNumber,
   InputPassword,
   InputRichText,
@@ -55,10 +56,6 @@ export const FormPage = () => {
 
   const putFile = () => {
     console.log('putFile');
-  };
-
-  const removeFile = () => {
-    console.log('removeFile');
   };
 
   return (
@@ -269,17 +266,34 @@ export const FormPage = () => {
             accept={['jpeg', 'jpg', 'png', 'webp', 'mp4']}
             postFile={postFile}
             putFile={putFile}
-            removeFile={removeFile}
           />
           <InputFile
             className="col-span-12"
-            label="File"
-            name="file"
+            label="File Multiple"
+            name="fileMultiple"
             register={Form.register}
             accept={['jpeg', 'jpg', 'png', 'webp', 'mp4']}
             postFile={postFile}
             putFile={putFile}
-            removeFile={removeFile}
+            multiple
+          />
+        </FormSection>
+        <FormSection title="Input Media">
+          <InputMedia
+            className="col-span-12"
+            label="Media"
+            name="media"
+            accept={['jpeg', 'jpg', 'png', 'webp', 'mp4', 'mp3']}
+            register={Form.register}
+            postFile={postFile}
+          />
+          <InputMedia
+            className="col-span-12"
+            label="Media Multiple"
+            name="mediaMultiple"
+            accept={['jpeg', 'jpg', 'png', 'webp', 'mp4', 'mp3']}
+            register={Form.register}
+            postFile={postFile}
             multiple
           />
         </FormSection>
