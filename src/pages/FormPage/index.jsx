@@ -26,7 +26,10 @@ export const FormPage = () => {
     select: '2',
     selectMultiple: ['3', '4', '5'],
     search: '2',
-    searchMultiple: ['3', '4', '5']
+    searchMultiple: ['3', '4', '5'],
+    check: true,
+    switch: true,
+    color: '#8c00ff'
   });
 
   const breadcrumb = [
@@ -204,8 +207,8 @@ export const FormPage = () => {
         </FormSection>
         <FormSection title="Input Check">
           <InputCheck
-            name="checkbox"
-            label="Checkbox"
+            name="check"
+            label="Check"
             labelCheck="Active"
             register={Form.register}
           />
