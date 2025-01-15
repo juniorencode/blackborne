@@ -7,6 +7,8 @@ import {
   Card,
   CountBadge,
   Kbd,
+  Stepper,
+  StepperItem,
   Tabs
 } from '../../../lib/main';
 import { BaseLayout } from '../../../lib/layouts';
@@ -130,6 +132,22 @@ export const HomePage = () => {
             accusantium doloremque laudantium, totam rem aperiam.
           </AccordionItem>
         </Accordion>
+      </Card>
+      <Card className="p-4">
+        <Stepper>
+          <StepperItem title="Home">
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus
+            imperdiet.
+          </StepperItem>
+          <StepperItem title="About">
+            Pellentesque habitant morbi tristique senectus et netus et malesuada
+            fames ac turpis egestas.
+          </StepperItem>
+          <StepperItem title="Contact">
+            Curabitur vel sem mi. Proin in lobortis ipsum. Sed fringilla mauris
+            sit amet nibh.
+          </StepperItem>
+        </Stepper>
       </Card>
     </BaseLayout>
   );
