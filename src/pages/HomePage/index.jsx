@@ -1,7 +1,15 @@
-import { Avatar, Card, CountBadge, Kbd, Tabs } from '../../../lib/main';
-import { BaseLayout } from '../../../lib/layouts';
-import { FaBoxOpen, FaUser, FaUserTie } from 'react-icons/fa';
 import { MdStickyNote2 } from 'react-icons/md';
+import { FaBoxOpen, FaUser, FaUserTie } from 'react-icons/fa';
+import {
+  Accordion,
+  AccordionItem,
+  Avatar,
+  Card,
+  CountBadge,
+  Kbd,
+  Tabs
+} from '../../../lib/main';
+import { BaseLayout } from '../../../lib/layouts';
 
 export const HomePage = () => {
   const tabs = [
@@ -87,18 +95,41 @@ export const HomePage = () => {
       </Card>
       <Card className="flex flex-col gap-2 p-4 text-sm dark:text-white">
         <div>
-          Presiona <Kbd size="sm">Ctrl</Kbd> + <Kbd size="sm">C</Kbd> para
-          copiar
+          Press <Kbd size="sm">Ctrl</Kbd> + <Kbd size="sm">C</Kbd> to copy
         </div>
         <div>
-          <Kbd color="primary">Esc</Kbd> para salir
+          <Kbd color="primary">Esc</Kbd> to exit
         </div>
         <div>
-          Presiona <Kbd size="lg">Enter</Kbd> para continuar
+          Press <Kbd size="lg">Enter</Kbd> to continue
         </div>
       </Card>
       <Card>
         <Tabs openDefault={3} tabs={tabs} disabled={[1, 4]} />
+      </Card>
+      <Card>
+        <Accordion openDefault={2} multiple>
+          <AccordionItem title="Home" subtitle="Press to expand" disabled>
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus
+            imperdiet.
+          </AccordionItem>
+          <AccordionItem title="About">
+            Pellentesque habitant morbi tristique senectus et netus et malesuada
+            fames ac turpis egestas.
+          </AccordionItem>
+          <AccordionItem title="Contact" subtitle="Press to expand">
+            Curabitur vel sem mi. Proin in lobortis ipsum. Sed fringilla mauris
+            sit amet nibh.
+          </AccordionItem>
+          <AccordionItem title="Services" subtitle="Press to expand">
+            Maecenas nec odio et ante tincidunt tempus. Vivamus elementum semper
+            nisi.
+          </AccordionItem>
+          <AccordionItem title="FAQ">
+            Sed ut perspiciatis unde omnis iste natus error sit voluptatem
+            accusantium doloremque laudantium, totam rem aperiam.
+          </AccordionItem>
+        </Accordion>
       </Card>
     </BaseLayout>
   );
