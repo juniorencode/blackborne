@@ -10,8 +10,9 @@ import {
 import { HomePage } from '../pages/HomePage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 import { SettingsPage } from '../pages/SettingsPage';
-import { TablePage } from '../pages/TablePage/index.jsx';
-import { FormPage } from '../pages/FormPage/index.jsx';
+import { TablePage } from '../pages/TablePage';
+import { FormPage } from '../pages/FormPage';
+import { LoginPage } from '../pages/LoginPage';
 
 const AppRoutes = () => {
   setSystemName('Blackborne');
@@ -57,10 +58,11 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
-      <Route path="/form" element={<FormPage />} />
       <Route path="/table" element={<TablePage />} />
-      <Route path="/settings" element={<SettingsPage />} />
+      <Route path="/form" element={<FormPage />} />
+      <Route path="/login" element={<LoginPage />} />
       <Route path="/not-found" element={<NotFoundPage />} />
+      <Route path="/settings" element={<SettingsPage />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
