@@ -7,6 +7,7 @@ import {
   InputPassword,
   InputSearch,
   InputSelect,
+  InputSwitch,
   InputText,
   InputTextarea
 } from '../../../lib/main';
@@ -204,6 +205,14 @@ export const FormPage = () => {
           <InputCheck
             name="checkbox"
             label="Checkbox"
+            labelCheck="Active"
+            register={Form.register}
+          />
+        </FormSection>
+        <FormSection title="Input Check">
+          <InputSwitch
+            name="switch"
+            label="Switch"
             labelCheck="Active"
             register={Form.register}
           />
