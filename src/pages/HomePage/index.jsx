@@ -1,4 +1,4 @@
-import { Avatar, Card, CountBadge } from '../../../lib/main';
+import { Avatar, Card, CountBadge, Kbd } from '../../../lib/main';
 import { BaseLayout } from '../../../lib/layouts';
 import { FaBoxOpen, FaUser, FaUserTie } from 'react-icons/fa';
 import { MdStickyNote2 } from 'react-icons/md';
@@ -50,6 +50,18 @@ export const HomePage = () => {
             color="secondary"
             name="Gloria"
           />
+        </div>
+      </Card>
+      <Card className="flex flex-col gap-2 p-4 text-sm dark:text-white">
+        <div>
+          Presiona <Kbd size="sm">Ctrl</Kbd> + <Kbd size="sm">C</Kbd> para
+          copiar
+        </div>
+        <div>
+          <Kbd color="primary">Esc</Kbd> para salir
+        </div>
+        <div>
+          Presiona <Kbd size="lg">Enter</Kbd> para continuar
         </div>
       </Card>
     </BaseLayout>
