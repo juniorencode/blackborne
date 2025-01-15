@@ -2,6 +2,7 @@ import { DataFormLayout } from '../../../lib/layouts';
 import { useForm } from '../../../lib/hooks';
 import {
   FormSection,
+  InputNumber,
   InputPassword,
   InputSearch,
   InputSelect,
@@ -14,6 +15,8 @@ export const FormPage = () => {
     textOptions: 'galaxy',
     textMultiple: ['apple', 'banana', 'cherry'],
     password: '1234ABCDC',
+    number: 200,
+    numberOptions: 460,
     select: '2',
     selectMultiple: ['3', '4', '5'],
     search: '2',
@@ -92,6 +95,23 @@ export const FormPage = () => {
             name="password"
             label="Password"
             register={Form.register}
+          />
+        </FormSection>
+        <FormSection title="Input Number">
+          <InputNumber
+            className="col-span-12"
+            name="number"
+            label="Number"
+            register={Form.register}
+            // required
+          />
+          <InputNumber
+            className="col-span-12"
+            name="numberOptions"
+            label="Number Options"
+            options={[30, 50, 120, 10, 460, 1720, 2, 600]}
+            register={Form.register}
+            // required
           />
         </FormSection>
         <FormSection title="Input Select">
