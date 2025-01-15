@@ -3,6 +3,7 @@ import { useForm } from '../../../lib/hooks';
 import {
   FormSection,
   InputCheck,
+  InputColor,
   InputNumber,
   InputPassword,
   InputSearch,
@@ -214,6 +215,14 @@ export const FormPage = () => {
             name="switch"
             label="Switch"
             labelCheck="Active"
+            register={Form.register}
+          />
+        </FormSection>
+        <FormSection title="Input Color">
+          <InputColor
+            className="col-span-4"
+            label="Color"
+            name="color"
             register={Form.register}
           />
         </FormSection>
