@@ -5,6 +5,7 @@ import {
   AccordionItem,
   Avatar,
   Badge,
+  BarChart,
   Card,
   CountBadge,
   Kbd,
@@ -15,6 +16,22 @@ import {
 import { BaseLayout } from '../../../lib/layouts';
 
 export const HomePage = () => {
+  const values = [72, 56, 20, 36, 80, 40, 30, 20, 25, 30, 12, 60];
+  const months = [
+    'Enero',
+    'Febrero',
+    'Marzo',
+    'Abril',
+    'Mayo',
+    'Junio',
+    'Julio',
+    'Agosto',
+    'Septiembre',
+    'Octubre',
+    'Noviembre',
+    'Diciembre'
+  ];
+
   const tabs = [
     {
       content:
@@ -86,6 +103,24 @@ export const HomePage = () => {
           />
         </Card>
       </div>
+      <Card className="col-span-12 lg:col-span-7 xl:col-span-8 2xl:col-span-9 flex flex-col gap-4 p-4">
+        <BarChart
+          title="Transacciones del 2024"
+          options={{
+            type: 'bar',
+            data: {
+              labels: months,
+              datasets: [
+                {
+                  data: values,
+                  borderWidth: 2
+                }
+              ]
+            }
+          }}
+          height={4}
+        />
+      </Card>
       <Card className="flex gap-4 p-4">
         <Badge label="2" position="right">
           <Avatar name="Jane Doe" color="primary" />
