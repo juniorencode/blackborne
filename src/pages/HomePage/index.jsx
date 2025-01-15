@@ -6,16 +6,20 @@ import {
   Avatar,
   Badge,
   BarChart,
+  Button,
   Card,
   CountBadge,
   Kbd,
   Stepper,
   StepperItem,
-  Tabs
+  Tabs,
+  useToast
 } from '../../../lib/main';
 import { BaseLayout } from '../../../lib/layouts';
 
 export const HomePage = () => {
+  const { addToast } = useToast();
+
   const values = [72, 56, 20, 36, 80, 40, 30, 20, 25, 30, 12, 60];
   const months = [
     'Enero',
@@ -64,6 +68,22 @@ export const HomePage = () => {
       tab: 'FAQ'
     }
   ];
+
+  const handleSuccess = () => {
+    addToast('success', 'Este es un mensaje de éxito');
+  };
+
+  const handleError = () => {
+    addToast('error', 'Este es un mensaje de error');
+  };
+
+  const handleWarning = () => {
+    addToast('warning', 'Este es un mensaje de advertencia');
+  };
+
+  const handleInfo = () => {
+    addToast('info', 'Este es un mensaje informativo');
+  };
 
   return (
     <BaseLayout className="flex flex-col gap-4">
@@ -120,6 +140,32 @@ export const HomePage = () => {
           }}
           height={4}
         />
+      </Card>
+      <Card className="flex flex-wrap gap-2 p-4">
+        <Button
+          className="px-3 py-1.5 rounded text-white bg-green-600 hover:bg-green-700"
+          onClick={handleSuccess}
+        >
+          Success Toast
+        </Button>
+        <Button
+          className="px-3 py-1.5 rounded text-white bg-red-600 hover:bg-red-700"
+          onClick={handleError}
+        >
+          Error Toast
+        </Button>
+        <Button
+          className="px-3 py-1.5 rounded text-white bg-yellow-600 hover:bg-yellow-700"
+          onClick={handleWarning}
+        >
+          Warning Toast
+        </Button>
+        <Button
+          className="px-3 py-1.5 rounded text-white bg-blue-600 hover:bg-blue-700"
+          onClick={handleInfo}
+        >
+          Info Toast
+        </Button>
       </Card>
       <Card className="flex gap-4 p-4">
         <Badge label="2" position="right">
