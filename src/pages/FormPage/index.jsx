@@ -6,6 +6,7 @@ import {
   InputColor,
   InputNumber,
   InputPassword,
+  InputRichText,
   InputSearch,
   InputSelect,
   InputSwitch,
@@ -223,9 +224,17 @@ export const FormPage = () => {
         </FormSection>
         <FormSection title="Input Color">
           <InputColor
-            className="col-span-4"
+            className="col-span-2"
             label="Color"
             name="color"
+            register={Form.register}
+          />
+        </FormSection>
+        <FormSection title="Input Color">
+          <InputRichText
+            className="col-span-12"
+            name="richtext"
+            label="RichText"
             register={Form.register}
           />
         </FormSection>
