@@ -1,8 +1,64 @@
-# React + Vite
+# Installation Guide
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Install Blackborne
 
-Currently, two official plugins are available:
+Blackborne requires `react` and `react-dom` as peer dependencies.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### Using npm
+
+```sh
+npm install blackborne
+```
+
+### Using yarn
+
+```sh
+yarn add blackborne
+```
+
+### Using pnpm
+
+```sh
+pnpm add blackborne
+```
+
+## Tailwind CSS Configuration
+
+If you're using Tailwind CSS, make sure to add the Blackborne plugins to your Tailwind configuration:
+
+```js
+/** @type {import('tailwindcss').Config} */
+import BlackBornePlugins from 'blackborne/plugins';
+
+export default {
+  content: [
+    './index.html',
+    './src/**/*.{js,ts,jsx,tsx}',
+    './node_modules/blackborne/**/*.{js,jsx}'
+  ],
+  theme: {
+    extend: {}
+  },
+  plugins: [BlackBornePlugins]
+};
+```
+
+## Peer Dependencies
+
+Ensure that you have the required peer dependencies installed:
+
+```sh
+npm install react@^19.0.0 react-dom@^19.0.0 react-router-dom@^7.1.1
+```
+
+## Importing Components
+
+After installation, you can import components into your project:
+
+```js
+import { Button } from 'blackborne';
+
+function App() {
+  return <Button>Click Me</Button>;
+}
+```
