@@ -215,6 +215,43 @@ export const HomePage = () => {
           </AccordionItem>
         </Accordion>
       </Card>
+      <Card>
+        <Accordion
+          openDefault={2}
+          multiple
+          data={[
+            {
+              title: 'Home',
+              subtitle: 'Press to expand',
+              content:
+                'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus imperdiet.',
+              disabled: true
+            },
+            {
+              title: 'About',
+              content:
+                'Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.'
+            },
+            {
+              title: 'Contact',
+              subtitle: 'Press to expand',
+              content:
+                'Curabitur vel sem mi. Proin in lobortis ipsum. Sed fringilla mauris sit amet nibh.'
+            },
+            {
+              title: 'Services',
+              subtitle: 'Press to expand',
+              content:
+                'Maecenas nec odio et ante tincidunt tempus. Vivamus elementum semper nisi.'
+            },
+            {
+              title: 'FAQ',
+              content:
+                'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam.'
+            }
+          ]}
+        ></Accordion>
+      </Card>
       <Card className="p-4">
         <Stepper>
           <StepperItem title="Home">
