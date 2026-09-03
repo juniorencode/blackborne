@@ -3,9 +3,14 @@
 The full recipe. Read it before writing anything — most of the cost of a
 component is decided before the first line.
 
-> **Note on the file layout section.** The exact file layout is settled with
-> the first component, in phase F6, together with the API conventions document.
-> Everything else on this page is already decided and applies now.
+> **Note on the file layout.** The exact file layout is settled with the first
+> component, together with [02 · API conventions](../foundations/README.md),
+> which is written after the React Aria spike. Everything else on this page is
+> already decided and applies now.
+
+This page is the operational summary. The reasoning behind every rule lives in
+the [foundations](../foundations/README.md); when the two disagree, the
+foundation wins and this page needs fixing.
 
 ## 1. Does it belong here at all?
 
@@ -68,6 +73,8 @@ While building, the things that are always forgotten:
   lands, least of all under the cursor.
 
 ## 4. The entry gate
+
+From [01 · Principles](../foundations/01-principles.md), §5.
 
 Twelve checkboxes. **All twelve, or it does not enter** — eleven out of twelve
 stays in the project that asked for it until it is twelve.

@@ -58,7 +58,8 @@ first. The short version:
 
 1. A component enters only when **two real consumers** ask for it. Not "while
    we're at it".
-2. It must pass the twelve-checkbox entry gate in that recipe.
+2. It must pass the twelve-checkbox entry gate in
+   [`docs/foundations/01-principles.md`](./docs/foundations/01-principles.md).
    Eleven out of twelve does not enter.
 3. Anything with logic goes in a hook or a pure function, tested without
    rendering. Components paint and delegate.
