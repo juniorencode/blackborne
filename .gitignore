@@ -11,3 +11,6 @@ storybook-static/
 .turbo/
 test-results/
 playwright-report/
+
+# Personal overrides, never committed
+.claude/settings.local.json

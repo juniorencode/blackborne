@@ -47,13 +47,19 @@ pnpm verify
 
 `docs/` is the source of truth. Start at [docs/README.md](./docs/README.md).
 
-The foundations are being written (phase F4). Two of them carry most of the
-weight and are worth reading first once they land: **01 · Principles and
-non-goals**, which holds the twelve-checkbox gate every component must pass,
-and **contributing/new-component**, the exact steps and file layout.
+The two worth reading before writing any code:
 
-Until then, [docs/README.md](./docs/README.md) tracks what exists and what does
-not.
+- [Adding a component](./docs/contributing/new-component.md) — whether it
+  belongs in the library at all, how to design it as a suite, and the
+  twelve-checkbox gate it has to pass.
+- [Commits and pull requests](./docs/contributing/commits-and-prs.md) — the
+  format, and the branching model.
+
+The ten foundation documents are being written (phase F4);
+[docs/README.md](./docs/README.md) tracks what exists and what does not.
+
+If you work with an AI agent in this repository, [CLAUDE.md](./CLAUDE.md) maps
+it: layout, commands, the hard rules, and the traps specific to this project.
 
 ## Contributing
 

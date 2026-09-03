@@ -36,21 +36,29 @@ green local run means a green CI run.
 
 ## Branches and commits
 
-- `main` is always releasable. Work happens on short-lived branches off `main`
-  and lands through a pull request.
+The full format is in
+[`docs/contributing/commits-and-prs.md`](./docs/contributing/commits-and-prs.md).
+The short version:
+
+- `main` is the only permanent branch and is always releasable. Work happens on
+  short-lived branches off `main` and lands through a pull request. There is no
+  `develop`, no `release/*` and no `hotfix/*`.
 - Branch names: `feature/…`, `fix/…`, `docs/…`, `chore/…`.
-- Commit subjects follow [Conventional Commits](https://www.conventionalcommits.org/):
-  `feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`.
+- Commits follow [Conventional Commits](https://www.conventionalcommits.org/),
+  and carry no `Co-Authored-By` trailer.
+- Pull request titles are Conventional Commits too: merges are squashed, so the
+  title becomes the commit on `main`.
 - Releases are tagged `vX.Y.Z` and published **from CI**, never from a laptop.
 
 ## Adding a component
 
-The full recipe lives in `docs/contributing/new-component.md`, which is being
-written (phase F4). The rules it will formalise already apply:
+Read
+[`docs/contributing/new-component.md`](./docs/contributing/new-component.md)
+first. The short version:
 
 1. A component enters only when **two real consumers** ask for it. Not "while
    we're at it".
-2. It must pass the twelve-checkbox entry gate from the principles document.
+2. It must pass the twelve-checkbox entry gate in that recipe.
    Eleven out of twelve does not enter.
 3. Anything with logic goes in a hook or a pure function, tested without
    rendering. Components paint and delegate.
