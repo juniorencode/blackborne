@@ -1,64 +1,20 @@
-# Installation Guide
+# Blackborne
 
-## Install Blackborne
+A UI component library for React, built for management applications:
+internal dashboards, CRUD screens, dense forms, and filterable data tables.
 
-Blackborne requires `react` and `react-dom` as peer dependencies.
+## Status: rewriting
 
-### Using npm
+Blackborne is being rewritten from scratch. Nothing from the previous
+codebase is carried over — not a component, not a prop name, not a DOM
+structure, not a test id.
 
-```sh
-npm install blackborne
-```
+`0.1.1` is the last release of the original library. It is deprecated and
+receives no further work. Its code stays available under the `v0.1.1` tag.
 
-### Using yarn
+The rewrite will ship as `0.2.0`. Until then this repository is a work in
+progress and the package on npm should not be used for new projects.
 
-```sh
-yarn add blackborne
-```
+## License
 
-### Using pnpm
-
-```sh
-pnpm add blackborne
-```
-
-## Tailwind CSS Configuration
-
-If you're using Tailwind CSS, make sure to add the Blackborne plugins to your Tailwind configuration:
-
-```js
-/** @type {import('tailwindcss').Config} */
-import BlackBornePlugins from 'blackborne/plugins';
-
-export default {
-  content: [
-    './index.html',
-    './src/**/*.{js,ts,jsx,tsx}',
-    './node_modules/blackborne/**/*.{js,jsx}'
-  ],
-  theme: {
-    extend: {}
-  },
-  plugins: [BlackBornePlugins]
-};
-```
-
-## Peer Dependencies
-
-Ensure that you have the required peer dependencies installed:
-
-```sh
-npm install react@^19.0.0 react-dom@^19.0.0 react-router-dom@^7.1.1
-```
-
-## Importing Components
-
-After installation, you can import components into your project:
-
-```js
-import { Button } from 'blackborne';
-
-function App() {
-  return <Button>Click Me</Button>;
-}
-```
+MIT
