@@ -13,8 +13,11 @@ peerDependencyRules:
 # @parcel/watcher (pulled in by the Tailwind CLI) ships prebuilt binaries per
 # platform — the one we use is in @parcel/watcher-win32-x64 — so its install
 # script is a source-build fallback we never need. Left unbuilt deliberately.
+# esbuild is the same story: the binary we use is in @esbuild/win32-x64, and
+# its install script only builds from source when no prebuild matches.
 ignoredBuiltDependencies:
   - '@parcel/watcher'
+  - 'esbuild'
 
 # An unbuilt-but-approved script leaves pnpm permanently "unsatisfied", and the
 # default pre-flight turns that into a hard failure on every `pnpm run`.
@@ -25,3 +28,4 @@ verifyDepsBeforeRun: warn
 
 allowBuilds:
   '@parcel/watcher': set this to true or false
+  esbuild: set this to true or false

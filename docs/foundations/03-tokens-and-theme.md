@@ -55,6 +55,28 @@ not sustainable and it breaks on its own.
 | **Light and dark paired** | Every scale has its dark counterpart with the same numbers and the same roles: the semantic mapping is **identical in both modes**. Only which scale is active changes |
 | **Useful extras**         | Translucent versions of each scale — which handle states over variable backgrounds well — and tinted greys that harmonise with each accent                             |
 
+**The roles, written down.** These are what "every step has a defined role"
+actually means, and they are the same in both modes:
+
+| Step  | Role                                      |
+| ----- | ----------------------------------------- |
+| 1–2   | Page and subtle backgrounds               |
+| **3** | **The resting background of a component** |
+| 4     | Hovered                                   |
+| 5     | Pressed or selected                       |
+| 6     | Subtle border                             |
+| 7     | Normal border                             |
+| 8     | Strong border, focus ring                 |
+| 9     | Solid                                     |
+| 10    | Solid, hovered                            |
+| 11    | Low-contrast text                         |
+| 12    | High-contrast text                        |
+
+Worth reading once rather than guessing: mapping a control's background to
+step 1 — a _page_ step — produces a button that in dark mode comes out darker
+than the panel it sits on and reads as a hole punched in it. The scale has
+step 3 for exactly this, which is why `surface-control` exists in §4.
+
 **How it is consumed.** As a **development dependency**, never a production
 one. The values are baked into the compiled CSS and the variables; whoever
 installs the library does not know it exists and it does not appear in their
@@ -102,13 +124,51 @@ Nestable means: the application in light mode at normal density, and one
 particular table at compact density. No tricks — you open a container with the
 variables redefined.
 
+### 3.1 The scope rule, and why it is not optional
+
+Redefining the variables on a container is only half of it. The other half is
+easy to miss and makes the axes silently do nothing.
+
+**A CSS `var()` is substituted at the element that DECLARES it, not at the
+element that uses it.** If the semantic mapping is declared only on the root,
+it resolves once against the light primitives and freezes. Swapping a primitive
+further down the tree changes nothing, because the semantic token was already
+resolved.
+
+So the semantic mapping is **re-declared on every theme scope**:
+
+```css
+:root,
+[data-bb-mode],
+[data-bb-theme] {
+  /* the whole semantic mapping */
+}
+```
+
+Inside such an element the `var()` resolves again, against whatever primitives
+that element carries. It is still **one mapping, written once** — the promise in
+§1.1 survives; it just has to be attached to more than one selector.
+
+Two consequences for the consumer, and they belong in the getting-started
+guide because the failure is invisible:
+
+- Overriding a **semantic** token works anywhere. It holds a value, so plain
+  inheritance delivers it.
+- Overriding a **primitive** — the brand scale, level 1 of §7 — requires
+  `data-bb-theme` on the same element. Without it the override does nothing at
+  all, with no error.
+
+This was found with the first component on screen, by a brand override that
+appeared to be ignored. It is written here so nobody rediscovers it.
+
 ## 4. Catalog of semantic tokens
 
 The closed inventory. Adding a new one requires checking that no equivalent
 already exists — three near-identical greys is how entropy begins.
 
 **Surfaces**
-`surface` (panel or card base) · `surface-raised` (raised: menu, popover,
+`surface` (panel or card base) · `surface-control` **+ `surface-control-on`**
+(the resting background of a control) · `surface-raised` (raised: menu, popover,
 dialog) · `surface-sunken` (sunken: table header, background zones) ·
 `surface-overlay` (the scrim behind a dialog) · `surface-hover` ·
 `surface-active` · `surface-selected` · `surface-disabled`
@@ -122,7 +182,8 @@ exceptional) · `border-focus`
 
 **Brand**
 `accent` **+ `accent-on`** · `accent-hover` · `accent-active` ·
-`accent-subtle` **+ `accent-subtle-on`**
+`accent-subtle` **+ `accent-subtle-on`** · `accent-subtle-hover` ·
+`accent-subtle-active`
 
 **States** — all four with the same structure, so they are interchangeable:
 `danger` **+ `danger-on`** · `danger-subtle` **+ `danger-subtle-on`** · the
@@ -390,6 +451,30 @@ With the decision in 1.1, this work already comes done at the primitive layer:
 the dark scales are designed as such, not inverted. What does not change is the
 rule — **one mode is never derived from the other by calculation**; the scale
 system simply saves you from maintaining two mappings.
+
+### 6.1 How this squares with §1.1
+
+Read quickly, §1.1 and this section look like they disagree: one says the
+semantic mapping is _identical in both modes_, the other says every token is
+defined _separately_ in each mode. Building the first component made the
+distinction concrete, so it is worth stating plainly.
+
+- **§1.1 is about families.** You do not need a different mapping per colour
+  family, and you do not need a different mapping per mode either. The step
+  that is "solid" is solid everywhere. That is the payoff of role-based
+  scales, and it is what makes seventeen families tractable.
+- **§6 is about derivation.** No mode is ever computed from the other. The
+  dark values are designed, not inverted.
+
+Where they meet: a token may be **restated** in the dark block when its role
+genuinely differs, and that is not a second mapping. The real case is
+elevation. Dark scales run dark-to-light, so "one step more raised" and "one
+step more recessed" are not the same index in both modes — a raised surface has
+to be restated. Three surface tokens need it; the rest of the mapping does not.
+
+The test for whether a restatement is legitimate: it names a role that behaves
+differently in the two modes. If it is only nudging a value because it looked
+nicer, it is drift, and it belongs in the primitives or nowhere.
 
 Practical consequence: the visual catalog must be able to show both modes
 **side by side**, not by toggling.

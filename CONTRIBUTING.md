@@ -23,16 +23,27 @@ docs/                  foundations, dated decisions, guides
 
 ## Commands
 
-| Command          | What it does                               |
-| ---------------- | ------------------------------------------ |
-| `pnpm verify`    | The full gate: format, lint, types, tests  |
-| `pnpm lint`      | ESLint, including this project's own rules |
-| `pnpm typecheck` | Types across the workspace                 |
-| `pnpm test`      | Unit and behavior tests                    |
-| `pnpm format`    | Apply formatting                           |
+| Command                     | What it does                                              |
+| --------------------------- | --------------------------------------------------------- |
+| `pnpm verify`               | The full gate: format, lint, types, tests                 |
+| `pnpm lint`                 | ESLint, including this project's own rules                |
+| `pnpm typecheck`            | Types across the workspace                                |
+| `pnpm test`                 | Unit and behavior tests                                   |
+| `pnpm verify:full`          | Everything above, plus browser checks against the catalog |
+| `pnpm --filter catalog dev` | The visual catalog, on port 6006                          |
+| `pnpm format`               | Apply formatting                                          |
 
-Run `pnpm verify` before opening a pull request. CI runs the same thing, so a
-green local run means a green CI run.
+Run `pnpm verify` before opening a pull request.
+
+Two levels, on purpose. `pnpm verify` is the fast gate and the same thing CI
+runs first, so a green local run means a green first job. `pnpm verify:full`
+adds the browser checks, which need Chromium and run as a separate CI job so
+they never delay the fast one.
+
+A browser is not optional pedantry: jsdom does not implement real tab order,
+so it cannot say where focus goes, and it does not resolve CSS variables, so
+it cannot say what colour an element ended up. A token bug that made dark
+mode do nothing at all passed every unit test.
 
 ## Branches and commits
 

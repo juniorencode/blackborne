@@ -11,21 +11,55 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # The fast gate, and the same command a contributor runs before opening a
+  # pull request. Seconds, not minutes: doc 10 §8 warns that a check which
+  # runs everything before every change ends up switched off.
   verify:
     name: Format, lint, types, tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: pnpm/action-setup@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm verify
 
-      - name: Install
-        run: pnpm install --frozen-lockfile
+  # The slow layer, in its own job so it never delays the fast one.
+  #
+  # It exists because two core guarantees cannot be checked without a browser:
+  # jsdom does not implement real tab order, so it cannot say where focus goes,
+  # and it does not resolve CSS variables, so it cannot say what colour an
+  # element ended up. A token cascade bug that made dark mode and brand
+  # overrides silently do nothing passed every unit test.
+  browser:
+    name: Browser checks against the catalog
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
 
-      - name: Verify
-        run: pnpm verify
+      # The catalog consumes the built package, exactly as a consumer does,
+      # so this has to run first.
+      - name: Build the package
+        run: pnpm --filter blackborne build
+
+      - name: Install Chromium
+        run: pnpm --filter catalog exec playwright install --with-deps chromium
+
+      - name: Run browser checks
+        run: pnpm --filter catalog test:e2e
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: apps/catalog/playwright-report/
+          retention-days: 7

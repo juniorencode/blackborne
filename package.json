@@ -20,7 +20,8 @@
     "lint": "eslint .",
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "pnpm -r --if-present test",
-    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test"
+    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test",
+    "verify:full": "pnpm verify && pnpm --filter blackborne build && pnpm --filter catalog test:e2e"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -110,6 +110,34 @@ flips; the library contains no physical `left`/`right` anywhere.
 Not required. CSS ships compiled and prefixed, so Tailwind is an internal
 implementation detail and cannot collide with yours.
 
+## Size
+
+Doc 10 is blunt about this: a budget without a number is not a budget, because
+when you exceed it you do not find out. Measured at `0.2.0`, with one
+component:
+
+| What              | Now                   | Budget                 |
+| ----------------- | --------------------- | ---------------------- |
+| `dist/index.js`   | 2.1 kB (0.8 kB gzip)  | — see below            |
+| `dist/styles.css` | 18.2 kB (3.9 kB gzip) | 40 kB raw / 10 kB gzip |
+| Published tarball | 10.5 kB               | —                      |
+| `pnpm verify`     | 25 s                  | 90 s                   |
+
+**The JavaScript budget is deliberately structural rather than a number.** With
+one component, any total figure would be a guess that gets raised every time a
+component lands, which is a budget in name only. The commitment that actually
+holds is: **importing one component pulls in that component and nothing else.**
+Every module is side-effect free apart from the stylesheet, and no dependency
+is bundled — `react` and `react-aria-components` stay external so your
+bundler deduplicates them.
+
+The CSS number is a real ceiling. Most of the current 18 kB is the token layer,
+which is a fixed cost paid once; utilities grow slowly because the scales are
+restricted and only what components use is emitted.
+
+Budgets are revised when exceeded, with data. They are not ignored and not
+raised quietly.
+
 ## Support
 
 Open source published in good faith and used in production by its authors.
@@ -118,4 +146,4 @@ acceptance.
 
 ## License
 
-[MIT](./LICENSE)
+[MIT](https://github.com/juniorencode/blackborne/blob/main/LICENSE)

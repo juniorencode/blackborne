@@ -14,3 +14,8 @@ playwright-report/
 
 # Personal overrides, never committed
 .claude/settings.local.json
+
+# Storybook build output and Playwright artefacts
+apps/catalog/storybook-static/
+apps/catalog/playwright-report/
+apps/catalog/test-results/
