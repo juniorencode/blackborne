@@ -42,14 +42,14 @@ carries the twelve-checkbox gate every component must pass.
 
 The library is being rewritten from scratch. Phases, in order:
 
-| Phase | What                                                                  | State       |
-| ----- | --------------------------------------------------------------------- | ----------- |
-| F1    | Close the past: tag, prune branches, empty the repo, deprecate on npm | Done        |
-| F2    | Skeleton: workspace, root files, CI, templates                        | In progress |
-| F3    | Documentation for AI agents                                           | Pending     |
-| F4    | Foundations, written in English                                       | Pending     |
-| F5    | One day with React Aria — decides documents 02 and 08                 | Pending     |
-| F6    | Full pipeline with the first component (`Button`)                     | Pending     |
+| Phase | What                                                                  | State   |
+| ----- | --------------------------------------------------------------------- | ------- |
+| F1    | Close the past: tag, prune branches, empty the repo, deprecate on npm | Done    |
+| F2    | Skeleton: workspace, root files, CI, templates                        | Done    |
+| F3    | Documentation for AI agents                                           | Pending |
+| F4    | Foundations, written in English                                       | Pending |
+| F5    | One day with React Aria — decides documents 02 and 08                 | Pending |
+| F6    | Full pipeline with the first component (`Button`)                     | Pending |
 
 Nothing from the `0.1.1` codebase is carried over. It stays available under the
 `v0.1.1` git tag.
