@@ -1,0 +1,40 @@
+name: Release
+
+# Publishing happens here and nowhere else. Never from a laptop.
+# Trigger: pushing a version tag, e.g. v0.2.0
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  publish:
+    name: Build and publish to npm
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Required for npm provenance.
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify
+        run: pnpm verify
+
+      - name: Build
+        run: pnpm --filter blackborne build
+
+      - name: Publish
+        run: pnpm --filter blackborne publish --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -1,0 +1,9 @@
+packages:
+  - 'packages/*'
+  - 'apps/*'
+
+# eslint-plugin-jsx-a11y works with ESLint 10; its peer range simply has not
+# been updated upstream. Remove this once the plugin declares ^10.
+peerDependencyRules:
+  allowedVersions:
+    'eslint-plugin-jsx-a11y>eslint': '10'

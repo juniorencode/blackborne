@@ -1,0 +1,59 @@
+{
+  "name": "blackborne",
+  "version": "0.2.0",
+  "description": "A UI component library for React, built for management applications.",
+  "author": "Carlos Junior Ramos Vásquez",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/juniorencode/blackborne.git",
+    "directory": "packages/blackborne"
+  },
+  "homepage": "https://github.com/juniorencode/blackborne",
+  "bugs": "https://github.com/juniorencode/blackborne/issues",
+  "keywords": [
+    "react",
+    "react-components",
+    "component-library",
+    "design-system",
+    "accessibility",
+    "react-aria",
+    "rtl",
+    "blackborne"
+  ],
+  "type": "module",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./styles.css": "./dist/styles.css",
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "scripts": {
+    "test": "vitest run --passWithNoTests"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "vitest": "^4.1.11"
+  }
+}

@@ -1,0 +1,55 @@
+name: Bug report
+description: Something in the library behaves incorrectly.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing: the library is being rewritten. Issues against `0.1.x`
+        will not be fixed — that line is deprecated.
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      placeholder: '0.2.0'
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you expected, and what happened instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: >
+        Minimal steps, or a link to a reproduction. A bug that cannot be
+        reproduced usually cannot be fixed.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: axes
+    attributes:
+      label: Does it also happen with…
+      description: >
+        These four axes are where most library bugs hide. Tick the ones you
+        checked, leave the rest — an unchecked box is information too.
+      options:
+        - label: Dark mode
+        - label: RTL direction
+        - label: Compact density
+        - label: A container narrower than 400px
+
+  - type: checkboxes
+    id: accessibility
+    attributes:
+      label: Accessibility
+      options:
+        - label: This is an accessibility issue (keyboard, focus, screen reader, contrast)
