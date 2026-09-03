@@ -1,0 +1,19 @@
+{
+  // The catalog runs in Node for its config and in the browser for stories, so
+  // it gets both sets of types. It ships nothing, so the library's stricter
+  // rules do not apply here.
+  //
+  // The paths are listed explicitly because TypeScript's `include` globs skip
+  // directories whose name starts with a dot, and .storybook is one.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node", "vite/client"]
+  },
+  "include": [
+    ".storybook/*.ts",
+    ".storybook/*.tsx",
+    "e2e",
+    "playwright.config.ts"
+  ]
+}

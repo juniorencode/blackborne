@@ -1,0 +1,31 @@
+{
+  "name": "catalog",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "The visual catalog. Several rules in the foundations can only be checked here.",
+  "scripts": {
+    "dev": "storybook dev -p 6006 --host 127.0.0.1 --no-open",
+    "build": "storybook build -o storybook-static",
+    "typecheck": "tsc -p tsconfig.json",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@storybook/addon-a11y": "^10.6.0",
+    "@storybook/addon-docs": "^10.6.0",
+    "@storybook/react-vite": "^10.6.0",
+    "@types/node": "^26.4.1",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "@vitejs/plugin-react": "^6.1.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "storybook": "^10.6.0",
+    "typescript": "5.9.3",
+    "vite": "8.2.2"
+  },
+  "dependencies": {
+    "blackborne": "workspace:*"
+  }
+}

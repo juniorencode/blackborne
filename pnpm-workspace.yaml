@@ -7,3 +7,21 @@ packages:
 peerDependencyRules:
   allowedVersions:
     'eslint-plugin-jsx-a11y>eslint': '10'
+
+# Install scripts run arbitrary code, so every one is an explicit yes or no.
+# Leaving a package undecided is not neutral: pnpm treats a pending decision as
+# an error on a clean install, which is what CI does.
+#
+# Both of these compile a native binary only when no prebuilt one matches the
+# platform. Prebuilt ones do — @parcel/watcher-win32-x64 and @esbuild/win32-x64
+# on this machine, and their Linux equivalents in CI — so the scripts are a
+# source-build fallback we never reach. Answered no.
+allowBuilds:
+  '@parcel/watcher': false
+  esbuild: false
+
+# Keeps `pnpm run` from hard-failing its pre-flight check when node_modules
+# drifts from the lockfile. The signal is still worth hearing after a pull, so
+# it warns rather than blocks. CI installs with --frozen-lockfile and never
+# relies on it.
+verifyDepsBeforeRun: warn

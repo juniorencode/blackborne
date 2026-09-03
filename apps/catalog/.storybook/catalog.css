@@ -1,0 +1,51 @@
+/*
+ * The catalog's own styling. Not part of the library, and deliberately using a
+ * different font so an imposed typeface would be obvious immediately.
+ */
+body {
+  font-family: system-ui, sans-serif;
+}
+
+/* The resizable container from the preview decorator. */
+.catalog-resizable {
+  resize: horizontal;
+  overflow: auto;
+  min-width: 240px;
+  max-width: 100%;
+  /* Starts wide so a story looks normal, and is dragged narrow to test. */
+  width: 100%;
+  padding: 12px;
+  border: 1px dashed var(--bb-border);
+  border-radius: var(--bb-radius-md);
+}
+
+/* --- Helpers for the side-by-side and matrix stories ------------------ */
+.catalog-pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+.catalog-panel {
+  background: var(--bb-surface);
+  color: var(--bb-text);
+  border: 1px solid var(--bb-border);
+  border-radius: var(--bb-radius-lg);
+  padding: 12px;
+}
+.catalog-label {
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.65;
+  margin-block-end: 8px;
+}
+.catalog-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.catalog-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}

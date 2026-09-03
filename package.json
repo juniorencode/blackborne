@@ -18,9 +18,11 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
-    "typecheck": "tsc --build --force",
+    "typecheck": "pnpm -r --if-present typecheck",
     "test": "pnpm -r --if-present test",
-    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test"
+    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test",
+    "verify:full": "pnpm verify && pnpm --filter blackborne build && pnpm --filter catalog test:e2e",
+    "verify:clean": "node scripts/clean-install.mjs && pnpm verify"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

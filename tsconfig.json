@@ -1,4 +1,6 @@
 {
+  // Type checking is per package, so each one owns its own settings and the
+  // root does not become a bottleneck as packages are added.
   "files": [],
-  "references": [{ "path": "./packages/blackborne" }]
+  "include": []
 }

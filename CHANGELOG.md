@@ -10,6 +10,27 @@ minor versions. Every break is listed here with its migration.
 
 ## [Unreleased]
 
+### Added
+
+- `Button`, the first component of the rewrite. Five variants, three sizes,
+  and every state styled from React Aria's DOM state attributes.
+- The token layer: layer-1 primitives baked from Radix Colors (a development
+  dependency that never ships), layer-2 semantic tokens, and the three theme
+  axes — mode, brand colour and density — each set by an attribute on a
+  container.
+- `blackborne/styles.css`: one compiled stylesheet, every class and variable
+  carrying the `bb` prefix. **No global reset**, so it cannot overwrite a
+  consumer's own styles, and no font is imposed.
+- Two ways to theme, and they differ. Overriding a **semantic** token
+  (`--bb-accent`) works anywhere, because it holds a value. Overriding the
+  **brand scale** (`--bb-x-brand-9`) requires `data-bb-theme` on the same
+  element — a CSS `var()` resolves where it is declared, so without the
+  attribute the override silently does nothing. Documented in the package
+  README and in foundation 03 §3.1.
+- Public stacking tokens `--bb-layer-overlay`, `--bb-layer-popover` and
+  `--bb-layer-toast`, with wide gaps so a consumer can place their own layers
+  between them.
+
 ### Changed
 
 - The library is being rewritten from scratch. Nothing from `0.1.1` is carried

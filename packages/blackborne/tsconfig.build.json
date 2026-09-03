@@ -1,0 +1,16 @@
+{
+  // What gets published. Tests and stories are typechecked by tsconfig.json
+  // but must not emit declarations: a consumer has no use for Button.test.d.ts
+  // and it would sit in their node_modules forever.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "emitDeclarationOnly": true,
+    "declaration": true,
+    "rootDir": "src",
+    "outDir": "dist",
+    "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo"
+  },
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/**/*.stories.tsx"]
+}

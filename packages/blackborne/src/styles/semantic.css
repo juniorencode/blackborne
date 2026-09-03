@@ -1,0 +1,260 @@
+/*
+ * Layer 2: semantic tokens. THE ONLY VOCABULARY A COMPONENT MAY USE.
+ *
+ * Named by role, never by color (doc 03 §2). Every background declares the
+ * text colour that goes on it, and they are used together — there is no
+ * standalone "text on accent" token, there is a pair (doc 03 §4.0).
+ *
+ * Literal values are legitimate HERE and nowhere else: this is the layer where
+ * values live. A component that writes one is a defect (doc 03 §5, rule 1).
+ *
+ * The three theme axes are all implemented the same way: by redefining
+ * variables on a container (doc 03 §3). Nesting works because each axis only
+ * touches its own tokens.
+ */
+
+/*
+ * THE SELECTOR LIST MATTERS, and it is the least obvious thing in this file.
+ *
+ * A var() is substituted at the element that DECLARES it, not at the element
+ * that uses it. Declared only on :root, --bb-accent would freeze to the light
+ * brand colour, and swapping --bb-x-brand-9 further down the tree would change
+ * nothing — the semantic token was already resolved.
+ *
+ * Re-declaring the mapping on every theme scope is what makes the three axes
+ * actually work: inside such an element the var() resolves again, against
+ * whatever primitives that element has. One mapping, written once, correct in
+ * both modes.
+ *
+ * Two scopes:
+ *   [data-bb-mode]  — set by anyone choosing light or dark
+ *   [data-bb-theme] — set by a consumer who redefines the brand scale
+ *
+ * Overriding a SEMANTIC token needs no scope: it holds a value, not a
+ * reference, so plain inheritance delivers it anywhere. Only overriding a
+ * primitive needs one.
+ */
+:root,
+[data-bb-mode],
+[data-bb-theme] {
+  /* --- Surfaces ------------------------------------------------------ */
+  --bb-surface: var(--bb-x-gray-1);
+  --bb-surface-on: var(--bb-x-gray-12);
+  --bb-surface-raised: var(--bb-x-gray-2);
+  --bb-surface-raised-on: var(--bb-x-gray-12);
+  --bb-surface-sunken: var(--bb-x-gray-3);
+  --bb-surface-sunken-on: var(--bb-x-gray-12);
+  /* The resting background of a CONTROL, as opposed to a page or a panel.
+     Step 3 is the scale's dedicated component background; steps 1-2 are
+     page backgrounds. Using a page step here is what made a button read as
+     a hole punched in its panel rather than a control sitting on it — in
+     dark mode the button came out darker than the surface behind it.
+     Its hover and pressed states are surface-hover and surface-active,
+     which are already steps 4 and 5. */
+  --bb-surface-control: var(--bb-x-gray-3);
+  --bb-surface-control-on: var(--bb-x-gray-12);
+  --bb-surface-hover: var(--bb-x-gray-4);
+  --bb-surface-active: var(--bb-x-gray-5);
+  --bb-surface-selected: var(--bb-x-brand-3);
+  --bb-surface-selected-on: var(--bb-x-brand-11);
+  --bb-surface-disabled: var(--bb-x-gray-2);
+  --bb-surface-disabled-on: var(--bb-x-gray-9);
+  /* The scrim is deliberately dark in both modes: it is a shadow, not a
+     surface, so it does not follow the mode. */
+  --bb-surface-overlay: rgb(0 0 0 / 0.45);
+
+  /* --- Content — three levels, no fourth (doc 03 §4.7) --------------- */
+  --bb-text: var(--bb-x-gray-12);
+  --bb-text-muted: var(--bb-x-gray-11);
+  --bb-text-disabled: var(--bb-x-gray-9);
+  --bb-link: var(--bb-x-brand-11);
+
+  /* --- Borders — one colour for almost everything (doc 03 §4.6b) ----- */
+  --bb-border: var(--bb-x-gray-7);
+  --bb-border-strong: var(--bb-x-gray-8);
+  --bb-border-focus: var(--bb-x-brand-8);
+
+  /* --- Brand -------------------------------------------------------- */
+  --bb-accent: var(--bb-x-brand-9);
+  --bb-accent-on: #fff;
+  --bb-accent-hover: var(--bb-x-brand-10);
+  --bb-accent-active: var(--bb-x-brand-11);
+  --bb-accent-subtle: var(--bb-x-brand-3);
+  --bb-accent-subtle-on: var(--bb-x-brand-11);
+  /* Without these, a subtle button hovers from tinted to grey — it leaves
+     its own colour family, which reads as a different component. */
+  --bb-accent-subtle-hover: var(--bb-x-brand-4);
+  --bb-accent-subtle-active: var(--bb-x-brand-5);
+
+  /* --- States — all four with the same shape, so they interchange ---- */
+  --bb-danger: var(--bb-x-danger-9);
+  --bb-danger-on: #fff;
+  --bb-danger-subtle: var(--bb-x-danger-3);
+  --bb-danger-subtle-on: var(--bb-x-danger-11);
+
+  /* Amber's solid step is a LIGHT colour, so its pair is dark text. This is
+     the documented per-family exception from doc 03 §1.1, and the reason the
+     rule of pairs exists at all. */
+  --bb-warning: var(--bb-x-warning-9);
+  --bb-warning-on: var(--bb-x-warning-12);
+  --bb-warning-subtle: var(--bb-x-warning-3);
+  --bb-warning-subtle-on: var(--bb-x-warning-11);
+
+  --bb-success: var(--bb-x-success-9);
+  --bb-success-on: #fff;
+  --bb-success-subtle: var(--bb-x-success-3);
+  --bb-success-subtle-on: var(--bb-x-success-11);
+
+  --bb-info: var(--bb-x-info-9);
+  --bb-info-on: #fff;
+  --bb-info-subtle: var(--bb-x-info-3);
+  --bb-info-subtle-on: var(--bb-x-info-11);
+
+  /* --- Focus — ONE ring for the whole library (doc 03 §4) ----------- */
+  --bb-focus-ring: var(--bb-x-brand-8);
+  --bb-focus-ring-offset: var(--bb-surface);
+
+  /* --- Shape -------------------------------------------------------- */
+  --bb-radius-sm: 4px;
+  --bb-radius-md: 6px;
+  --bb-radius-lg: 8px;
+  --bb-radius-full: 9999px;
+
+  /* --- Elevation — own values in dark, not the same ones dimmed ----- */
+  --bb-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.06);
+  --bb-shadow-md: 0 4px 12px rgb(0 0 0 / 0.1);
+  --bb-shadow-lg: 0 12px 32px rgb(0 0 0 / 0.14);
+
+  /* --- Typography — the library imposes no font (doc 03 §4.1) ------- */
+  --bb-font-sans: inherit;
+  --bb-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --bb-text-xs: 12px;
+  --bb-text-sm: 13px;
+  --bb-text-md: 14px;
+  --bb-text-lg: 16px;
+  --bb-text-xl: 20px;
+  --bb-leading-tight: 1.25;
+  --bb-leading-normal: 1.5;
+  --bb-weight-normal: 400;
+  --bb-weight-strong: 600;
+
+  /* --- Motion — cancelled entirely under reduced motion ------------- */
+  --bb-duration-fast: 100ms;
+  --bb-duration-normal: 160ms;
+  --bb-ease: cubic-bezier(0.2, 0, 0.3, 1);
+
+  /* --- Stacking — PUBLIC, with wide gaps (doc 08 §2) ---------------- */
+  --bb-layer-overlay: 100;
+  --bb-layer-popover: 200;
+  --bb-layer-toast: 300;
+}
+
+/* ===================================================================
+ * Axis 1 · Mode
+ *
+ * Dark is NOT an inversion (doc 03 §6). The paired dark scales already
+ * carry the work, so most of the mapping is unchanged — which is the whole
+ * payoff of role-based scales. Only what genuinely differs is restated.
+ * =================================================================== */
+[data-bb-mode='dark'] {
+  /* Elevation in dark is communicated by a LIGHTER surface, not by a
+     shadow — shadows are barely visible on a dark ground (doc 03 §5,
+     rule 5). The dark scales run dark-to-light, so the same step indices
+     produce the correct direction without a second mapping. */
+  --bb-surface: var(--bb-x-gray-1);
+  --bb-surface-raised: var(--bb-x-gray-3);
+  --bb-surface-sunken: var(--bb-x-gray-2);
+
+  /* Neither pure white on pure black nor the reverse (doc 03 §5, rule 6).
+     Radix's step 12 is already an off-white here, so nothing to correct. */
+
+  /* Shadows get their own values, deeper and tighter, rather than the light
+     ones dimmed. They are a secondary signal in dark, not the primary one. */
+  --bb-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.3);
+  --bb-shadow-md: 0 4px 12px rgb(0 0 0 / 0.4);
+  --bb-shadow-lg: 0 12px 32px rgb(0 0 0 / 0.5);
+
+  /* The scrim needs to be heavier to read against a dark page. */
+  --bb-surface-overlay: rgb(0 0 0 / 0.6);
+}
+
+/* ===================================================================
+ * Axis 2 · Density
+ *
+ * Moves spacing, control heights and row heights. Touches NO colour, and
+ * does not touch the base text size: compact trims air, not legibility
+ * (doc 03 §3).
+ *
+ * The minimum hit area is respected at every density (doc 06 §3). Where a
+ * control looks shorter than 24px of touchable space, transparent padding
+ * makes up the difference — the control may look shorter than its active
+ * zone measures.
+ * =================================================================== */
+:root,
+[data-bb-density='normal'] {
+  --bb-space-1: 2px;
+  --bb-space-2: 4px;
+  --bb-space-3: 8px;
+  --bb-space-4: 12px;
+  --bb-space-5: 16px;
+  --bb-space-6: 24px;
+  --bb-space-7: 32px;
+  --bb-space-8: 48px;
+
+  --bb-control-height-sm: 32px;
+  --bb-control-height-md: 40px;
+  --bb-control-height-lg: 48px;
+  --bb-control-padding-x: 12px;
+  --bb-row-height: 40px;
+
+  /* Exactly two vertical gaps in a form, decided once (doc 03 §4.6c). */
+  --bb-field-gap-inner: 4px;
+  --bb-field-gap: 16px;
+}
+
+[data-bb-density='compact'] {
+  --bb-space-1: 2px;
+  --bb-space-2: 4px;
+  --bb-space-3: 6px;
+  --bb-space-4: 8px;
+  --bb-space-5: 12px;
+  --bb-space-6: 16px;
+  --bb-space-7: 24px;
+  --bb-space-8: 32px;
+
+  --bb-control-height-sm: 28px;
+  --bb-control-height-md: 32px;
+  --bb-control-height-lg: 40px;
+  --bb-control-padding-x: 8px;
+  --bb-row-height: 32px;
+
+  --bb-field-gap-inner: 2px;
+  --bb-field-gap: 12px;
+}
+
+/* ===================================================================
+ * Axis 3 · Brand colour
+ *
+ * A consumer redefines the brand scale and every semantic token derives on
+ * its own — that is the point of the layering (doc 03 §7, level 1). Nothing
+ * below this line exists in the library; it documents the contract.
+ *
+ *   [data-bb-mode='light'] {
+ *     --bb-x-brand-3:  <their step 3>;
+ *     --bb-x-brand-9:  <their step 9>;
+ *     ...
+ *   }
+ *
+ * If their brand is a light colour, they must also set --bb-accent-on to a
+ * dark value. The rule of pairs is what makes that a single, obvious line
+ * instead of a contrast bug nobody notices.
+ * =================================================================== */
+
+/* Reduced motion removes animation entirely; it is not softened
+ * (doc 09 §2). Declared here so no component has to remember. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --bb-duration-fast: 0ms;
+    --bb-duration-normal: 0ms;
+  }
+}
