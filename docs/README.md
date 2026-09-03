@@ -17,6 +17,15 @@ Foundations and the component catalog are kept apart on purpose: the catalog is
 a living list that changes weekly, and mixing them would make the foundations
 look less stable than they are.
 
+## Start here
+
+| If you want to…                  | Read                                                                                                  |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Add a component                  | [contributing/new-component.md](./contributing/new-component.md)                                      |
+| Open a pull request              | [contributing/commits-and-prs.md](./contributing/commits-and-prs.md)                                  |
+| Work with an AI agent            | [../CLAUDE.md](../CLAUDE.md) and [../packages/blackborne/CLAUDE.md](../packages/blackborne/CLAUDE.md) |
+| Know why the toolchain is pinned | [decisions/0001-toolchain-versions.md](./decisions/0001-toolchain-versions.md)                        |
+
 ## Foundations
 
 Written in build order. Two of them (02 and 08) are deliberately written
@@ -38,6 +47,10 @@ _after_ the React Aria spike, because that spike is what decides their content.
 Start with 01. It is the first one written and the last one changed, and it
 carries the twelve-checkbox gate every component must pass.
 
+Until they are written, the rules they will hold are summarised — deliberately
+briefly — in [../CLAUDE.md](../CLAUDE.md) and
+[contributing/new-component.md](./contributing/new-component.md).
+
 ## Where the project stands
 
 The library is being rewritten from scratch. Phases, in order:
@@ -46,7 +59,7 @@ The library is being rewritten from scratch. Phases, in order:
 | ----- | --------------------------------------------------------------------- | ------- |
 | F1    | Close the past: tag, prune branches, empty the repo, deprecate on npm | Done    |
 | F2    | Skeleton: workspace, root files, CI, templates                        | Done    |
-| F3    | Documentation for AI agents                                           | Pending |
+| F3    | Documentation for AI agents                                           | Done    |
 | F4    | Foundations, written in English                                       | Pending |
 | F5    | One day with React Aria — decides documents 02 and 08                 | Pending |
 | F6    | Full pipeline with the first component (`Button`)                     | Pending |
