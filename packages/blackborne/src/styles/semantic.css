@@ -13,7 +13,30 @@
  * touches its own tokens.
  */
 
-:root {
+/*
+ * THE SELECTOR LIST MATTERS, and it is the least obvious thing in this file.
+ *
+ * A var() is substituted at the element that DECLARES it, not at the element
+ * that uses it. Declared only on :root, --bb-accent would freeze to the light
+ * brand colour, and swapping --bb-x-brand-9 further down the tree would change
+ * nothing — the semantic token was already resolved.
+ *
+ * Re-declaring the mapping on every theme scope is what makes the three axes
+ * actually work: inside such an element the var() resolves again, against
+ * whatever primitives that element has. One mapping, written once, correct in
+ * both modes.
+ *
+ * Two scopes:
+ *   [data-bb-mode]  — set by anyone choosing light or dark
+ *   [data-bb-theme] — set by a consumer who redefines the brand scale
+ *
+ * Overriding a SEMANTIC token needs no scope: it holds a value, not a
+ * reference, so plain inheritance delivers it anywhere. Only overriding a
+ * primitive needs one.
+ */
+:root,
+[data-bb-mode],
+[data-bb-theme] {
   /* --- Surfaces ------------------------------------------------------ */
   --bb-surface: var(--bb-x-gray-1);
   --bb-surface-on: var(--bb-x-gray-12);
@@ -21,6 +44,15 @@
   --bb-surface-raised-on: var(--bb-x-gray-12);
   --bb-surface-sunken: var(--bb-x-gray-3);
   --bb-surface-sunken-on: var(--bb-x-gray-12);
+  /* The resting background of a CONTROL, as opposed to a page or a panel.
+     Step 3 is the scale's dedicated component background; steps 1-2 are
+     page backgrounds. Using a page step here is what made a button read as
+     a hole punched in its panel rather than a control sitting on it — in
+     dark mode the button came out darker than the surface behind it.
+     Its hover and pressed states are surface-hover and surface-active,
+     which are already steps 4 and 5. */
+  --bb-surface-control: var(--bb-x-gray-3);
+  --bb-surface-control-on: var(--bb-x-gray-12);
   --bb-surface-hover: var(--bb-x-gray-4);
   --bb-surface-active: var(--bb-x-gray-5);
   --bb-surface-selected: var(--bb-x-brand-3);
@@ -49,6 +81,10 @@
   --bb-accent-active: var(--bb-x-brand-11);
   --bb-accent-subtle: var(--bb-x-brand-3);
   --bb-accent-subtle-on: var(--bb-x-brand-11);
+  /* Without these, a subtle button hovers from tinted to grey — it leaves
+     its own colour family, which reads as a different component. */
+  --bb-accent-subtle-hover: var(--bb-x-brand-4);
+  --bb-accent-subtle-active: var(--bb-x-brand-5);
 
   /* --- States — all four with the same shape, so they interchange ---- */
   --bb-danger: var(--bb-x-danger-9);

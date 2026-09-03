@@ -55,7 +55,11 @@ container. They combine, and they nest.
 The library does **not** detect the system colour scheme, and does not
 remember a choice. Your application decides and passes the resolved value.
 
-Colours are CSS variables, so overriding is CSS:
+Colours are CSS variables, so overriding is CSS. There are two levels, and
+they differ in one important way.
+
+**Overriding a semantic token works anywhere.** It holds a value, so plain
+inheritance delivers it:
 
 ```css
 :root {
@@ -67,6 +71,30 @@ Colours are CSS variables, so overriding is CSS:
 Every background token has a paired `-on` token for the text that goes on it.
 Set them together — that is what keeps contrast correct when a brand colour is
 light.
+
+**Overriding the brand scale needs `data-bb-theme` on the same element.**
+The scale is a set of primitives that the semantic tokens are computed from,
+and a CSS `var()` resolves where it is declared, not where it is used. The
+attribute is what tells the library to recompute the mapping in that scope:
+
+```css
+.my-brand {
+  --bb-x-brand-3: #f3e8ff;
+  --bb-x-brand-9: #7c3aed;
+  --bb-x-brand-10: #6d28d9;
+  --bb-x-brand-11: #5b21b6;
+}
+```
+
+```tsx
+<div className="my-brand" data-bb-theme="my-brand">
+  …
+</div>
+```
+
+Without the attribute the override silently does nothing — the semantic tokens
+stay resolved against the default scale. If a brand override appears to have no
+effect, that attribute is the first thing to check.
 
 ## RTL
 

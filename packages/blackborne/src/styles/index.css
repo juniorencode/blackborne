@@ -38,6 +38,8 @@
   --color-surface: var(--bb-surface);
   --color-surface-raised: var(--bb-surface-raised);
   --color-surface-sunken: var(--bb-surface-sunken);
+  --color-surface-control: var(--bb-surface-control);
+  --color-surface-control-on: var(--bb-surface-control-on);
   --color-surface-hover: var(--bb-surface-hover);
   --color-surface-active: var(--bb-surface-active);
   --color-surface-selected: var(--bb-surface-selected);
@@ -59,6 +61,8 @@
   --color-accent-active: var(--bb-accent-active);
   --color-accent-subtle: var(--bb-accent-subtle);
   --color-accent-subtle-on: var(--bb-accent-subtle-on);
+  --color-accent-subtle-hover: var(--bb-accent-subtle-hover);
+  --color-accent-subtle-active: var(--bb-accent-subtle-active);
 
   --color-danger: var(--bb-danger);
   --color-danger-on: var(--bb-danger-on);

@@ -26,14 +26,14 @@ const VARIANT: Record<ButtonVariant, string> = {
     'bb:data-pressed:bg-accent-active'
   ),
   secondary: cx(
-    'bb:bg-surface bb:text-text bb:border-border',
+    'bb:bg-surface-control bb:text-surface-control-on bb:border-border',
     'bb:data-hovered:bg-surface-hover',
     'bb:data-pressed:bg-surface-active'
   ),
   subtle: cx(
     'bb:bg-accent-subtle bb:text-accent-subtle-on bb:border-transparent',
-    'bb:data-hovered:bg-surface-hover',
-    'bb:data-pressed:bg-surface-active'
+    'bb:data-hovered:bg-accent-subtle-hover',
+    'bb:data-pressed:bg-accent-subtle-active'
   ),
   danger: cx(
     'bb:bg-danger bb:text-danger-on bb:border-danger',
@@ -79,7 +79,11 @@ const BASE = cx(
   'bb:data-focus-visible:shadow-[0_0_0_2px_var(--bb-focus-ring-offset),0_0_0_4px_var(--bb-focus-ring)]',
   'bb:data-disabled:bg-surface-disabled bb:data-disabled:text-text-disabled',
   'bb:data-disabled:border-border bb:data-disabled:cursor-not-allowed',
-  'bb:data-pending:cursor-progress'
+  // Pending had only a cursor change, which is invisible until you hover:
+  // the state was in the API and not on the screen. Doc 09 §3 requires a
+  // visible response to every interaction. A spinner would be better and
+  // needs the Spinner piece, which is not built yet.
+  'bb:data-pending:cursor-progress bb:data-pending:opacity-70'
 );
 
 export interface ButtonProps extends Omit<
