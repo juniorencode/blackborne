@@ -33,20 +33,22 @@ look less stable than they are.
 The full index, with what each one settles, is in
 [foundations/README.md](./foundations/README.md).
 
-| #   | Document                                                                 | Status                               |
-| --- | ------------------------------------------------------------------------ | ------------------------------------ |
-| 01  | [Principles and non-goals](./foundations/01-principles.md)               | Adopted                              |
-| 02  | API conventions                                                          | Pending — needs the React Aria spike |
-| 03  | [Tokens and theme](./foundations/03-tokens-and-theme.md)                 | Adopted                              |
-| 04  | [Responsive and adaptability](./foundations/04-responsive.md)            | Adopted                              |
-| 05  | [Languages and formatting](./foundations/05-languages-and-formatting.md) | Adopted                              |
-| 06  | [Accessibility](./foundations/06-accessibility.md)                       | Adopted                              |
-| 07  | [Forms](./foundations/07-forms.md)                                       | Adopted                              |
-| 08  | Layers and focus                                                         | Pending — needs the React Aria spike |
-| 09  | [Behavior and interaction](./foundations/09-behavior.md)                 | Adopted                              |
-| 10  | [Quality and verification](./foundations/10-quality-and-verification.md) | Adopted                              |
+| #   | Document                                                                 | Status  |
+| --- | ------------------------------------------------------------------------ | ------- |
+| 01  | [Principles and non-goals](./foundations/01-principles.md)               | Adopted |
+| 02  | [API conventions](./foundations/02-api-conventions.md)                   | Adopted |
+| 03  | [Tokens and theme](./foundations/03-tokens-and-theme.md)                 | Adopted |
+| 04  | [Responsive and adaptability](./foundations/04-responsive.md)            | Adopted |
+| 05  | [Languages and formatting](./foundations/05-languages-and-formatting.md) | Adopted |
+| 06  | [Accessibility](./foundations/06-accessibility.md)                       | Adopted |
+| 07  | [Forms](./foundations/07-forms.md)                                       | Adopted |
+| 08  | [Layers and focus](./foundations/08-layers-and-focus.md)                 | Adopted |
+| 09  | [Behavior and interaction](./foundations/09-behavior.md)                 | Adopted |
+| 10  | [Quality and verification](./foundations/10-quality-and-verification.md) | Adopted |
 
-Documents 02 and 08 are not late: they describe things that can only be decided
+Documents 02 and 08 were written last on purpose: they describe things only
+building can decide. Both mark what was verified in a browser and what was
+not — 08 §6 leaves one check openly pending rather than claiming it.
 by building, and writing them from imagination would produce rules the first
 real component contradicts.
 
@@ -60,7 +62,7 @@ The library is being rewritten from scratch. Phases, in order:
 | F2    | Skeleton: workspace, root files, CI, templates                        | Done    |
 | F3    | Documentation for AI agents                                           | Done    |
 | F4    | Foundations, written in English                                       | Done    |
-| F5    | One day with React Aria — decides documents 02 and 08                 | Pending |
+| F5    | One day with React Aria — decided documents 02 and 08                 | Done    |
 | F6    | Full pipeline with the first component (`Button`)                     | Pending |
 
 Nothing from the `0.1.1` codebase is carried over. It stays available under the

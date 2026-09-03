@@ -8,30 +8,30 @@ Read in order. 01 is the one the others hang off.
 | #   | Document                                                     | What it settles                                                                                             |
 | --- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
 | 01  | [Principles and non-goals](./01-principles.md)               | What the library is, the six principles, the twelve non-goals, and the entry gate every component must pass |
-| 02  | API conventions                                              | _Pending — written after the React Aria spike, which is what decides its content_                           |
+| 02  | [API conventions](./02-api-conventions.md)                   | How props are named, how variants are expressed, what is composed and what is a prop                        |
 | 03  | [Tokens and theme](./03-tokens-and-theme.md)                 | The visual vocabulary: three token layers, three theme axes, and how they are restricted                    |
 | 04  | [Responsive and adaptability](./04-responsive.md)            | How a component behaves when space changes. The container decides, not the window                           |
 | 05  | [Languages and formatting](./05-languages-and-formatting.md) | The five fronts of multi-language, and why the time zone is never the browser's                             |
 | 06  | [Accessibility](./06-accessibility.md)                       | WCAG 2.2 AA as an entry condition, and who is responsible for what                                          |
 | 07  | [Forms](./07-forms.md)                                       | Where the library ends and the project begins: restrict input, present the error                            |
-| 08  | Layers and focus                                             | _Pending — written after the React Aria spike_                                                              |
+| 08  | [Layers and focus](./08-layers-and-focus.md)                 | Dialogs, popovers, drawers and toasts; stacking tokens, focus, and scroll locking                           |
 | 09  | [Behavior and interaction](./09-behavior.md)                 | How it feels. Built for people who use it eight hours a day                                                 |
 | 10  | [Quality and verification](./10-quality-and-verification.md) | What turns every rule above into an automated check                                                         |
 
-## The two that are missing on purpose
+## Why 02 and 08 came last
 
-Documents 02 and 08 are not late — they are sequenced. Both describe things
-that can only be decided by building: how props are named and how variants are
-expressed (02), and how portals, focus, cascading dismissal and scroll locking
-compose (08).
+They were not late — they were sequenced. Both describe things that can only be
+decided by building: how props are named and how variants are expressed (02),
+and how portals, focus, cascading dismissal and scroll locking compose (08).
 
-Writing them from imagination would produce rules the first real component
-contradicts. They are written after a day spent with the headless base building
-a dialog with a dropdown inside and a field with a label, description and
-error — which is also the day that validates the two bottlenecks of the build
-order.
+Writing them from imagination would have produced rules the first real
+component contradicts. They were written after a day with the headless base,
+building a dialog with a select inside it and a field with a label, description
+and error — the same day that validates the two bottlenecks of the build order.
 
-Until then: **do not invent a rule these documents will define.** Ask.
+Both mark explicitly what was **verified in a browser** and what is still
+believed on faith. Document 08 §6 leaves one check openly pending rather than
+claiming it.
 
 ## Related, but deliberately not a foundation
 

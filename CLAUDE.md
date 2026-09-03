@@ -32,16 +32,18 @@ this file is out of date. Fix this file.
 `docs/README.md` carries the phase table and is kept current. Check it before
 assuming anything exists.
 
-At the time of writing: the skeleton is up, eight of the ten foundations are
-written, and **no component exists yet**. The two that are missing — 02 · API
-conventions and 08 · Layers and focus — are deliberately unwritten until a
-spike with React Aria decides their content.
+At the time of writing: the skeleton is up, **all ten foundations are written**,
+and **no component exists yet**. The first one, `Button`, arrives with the build
+pipeline.
 
-This has a direct consequence for you: **do not invent a rule that a foundation
-is going to define.** If you need a decision that belongs in an unwritten
-document — how props are named, how layers stack, how variants are expressed —
-say so and ask. Choosing quietly leaves a fact in the code that will contradict
-the document written next week, and nobody will notice until it is expensive.
+So the rules are settled and you should follow them rather than invent. Two
+things to keep in mind anyway:
+
+- **Some rules are marked as not yet verified.** Document 08 §6 leaves scroll
+  locking across nested layers openly pending. Where a document says something
+  is unverified, treat it as unverified — do not quietly promote it.
+- **The file layout of a component is still open.** It is settled with the
+  first component. If you need it before then, ask.
 
 ## Commands
 
@@ -119,6 +121,9 @@ Things that look like improvements and are not:
 - **Do not build a component that does everything through props.** Complex sets
   (tables, dense forms) ship as hooks + presentational pieces + a thin optional
   assembly. An assembly may not have a capability its pieces lack.
+- **Do not rename props to match HTML.** The library uses `isDisabled` and
+  `onPress`, following the headless base. This looks like a bug to fix and is
+  not: see `docs/decisions/0007-prop-names-follow-the-base.md`.
 - **Do not reimplement accessibility or a solved engine.** Dialogs, menus,
   focus and keyboard come from React Aria. Table state, drag and drop, rich
   text and phone formatting come from existing libraries. Building one by hand

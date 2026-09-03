@@ -90,15 +90,15 @@ validates both.
 
 ### Level 3 · Layers — depend on the portal and focus infrastructure
 
-| Component  | Notes                                                                                | Status  | Asked for by |
-| ---------- | ------------------------------------------------------------------------------------ | ------- | ------------ |
-| Layer base | **Bottleneck.** Portal, focus, cascading dismissal, scroll locking (doc 08, pending) | Pending | —            |
-| `Popover`  |                                                                                      | Pending | —            |
-| `Dialog`   | The legitimate viewport exception ([doc 04](./foundations/04-responsive.md), §5)     | Pending | —            |
-| `Drawer`   |                                                                                      | Pending | —            |
-| `Tooltip`  | Never the only route to information ([doc 06](./foundations/06-accessibility.md))    | Pending | —            |
-| `Menu`     |                                                                                      | Pending | —            |
-| `Toast`    | Includes the queue and its management                                                | Pending | —            |
+| Component  | Notes                                                                                                               | Status   | Asked for by |
+| ---------- | ------------------------------------------------------------------------------------------------------------------- | -------- | ------------ |
+| Layer base | **Bottleneck.** Portal, focus, cascading dismissal, scroll locking ([doc 08](./foundations/08-layers-and-focus.md)) | Pending  | —            |
+| `Popover`  |                                                                                                                     | Pending  | —            |
+| `Dialog`   | The legitimate viewport exception ([doc 04](./foundations/04-responsive.md), §5)                                    | Pending  | —            |
+| `Drawer`   |                                                                                                                     | Pending  | —            |
+| `Tooltip`  | Never the only route to information ([doc 06](./foundations/06-accessibility.md))                                   | Pending  | —            |
+| `Menu`     |                                                                                                                     | Pending  | —            |
+| `Toast`    | **Deferred** — the base's toast API is still unstable. See [doc 08](./foundations/08-layers-and-focus.md) §7        | Deferred | —            |
 
 ### Level 4 · Composed fields — `Field` + layers
 
@@ -138,20 +138,21 @@ The table pieces come afterwards, with the architecture already validated.
 The section that gains the most value over time: without it, every few months
 someone proposes the same thing again.
 
-| What                                                | Decision  | Reason                                                           |
-| --------------------------------------------------- | --------- | ---------------------------------------------------------------- |
-| A closed data table                                 | **Never** | Non-goal 4. Pieces and hooks are offered instead                 |
-| Application layout (shell, side navigation, header) | **Never** | Non-goal 1: it belongs to the project                            |
-| Any domain component                                | **Never** | P1                                                               |
-| A form generator from a schema                      | **Never** | Doc 07, §9                                                       |
-| Charts                                              | **Never** | A different product category                                     |
-| An icon pack                                        | **Never** | Icons are received; see level 0                                  |
-| Rich text editor                                    | Deferred  | A specialised library. Only if two projects ask                  |
-| File upload                                         | Deferred  | Until there is real demand                                       |
-| Color picker                                        | Deferred  | Until there is real demand                                       |
-| Phone field                                         | Deferred  | Requires a heavy dependency. The cost is assessed when asked for |
-| Signature pad                                       | Deferred  | Too specific                                                     |
-| `Avatar`, `Accordion`, `Progress`, `Slider`         | Deferred  | Likely, but no demand yet. The rule of two                       |
+| What                                                | Decision  | Reason                                                                                                                            |
+| --------------------------------------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| A closed data table                                 | **Never** | Non-goal 4. Pieces and hooks are offered instead                                                                                  |
+| Application layout (shell, side navigation, header) | **Never** | Non-goal 1: it belongs to the project                                                                                             |
+| Any domain component                                | **Never** | P1                                                                                                                                |
+| A form generator from a schema                      | **Never** | Doc 07, §9                                                                                                                        |
+| Charts                                              | **Never** | A different product category                                                                                                      |
+| An icon pack                                        | **Never** | Icons are received; see level 0                                                                                                   |
+| Rich text editor                                    | Deferred  | A specialised library. Only if two projects ask                                                                                   |
+| File upload                                         | Deferred  | Until there is real demand                                                                                                        |
+| Color picker                                        | Deferred  | Until there is real demand                                                                                                        |
+| Phone field                                         | Deferred  | Requires a heavy dependency. The cost is assessed when asked for                                                                  |
+| Signature pad                                       | Deferred  | Too specific                                                                                                                      |
+| `Toast`                                             | Deferred  | The base's toast API is still `UNSTABLE_` in 1.21.0. Revisited on real demand ([doc 08](./foundations/08-layers-and-focus.md) §7) |
+| `Avatar`, `Accordion`, `Progress`, `Slider`         | Deferred  | Likely, but no demand yet. The rule of two                                                                                        |
 
 ## 8. How this is maintained
 
