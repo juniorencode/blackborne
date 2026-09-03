@@ -21,6 +21,12 @@ minor versions. Every break is listed here with its migration.
 - `blackborne/styles.css`: one compiled stylesheet, every class and variable
   carrying the `bb` prefix. **No global reset**, so it cannot overwrite a
   consumer's own styles, and no font is imposed.
+- Two ways to theme, and they differ. Overriding a **semantic** token
+  (`--bb-accent`) works anywhere, because it holds a value. Overriding the
+  **brand scale** (`--bb-x-brand-9`) requires `data-bb-theme` on the same
+  element — a CSS `var()` resolves where it is declared, so without the
+  attribute the override silently does nothing. Documented in the package
+  README and in foundation 03 §3.1.
 - Public stacking tokens `--bb-layer-overlay`, `--bb-layer-popover` and
   `--bb-layer-toast`, with wide gaps so a consumer can place their own layers
   between them.
