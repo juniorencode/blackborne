@@ -1,0 +1,219 @@
+/*
+ * GENERATED FILE — do not edit.
+ * Source: @radix-ui/colors (a development dependency, never shipped).
+ * Regenerate: pnpm --filter blackborne tokens
+ *
+ * Layer 1: primitives. Values with no meaning. NO COMPONENT MAY USE THESE.
+ * The `x` in --bb-x-* marks them private (doc 03 §4.5). Only semantic.css
+ * reads them; lint enforces the rest.
+ *
+ * Each step has a fixed role, identical in both modes, which is the whole
+ * reason for choosing role-based scales (doc 03 §1.1):
+ *
+ *   1-2   backgrounds          7    normal border
+ *   3     component background 8    strong border, focus ring
+ *   4     hovered              9    solid
+ *   5     pressed / selected   10   solid hovered
+ *   6     subtle border        11   low-contrast text
+ *                              12   high-contrast text
+ */
+
+:root {
+    /* gray — slate */
+    --bb-x-gray-1: #fcfcfd;
+    --bb-x-gray-2: #f9f9fb;
+    --bb-x-gray-3: #f0f0f3;
+    --bb-x-gray-4: #e8e8ec;
+    --bb-x-gray-5: #e0e1e6;
+    --bb-x-gray-6: #d9d9e0;
+    --bb-x-gray-7: #cdced6;
+    --bb-x-gray-8: #b9bbc6;
+    --bb-x-gray-9: #8b8d98;
+    --bb-x-gray-10: #80838d;
+    --bb-x-gray-11: #60646c;
+    --bb-x-gray-12: #1c2024;
+
+    /* brand — indigo */
+    --bb-x-brand-1: #fdfdfe;
+    --bb-x-brand-2: #f7f9ff;
+    --bb-x-brand-3: #edf2fe;
+    --bb-x-brand-4: #e1e9ff;
+    --bb-x-brand-5: #d2deff;
+    --bb-x-brand-6: #c1d0ff;
+    --bb-x-brand-7: #abbdf9;
+    --bb-x-brand-8: #8da4ef;
+    --bb-x-brand-9: #3e63dd;
+    --bb-x-brand-10: #3358d4;
+    --bb-x-brand-11: #3a5bc7;
+    --bb-x-brand-12: #1f2d5c;
+
+    /* danger — red */
+    --bb-x-danger-1: #fffcfc;
+    --bb-x-danger-2: #fff7f7;
+    --bb-x-danger-3: #feebec;
+    --bb-x-danger-4: #ffdbdc;
+    --bb-x-danger-5: #ffcdce;
+    --bb-x-danger-6: #fdbdbe;
+    --bb-x-danger-7: #f4a9aa;
+    --bb-x-danger-8: #eb8e90;
+    --bb-x-danger-9: #e5484d;
+    --bb-x-danger-10: #dc3e42;
+    --bb-x-danger-11: #ce2c31;
+    --bb-x-danger-12: #641723;
+
+    /* warning — amber */
+    --bb-x-warning-1: #fefdfb;
+    --bb-x-warning-2: #fefbe9;
+    --bb-x-warning-3: #fff7c2;
+    --bb-x-warning-4: #ffee9c;
+    --bb-x-warning-5: #fbe577;
+    --bb-x-warning-6: #f3d673;
+    --bb-x-warning-7: #e9c162;
+    --bb-x-warning-8: #e2a336;
+    --bb-x-warning-9: #ffc53d;
+    --bb-x-warning-10: #ffba18;
+    --bb-x-warning-11: #ab6400;
+    --bb-x-warning-12: #4f3422;
+
+    /* success — green */
+    --bb-x-success-1: #fbfefc;
+    --bb-x-success-2: #f4fbf6;
+    --bb-x-success-3: #e6f6eb;
+    --bb-x-success-4: #d6f1df;
+    --bb-x-success-5: #c4e8d1;
+    --bb-x-success-6: #adddc0;
+    --bb-x-success-7: #8eceaa;
+    --bb-x-success-8: #5bb98b;
+    --bb-x-success-9: #30a46c;
+    --bb-x-success-10: #2b9a66;
+    --bb-x-success-11: #218358;
+    --bb-x-success-12: #193b2d;
+
+    /* info — blue */
+    --bb-x-info-1: #fbfdff;
+    --bb-x-info-2: #f4faff;
+    --bb-x-info-3: #e6f4fe;
+    --bb-x-info-4: #d5efff;
+    --bb-x-info-5: #c2e5ff;
+    --bb-x-info-6: #acd8fc;
+    --bb-x-info-7: #8ec8f6;
+    --bb-x-info-8: #5eb1ef;
+    --bb-x-info-9: #0090ff;
+    --bb-x-info-10: #0588f0;
+    --bb-x-info-11: #0d74ce;
+    --bb-x-info-12: #113264;
+
+    /* gray-a — slateA */
+    --bb-x-gray-a-1: #00005503;
+    --bb-x-gray-a-2: #00005506;
+    --bb-x-gray-a-3: #0000330f;
+    --bb-x-gray-a-4: #00002d17;
+    --bb-x-gray-a-5: #0009321f;
+    --bb-x-gray-a-6: #00002f26;
+    --bb-x-gray-a-7: #00062e32;
+    --bb-x-gray-a-8: #00083046;
+    --bb-x-gray-a-9: #00051d74;
+    --bb-x-gray-a-10: #00071b7f;
+    --bb-x-gray-a-11: #0007149f;
+    --bb-x-gray-a-12: #000509e3;
+}
+
+[data-bb-mode='dark'] {
+    /* gray — slateDark */
+    --bb-x-gray-1: #111113;
+    --bb-x-gray-2: #18191b;
+    --bb-x-gray-3: #212225;
+    --bb-x-gray-4: #272a2d;
+    --bb-x-gray-5: #2e3135;
+    --bb-x-gray-6: #363a3f;
+    --bb-x-gray-7: #43484e;
+    --bb-x-gray-8: #5a6169;
+    --bb-x-gray-9: #696e77;
+    --bb-x-gray-10: #777b84;
+    --bb-x-gray-11: #b0b4ba;
+    --bb-x-gray-12: #edeef0;
+
+    /* brand — indigoDark */
+    --bb-x-brand-1: #11131f;
+    --bb-x-brand-2: #141726;
+    --bb-x-brand-3: #182449;
+    --bb-x-brand-4: #1d2e62;
+    --bb-x-brand-5: #253974;
+    --bb-x-brand-6: #304384;
+    --bb-x-brand-7: #3a4f97;
+    --bb-x-brand-8: #435db1;
+    --bb-x-brand-9: #3e63dd;
+    --bb-x-brand-10: #5472e4;
+    --bb-x-brand-11: #9eb1ff;
+    --bb-x-brand-12: #d6e1ff;
+
+    /* danger — redDark */
+    --bb-x-danger-1: #191111;
+    --bb-x-danger-2: #201314;
+    --bb-x-danger-3: #3b1219;
+    --bb-x-danger-4: #500f1c;
+    --bb-x-danger-5: #611623;
+    --bb-x-danger-6: #72232d;
+    --bb-x-danger-7: #8c333a;
+    --bb-x-danger-8: #b54548;
+    --bb-x-danger-9: #e5484d;
+    --bb-x-danger-10: #ec5d5e;
+    --bb-x-danger-11: #ff9592;
+    --bb-x-danger-12: #ffd1d9;
+
+    /* warning — amberDark */
+    --bb-x-warning-1: #16120c;
+    --bb-x-warning-2: #1d180f;
+    --bb-x-warning-3: #302008;
+    --bb-x-warning-4: #3f2700;
+    --bb-x-warning-5: #4d3000;
+    --bb-x-warning-6: #5c3d05;
+    --bb-x-warning-7: #714f19;
+    --bb-x-warning-8: #8f6424;
+    --bb-x-warning-9: #ffc53d;
+    --bb-x-warning-10: #ffd60a;
+    --bb-x-warning-11: #ffca16;
+    --bb-x-warning-12: #ffe7b3;
+
+    /* success — greenDark */
+    --bb-x-success-1: #0e1512;
+    --bb-x-success-2: #121b17;
+    --bb-x-success-3: #132d21;
+    --bb-x-success-4: #113b29;
+    --bb-x-success-5: #174933;
+    --bb-x-success-6: #20573e;
+    --bb-x-success-7: #28684a;
+    --bb-x-success-8: #2f7c57;
+    --bb-x-success-9: #30a46c;
+    --bb-x-success-10: #33b074;
+    --bb-x-success-11: #3dd68c;
+    --bb-x-success-12: #b1f1cb;
+
+    /* info — blueDark */
+    --bb-x-info-1: #0d1520;
+    --bb-x-info-2: #111927;
+    --bb-x-info-3: #0d2847;
+    --bb-x-info-4: #003362;
+    --bb-x-info-5: #004074;
+    --bb-x-info-6: #104d87;
+    --bb-x-info-7: #205d9e;
+    --bb-x-info-8: #2870bd;
+    --bb-x-info-9: #0090ff;
+    --bb-x-info-10: #3b9eff;
+    --bb-x-info-11: #70b8ff;
+    --bb-x-info-12: #c2e6ff;
+
+    /* gray-a — slateDarkA */
+    --bb-x-gray-a-1: #00000000;
+    --bb-x-gray-a-2: #d8f4f609;
+    --bb-x-gray-a-3: #ddeaf814;
+    --bb-x-gray-a-4: #d3edf81d;
+    --bb-x-gray-a-5: #d9edfe25;
+    --bb-x-gray-a-6: #d6ebfd30;
+    --bb-x-gray-a-7: #d9edff40;
+    --bb-x-gray-a-8: #d9edff5d;
+    --bb-x-gray-a-9: #dfebfd6d;
+    --bb-x-gray-a-10: #e5edfd7b;
+    --bb-x-gray-a-11: #f1f7feb5;
+    --bb-x-gray-a-12: #fcfdffef;
+}

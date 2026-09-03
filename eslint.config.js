@@ -3,6 +3,11 @@ import tseslint from 'typescript-eslint';
 import reactHooks from 'eslint-plugin-react-hooks';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
 import globals from 'globals';
+import {
+  restrictedGlobals,
+  restrictedImports,
+  restrictedSyntax
+} from './eslint.rules.js';
 
 export default tseslint.config(
   {
@@ -10,7 +15,9 @@ export default tseslint.config(
       '**/dist/**',
       '**/node_modules/**',
       '**/coverage/**',
-      '**/storybook-static/**'
+      '**/storybook-static/**',
+      // Generated from @radix-ui/colors; regenerate rather than edit.
+      'packages/*/src/styles/primitives.css'
     ]
   },
 
@@ -18,10 +25,12 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
 
   // ---------------------------------------------------------------------
-  // Library source. Everything the package ships is linted here.
+  // Shipped library source. Everything in the package obeys the
+  // foundations, and this block is what makes that true rather than hoped.
   // ---------------------------------------------------------------------
   {
     files: ['packages/*/src/**/*.{ts,tsx}'],
+    ignores: ['**/*.stories.tsx', '**/*.test.{ts,tsx}'],
     languageOptions: {
       globals: globals.browser,
       parserOptions: {
@@ -40,47 +49,47 @@ export default tseslint.config(
       // The public surface is the API. An implicit `any` in it is a hole.
       '@typescript-eslint/explicit-module-boundary-types': 'error',
 
-      // -----------------------------------------------------------------
-      // The project's own rules live here.
-      //
-      // Doc 10 turns the foundations into lint: a rule that is only written
-      // down gets respected for a few weeks and then yields to the first
-      // deadline. These are enforcement, not style:
-      //
-      //   - no literal colors, no primitive tokens inside a component
-      //   - no physical directions (left/right) — always start/end
-      //   - no literal user-facing strings, accessibility labels included
-      //   - no viewport breakpoints outside portal components
-      //   - no imports into another component's internal path
-      //   - no access to document, localStorage or globals
-      //   - no generic element with a click handler acting as a button
-      //
-      // They are written in phase F6, alongside the first component, so each
-      // rule is built against real code instead of a hypothetical.
-      // -----------------------------------------------------------------
-      'no-restricted-globals': [
-        'error',
-        {
-          name: 'localStorage',
-          message:
-            'The library keeps no global state (principle P3). State enters through props or the config provider.'
-        },
-        {
-          name: 'sessionStorage',
-          message:
-            'The library keeps no global state (principle P3). State enters through props or the config provider.'
-        }
-      ]
+      // The project's own rules. See eslint.rules.js for why each exists.
+      'no-restricted-syntax': ['error', ...restrictedSyntax],
+      'no-restricted-globals': ['error', ...restrictedGlobals],
+      'no-restricted-imports': ['error', restrictedImports]
     }
   },
 
   // ---------------------------------------------------------------------
-  // Config files at the root run in Node, not in the browser.
+  // Stories and tests. Not published, so the content rules do not apply:
+  // their literal strings and sample colours are the point. The
+  // accessibility and hook rules still do.
   // ---------------------------------------------------------------------
   {
-    files: ['*.{js,mjs,ts}', '.storybook/**/*.{js,ts}'],
+    files: [
+      'packages/*/src/**/*.{stories,test}.{ts,tsx}',
+      'apps/**/*.{ts,tsx}'
+    ],
     languageOptions: {
-      globals: globals.node
+      globals: globals.browser,
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname
+      }
+    },
+    plugins: { 'react-hooks': reactHooks, 'jsx-a11y': jsxA11y },
+    rules: {
+      ...reactHooks.configs.recommended.rules,
+      ...jsxA11y.flatConfigs.recommended.rules
     }
+  },
+
+  // ---------------------------------------------------------------------
+  // Config files and scripts run in Node, not in the browser.
+  // ---------------------------------------------------------------------
+  {
+    files: [
+      '*.{js,mjs,ts}',
+      '**/*.config.{js,mjs,ts}',
+      '**/scripts/**/*.mjs',
+      '.storybook/**/*.{js,ts}'
+    ],
+    languageOptions: { globals: globals.node }
   }
 );

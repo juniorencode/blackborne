@@ -47,13 +47,31 @@
     "react-dom": "^19.0.0"
   },
   "scripts": {
-    "test": "vitest run --passWithNoTests"
+    "tokens": "node scripts/generate-primitives.mjs",
+    "build:types": "tsc -p tsconfig.build.json",
+    "build:js": "vite build",
+    "build:css": "tailwindcss -i src/styles/index.css -o dist/styles.css",
+    "build": "pnpm build:types && pnpm build:js && pnpm build:css",
+    "test": "vitest run --passWithNoTests",
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json"
   },
   "devDependencies": {
+    "@radix-ui/colors": "3.0.0",
+    "@tailwindcss/cli": "4.3.3",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.7",
+    "@types/node": "^26.4.1",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",
+    "@vitejs/plugin-react": "^6.1.1",
+    "jsdom": "^30.0.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "tailwindcss": "4.3.3",
+    "vite": "8.2.2",
     "vitest": "^4.1.11"
+  },
+  "dependencies": {
+    "react-aria-components": "1.21.0"
   }
 }

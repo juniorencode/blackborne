@@ -1,0 +1,153 @@
+/*
+ * The stylesheet the consumer imports: `import 'blackborne/styles.css'`.
+ *
+ * Two things it deliberately does NOT do:
+ *
+ * 1. No preflight. Tailwind's reset targets `*` and would overwrite the
+ *    consumer's own styles. A library may not ship a global reset — only
+ *    `theme` and `utilities` are imported, never `base`.
+ * 2. No font-family. The tokens inherit from the project (doc 03 §4.1).
+ *
+ * Everything carries the `bb` prefix, on classes and on variables, so nothing
+ * collides with the consumer's own Tailwind (doc 03 §5, rule 7).
+ */
+@layer theme, utilities;
+
+@import 'tailwindcss/theme.css' layer(theme) prefix(bb);
+@import 'tailwindcss/utilities.css' layer(utilities) prefix(bb);
+
+@import './primitives.css';
+@import './semantic.css';
+
+@source '../**/*.{ts,tsx}';
+
+/*
+ * `inline` matters here: it substitutes the value into each utility instead of
+ * emitting a second variable. Without it every token would exist twice — once
+ * as --bb-surface and again as --bb-color-surface — which fattens the CSS and
+ * doubles the public surface for nothing (doc 03 §4.5).
+ *
+ * `--x-*: initial` clears Tailwind's defaults first. This is the restriction
+ * from doc 03 §4.4: the wrong thing is not forbidden, it is made impossible to
+ * express. There is no `bb:bg-blue-500` because no such utility exists.
+ */
+@theme inline {
+  /* --- Colours: semantic only. No primitive is reachable from a utility. */
+  --color-*: initial;
+
+  --color-surface: var(--bb-surface);
+  --color-surface-raised: var(--bb-surface-raised);
+  --color-surface-sunken: var(--bb-surface-sunken);
+  --color-surface-hover: var(--bb-surface-hover);
+  --color-surface-active: var(--bb-surface-active);
+  --color-surface-selected: var(--bb-surface-selected);
+  --color-surface-disabled: var(--bb-surface-disabled);
+  --color-surface-overlay: var(--bb-surface-overlay);
+
+  --color-text: var(--bb-text);
+  --color-text-muted: var(--bb-text-muted);
+  --color-text-disabled: var(--bb-text-disabled);
+  --color-link: var(--bb-link);
+
+  --color-border: var(--bb-border);
+  --color-border-strong: var(--bb-border-strong);
+  --color-border-focus: var(--bb-border-focus);
+
+  --color-accent: var(--bb-accent);
+  --color-accent-on: var(--bb-accent-on);
+  --color-accent-hover: var(--bb-accent-hover);
+  --color-accent-active: var(--bb-accent-active);
+  --color-accent-subtle: var(--bb-accent-subtle);
+  --color-accent-subtle-on: var(--bb-accent-subtle-on);
+
+  --color-danger: var(--bb-danger);
+  --color-danger-on: var(--bb-danger-on);
+  --color-danger-subtle: var(--bb-danger-subtle);
+  --color-danger-subtle-on: var(--bb-danger-subtle-on);
+
+  --color-warning: var(--bb-warning);
+  --color-warning-on: var(--bb-warning-on);
+  --color-warning-subtle: var(--bb-warning-subtle);
+  --color-warning-subtle-on: var(--bb-warning-subtle-on);
+
+  --color-success: var(--bb-success);
+  --color-success-on: var(--bb-success-on);
+  --color-success-subtle: var(--bb-success-subtle);
+  --color-success-subtle-on: var(--bb-success-subtle-on);
+
+  --color-info: var(--bb-info);
+  --color-info-on: var(--bb-info-on);
+  --color-info-subtle: var(--bb-info-subtle);
+  --color-info-subtle-on: var(--bb-info-subtle-on);
+
+  /* --- Radii: four, and no more (doc 03 §4.3). */
+  --radius-*: initial;
+  --radius-sm: var(--bb-radius-sm);
+  --radius-md: var(--bb-radius-md);
+  --radius-lg: var(--bb-radius-lg);
+  --radius-full: var(--bb-radius-full);
+
+  /* --- Control heights: three sizes, moved by density. Restricted because
+         this is exactly where a system drifts — eight arbitrary heights and
+         nothing aligns any more. */
+  --height-*: initial;
+  --height-control-sm: var(--bb-control-height-sm);
+  --height-control-md: var(--bb-control-height-md);
+  --height-control-lg: var(--bb-control-height-lg);
+  --height-row: var(--bb-row-height);
+
+  /* --- Type: short scale, base 14, secondary 12. */
+  --text-*: initial;
+  --text-xs: var(--bb-text-xs);
+  --text-sm: var(--bb-text-sm);
+  --text-md: var(--bb-text-md);
+  --text-lg: var(--bb-text-lg);
+  --text-xl: var(--bb-text-xl);
+
+  --font-weight-*: initial;
+  --font-weight-normal: var(--bb-weight-normal);
+  --font-weight-strong: var(--bb-weight-strong);
+
+  --leading-*: initial;
+  --leading-tight: var(--bb-leading-tight);
+  --leading-normal: var(--bb-leading-normal);
+
+  /* --- Shadows: own values per mode, set in semantic.css. */
+  --shadow-*: initial;
+  --shadow-sm: var(--bb-shadow-sm);
+  --shadow-md: var(--bb-shadow-md);
+  --shadow-lg: var(--bb-shadow-lg);
+
+  /* --- Fonts: no family is imposed; sans inherits (doc 03 §4.1). */
+  --font-*: initial;
+  --font-sans: var(--bb-font-sans);
+  --font-mono: var(--bb-font-mono);
+
+  /* --- Motion. */
+  --ease-*: initial;
+  --ease-standard: var(--bb-ease);
+
+  /* --- Viewport breakpoints are DELETED, not discouraged.
+         P4 says the container decides, not the window. Clearing the scale
+         means there is no bb:md: variant to write — the wrong thing is not
+         forbidden, it does not exist (doc 03 §4.4). The one legitimate
+         exception is a component rendered in a portal, whose real container
+         IS the window (doc 04 §5); those declare their own media query in
+         plain CSS, with the reason written next to it. */
+  --breakpoint-*: initial;
+
+  /* --- Container sizes instead: a SHORT scale, named relative to the
+         container and never to a device. "mobile", "tablet" and "desktop"
+         are forbidden names — they smuggle in assumptions about the device,
+         the pointer and the window (doc 04 §4). Injectable: a consumer
+         redefines these like any other token. */
+  --container-*: initial;
+  --container-narrow: 24rem;
+  --container-medium: 30rem;
+  --container-wide: 48rem;
+
+  /* --- Spacing is left FREE on purpose. Doc 03 §4.4 warns that
+         over-restricting backfires: a system that gets in the way every day
+         gets switched off. Padding, margins and gaps are already used
+         coherently, so they are not policed. */
+}

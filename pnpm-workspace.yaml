@@ -7,3 +7,21 @@ packages:
 peerDependencyRules:
   allowedVersions:
     'eslint-plugin-jsx-a11y>eslint': '10'
+
+# Install scripts run arbitrary code, so each one is an explicit decision.
+#
+# @parcel/watcher (pulled in by the Tailwind CLI) ships prebuilt binaries per
+# platform — the one we use is in @parcel/watcher-win32-x64 — so its install
+# script is a source-build fallback we never need. Left unbuilt deliberately.
+ignoredBuiltDependencies:
+  - '@parcel/watcher'
+
+# An unbuilt-but-approved script leaves pnpm permanently "unsatisfied", and the
+# default pre-flight turns that into a hard failure on every `pnpm run`.
+# Warning keeps the signal — a stale node_modules after a pull is worth
+# hearing about — without blocking. CI installs with --frozen-lockfile, so it
+# never relies on this check.
+verifyDepsBeforeRun: warn
+
+allowBuilds:
+  '@parcel/watcher': set this to true or false

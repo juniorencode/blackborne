@@ -1,0 +1,10 @@
+{
+  // Build configuration and scripts. These run in Node, so they get Node
+  // types — kept apart so the library source never does.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": ["vite.config.ts", "vitest.config.ts", "scripts"]
+}

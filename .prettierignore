@@ -2,3 +2,4 @@ pnpm-lock.yaml
 dist/
 coverage/
 storybook-static/
+packages/*/src/styles/primitives.css
