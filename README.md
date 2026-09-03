@@ -47,16 +47,19 @@ pnpm verify
 
 `docs/` is the source of truth. Start at [docs/README.md](./docs/README.md).
 
-The two worth reading before writing any code:
+The three worth reading before writing any code:
 
+- [Principles and non-goals](./docs/foundations/01-principles.md) — what the
+  library will and will not do, and the twelve-checkbox gate every component
+  must pass.
 - [Adding a component](./docs/contributing/new-component.md) — whether it
-  belongs in the library at all, how to design it as a suite, and the
-  twelve-checkbox gate it has to pass.
+  belongs in the library at all, and how to design it as a suite.
 - [Commits and pull requests](./docs/contributing/commits-and-prs.md) — the
   format, and the branching model.
 
-The ten foundation documents are being written (phase F4);
-[docs/README.md](./docs/README.md) tracks what exists and what does not.
+Eight of the ten foundations are written. The two that are missing — API
+conventions, and layers and focus — wait on a spike with the headless base,
+because that is what decides their content.
 
 If you work with an AI agent in this repository, [CLAUDE.md](./CLAUDE.md) maps
 it: layout, commands, the hard rules, and the traps specific to this project.

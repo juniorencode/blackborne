@@ -32,10 +32,10 @@ this file is out of date. Fix this file.
 `docs/README.md` carries the phase table and is kept current. Check it before
 assuming anything exists.
 
-At the time of writing: the skeleton is up, the foundations are **not yet
-written**, and **no component exists**. Two of the ten foundations (API
-conventions, and layers and focus) are deliberately unwritten until a spike
-with React Aria decides their content.
+At the time of writing: the skeleton is up, eight of the ten foundations are
+written, and **no component exists yet**. The two that are missing — 02 · API
+conventions and 08 · Layers and focus — are deliberately unwritten until a
+spike with React Aria decides their content.
 
 This has a direct consequence for you: **do not invent a rule that a foundation
 is going to define.** If you need a decision that belongs in an unwritten
@@ -58,7 +58,8 @@ CI runs exactly `pnpm verify`, so a green local run means a green CI run.
 
 ## Hard rules
 
-These come from the foundations. They are not style preferences, and a change
+These come from the foundations in [`docs/foundations/`](./docs/foundations/README.md),
+which now hold the full reasoning. They are not style preferences, and a change
 that breaks one does not merge.
 
 1. **Semantic tokens only.** No literal colors, no primitive tokens inside a
