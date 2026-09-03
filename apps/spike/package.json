@@ -1,0 +1,22 @@
+{
+  "name": "spike",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Throwaway playground for the React Aria spike. Not part of the library, never published, deleted when phase F5 closes.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "react": "^19.2.8",
+    "react-aria-components": "^1.21.0",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "@vitejs/plugin-react": "^6.1.1",
+    "vite": "^8.2.2"
+  }
+}

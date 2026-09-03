@@ -1,0 +1,243 @@
+/*
+ * Styled ONLY against React Aria's DOM state attributes. No conditional class
+ * strings from JS anywhere. If a state cannot be reached from CSS here, that is
+ * a finding for document 02.
+ */
+:root {
+  --surface: #fff;
+  --surface-raised: #fff;
+  --surface-sunken: #f6f7f9;
+  --text: #16181d;
+  --text-muted: #5b616e;
+  --border: #d6d9e0;
+  --accent: #2a5bd7;
+  --accent-on: #fff;
+  --danger: #c4321f;
+  --radius-md: 6px;
+  --focus-ring: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent);
+  font-family: system-ui, sans-serif;
+  color: var(--text);
+}
+
+body {
+  margin: 0;
+  background: var(--surface-sunken);
+  font-size: 14px;
+}
+.page {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: 2rem 1rem 6rem;
+}
+section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-block: 1.5rem;
+}
+h1 {
+  font-size: 1.4rem;
+}
+h2 {
+  font-size: 1.05rem;
+  margin-top: 0;
+}
+.note {
+  color: var(--text-muted);
+  margin-block: 0.5rem;
+}
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.row {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+/* --- Field: label + control + description + error ------------------- */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.field [slot='description'] {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.react-aria-Label {
+  font-weight: 600;
+}
+.react-aria-Label::after {
+  content: '';
+}
+.field:has([data-required]) .react-aria-Label::after,
+.field[data-required] .react-aria-Label::after {
+  content: ' *';
+  color: var(--danger);
+}
+
+.react-aria-Input,
+.btn-select {
+  height: 40px;
+  padding-inline: 0.625rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  font: inherit;
+  color: var(--text);
+}
+.react-aria-Input[data-focused],
+.btn-select[data-focused] {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+.react-aria-Input[data-invalid] {
+  border-color: var(--danger);
+}
+.react-aria-Input[data-disabled],
+.btn[data-disabled] {
+  background: var(--surface-sunken);
+  color: var(--text-muted);
+}
+.react-aria-Input[data-readonly] {
+  background: var(--surface-sunken);
+}
+.react-aria-Input::placeholder {
+  color: var(--text-muted);
+}
+
+.react-aria-FieldError {
+  color: var(--danger);
+  font-size: 12px;
+}
+
+/* --- Button --------------------------------------------------------- */
+.btn {
+  height: 40px;
+  padding-inline: 0.875rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  font: inherit;
+  cursor: pointer;
+}
+.btn[data-hovered] {
+  background: var(--surface-sunken);
+}
+.btn[data-pressed] {
+  transform: translateY(1px);
+}
+.btn[data-focus-visible] {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-on);
+  border-color: var(--accent);
+}
+.btn-primary[data-hovered] {
+  filter: brightness(0.94);
+}
+.btn-small {
+  height: 28px;
+  padding-inline: 0.5rem;
+  font-size: 12px;
+}
+.btn-select {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  cursor: pointer;
+  text-align: start;
+}
+
+/* --- Layers --------------------------------------------------------- */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 0.35);
+  display: grid;
+  place-items: center;
+  z-index: 100;
+}
+.modal {
+  width: min(32rem, calc(100vw - 2rem));
+}
+.dialog {
+  background: var(--surface-raised);
+  border-radius: 8px;
+  padding: 1.25rem;
+  outline: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.dialog h2 {
+  margin: 0;
+}
+
+.popover {
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
+  width: var(--trigger-width);
+  z-index: 200;
+}
+.listbox {
+  padding: 0.25rem;
+  outline: none;
+}
+.listbox-item {
+  padding: 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  outline: none;
+}
+.listbox-item[data-focused] {
+  background: var(--accent);
+  color: var(--accent-on);
+}
+.listbox-item[data-selected]::after {
+  content: ' ✓';
+}
+
+.toast-region {
+  position: fixed;
+  inset-block-end: 1rem;
+  inset-inline-end: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  z-index: 300;
+}
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--text);
+  color: var(--surface);
+  padding: 0.625rem 0.75rem;
+  border-radius: var(--radius-md);
+}
+.toast .btn {
+  background: transparent;
+  color: inherit;
+  border-color: currentColor;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
