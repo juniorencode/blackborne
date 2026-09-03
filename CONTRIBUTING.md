@@ -45,6 +45,12 @@ so it cannot say where focus goes, and it does not resolve CSS variables, so
 it cannot say what colour an element ended up. A token bug that made dark
 mode do nothing at all passed every unit test.
 
+**After touching `pnpm-workspace.yaml`, `.npmrc` or anything about
+dependencies, run `pnpm verify:clean`.** It removes every `node_modules` and
+installs the way CI does. A local `pnpm install` reuses what is already
+there, so a setting left in a pending state warns locally and fails only on
+a clean install — which is how a branch that was green everywhere broke CI.
+
 ## Branches and commits
 
 The full format is in
