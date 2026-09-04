@@ -7,6 +7,7 @@
  * Component by component everything looks right; together is where the three
  * greys you thought were one show up.
  */
+import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Button } from '../Button';
 import { Checkbox } from './Checkbox';
@@ -66,10 +67,13 @@ export const States: Story = {
     <div className="catalog-stack" style={{ maxWidth: 420 }}>
       <Checkbox>Unchecked</Checkbox>
       <Checkbox defaultSelected>Checked</Checkbox>
-      <Checkbox isIndeterminate>Indeterminate</Checkbox>
-      <Checkbox isIndeterminate defaultSelected>
-        Indeterminate and selected at once
-      </Checkbox>
+      {/*
+        These two are HELD states: the props are fixed, so clicking changes the
+        underlying value but not the appearance. That is the component being
+        controlled, not the component ignoring you — see the SelectAll story
+        for indeterminate behaving as it does in real use.
+      */}
+      <Checkbox isIndeterminate>Indeterminate (held)</Checkbox>
       <Checkbox {...forced('data-hovered')}>Hovered</Checkbox>
       <Checkbox {...forced('data-pressed')}>Pressed</Checkbox>
       <Checkbox {...forced('data-focus-visible')}>Focused</Checkbox>
@@ -99,6 +103,10 @@ export const States: Story = {
  * order a generator happened to emit them in. **Exactly one mark is visible in
  * every row**, and a browser test asserts it — this is not something to check
  * by squinting.
+ *
+ * Every row here holds its state deliberately, so clicking changes the value
+ * underneath without changing what is drawn. That is the point: a static truth
+ * table is what a screenshot tool can check, and it cannot hover or click.
  */
 export const Marks: Story = {
   render: () => (
@@ -119,6 +127,72 @@ export const Marks: Story = {
       </div>
     </div>
   )
+};
+
+/**
+ * **Indeterminate as it actually works.**
+ *
+ * The state exists for exactly one pattern: a parent over a set, where "some
+ * but not all" is a third thing that neither checked nor unchecked can say.
+ * Shown on a lone checkbox with a fixed prop it looks broken, because there is
+ * no way out of it — which is why this story exists and why the earlier ones
+ * label themselves as held.
+ *
+ * Note who owns the state: the parent's appearance is DERIVED from the
+ * children on every render, and the component is told what to be. It never
+ * decides for itself, which is what makes it usable for a pattern the library
+ * cannot anticipate.
+ */
+function SelectAll() {
+  const [items, setItems] = useState([
+    { id: 'email', label: 'Email', on: true },
+    { id: 'sms', label: 'SMS', on: false },
+    { id: 'push', label: 'Push', on: false }
+  ]);
+
+  const selected = items.filter(item => item.on).length;
+  const all = selected === items.length;
+  const some = selected > 0 && !all;
+
+  return (
+    <div className="catalog-stack" style={{ maxWidth: 420 }}>
+      <Checkbox
+        isSelected={all}
+        isIndeterminate={some}
+        onChange={next => setItems(items.map(item => ({ ...item, on: next })))}
+      >
+        All notifications
+      </Checkbox>
+      <div
+        className="catalog-stack"
+        style={{ marginInlineStart: 'var(--bb-space-6)' }}
+      >
+        {items.map(item => (
+          <Checkbox
+            key={item.id}
+            isSelected={item.on}
+            onChange={next =>
+              setItems(
+                items.map(other =>
+                  other.id === item.id ? { ...other, on: next } : other
+                )
+              )
+            }
+          >
+            {item.label}
+          </Checkbox>
+        ))}
+      </div>
+      <p className="catalog-label" style={{ marginBlockEnd: 0 }}>
+        {`${selected} of ${items.length} selected`}
+      </p>
+    </div>
+  );
+}
+
+export const SelectAllPattern: Story = {
+  name: 'Select all (indeterminate in use)',
+  render: () => <SelectAll />
 };
 
 /** Light and dark side by side, never by toggling (doc 03 §6). */

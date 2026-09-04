@@ -61,3 +61,81 @@ test('the two marks are never shown at once', async ({ page }) => {
     expect(both, `${id} shows both marks`).toBe(false);
   }
 });
+
+/*
+ * Indeterminate in the pattern it exists for.
+ *
+ * The static rows above hold their state on purpose, which makes them look
+ * unresponsive — that is what prompted the question "is this a bug?". It is
+ * not: the component is controlled and does what it is told. These tests
+ * assert the other half, which the static rows cannot show: that when the
+ * consumer stops saying "indeterminate", the component stops drawing it.
+ */
+test.describe('select all', () => {
+  const PARENT = 'All notifications';
+
+  test.beforeEach(async ({ page }) => {
+    await page.goto(
+      '/iframe.html?id=components-checkbox--select-all-pattern&viewMode=story'
+    );
+  });
+
+  /*
+   * Click the LABEL, not the input.
+   *
+   * The base renders a visually hidden input inside a label, so the input has
+   * no hit target of its own — clicking it is not what a person does and
+   * Playwright rightly refuses. The label is the control as far as anyone
+   * using it is concerned.
+   */
+  const toggle = (page: import('@playwright/test').Page, text: string) =>
+    page.locator('label').filter({ hasText: text }).first().click();
+
+  const marks = (page: import('@playwright/test').Page) =>
+    page.getByRole('checkbox', { name: PARENT }).evaluate(input => {
+      const row = input.closest('label')?.parentElement as HTMLElement;
+      return {
+        tick: getComputedStyle(row.querySelector('.bb-checkbox-check')!)
+          .display,
+        dash: getComputedStyle(row.querySelector('.bb-checkbox-dash')!).display
+      };
+    });
+
+  /* Polled, because the marks change after a state update rather than with it. */
+  const expectMarks = async (
+    page: import('@playwright/test').Page,
+    expected: { tick: string; dash: string }
+  ) => {
+    await expect.poll(() => marks(page)).toEqual(expected);
+  };
+
+  test('some but not all shows the dash', async ({ page }) => {
+    // Email starts on, so the parent is partly selected from the first render.
+    await expectMarks(page, { tick: 'none', dash: 'block' });
+  });
+
+  test('selecting every child turns the dash into a tick', async ({ page }) => {
+    await toggle(page, 'SMS');
+    await toggle(page, 'Push');
+
+    // The consumer stopped saying "indeterminate", so the component stopped
+    // drawing it. That is the half a held row cannot demonstrate.
+    await expectMarks(page, { tick: 'block', dash: 'none' });
+  });
+
+  test('clearing every child leaves no mark at all', async ({ page }) => {
+    await toggle(page, 'Email');
+    await expectMarks(page, { tick: 'none', dash: 'none' });
+  });
+
+  test('pressing the parent while mixed selects everything', async ({
+    page
+  }) => {
+    await toggle(page, PARENT);
+
+    for (const name of ['Email', 'SMS', 'Push']) {
+      await expect(page.getByRole('checkbox', { name })).toBeChecked();
+    }
+    await expectMarks(page, { tick: 'block', dash: 'none' });
+  });
+});
