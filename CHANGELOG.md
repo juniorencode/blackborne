@@ -12,6 +12,11 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- `Checkbox`, with an optional description and error beneath it. The base
+  renders those two for a lone checkbox but does not reference them from the
+  input, so the association is supplied here — a description nothing points
+  at does not exist for a screen reader.
+
 - `TextField`, the first field: label, control, description and error related
   to each other, with all eight states from the forms foundation. The library
   presents the error; deciding there is one, and writing it, stays with your

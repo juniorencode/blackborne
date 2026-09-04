@@ -1,12 +1,21 @@
 import type { Decorator, Preview } from '@storybook/react-vite';
 
 /*
- * The catalog imports the BUILT package, exactly as a consumer does — not the
- * source. That means it validates the artifact that actually ships: the
- * compiled, prefixed stylesheet and the published exports. The cost is that
- * `pnpm --filter blackborne build` has to run before changes show up, which is
- * the right trade: a catalog that renders something consumers never receive
- * proves nothing.
+ * The stylesheet is the BUILT artifact; the components are the source.
+ *
+ * Worth stating precisely, because the split is deliberate and an earlier
+ * version of this comment overstated it:
+ *
+ *   - `blackborne/styles.css` resolves through the workspace link to
+ *     dist/styles.css, so the catalog renders against the compiled, prefixed
+ *     CSS a consumer actually receives. That is where prefixing, the token
+ *     layers and the absence of a global reset live, and none of it can be
+ *     verified against source.
+ *   - The components come from source, because the stories sit beside them and
+ *     import them by relative path. That buys fast reloading while building.
+ *
+ * The consequence to remember: after changing anything under styles/, run
+ * `pnpm --filter blackborne build` or the catalog keeps showing the old CSS.
  */
 import 'blackborne/styles.css';
 import './catalog.css';

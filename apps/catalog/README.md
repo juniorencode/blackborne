@@ -26,12 +26,20 @@ explicit that the real test is narrowing the _container_ with the window wide,
 because that is the situation a consumer is in. Storybook's viewport tool
 resizes the window, which is the wrong axis.
 
-## It consumes the built package
+## Built CSS, source components
 
-The catalog imports `blackborne/styles.css` and the published exports, not the
-source. So it validates the artifact that actually ships, and `pnpm --filter
-blackborne build` has to run before changes appear. A catalog rendering
-something consumers never receive would prove nothing.
+The split is deliberate:
+
+- **The stylesheet is the built artifact.** `blackborne/styles.css` resolves to
+  `dist/styles.css`, so the catalog renders against the compiled, prefixed CSS
+  a consumer receives. Prefixing, the token layers and the absence of a global
+  reset only exist there — none of it can be checked against source.
+- **The components are the source**, because the stories sit beside them and
+  import them by relative path. That buys fast reloading while building.
+
+So after changing anything under `src/styles/`, run `pnpm --filter blackborne
+build` or the catalog keeps showing the old CSS. Storybook also caches its
+transforms: if an export you just added appears to be missing, restart it.
 
 ## Browser checks
 
