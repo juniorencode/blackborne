@@ -85,14 +85,14 @@ validates both.
 
 ### Level 2 · Simple fields — depend on `Field`
 
-| Component     | Notes                                                                                                  | Status   |
-| ------------- | ------------------------------------------------------------------------------------------------------ | -------- |
-| `TextField`   | The first field. All eight states from doc 07 §6                                                       | **Done** |
-| `TextArea`    |                                                                                                        | Pending  |
-| `NumberField` | Locale-aware formatting; the base handles it                                                           | Pending  |
-| `Checkbox`    | The layout that made the field structure insufficient: the label sits beside the control, not above it | **Done** |
-| `RadioGroup`  |                                                                                                        | Pending  |
-| `Switch`      | Different from `Checkbox`: immediate action, not a form value                                          | Pending  |
+| Component     | Notes                                                                                                    | Status   |
+| ------------- | -------------------------------------------------------------------------------------------------------- | -------- |
+| `TextField`   | The first field. All eight states from doc 07 §6                                                         | **Done** |
+| `TextArea`    |                                                                                                          | Pending  |
+| `NumberField` | Locale-aware formatting; the base handles it                                                             | Pending  |
+| `Checkbox`    | The layout that made the field structure insufficient: the label sits beside the control, not above it   | **Done** |
+| `RadioGroup`  | Two levels of label: one for the group, one per option. The base wires the description and error to both | **Done** |
+| `Switch`      | Deliberately NOT a checkbox: immediate action, so no error state and no required (see decision 0009)     | **Done** |
 
 ### Level 3 · Layers — depend on the portal and focus infrastructure
 

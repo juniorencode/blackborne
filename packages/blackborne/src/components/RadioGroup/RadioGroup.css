@@ -1,0 +1,18 @@
+/*
+ * Layer 3: a component exception, for the same reason Checkbox has one.
+ *
+ * Which mark shows is a precedence rule, and two utilities of equal
+ * specificity are resolved by generator output order rather than by the order
+ * they are written in the component. Stated here instead.
+ */
+.bb-radio-dot {
+  display: none;
+  block-size: 0.375rem;
+  inline-size: 0.375rem;
+  border-radius: var(--bb-radius-full);
+  background: var(--bb-accent-on);
+}
+
+[data-selected] .bb-radio-dot {
+  display: block;
+}
