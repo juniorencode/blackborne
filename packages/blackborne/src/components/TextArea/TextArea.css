@@ -1,0 +1,15 @@
+/*
+ * Layer 3: resize behaviour, which utilities do not express and which needs
+ * saying out loud because it is a deliberate choice.
+ *
+ * Vertical only. Someone given a small box for a long note will want it
+ * bigger, and removing that to keep a layout tidy trades their problem for
+ * ours. Horizontal is disabled because widening a field can push it out of its
+ * container, and doc 04 §7 puts that on whoever caused it.
+ */
+.bb-textarea {
+  resize: vertical;
+  /* Never smaller than the rows it was given, so dragging cannot collapse it
+     into an unusable sliver. */
+  min-block-size: fit-content;
+}

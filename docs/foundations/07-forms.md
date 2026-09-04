@@ -145,7 +145,40 @@ does not enter.
 5. It does not save drafts and does not remember state between sessions (P3).
 6. It does not require any form or validation library.
 
-## 10. Verification
+## 10. Arriving at a field
+
+What happens to the text already in a field when someone tabs into it. It
+sounds like a detail and it is not: in an application where someone enters a
+hundred records a day, this is the difference between typing over a value and
+having to clear it first.
+
+| Field                          | Arriving with a value           |
+| ------------------------------ | ------------------------------- |
+| Single-line, including numeric | **The whole value is selected** |
+| Multi-line                     | **The caret goes to the start** |
+| Any field, empty               | The caret goes to the start     |
+
+The split is by _how the field is used_, not by how it looks. A single-line
+value is nearly always replaced — you tab to `12` to make it `40` — so
+arriving with it selected means one keystroke does the job. A long note is
+edited, and arriving with three paragraphs selected means one keystroke
+destroys them.
+
+This is written down because it diverged without anyone noticing, and it
+diverged precisely because it was not written down. The behaviour comes from
+the headless base and is correct; the risk is that a minor upgrade changes it
+silently, in a way no unit test would catch — a test environment without a
+layout engine does not implement selection on focus.
+
+**It is enforced in a browser** and belongs to the same family of guarantees as
+doc 09 §8: a key means the same thing everywhere, and one exception costs the
+credibility of the other twenty-nine components.
+
+Note what this rule does NOT cover: which field receives focus first when a
+form opens. Nothing is autofocused without the person having asked
+([doc 06](./06-accessibility.md) §4, point 8).
+
+## 11. Verification
 
 - [ ] A field works on its own, with no form and no library around it
 - [ ] All eight states are in the visual catalog
@@ -162,3 +195,5 @@ does not enter.
 - [ ] In a 320px container the form is still usable
 - [ ] Vertical spacing uses exactly two values: inside the field and between
       fields (doc 03, §4.6c)
+- [ ] Arriving by keyboard does the right thing for the kind of field: a
+      single-line value is selected, a multi-line one is not (§10)

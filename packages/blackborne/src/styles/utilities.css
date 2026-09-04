@@ -1,0 +1,24 @@
+/*
+ * Library-wide helpers that are not tokens and not per-component.
+ *
+ * Kept deliberately short. Doc 03 §4.4 warns against bespoke classes wrapping
+ * utilities: they create a second vocabulary, break when the fourth component
+ * needs a variation, and hide what a component does. A rule earns a place here
+ * only when a utility cannot express it.
+ */
+
+/*
+ * Tabular figures, for every number read in a column — numeric cells, numeric
+ * fields, amounts, quantities (doc 03 §4.2). Digits then take the same width
+ * and columns line up.
+ *
+ * NEVER on running text, where proportional figures read better. That is why
+ * this is opt-in rather than set on a container.
+ *
+ * `slashed-zero` comes along because these are numbers being read carefully; a
+ * zero that cannot be confused with an O is worth having when someone is
+ * checking an amount.
+ */
+.bb-tabular {
+  font-variant-numeric: tabular-nums slashed-zero;
+}
