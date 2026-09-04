@@ -77,21 +77,25 @@
   --color-danger-on: var(--bb-danger-on);
   --color-danger-subtle: var(--bb-danger-subtle);
   --color-danger-subtle-on: var(--bb-danger-subtle-on);
+  --color-danger-text: var(--bb-danger-text);
 
   --color-warning: var(--bb-warning);
   --color-warning-on: var(--bb-warning-on);
   --color-warning-subtle: var(--bb-warning-subtle);
   --color-warning-subtle-on: var(--bb-warning-subtle-on);
+  --color-warning-text: var(--bb-warning-text);
 
   --color-success: var(--bb-success);
   --color-success-on: var(--bb-success-on);
   --color-success-subtle: var(--bb-success-subtle);
   --color-success-subtle-on: var(--bb-success-subtle-on);
+  --color-success-text: var(--bb-success-text);
 
   --color-info: var(--bb-info);
   --color-info-on: var(--bb-info-on);
   --color-info-subtle: var(--bb-info-subtle);
   --color-info-subtle-on: var(--bb-info-subtle-on);
+  --color-info-text: var(--bb-info-text);
 
   /* --- Radii: four, and no more (doc 03 §4.3). */
   --radius-*: initial;

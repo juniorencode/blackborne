@@ -425,6 +425,25 @@ it shows immediately.
 2. Minimum AA contrast (4.5:1 for text, 3:1 for graphical elements), verified
    **in both modes and in every brand theme offered**. If a theme does not
    pass, the derived token is adjusted; the theme is not published.
+
+   Two things measurement taught, and neither was obvious from reading the
+   palette:
+
+   - **Step 9 is not a text background.** It is designed for graphical
+     elements, which need only 3:1. White on it measures 3.91:1 for red,
+     3.16:1 for green, 3.26:1 for blue and 1.58:1 for amber — every one below
+     the requirement. A filled button carrying a label is text. Step 11 clears
+     it in light mode.
+   - **Dark mode needs the other pairing entirely.** No step of the dark
+     scales reaches 4.5:1 against white, because they are built to sit on a
+     dark page rather than to carry white text. Against dark text the same
+     step 9 clears it comfortably. So a filled state button is white-on-deep
+     in light mode and dark-on-bright in dark mode — which is also why §6.1
+     allows a token to be restated when its role genuinely differs.
+
+   All of this was found by automated accessibility, not by review, and it had
+   been in the catalog since the first component.
+
 3. The library does **not** write to `document`, does not write to
    `localStorage`, and does not detect the system preference on its own. It
    receives the mode already resolved. The project decides (P3).

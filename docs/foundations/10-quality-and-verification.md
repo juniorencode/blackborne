@@ -38,18 +38,18 @@ From there on, breaking a document stops being a matter of memory.
 
 ## 3. The verification layers
 
-| Layer                       | What it checks                                             | Cost                    |
-| --------------------------- | ---------------------------------------------------------- | ----------------------- |
-| **Format and lint**         | Code style and the project's own rules from section 2      | Seconds                 |
-| **Types**                   | That the public surface is properly typed                  | Seconds                 |
-| **Logic**                   | Hooks and pure functions, **rendering nothing** (P6)       | Fast                    |
-| **Behavior**                | The component from the perspective of someone using it     | Medium                  |
-| **Re-render**               | That typing in one field does not re-render its neighbours | Medium                  |
-| **Automated accessibility** | Contrast, missing labels, malformed ARIA                   | Medium                  |
-| **Visual regression**       | What changed in appearance, and where                      | Slow                    |
-| **Package**                 | Types resolve, exports are correct, no side effects        | Fast                    |
-| **Server**                  | That everything prerenders without mismatches              | Free: the site gives it |
-| **Manual**                  | Keyboard always; screen reader on the complex ones         | Minutes                 |
+| Layer                       | What it checks                                                                                                    | Cost                    |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| **Format and lint**         | Code style and the project's own rules from section 2                                                             | Seconds                 |
+| **Types**                   | That the public surface is properly typed                                                                         | Seconds                 |
+| **Logic**                   | Hooks and pure functions, **rendering nothing** (P6)                                                              | Fast                    |
+| **Behavior**                | The component from the perspective of someone using it                                                            | Medium                  |
+| **Re-render**               | That typing in one field does not re-render its neighbours                                                        | Medium                  |
+| **Automated accessibility** | Contrast, missing labels, malformed ARIA. **Running**: axe against every story in the catalog                     | Medium                  |
+| **Visual regression**       | What changed in appearance, and where. **Running**: 19 captures, generated in Docker so the tolerance can be zero | Slow                    |
+| **Package**                 | Types resolve, exports are correct, no side effects                                                               | Fast                    |
+| **Server**                  | That everything prerenders without mismatches                                                                     | Free: the site gives it |
+| **Manual**                  | Keyboard always; screen reader on the complex ones                                                                | Minutes                 |
 
 ## 4. What is tested and what is not
 
@@ -96,7 +96,18 @@ and know within a minute **which twelve components changed appearance**,
 instead of opening them one by one.
 
 It is the only thing that makes touching tokens safe once there are thirty
-components.
+components — and it was adopted at ten, because approving ten baselines is an
+afternoon and approving thirty is not.
+
+Demonstrated rather than asserted: changing `--bb-radius-md` from 6px to 10px
+failed **13 of 19** captures and left 6 untouched. That is the report this
+section is asking for.
+
+**The habit that decides whether it is worth having** is the fourth bullet
+below. Updating a baseline is one command and will always be the fastest way to
+turn a red check green; a baseline updated without looking automates the act of
+not noticing. The workflow is in
+[contributing/visual-regression.md](../contributing/visual-regression.md).
 
 So it does not produce constant false positives:
 

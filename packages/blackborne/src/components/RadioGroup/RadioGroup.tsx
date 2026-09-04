@@ -152,7 +152,7 @@ export const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(
              * aria-required on the group, so reading the asterisk aloud would
              * say it twice.
              */
-            <span aria-hidden="true" className="bb:text-danger bb:ms-1">
+            <span aria-hidden="true" className="bb:text-danger-text bb:ms-1">
               *
             </span>
           ) : null}
@@ -175,7 +175,7 @@ export const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(
           </Text>
         ) : null}
 
-        <FieldError className="bb:text-xs bb:text-danger">
+        <FieldError className="bb:text-xs bb:text-danger-text">
           {errorMessage}
         </FieldError>
       </AriaRadioGroup>

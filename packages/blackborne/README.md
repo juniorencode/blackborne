@@ -112,16 +112,19 @@ implementation detail and cannot collide with yours.
 
 ## Size
 
-Doc 10 is blunt about this: a budget without a number is not a budget, because
-when you exceed it you do not find out. Measured at `0.2.0`, with one
-component:
+Doc 10 is blunt about this: a budget without a number is not a budget,
+because when you exceed it you do not find out. Measured at `0.2.0`, with
+ten components:
 
-| What              | Now                   | Budget                 |
-| ----------------- | --------------------- | ---------------------- |
-| `dist/index.js`   | 2.1 kB (0.8 kB gzip)  | — see below            |
-| `dist/styles.css` | 18.2 kB (3.9 kB gzip) | 40 kB raw / 10 kB gzip |
-| Published tarball | 10.5 kB               | —                      |
-| `pnpm verify`     | 25 s                  | 90 s                   |
+| What                    | Now                   | Budget                 |
+| ----------------------- | --------------------- | ---------------------- |
+| `dist/index.js`         | 18.1 kB (3.9 kB gzip) | — see below            |
+| `dist/styles.css`       | 26.3 kB (5.1 kB gzip) | 60 kB raw / 12 kB gzip |
+| Published tarball       | 36.8 kB               | —                      |
+| `pnpm verify`           | 46 s                  | 90 s                   |
+| Browser checks          | 191 s                 | 300 s                  |
+| Automated accessibility | 141 s                 | 240 s                  |
+| Visual regression       | 90 s                  | 240 s                  |
 
 **The JavaScript budget is deliberately structural rather than a number.** With
 one component, any total figure would be a guess that gets raised every time a
@@ -134,6 +137,18 @@ bundler deduplicates them.
 The CSS number is a real ceiling. Most of the current 18 kB is the token layer,
 which is a fixed cost paid once; utilities grow slowly because the scales are
 restricted and only what components use is emitted.
+
+**Why the slow layers get their own numbers.** Doc 10 §8 warns that a check
+which runs everything before every change ends up switched off, so the fast
+gate and the slow one are budgeted separately. `pnpm verify` runs before every
+commit and has to stay under a minute; the browser layers run in their own CI
+job and are allowed minutes.
+
+The ceilings sit at roughly one and a half times the current figures — room for
+the components still to come, tight enough that a doubling shows up. All of
+them grow with the component count, so they will be revisited; the point of
+writing them down is that the revision happens with data rather than by nobody
+noticing.
 
 Budgets are revised when exceeded, with data. They are not ignored and not
 raised quietly.

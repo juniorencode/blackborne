@@ -87,28 +87,61 @@
   --bb-accent-subtle-active: var(--bb-x-brand-5);
 
   /* --- States — all four with the same shape, so they interchange ---- */
-  --bb-danger: var(--bb-x-danger-9);
+  /*
+   * MEASURED, not chosen by eye. White on step 9 of these scales fails AA for
+   * text — red 3.91:1, green 3.16:1, blue 3.26:1, amber 1.58:1 against the
+   * 4.5:1 doc 03 §5 rule 2 requires. Step 9 is designed for GRAPHICAL
+   * elements, which need only 3:1; a filled button carrying a label is text.
+   *
+   * Step 11 clears it: red 5.21:1, green 4.72:1, blue 4.77:1, amber 4.61:1.
+   *
+   * Found by automated accessibility on the danger button, after the suite was
+   * fixed to actually run the contrast rule. It had been in the catalog since
+   * the first component.
+   *
+   * Accent is left at step 9 because indigo measures 5.21:1 there — but if the
+   * brand is overridden to a lighter colour, --bb-accent-on has to change with
+   * it, which is what the rule of pairs is for (§4.0).
+   */
+  --bb-danger: var(--bb-x-danger-11);
   --bb-danger-on: #fff;
+  /*
+   * Step 9 is the SOLID colour — meant for a filled background, where its
+   * pair carries the text. Used as text on a light surface it measures
+   * 3.82:1, below the 4.5:1 that doc 03 §5 rule 2 requires, and automated
+   * accessibility caught it on the field error message.
+   *
+   * Step 11 is the scale's low-contrast TEXT step: 5.08:1 on light, 8.95:1 on
+   * dark. Every state colour gets a -text pair for the same reason, so
+   * nobody reaches for the solid step again.
+   */
+  --bb-danger-text: var(--bb-x-danger-11);
   --bb-danger-subtle: var(--bb-x-danger-3);
   --bb-danger-subtle-on: var(--bb-x-danger-11);
 
-  /* Amber's solid step is a LIGHT colour, so its pair is dark text. This is
-     the documented per-family exception from doc 03 §1.1, and the reason the
-     rule of pairs exists at all. */
+  /*
+   * Amber is the documented per-family exception from doc 03 §1.1, and the
+   * reason the rule of pairs exists at all: its solid step is a LIGHT colour,
+   * so it keeps step 9 and pairs with DARK text. White on it measures 1.58:1
+   * — the worst in the set — while step 12 on it clears AA comfortably.
+   */
   --bb-warning: var(--bb-x-warning-9);
   --bb-warning-on: var(--bb-x-warning-12);
   --bb-warning-subtle: var(--bb-x-warning-3);
   --bb-warning-subtle-on: var(--bb-x-warning-11);
+  --bb-warning-text: var(--bb-x-warning-11);
 
-  --bb-success: var(--bb-x-success-9);
+  --bb-success: var(--bb-x-success-11);
   --bb-success-on: #fff;
   --bb-success-subtle: var(--bb-x-success-3);
   --bb-success-subtle-on: var(--bb-x-success-11);
+  --bb-success-text: var(--bb-x-success-11);
 
-  --bb-info: var(--bb-x-info-9);
+  --bb-info: var(--bb-x-info-11);
   --bb-info-on: #fff;
   --bb-info-subtle: var(--bb-x-info-3);
   --bb-info-subtle-on: var(--bb-x-info-11);
+  --bb-info-text: var(--bb-x-info-11);
 
   /* --- Focus — ONE ring for the whole library (doc 03 §4) ----------- */
   --bb-focus-ring: var(--bb-x-brand-8);
@@ -176,6 +209,46 @@
 
   /* The scrim needs to be heavier to read against a dark page. */
   --bb-surface-overlay: rgb(0 0 0 / 0.6);
+
+  /*
+   * THE SOLID STATE COLOURS NEED THEIR OWN MAPPING HERE, and this is the case
+   * doc 03 §6.1 describes: a token restated because its ROLE behaves
+   * differently in the two modes, which is not a second mapping.
+   *
+   * Measured. In dark mode no step of these scales reaches 4.5:1 against white
+   * — red tops out at 3.91:1 — because the dark scales are built to sit on a
+   * dark page, not to carry white text. Against DARK text the same step 9
+   * clears it comfortably: red 4.82:1, green 5.97:1, info 5.78:1, amber
+   * 11.95:1.
+   *
+   * So in dark mode a filled state button is a bright fill with dark text.
+   * That is also how it looks right: a saturated red with white text reads as
+   * muddy on a dark page, which doc 03 §5 rule 6 already warns about.
+   *
+   * Light mode keeps step 11 with white text, where it measures 5.21:1.
+   *
+   * Found by automated accessibility once the contrast rule was actually
+   * running. Every number here came from a measurement, not from a preference.
+   */
+  --bb-danger: var(--bb-x-danger-9);
+  --bb-danger-on: var(--bb-x-gray-1);
+  --bb-success: var(--bb-x-success-9);
+  --bb-success-on: var(--bb-x-gray-1);
+  --bb-info: var(--bb-x-info-9);
+  --bb-info-on: var(--bb-x-gray-1);
+  /* Amber already paired with dark text in light mode; unchanged here. */
+
+  /*
+   * The ACCENT is deliberately not restated. Measured: indigo's step 9 gives
+   * 5.21:1 against white in dark mode, so the light-mode pairing already
+   * clears AA and a second mapping would be drift rather than a role that
+   * behaves differently (doc 03 §6.1).
+   *
+   * I did restate it first, on the assumption that if the state colours
+   * needed a dark pairing the accent must too. It did not, and the number said
+   * so: step 11 in dark is a pale blue at 2.06:1 against white. The assumption
+   * was the error, not the original mapping.
+   */
 }
 
 /* ===================================================================
