@@ -1,0 +1,40 @@
+/*
+ * Layer 3: a component exception, derived from layer 2 (doc 03 §1).
+ *
+ * It exists as a class rather than utilities because keyframes are not
+ * something a utility expresses, and the duration has to come from a token so
+ * the reduced-motion rule reaches it. This is the narrow case §4.4 allows, not
+ * a licence to start a second vocabulary.
+ */
+.bb-spinner {
+  /* Inherits its colour, so it works inside a solid button and beside plain
+     text without either knowing about the other. */
+  color: currentColor;
+  flex: none;
+}
+
+.bb-spinner-arc {
+  transform-origin: center;
+  animation: bb-spin 700ms linear infinite;
+}
+
+@keyframes bb-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/*
+ * Reduced motion removes the animation rather than slowing it (doc 09 §2).
+ *
+ * The arc is then drawn as a full ring instead of being left frozen part-way
+ * round: a stopped spinner reads as something broken, which is a worse outcome
+ * than the one the preference was asking for.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .bb-spinner-arc {
+    animation: none;
+    d: path('M8 1.5a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13');
+    stroke-opacity: 0.55;
+  }
+}

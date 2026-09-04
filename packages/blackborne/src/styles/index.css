@@ -19,6 +19,10 @@
 @import './primitives.css';
 @import './semantic.css';
 
+/* Layer 3: component exceptions. One import per component that needs one, so
+   the list stays visible rather than hiding in a barrel file. */
+@import '../components/Spinner/Spinner.css';
+
 @source '../**/*.{ts,tsx}';
 
 /*

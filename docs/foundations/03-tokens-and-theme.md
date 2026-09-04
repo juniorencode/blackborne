@@ -438,7 +438,18 @@ it shows immediately.
    the reverse.
 7. Every class and variable carries the library prefix, so nothing collides
    with the consumer's own Tailwind.
-8. No new token without checking that an equivalent does not exist.
+8. **No global reset ships with the package.** A library may not overwrite the
+   styles of the application that installs it, so only the theme and utility
+   layers are compiled in — never the base layer.
+
+   The consequence is easy to miss and was found by building: browser defaults
+   then apply to our own elements, and `box-sizing` defaults to
+   `content-box`. A control declared 40px tall measures 42, and two controls
+   of the same nominal size stop aligning. Every element with a height, width
+   or border sets `box-border` explicitly. The alignment check in §9 is what
+   catches a component that forgets.
+
+9. No new token without checking that an equivalent does not exist.
 
 ## 6. Dark mode is not an inversion
 

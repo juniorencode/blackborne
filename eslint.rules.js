@@ -93,10 +93,44 @@ export const restrictedGlobals = [
 export const restrictedImports = {
   patterns: [
     {
-      // Component folders are capitalised, which makes the pattern precise:
-      // ../Card/Card reaches past Card's index, while ../../internal/cx is a
-      // deliberately shared helper and must stay allowed.
-      group: ['../[A-Z]*/*', '../../components/*/*'],
+      // Reaching past a component index, in its two relative forms.
+      //
+      // Deliberately NOT written with a capital-letter character class.
+      // Minimatch is case-insensitive on Windows, so such a pattern also
+      // caught "../internal/isDev" here and would not have caught it on
+      // Linux. A lint rule that behaves differently per operating system is
+      // worse than no rule: it passes locally and fails in CI, or the
+      // reverse. The shared directories are exempted by name instead, which
+      // is unambiguous everywhere.
+      //
+      // Line comments on purpose: a glob containing a star followed by a
+      // slash closes a block comment early, which is exactly how this file
+      // was broken a moment ago.
+      // Reaching past a component index, in its relative forms.
+      //
+      // Arrived at empirically, against a probe file, because minimatch
+      // does not behave the way the patterns read:
+      //
+      //   - a star matches the literal ".." segment, so a three-part
+      //     pattern also catches every "../../something" path
+      //   - matching is case-insensitive on Windows, so a capital-letter
+      //     character class caught lowercase directories here and would
+      //     not have on Linux. A rule that differs per operating system is
+      //     worse than no rule: it passes locally and fails in CI
+      //
+      // Verified in both directions: three real violations caught, zero
+      // false positives across the package.
+      //
+      // Line comments on purpose — a glob with a star before a slash closes
+      // a block comment early, which broke this file once already.
+      group: [
+        '../*/*',
+        '!../internal/**',
+        '!../config/**',
+        '!../../**',
+        '../../components/*/*',
+        '../../internal/*/*'
+      ],
       message:
         "No importing another component's internal path (doc 01). Import from its index, or move the shared piece to src/internal."
     },

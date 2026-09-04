@@ -68,6 +68,11 @@ const SIZE: Record<ButtonSize, string> = {
  *   0ms, so nothing animates when the system asks for that (doc 09 §2).
  */
 const BASE = cx(
+  // box-border on every sizeable element, because the package ships no
+  // global reset (doc 03: a library may not overwrite a consumer's styles).
+  // Without it the browser default is content-box, a declared height of
+  // 40px measures 42, and controls of the same nominal size stop lining up.
+  'bb:box-border',
   'bb:inline-flex bb:items-center bb:justify-center bb:gap-2',
   'bb:px-(--bb-control-padding-x)',
   'bb:rounded-md bb:border bb:border-solid',
