@@ -21,6 +21,7 @@
 
 /* Layer 3: component exceptions. One import per component that needs one, so
    the list stays visible rather than hiding in a barrel file. */
+@import '../components/Checkbox/Checkbox.css';
 @import '../components/Spinner/Spinner.css';
 
 @source '../**/*.{ts,tsx}';
