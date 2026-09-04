@@ -1,0 +1,41 @@
+/*
+ * Layer 3: the thumb's position.
+ *
+ * A utility cannot express "move to the other end" in a way that survives RTL:
+ * the offset has to be logical, and it has to flip with direction. Written
+ * here with inset-inline so it follows the writing mode rather than the
+ * screen.
+ */
+.bb-switch-thumb {
+  position: absolute;
+  inset-inline-start: 2px;
+  block-size: 1rem;
+  inline-size: 1rem;
+  border-radius: var(--bb-radius-full);
+  background: var(--bb-surface);
+  box-shadow: var(--bb-shadow-sm);
+  transition: inset-inline-start var(--bb-duration-fast) var(--bb-ease);
+}
+
+[data-selected] .bb-switch-thumb {
+  /* The track is 2.25rem wide with a 1px border, so this lands the thumb 2px
+     from the far end — mirroring the resting position. */
+  inset-inline-start: calc(2.25rem - 1rem - 4px);
+  background: var(--bb-accent-on);
+}
+
+[data-disabled] .bb-switch-thumb {
+  background: var(--bb-surface-disabled);
+  box-shadow: none;
+}
+
+/*
+ * The movement communicates which end the thumb went to, so under reduced
+ * motion it still moves — it just arrives immediately (doc 09 §2: motion that
+ * communicates something is removed as ANIMATION, not as information).
+ */
+@media (prefers-reduced-motion: reduce) {
+  .bb-switch-thumb {
+    transition: none;
+  }
+}

@@ -12,6 +12,13 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- `RadioGroup` and `Radio`: a set of mutually exclusive options, with a label
+  for the group and one per option. The whole group is a single tab stop and
+  the arrow keys move within it.
+- `Switch`, for a setting that applies the moment it is flipped. It carries no
+  error state and no `isRequired` on purpose — if a value needs validating
+  before submission, that is a `Checkbox`.
+
 - `Checkbox`, with an optional description and error beneath it. The base
   renders those two for a lone checkbox but does not reference them from the
   input, so the association is supplied here — a description nothing points
