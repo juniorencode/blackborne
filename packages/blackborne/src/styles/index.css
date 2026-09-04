@@ -18,6 +18,7 @@
 
 @import './primitives.css';
 @import './semantic.css';
+@import './utilities.css';
 
 /* Layer 3: component exceptions. One import per component that needs one, so
    the list stays visible rather than hiding in a barrel file. */
@@ -25,6 +26,7 @@
 @import '../components/RadioGroup/RadioGroup.css';
 @import '../components/Spinner/Spinner.css';
 @import '../components/Switch/Switch.css';
+@import '../components/TextArea/TextArea.css';
 
 @source '../**/*.{ts,tsx}';
 

@@ -18,7 +18,16 @@ export const en = {
   /** Announced while a field is waiting for data it needs. */
   fieldLoading: 'Loading',
   /** Announced while a value is being submitted. */
-  fieldSaving: 'Saving'
+  fieldSaving: 'Saving',
+  /**
+   * The stepper buttons on a number field, which carry an icon and no text.
+   *
+   * A button whose only content is an icon always needs an accessible name
+   * (doc 06 §3), and the consumer cannot supply these: they are internal
+   * controls of a component, not application content (doc 05 §2.1).
+   */
+  increment: 'Increase',
+  decrement: 'Decrease'
 } as const;
 
 export type DictionaryKey = keyof typeof en;

@@ -12,6 +12,15 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- `TextArea`, for multi-line text. Its height comes from a row count rather
+  than the control-height tokens, and it resizes vertically only.
+- `NumberField`, formatted and parsed in the active locale — separators, and
+  the digits themselves in some scripts. Currency comes from the config
+  provider or a prop; the library never invents one.
+- Two dictionary entries, `increment` and `decrement`, for the stepper
+  buttons. The base composes them with the field label, so it announces
+  "Increase Quantity" rather than a bare "Increase".
+
 - `RadioGroup` and `Radio`: a set of mutually exclusive options, with a label
   for the group and one per option. The whole group is a single tab stop and
   the arrow keys move within it.

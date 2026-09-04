@@ -31,6 +31,12 @@ export type {
 export { Checkbox } from './components/Checkbox';
 export type { CheckboxProps } from './components/Checkbox';
 
+export { NumberField } from './components/NumberField';
+export type {
+  NumberFieldProps,
+  NumberFieldSize
+} from './components/NumberField';
+
 export { Radio, RadioGroup } from './components/RadioGroup';
 export type { RadioGroupProps, RadioProps } from './components/RadioGroup';
 
@@ -39,6 +45,9 @@ export type { SpinnerProps, SpinnerSize } from './components/Spinner';
 
 export { Switch } from './components/Switch';
 export type { SwitchProps } from './components/Switch';
+
+export { TextArea } from './components/TextArea';
+export type { TextAreaProps } from './components/TextArea';
 
 export { TextField } from './components/TextField';
 export type { TextFieldProps, TextFieldSize } from './components/TextField';
