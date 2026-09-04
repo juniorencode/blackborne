@@ -59,7 +59,8 @@ content.
    conditional. Some languages have more than two forms.
 7. **The library ships English only.** Other languages are injected by the
    project. If over time both projects write the same Spanish dictionary, it
-   moves in by the rule of two.
+   moves in — that is package content earning its place, the same test a new
+   prop faces (P5).
 
 ## 3. Formatting
 

@@ -4,8 +4,8 @@
 
 ## Why now
 
-<!-- What real need drove this. For a new component or prop: name the two
-     consumers (rule of two). "While we were at it" is not a reason. -->
+<!-- What real need drove this. For a new prop or variant: name the place
+     that needs it today. "While we were at it" is not a reason. -->
 
 ---
 
@@ -17,10 +17,10 @@
 
 ## Entry gate
 
-Only for a **new component**. All twelve, or it does not enter — eleven out of
-twelve stays in the project that asked for it.
+Only for a **new component**. All thirteen, or it does not enter — twelve out
+of thirteen stays in the project that needed it.
 
-- [ ] Two real consumers ask for it
+- [ ] It belongs in the catalog, and any new prop has a real case
 - [ ] Its name mentions no business domain
 - [ ] It does not need to know where its data comes from
 - [ ] It works with no provider around it

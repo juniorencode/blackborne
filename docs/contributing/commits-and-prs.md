@@ -85,12 +85,12 @@ conventional without anyone having to remember.
 Fill in the template in `.github/PULL_REQUEST_TEMPLATE.md`. It is short on
 purpose:
 
-| Section               | What goes in it                                                              |
-| --------------------- | ---------------------------------------------------------------------------- |
-| **What this changes** | One or two sentences. What and why, not how                                  |
-| **Why now**           | The real need behind it. For a new component or prop: name the two consumers |
-| **Checks**            | `pnpm verify` green, docs updated, changelog updated                         |
-| **Entry gate**        | Only for a new component: the twelve checkboxes, all of them                 |
+| Section               | What goes in it                                                                        |
+| --------------------- | -------------------------------------------------------------------------------------- |
+| **What this changes** | One or two sentences. What and why, not how                                            |
+| **Why now**           | The real need behind it. For a new prop or variant: name the place that needs it today |
+| **Checks**            | `pnpm verify` green, docs updated, changelog updated                                   |
+| **Entry gate**        | Only for a new component: the thirteen checkboxes, all of them                         |
 
 A pull request that cannot fill in "Why now" is usually a pull request that
 should not be opened yet.

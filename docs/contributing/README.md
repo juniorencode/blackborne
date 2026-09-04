@@ -4,10 +4,10 @@ How to _work on_ the library. Repository-level workflow lives in
 [../../CONTRIBUTING.md](../../CONTRIBUTING.md); this folder holds the detailed
 recipes.
 
-| Document                                   | What it covers                                                                                                                                                     |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [new-component.md](./new-component.md)     | The full recipe for adding a component: whether it belongs at all, how to design it as a suite, the twelve-checkbox entry gate, and how to actually check each box |
-| [commits-and-prs.md](./commits-and-prs.md) | Commit format, pull request format, and the branching model                                                                                                        |
+| Document                                   | What it covers                                                                                                                                                       |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [new-component.md](./new-component.md)     | The full recipe for adding a component: whether it belongs at all, how to design it as a suite, the thirteen-checkbox entry gate, and how to actually check each box |
+| [commits-and-prs.md](./commits-and-prs.md) | Commit format, pull request format, and the branching model                                                                                                          |
 
 ## Working with an AI agent
 

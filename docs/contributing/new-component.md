@@ -16,10 +16,15 @@ foundation wins and this page needs fixing.
 
 Three questions, in order. A "no" ends it.
 
-**Do two real consumers need it?** Not "would find it useful" — need it, today,
-in code that exists. With one consumer you do not generalise, you just move
-code to a place where it is harder to change. Asking early is still worth
-doing: the request stays open as a signal until a second one appears.
+**Does it belong in the catalog?** Which components exist is a deliberate
+decision, not a vote — see [catalog and build order](../catalog-and-build-order.md).
+The question to answer is whether this is a _component_ at all, or a prop on
+one that already exists. Those have very different costs: a component nobody
+imports can be deprecated away, while a prop lives on something people use and
+removing it takes a major version.
+
+A **new prop or variant** faces the stricter test (P5): name the real place
+that needs it today. "Would be useful" is where components go to rot.
 
 **Does its name mention a business domain?** If the component only makes sense
 inside one industry or one application, it belongs to that application.
@@ -76,8 +81,8 @@ While building, the things that are always forgotten:
 
 From [01 · Principles](../foundations/01-principles.md), §5.
 
-Twelve checkboxes. **All twelve, or it does not enter** — eleven out of twelve
-stays in the project that asked for it until it is twelve.
+Thirteen checkboxes. **All thirteen, or it does not enter** — twelve out of
+thirteen stays in the project that needed it until it is thirteen.
 
 - [ ] Two real consumers ask for it
 - [ ] Its name mentions no business domain
@@ -128,7 +133,7 @@ destroys trust in the other twenty-nine.
 pnpm verify
 ```
 
-Then fill in the pull request template, including the twelve checkboxes. Update
+Then fill in the pull request template, including the thirteen checkboxes. Update
 `CHANGELOG.md`. If anything about the public API changed, update the docs in
 the same pull request — documentation that lags by one pull request never
 catches up.
