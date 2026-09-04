@@ -1,16 +1,32 @@
-name: Component request
-description: Propose a component or a capability for the library.
+name: Component or capability request
+description: Propose a component, a prop or a variant for the library.
 labels: [component-request]
 body:
   - type: markdown
     attributes:
       value: |
-        A component enters the library when **two real consumers** need it.
-        One is not enough — with one you do not generalise, you just move code.
+        Two very different things get proposed through this form, and they are
+        judged differently.
 
-        Asking with only one consumer is still worth doing: the request stays
-        open as a signal until a second one appears. Nothing gets rejected for
-        being early.
+        **A new component** is a decision about the catalog. It sits apart, and
+        if it turns out to be a mistake it can be deprecated away. Propose one
+        freely.
+
+        **A new prop or variant on a component that already exists** is a
+        heavier ask. It lives on something people use, and removing it later
+        costs a major version. It needs a real place that needs it today — not
+        one that can be imagined.
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of change is this
+      options:
+        - A new component
+        - A new prop or variant on an existing component
+        - Not sure
+    validations:
+      required: true
 
   - type: input
     id: name
@@ -22,12 +38,12 @@ body:
       required: true
 
   - type: textarea
-    id: consumers
+    id: need
     attributes:
-      label: Who needs it
+      label: What needs it, today
       description: >
-        Name the real places that use it today, and what each does with it.
-        "It would be useful" is not a consumer.
+        The real place this is for. For a new prop this is the important field:
+        "would be useful" is where components go to rot.
     validations:
       required: true
 
@@ -36,9 +52,9 @@ body:
     attributes:
       label: What you do today instead
       description: >
-        The most useful field in this form. How the need is met right now
-        usually reveals whether this is a new component or a missing prop on an
-        existing one.
+        The most useful field on this form. How the need is met right now
+        usually reveals whether this is a new component or a missing prop on
+        one that already exists — and those have very different costs.
     validations:
       required: true
 

@@ -50,7 +50,7 @@ pnpm verify
 The three worth reading before writing any code:
 
 - [Principles and non-goals](./docs/foundations/01-principles.md) — what the
-  library will and will not do, and the twelve-checkbox gate every component
+  library will and will not do, and the thirteen-checkbox gate every component
   must pass.
 - [Adding a component](./docs/contributing/new-component.md) — whether it
   belongs in the library at all, and how to design it as a suite.

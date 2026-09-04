@@ -73,11 +73,12 @@ Read
 [`docs/contributing/new-component.md`](./docs/contributing/new-component.md)
 first. The short version:
 
-1. A component enters only when **two real consumers** ask for it. Not "while
-   we're at it".
-2. It must pass the twelve-checkbox entry gate in
+1. Which components exist is a deliberate decision — check the catalog first.
+   A new **prop or variant** on an existing one is the stricter case: name the
+   real place that needs it today, not one you can imagine.
+2. It must pass the thirteen-checkbox entry gate in
    [`docs/foundations/01-principles.md`](./docs/foundations/01-principles.md).
-   Eleven out of twelve does not enter.
+   Twelve out of thirteen does not enter.
 3. Anything with logic goes in a hook or a pure function, tested without
    rendering. Components paint and delegate.
 
@@ -98,5 +99,6 @@ request that breaks one does not merge:
 ## Reporting
 
 Bugs and component requests go through the issue templates. A component
-request that cannot name two real consumers will be kept open as a signal, not
-rejected — the rule of two is counted with data, not from memory.
+request is a proposal, not a vote. The most useful field on the form is what
+you do today instead: it usually reveals whether something is a new component
+or a missing prop on one that exists.

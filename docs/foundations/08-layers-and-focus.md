@@ -118,10 +118,10 @@ Two findings, both consequential.
 the toast exports carry an `UNSTABLE_` prefix — the only six unstable exports
 out of two hundred and ninety-five.
 
-**Decision: `Toast` is deferred.** No consumer has asked for it yet, so the
-rule of two defers it for free, and building a first-class component on an API
-declared unstable buys a migration nobody scheduled. It is revisited on real
-demand, by which point the API may have settled.
+**Decision: `Toast` is deferred**, and on the API alone. Building a
+first-class component on exports the base itself marks unstable buys a
+migration nobody scheduled, and toasts are not a piece you want to rewrite once
+consumers depend on their queue. Revisited when the prefix goes away.
 
 **The queue is state, and it is not ours.** The base's toast queue is created
 outside React, at module level. That is global state, and P3 forbids the

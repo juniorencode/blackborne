@@ -53,7 +53,9 @@ library. Reasons:
 
 **Adapters** for form libraries live behind a separate entry point in the
 package, are optional, and are dependencies of the consumer, not of the library
-(non-goal 9). They are added when two projects ask for them (P5): before that,
+(non-goal 9). Each one binds the package to a third-party library and a
+version, so it waits for a project that actually uses that library (P5): before
+that,
 each project wires its fields however it likes, which with a controlled field
 is trivial.
 

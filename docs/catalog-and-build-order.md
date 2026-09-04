@@ -6,28 +6,32 @@
 > living list that changes weekly. They are kept apart so the foundations do
 > not look less stable than they are.
 
-**Status:** forecast, not confirmed by real demand · **Date:** 2026-09-02
+**Status:** a chosen list, not a queue · **Date:** 2026-09-03
 
 ---
 
 ## 1. A warning about this list
 
 The list below is a **forecast**, based on what nearly every management
-application needs. It is not a commitment.
+application needs. It is not a commitment, and it is not a queue that has to be
+worked through in order.
 
-The definitive list is dictated by the first real screens of the two reference
-consumers. Until those exist, the "asked for by" column is empty on purpose: it
-is the reminder that the rule of two (P5) is applied with data, not from
-memory.
+Which of these get built, and in what order, is a deliberate decision
+([decision 0008](./decisions/0008-the-rule-of-two-splits.md)). Real screens
+change that decision when they exist — that is the point of having a consumer —
+but their absence does not block it.
 
 ## 2. How a component gets in
 
-1. **Two** real consumers ask for it (P5)
-2. It passes the **twelve checkboxes** of the entry gate
-   ([doc 01](./foundations/01-principles.md))
+1. It is a **component**, not a prop on one that already exists. If the need
+   can be met by an existing component, that is the cheaper answer — and the
+   prop it would take faces the stricter half of P5
+2. It passes the **eleven checkboxes** of the entry gate
+   ([doc 01](./foundations/01-principles.md)). Eleven of eleven, not ten
 3. It breaks no non-goal
 
-Nothing enters "since we're already here".
+No component enters half-built. "Since we're already here" is still the reason
+things rot — it just rots through props rather than through the catalog.
 
 ## 3. How the order is decided
 
@@ -36,8 +40,10 @@ Three criteria, in strict priority:
 **1. Technical dependency.** Overrides everything else. You cannot build a
 select without having the field and the layers first.
 
-**2. Real demand.** Within what criterion 1 permits, the order is dictated by
-real screens, not by this list.
+**2. Real demand, when it exists.** Within what criterion 1 permits, real
+screens dictate the order over this list. With no consumer yet, that criterion
+is quiet and the order falls to criteria 1 and 3 — which is why the bottlenecks
+and the risky piece come first.
 
 **3. Risk, once.** A difficult component is built **early**, even if nobody has
 asked for it: if the composition model does not hold, it is far better to find
@@ -58,65 +64,65 @@ validates both.
 
 ### Level 0 · Base — nothing depends on anything
 
-| Piece            | Notes                                                                                  | Status   | Asked for by                                  |
-| ---------------- | -------------------------------------------------------------------------------------- | -------- | --------------------------------------------- |
-| Tokens and theme | Not a component: it is the vocabulary ([doc 03](./foundations/03-tokens-and-theme.md)) | Pending  | —                                             |
+| Piece            | Notes                                                                                  | Status   |
+| ---------------- | -------------------------------------------------------------------------------------- | -------- |
+| Tokens and theme | Not a component: it is the vocabulary ([doc 03](./foundations/03-tokens-and-theme.md)) | Pending  |
 | `ConfigProvider` | Language, dictionary, time zone, currency. Defaults that work (P3)                     | **Done** | Needed by every internal string               |
-| Icon convention  | Icons are not distributed: they are received. Only the convention                      | Pending  | —                                             |
+| Icon convention  | Icons are not distributed: they are received. Only the convention                      | Pending  |
 | `Spinner`        | Accessible name from the dictionary; a static ring under reduced motion                | **Done** | Needed by the busy states of Button and Field |
-| `Skeleton`       |                                                                                        | Pending  | —                                             |
-| `Separator`      |                                                                                        | Pending  | —                                             |
+| `Skeleton`       |                                                                                        | Pending  |
+| `Separator`      |                                                                                        | Pending  |
 
 ### Level 1 · Primitives
 
-| Component    | Notes                                                                                                                                                                                      | Status   | Asked for by |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ------------ |
-| `Button`     | The first of all: it validated the whole pipeline                                                                                                                                          | **Done** | —            |
-| `Field`      | **Bottleneck.** Label + control + description + error, related ([doc 07](./foundations/07-forms.md)). Built, but **internal** until a second consumer needs to compose a custom field (P5) | **Done** | —            |
-| `Badge`      |                                                                                                                                                                                            | Pending  | —            |
-| `Card`       |                                                                                                                                                                                            | Pending  | —            |
-| `EmptyState` | Must distinguish "no data" from "no results" ([doc 09](./foundations/09-behavior.md))                                                                                                      | Pending  | —            |
+| Component    | Notes                                                                                                                                                                                                     | Status   |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `Button`     | The first of all: it validated the whole pipeline                                                                                                                                                         | **Done** |
+| `Field`      | **Bottleneck.** Label + control + description + error, related ([doc 07](./foundations/07-forms.md)). Built, but **internal**: nothing needs it public yet, and an export is easier to open than to close | **Done** |
+| `Badge`      |                                                                                                                                                                                                           | Pending  |
+| `Card`       |                                                                                                                                                                                                           | Pending  |
+| `EmptyState` | Must distinguish "no data" from "no results" ([doc 09](./foundations/09-behavior.md))                                                                                                                     | Pending  |
 
 ### Level 2 · Simple fields — depend on `Field`
 
-| Component     | Notes                                                         | Status   | Asked for by |
-| ------------- | ------------------------------------------------------------- | -------- | ------------ |
-| `TextField`   | The first field. All eight states from doc 07 §6              | **Done** | —            |
-| `TextArea`    |                                                               | Pending  | —            |
-| `NumberField` | Locale-aware formatting; the base handles it                  | Pending  | —            |
-| `Checkbox`    |                                                               | Pending  | —            |
-| `RadioGroup`  |                                                               | Pending  | —            |
-| `Switch`      | Different from `Checkbox`: immediate action, not a form value | Pending  | —            |
+| Component     | Notes                                                         | Status   |
+| ------------- | ------------------------------------------------------------- | -------- |
+| `TextField`   | The first field. All eight states from doc 07 §6              | **Done** |
+| `TextArea`    |                                                               | Pending  |
+| `NumberField` | Locale-aware formatting; the base handles it                  | Pending  |
+| `Checkbox`    |                                                               | Pending  |
+| `RadioGroup`  |                                                               | Pending  |
+| `Switch`      | Different from `Checkbox`: immediate action, not a form value | Pending  |
 
 ### Level 3 · Layers — depend on the portal and focus infrastructure
 
-| Component  | Notes                                                                                                               | Status   | Asked for by |
-| ---------- | ------------------------------------------------------------------------------------------------------------------- | -------- | ------------ |
-| Layer base | **Bottleneck.** Portal, focus, cascading dismissal, scroll locking ([doc 08](./foundations/08-layers-and-focus.md)) | Pending  | —            |
-| `Popover`  |                                                                                                                     | Pending  | —            |
-| `Dialog`   | The legitimate viewport exception ([doc 04](./foundations/04-responsive.md), §5)                                    | Pending  | —            |
-| `Drawer`   |                                                                                                                     | Pending  | —            |
-| `Tooltip`  | Never the only route to information ([doc 06](./foundations/06-accessibility.md))                                   | Pending  | —            |
-| `Menu`     |                                                                                                                     | Pending  | —            |
-| `Toast`    | **Deferred** — the base's toast API is still unstable. See [doc 08](./foundations/08-layers-and-focus.md) §7        | Deferred | —            |
+| Component  | Notes                                                                                                               | Status   |
+| ---------- | ------------------------------------------------------------------------------------------------------------------- | -------- |
+| Layer base | **Bottleneck.** Portal, focus, cascading dismissal, scroll locking ([doc 08](./foundations/08-layers-and-focus.md)) | Pending  |
+| `Popover`  |                                                                                                                     | Pending  |
+| `Dialog`   | The legitimate viewport exception ([doc 04](./foundations/04-responsive.md), §5)                                    | Pending  |
+| `Drawer`   |                                                                                                                     | Pending  |
+| `Tooltip`  | Never the only route to information ([doc 06](./foundations/06-accessibility.md))                                   | Pending  |
+| `Menu`     |                                                                                                                     | Pending  |
+| `Toast`    | **Deferred** — the base's toast API is still unstable. See [doc 08](./foundations/08-layers-and-focus.md) §7        | Deferred |
 
 ### Level 4 · Composed fields — `Field` + layers
 
-| Component    | Notes                                                                                             | Status  | Asked for by |
-| ------------ | ------------------------------------------------------------------------------------------------- | ------- | ------------ |
-| `Select`     |                                                                                                   | Pending | —            |
-| `ComboBox`   | **The risk component.** Built early, on purpose                                                   | Pending | —            |
-| `DatePicker` | Locale, first day of the week, time zone ([doc 05](./foundations/05-languages-and-formatting.md)) | Pending | —            |
+| Component    | Notes                                                                                             | Status  |
+| ------------ | ------------------------------------------------------------------------------------------------- | ------- |
+| `Select`     |                                                                                                   | Pending |
+| `ComboBox`   | **The risk component.** Built early, on purpose                                                   | Pending |
+| `DatePicker` | Locale, first day of the week, time zone ([doc 05](./foundations/05-languages-and-formatting.md)) | Pending |
 
 ### Level 5 · Composition
 
-| Component       | Notes                                                                                       | Status  | Asked for by |
-| --------------- | ------------------------------------------------------------------------------------------- | ------- | ------------ |
-| `Tabs`          | Structural change expected in a narrow container ([doc 04](./foundations/04-responsive.md)) | Pending | —            |
-| `Breadcrumbs`   |                                                                                             | Pending | —            |
-| `Pagination`    |                                                                                             | Pending | —            |
-| `ConfirmDialog` | Confirm **or** undo, never both ([doc 09](./foundations/09-behavior.md))                    | Pending | —            |
-| Table pieces    | Header, row, cell, sorting, selection **plus their hooks** (P6). Not a closed table         | Pending | —            |
+| Component       | Notes                                                                                       | Status  |
+| --------------- | ------------------------------------------------------------------------------------------- | ------- |
+| `Tabs`          | Structural change expected in a narrow container ([doc 04](./foundations/04-responsive.md)) | Pending |
+| `Breadcrumbs`   |                                                                                             | Pending |
+| `Pagination`    |                                                                                             | Pending |
+| `ConfirmDialog` | Confirm **or** undo, never both ([doc 09](./foundations/09-behavior.md))                    | Pending |
+| Table pieces    | Header, row, cell, sorting, selection **plus their hooks** (P6). Not a closed table         | Pending |
 
 **Forecast total: 31 pieces.**
 
@@ -146,19 +152,19 @@ someone proposes the same thing again.
 | A form generator from a schema                      | **Never** | Doc 07, §9                                                                                                                        |
 | Charts                                              | **Never** | A different product category                                                                                                      |
 | An icon pack                                        | **Never** | Icons are received; see level 0                                                                                                   |
-| Rich text editor                                    | Deferred  | A specialised library. Only if two projects ask                                                                                   |
-| File upload                                         | Deferred  | Until there is real demand                                                                                                        |
-| Color picker                                        | Deferred  | Until there is real demand                                                                                                        |
+| Rich text editor                                    | Deferred  | A specialised library and a heavy dependency. The cost is weighed against a project that actually needs it                        |
+| File upload                                         | Deferred  | Sequencing, not doctrine. It needs the layer base first                                                                           |
+| Color picker                                        | Deferred  | Sequencing only. Nothing blocks it once the field types are done                                                                  |
 | Phone field                                         | Deferred  | Requires a heavy dependency. The cost is assessed when asked for                                                                  |
 | Signature pad                                       | Deferred  | Too specific                                                                                                                      |
 | `Toast`                                             | Deferred  | The base's toast API is still `UNSTABLE_` in 1.21.0. Revisited on real demand ([doc 08](./foundations/08-layers-and-focus.md) §7) |
-| `Avatar`, `Accordion`, `Progress`, `Slider`         | Deferred  | Likely, but no demand yet. The rule of two                                                                                        |
+| `Avatar`, `Accordion`, `Progress`, `Slider`         | Deferred  | Sequencing only. Likely to be built; they are simply not next                                                                     |
 
 ## 8. How this is maintained
 
 - **Every finished component** updates its status here, not somewhere else.
-- **Every request** is noted in "asked for by", even when it has not yet
-  reached two.
+- **Every decision to build something** updates this list before the work
+  starts, not after. The list is the record of what was chosen.
 - **Every rejection** goes in section 7 with its reason, even when it seems
   obvious at the time.
 - This document is **not** moved into the foundations: it lives apart and

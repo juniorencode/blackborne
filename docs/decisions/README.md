@@ -18,3 +18,4 @@ the folder is that you can see what was believed when.
 | [0005](./0005-validation-stays-in-the-project.md) | Validation stays in the project             | The library restricts input and presents errors; no schema dependency    |
 | [0006](./0006-no-container-query-polyfill.md)     | No container query polyfill                 | Narrow-first queries degrade gracefully; a project can add one globally  |
 | [0007](./0007-prop-names-follow-the-base.md)      | Prop names follow the headless base         | `isDisabled` and `onPress`, not `disabled` and `onClick`                 |
+| [0008](./0008-the-rule-of-two-splits.md)          | The rule of two splits                      | Components are chosen; props still need a real case                      |

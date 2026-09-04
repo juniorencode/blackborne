@@ -98,9 +98,11 @@ that breaks one does not merge.
 7. **Logic lives in hooks or pure functions**, testable without rendering.
    Components paint and delegate. A new capability is a new hook, never one
    more prop on an existing component.
-8. **Two consumers, or it does not enter.** A component, a prop or a variant
-   needs two real consumers asking for it. "While we're at it" is the reason
-   things rot.
+8. **Components are chosen; props are earned.** Which components exist is a
+   deliberate decision — check the catalog. A new **prop or variant on an
+   existing component** is different: it needs a real place that needs it
+   today. "While we're at it" is the reason things rot, and it rots through
+   props, never through the component count.
 
 Six of these are meant to be enforced by lint rules that do not exist yet; they
 are written in phase F6, against real code. Until then they hold by reading.

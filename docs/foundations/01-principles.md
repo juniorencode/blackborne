@@ -30,6 +30,13 @@ pressure. An API that satisfies only its author is untested. That there are
 **two**, in different domains, is deliberate — with one you do not generalise,
 and with many you do not ship.
 
+**They do not exist yet**, and this document says so rather than describing an
+intention as a fact. Until they do, the library is designed against judgement
+instead of evidence, which is a real limitation and the reason P5 was narrowed
+([decision 0008](../decisions/0008-the-rule-of-two-splits.md)). The first
+application to use the library in earnest will change API decisions, and that
+is the point of having one.
+
 They are not named here, and never will be. They are private projects, and no
 document in this repository refers to one.
 
@@ -64,11 +71,21 @@ are the exception and must be justified in writing. Everything is fluid by
 default: nothing has a fixed width.
 _Test:_ does it work in a 320px side panel inside a 1920px screen?
 
-**P5 · The rule of two.**
-A component does not enter until **two** consumers ask for it. A prop is not
-generalised until **two** consumers need it. A variant is never added "just in
-case".
-_Test:_ can you name the two real places that use it today?
+**P5 · Components are chosen; props are earned.**
+Which components exist is a deliberate decision. Which props they carry is not:
+a new prop, variant or entry point on an existing component needs a real place
+that needs it today — not one somebody can imagine.
+
+The asymmetry is the whole point. One component too many sits apart, gets
+imported by nobody, and can be deprecated away. One prop too many lives on a
+component people do use, and removing it costs a major version. Every warning
+sign in §7 is about props; not one is about how many components exist.
+_Test:_ for a new prop, can you name the place that needs it today?
+
+This principle was narrower before — it required **two** consumers for
+anything at all, components included. See
+[decision 0008](../decisions/0008-the-rule-of-two-splits.md) for why it
+changed and what would bring the stricter form back.
 
 **P6 · State is separate from presentation.**
 Anything with logic lives in a hook or a pure function, testable without
@@ -138,7 +155,7 @@ What the library will never do. This list is the useful part of the document.
 
 To enter the library, **all** of these must hold:
 
-- [ ] Two real consumers ask for it (P5)
+- [ ] It belongs in the catalog, and any new prop it carries has a real case (P5)
 - [ ] Its name mentions no business domain (P1)
 - [ ] It does not need to know where its data comes from (P2)
 - [ ] It works with no provider around it (P3)
@@ -156,8 +173,8 @@ To enter the library, **all** of these must hold:
       disabled, loading, error, empty
 - [ ] It contains no literal user-facing string outside the dictionary
 
-A component that meets eleven of twelve does not enter: it stays in the project
-that asked for it until it meets all of them.
+Thirteen. A component that meets twelve of them does not enter: it stays in
+the project that needed it until it meets all thirteen.
 
 ## 6. Decisions already taken
 
@@ -194,7 +211,8 @@ Revisit when any of these appear:
 - A literal string appears in the code, and above all inside an `aria-label`
 - A fixed width or height exists so one particular label fits
 - There are two different ways to do the same thing inside the library
-- Someone proposes adding something "since we're already here"
+- Someone proposes adding a prop "since we're already here" — the half of P5
+  that still bites
 
 ## 8. How this document changes
 
