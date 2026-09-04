@@ -67,6 +67,9 @@ export const States: Story = {
       <Checkbox>Unchecked</Checkbox>
       <Checkbox defaultSelected>Checked</Checkbox>
       <Checkbox isIndeterminate>Indeterminate</Checkbox>
+      <Checkbox isIndeterminate defaultSelected>
+        Indeterminate and selected at once
+      </Checkbox>
       <Checkbox {...forced('data-hovered')}>Hovered</Checkbox>
       <Checkbox {...forced('data-pressed')}>Pressed</Checkbox>
       <Checkbox {...forced('data-focus-visible')}>Focused</Checkbox>
@@ -84,6 +87,36 @@ export const States: Story = {
       >
         Invalid, with both messages
       </Checkbox>
+    </div>
+  )
+};
+
+/**
+ * The four combinations of the two marks, which is where a real bug hid.
+ *
+ * A checkbox that is both indeterminate and selected drew the tick on top of
+ * the dash, because two utilities of equal specificity were decided by the
+ * order a generator happened to emit them in. **Exactly one mark is visible in
+ * every row**, and a browser test asserts it — this is not something to check
+ * by squinting.
+ */
+export const Marks: Story = {
+  render: () => (
+    <div className="catalog-stack" style={{ maxWidth: 420 }}>
+      <div data-testid="mark-none">
+        <Checkbox>Neither</Checkbox>
+      </div>
+      <div data-testid="mark-selected">
+        <Checkbox defaultSelected>Selected</Checkbox>
+      </div>
+      <div data-testid="mark-indeterminate">
+        <Checkbox isIndeterminate>Indeterminate</Checkbox>
+      </div>
+      <div data-testid="mark-both">
+        <Checkbox isIndeterminate defaultSelected>
+          Indeterminate and selected
+        </Checkbox>
+      </div>
     </div>
   )
 };

@@ -1,0 +1,43 @@
+/*
+ * Layer 3: a component exception, and it exists for a specific reason.
+ *
+ * Which mark a checkbox shows is a PRECEDENCE rule, and utilities cannot
+ * express one reliably. The first version of this component tried:
+ *
+ *   check: hidden, group-data-selected:block, group-data-indeterminate:hidden
+ *   dash:  hidden, group-data-indeterminate:block
+ *
+ * Both utilities have the same specificity, so the winner is decided by their
+ * order in the generated stylesheet — which a utility generator chooses, not
+ * us. It put `block` after `hidden`, so a checkbox that was both indeterminate
+ * and selected drew the tick on top of the dash.
+ *
+ * Written as CSS, the precedence is stated instead of inherited from whatever
+ * order the output happened to have.
+ */
+
+.bb-checkbox-check,
+.bb-checkbox-dash {
+  display: none;
+}
+
+[data-selected] .bb-checkbox-check {
+  display: block;
+}
+
+[data-indeterminate] .bb-checkbox-dash {
+  display: block;
+}
+
+/*
+ * Indeterminate always wins over selected, and this rule comes last so that is
+ * explicit rather than accidental.
+ *
+ * It is also what "mixed" means: the state describes a set that is partly
+ * chosen, and it says nothing about the underlying value. HTML behaves the
+ * same way — the `indeterminate` property overrides the tick without changing
+ * `checked`. A control showing both marks at once is claiming two things.
+ */
+[data-indeterminate] .bb-checkbox-check {
+  display: none;
+}
