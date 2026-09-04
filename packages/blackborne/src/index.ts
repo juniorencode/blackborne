@@ -7,10 +7,29 @@
  * Before adding anything here, read docs/contributing/new-component.md. A
  * component becomes public only once it passes the twelve-checkbox entry gate
  * in docs/foundations/01-principles.md.
+ *
+ * Not exported on purpose: the internal Field that every field type is built
+ * from. Nobody has asked twice for the ability to build a custom field (P5),
+ * and an export is easier to open than to close.
  */
+export { ConfigProvider, useConfig } from './config';
+export type {
+  Config,
+  ConfigProviderProps,
+  Dictionary,
+  DictionaryKey
+} from './config';
+export { defaultDictionary } from './config';
+
 export { Button } from './components/Button';
 export type {
   ButtonProps,
   ButtonSize,
   ButtonVariant
 } from './components/Button';
+
+export { Spinner } from './components/Spinner';
+export type { SpinnerProps, SpinnerSize } from './components/Spinner';
+
+export { TextField } from './components/TextField';
+export type { TextFieldProps, TextFieldSize } from './components/TextField';

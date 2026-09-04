@@ -12,6 +12,17 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- `TextField`, the first field: label, control, description and error related
+  to each other, with all eight states from the forms foundation. The library
+  presents the error; deciding there is one, and writing it, stays with your
+  project.
+- `ConfigProvider`, carrying language, dictionary, time zone and currency.
+  Nothing is detected and nothing is remembered — your application resolves
+  these and passes them in. It works with no provider around it, in English
+  and LTR.
+- `Spinner`, with an accessible name from the dictionary. Under reduced
+  motion it becomes a static ring rather than freezing part-way round.
+
 - `Button`, the first component of the rewrite. Five variants, three sizes,
   and every state styled from React Aria's DOM state attributes.
 - The token layer: layer-1 primitives baked from Radix Colors (a development

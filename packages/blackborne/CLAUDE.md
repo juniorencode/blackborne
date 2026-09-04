@@ -52,6 +52,22 @@ legibility.
 Dark mode is not an inversion. Each semantic token is defined separately per
 mode; a dark theme derived by calculation is recognisable on sight.
 
+## The package ships no reset, and that has a consequence
+
+Tailwind's preflight is deliberately excluded: a library may not overwrite the
+styles of the application that installs it. The cost is that browser defaults
+apply to our elements too, and one of them bites.
+
+**Every element with a height, a width or a border needs `bb:box-border`.**
+Without it the default is `content-box`, so a control declared 40px tall
+measures 42, and two controls of the same nominal size stop lining up. It is
+invisible until a form looks subtly wrong and someone starts nudging margins,
+which hides the symptom and keeps the cause.
+
+This is caught rather than merely written down: the catalog asserts in a real
+browser that a field and a button of the same size have exactly the same
+height. Adding a component that forgets `box-border` fails that check.
+
 ## Components
 
 - Style against the DOM state attributes React Aria exposes, not against

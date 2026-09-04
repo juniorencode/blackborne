@@ -58,35 +58,35 @@ validates both.
 
 ### Level 0 · Base — nothing depends on anything
 
-| Piece            | Notes                                                                                  | Status  | Asked for by |
-| ---------------- | -------------------------------------------------------------------------------------- | ------- | ------------ |
-| Tokens and theme | Not a component: it is the vocabulary ([doc 03](./foundations/03-tokens-and-theme.md)) | Pending | —            |
-| `ConfigProvider` | Language, dictionary, time zone, theme. With defaults that work (P3)                   | Pending | —            |
-| Icon convention  | Icons are not distributed: they are received. Only the convention                      | Pending | —            |
-| `Spinner`        |                                                                                        | Pending | —            |
-| `Skeleton`       |                                                                                        | Pending | —            |
-| `Separator`      |                                                                                        | Pending | —            |
+| Piece            | Notes                                                                                  | Status   | Asked for by                                  |
+| ---------------- | -------------------------------------------------------------------------------------- | -------- | --------------------------------------------- |
+| Tokens and theme | Not a component: it is the vocabulary ([doc 03](./foundations/03-tokens-and-theme.md)) | Pending  | —                                             |
+| `ConfigProvider` | Language, dictionary, time zone, currency. Defaults that work (P3)                     | **Done** | Needed by every internal string               |
+| Icon convention  | Icons are not distributed: they are received. Only the convention                      | Pending  | —                                             |
+| `Spinner`        | Accessible name from the dictionary; a static ring under reduced motion                | **Done** | Needed by the busy states of Button and Field |
+| `Skeleton`       |                                                                                        | Pending  | —                                             |
+| `Separator`      |                                                                                        | Pending  | —                                             |
 
 ### Level 1 · Primitives
 
-| Component    | Notes                                                                                                | Status  | Asked for by |
-| ------------ | ---------------------------------------------------------------------------------------------------- | ------- | ------------ |
-| `Button`     | The first of all: it validates the whole pipeline                                                    | Pending | —            |
-| `Field`      | **Bottleneck.** Label + control + description + error, related ([doc 07](./foundations/07-forms.md)) | Pending | —            |
-| `Badge`      |                                                                                                      | Pending | —            |
-| `Card`       |                                                                                                      | Pending | —            |
-| `EmptyState` | Must distinguish "no data" from "no results" ([doc 09](./foundations/09-behavior.md))                | Pending | —            |
+| Component    | Notes                                                                                                                                                                                      | Status   | Asked for by |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ------------ |
+| `Button`     | The first of all: it validated the whole pipeline                                                                                                                                          | **Done** | —            |
+| `Field`      | **Bottleneck.** Label + control + description + error, related ([doc 07](./foundations/07-forms.md)). Built, but **internal** until a second consumer needs to compose a custom field (P5) | **Done** | —            |
+| `Badge`      |                                                                                                                                                                                            | Pending  | —            |
+| `Card`       |                                                                                                                                                                                            | Pending  | —            |
+| `EmptyState` | Must distinguish "no data" from "no results" ([doc 09](./foundations/09-behavior.md))                                                                                                      | Pending  | —            |
 
 ### Level 2 · Simple fields — depend on `Field`
 
-| Component     | Notes                                                         | Status  | Asked for by |
-| ------------- | ------------------------------------------------------------- | ------- | ------------ |
-| `TextField`   |                                                               | Pending | —            |
-| `TextArea`    |                                                               | Pending | —            |
-| `NumberField` | Locale-aware formatting; the base handles it                  | Pending | —            |
-| `Checkbox`    |                                                               | Pending | —            |
-| `RadioGroup`  |                                                               | Pending | —            |
-| `Switch`      | Different from `Checkbox`: immediate action, not a form value | Pending | —            |
+| Component     | Notes                                                         | Status   | Asked for by |
+| ------------- | ------------------------------------------------------------- | -------- | ------------ |
+| `TextField`   | The first field. All eight states from doc 07 §6              | **Done** | —            |
+| `TextArea`    |                                                               | Pending  | —            |
+| `NumberField` | Locale-aware formatting; the base handles it                  | Pending  | —            |
+| `Checkbox`    |                                                               | Pending  | —            |
+| `RadioGroup`  |                                                               | Pending  | —            |
+| `Switch`      | Different from `Checkbox`: immediate action, not a form value | Pending  | —            |
 
 ### Level 3 · Layers — depend on the portal and focus infrastructure
 
