@@ -38,6 +38,32 @@ const BOX = cx(
   // Selected and indeterminate both read as "acted upon", so both fill.
   'bb:group-data-selected:border-accent bb:group-data-selected:bg-accent',
   'bb:group-data-indeterminate:border-accent bb:group-data-indeterminate:bg-accent',
+  /*
+   * Pointer feedback. Doc 09 §3 asks for a visible response to every
+   * interaction, and this control had none: measured, hover and pressed were
+   * pixel-identical to rest.
+   *
+   * The FILL moves and the border does not, because Button already answered
+   * this question — secondary hovers by moving bg-surface-hover and leaves
+   * its border alone — and doc 09 §8 is blunt that one component behaving
+   * differently costs the credibility of all of them.
+   *
+   * TWO rules, not one. A filled control hovering back to grey would read as
+   * a different component, so once it is filled it moves along the ACCENT
+   * ramp instead. The stacked variant carries higher specificity than either
+   * single one, so which wins is not decided by source order — this file has
+   * already lost that argument once.
+   *
+   * The whole label triggers it, not just the box: the label IS the hit area,
+   * and feedback that fired only over twenty pixels would teach people the
+   * text is not pressable when it is.
+   */
+  'bb:group-data-hovered:bg-surface-hover',
+  'bb:group-data-pressed:bg-surface-active',
+  'bb:group-data-selected:group-data-hovered:border-accent-hover bb:group-data-selected:group-data-hovered:bg-accent-hover',
+  'bb:group-data-selected:group-data-pressed:border-accent-active bb:group-data-selected:group-data-pressed:bg-accent-active',
+  'bb:group-data-indeterminate:group-data-hovered:border-accent-hover bb:group-data-indeterminate:group-data-hovered:bg-accent-hover',
+  'bb:group-data-indeterminate:group-data-pressed:border-accent-active bb:group-data-indeterminate:group-data-pressed:bg-accent-active',
   // The ring lands on the box, because the real input is visually hidden. It
   // is the library's single focus ring, from a token, and only on keyboard
   // focus — a ring on mouse click is noise (doc 06 §3).

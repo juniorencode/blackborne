@@ -62,6 +62,17 @@ export const States: Story = {
       <Force state="data-focused">
         <Switch defaultSelected>Focused and on</Switch>
       </Force>
+      {/*
+        The pair that can actually break: off moves along the grey ramp, on
+        moves along the accent one, and a stacked variant decides. A picture of
+        the "on" half is what proves the two did not collapse into one.
+      */}
+      <Force state="data-hovered">
+        <Switch defaultSelected>Hovered and on</Switch>
+      </Force>
+      <Force state="data-pressed">
+        <Switch defaultSelected>Pressed and on</Switch>
+      </Force>
       <Switch isDisabled>Disabled</Switch>
       <Switch isDisabled defaultSelected>
         Disabled and on

@@ -43,6 +43,9 @@ const GROUP = cx(
   'bb:duration-(--bb-duration-fast) bb:ease-standard',
   // The ring lands on the GROUP, not the input, because the buttons are part
   // of the control as far as anyone looking at it is concerned.
+  // The border moves on hover, as on the other fields. See TextField for why a
+  // field moves its border where a checkbox moves its fill.
+  'bb:data-hovered:border-border-strong',
   'bb:data-focus-within:border-border-focus',
   'bb:data-focus-within:border-focus-ring bb:data-focus-within:shadow-[0_0_0_4px_color-mix(in_oklab,var(--bb-focus-ring)_var(--bb-focus-ring-halo-strength),transparent)]',
   'bb:data-invalid:border-danger',

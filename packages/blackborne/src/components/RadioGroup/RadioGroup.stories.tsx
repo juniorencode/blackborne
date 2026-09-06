@@ -101,18 +101,38 @@ export const States: Story = {
         all. Checkbox and Switch drew no ring for a while and nobody saw it,
         precisely because the state was in no baseline.
 
-        Deliberately no "hovered" or "pressed" row. Measured, they would be
-        pixel-identical to the resting radio: none of the three small controls
-        styles either state. A row labelled with a state it does not paint is
-        the thing this story exists to avoid, so the gap is recorded here
-        rather than papered over with a picture that proves nothing.
+        Hovered and pressed appear twice each, unselected and selected, and
+        that pairing is the point rather than thoroughness. An unselected radio
+        moves along the grey ramp and a selected one along the accent ramp, and
+        the rule that picks between them is a stacked variant whose specificity
+        beats either single one. A screenshot is what proves the pair did not
+        collapse into whichever rule happens to be written last.
       */}
-      <RadioGroup label="Focus" defaultValue="pickup">
+      <RadioGroup label="Interaction" defaultValue="pickup">
+        <Force state="data-hovered">
+          <Radio value="standard">Hovered</Radio>
+        </Force>
+        <Force state="data-pressed">
+          <Radio value="express">Pressed</Radio>
+        </Force>
         <Force state="data-focused">
-          <Radio value="standard">Focused</Radio>
+          <Radio value="unselected">Focused</Radio>
         </Force>
         <Force state="data-focused">
           <Radio value="pickup">Focused and selected</Radio>
+        </Force>
+      </RadioGroup>
+      <RadioGroup label="Interaction, already selected" defaultValue="standard">
+        <Force state="data-hovered">
+          <Radio value="standard">Hovered and selected</Radio>
+        </Force>
+      </RadioGroup>
+      <RadioGroup
+        label="Interaction, pressed while selected"
+        defaultValue="standard"
+      >
+        <Force state="data-pressed">
+          <Radio value="standard">Pressed and selected</Radio>
         </Force>
       </RadioGroup>
     </div>
