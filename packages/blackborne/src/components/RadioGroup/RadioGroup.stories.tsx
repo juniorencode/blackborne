@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Radio, RadioGroup } from './RadioGroup';
+import { Force } from '../../catalog/forceState';
 
 function Scope({
   label,
@@ -90,6 +91,29 @@ export const States: Story = {
         <Radio value="express" isDisabled>
           Express, unavailable to your area
         </Radio>
+      </RadioGroup>
+      {/*
+        Focus, forced so a screenshot can hold it. It goes on the individual
+        Radio rather than on the group, because that is where the base puts it
+        and where bb:group sits — a radio is focused, a set of them is not.
+
+        Radio was the last of the three small controls with no focus row at
+        all. Checkbox and Switch drew no ring for a while and nobody saw it,
+        precisely because the state was in no baseline.
+
+        Deliberately no "hovered" or "pressed" row. Measured, they would be
+        pixel-identical to the resting radio: none of the three small controls
+        styles either state. A row labelled with a state it does not paint is
+        the thing this story exists to avoid, so the gap is recorded here
+        rather than papered over with a picture that proves nothing.
+      */}
+      <RadioGroup label="Focus" defaultValue="pickup">
+        <Force state="data-focused">
+          <Radio value="standard">Focused</Radio>
+        </Force>
+        <Force state="data-focused">
+          <Radio value="pickup">Focused and selected</Radio>
+        </Force>
       </RadioGroup>
     </div>
   )
