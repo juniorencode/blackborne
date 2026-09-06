@@ -9,18 +9,34 @@
 .bb-switch-thumb {
   position: absolute;
   inset-inline-start: 2px;
-  block-size: 1rem;
-  inline-size: 1rem;
+  /* Derived from the track: 4px smaller, so 2px of track shows all round.
+     Deriving rather than restating means density moves both together. */
+  block-size: calc(var(--bb-control-switch-height) - 4px);
+  inline-size: calc(var(--bb-control-switch-height) - 4px);
   border-radius: var(--bb-radius-full);
-  background: var(--bb-surface);
+  /*
+   * The OFF thumb is the solid step, not the surface colour.
+   *
+   * It was the surface, sitting on a track set to the sunken surface — two
+   * adjacent steps, measuring 1.03:1 in light and 1.07:1 in dark. The thumb
+   * was invisible, and on a switch the thumb is the ONLY signal of position:
+   * lose it and the control says nothing about its own state.
+   *
+   * Step 7 measures 1.38:1 in light and 1.72:1 in dark. It does not reach the
+   * 3:1 of WCAG 1.4.11 — step 9 does, and reads too heavy — but it is well
+   * clear of the 1.03:1 it replaced, and the thumb's shadow carries some of
+   * the separation that the colour no longer has to.
+   */
+  background: var(--bb-x-gray-7);
   box-shadow: var(--bb-shadow-sm);
   transition: inset-inline-start var(--bb-duration-fast) var(--bb-ease);
 }
 
 [data-selected] .bb-switch-thumb {
-  /* The track is 2.25rem wide with a 1px border, so this lands the thumb 2px
-     from the far end — mirroring the resting position. */
-  inset-inline-start: calc(2.25rem - 1rem - 4px);
+  /* Lands the thumb 2px from the far end, mirroring its resting position. */
+  inset-inline-start: calc(
+    var(--bb-control-switch-width) - var(--bb-control-switch-height) + 4px - 4px
+  );
   background: var(--bb-accent-on);
 }
 

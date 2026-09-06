@@ -30,20 +30,20 @@ import { cx } from '../../internal/cx';
  */
 
 const TRACK = cx(
-  'bb:box-border bb:relative bb:flex bb:h-5 bb:w-9 bb:flex-none bb:items-center',
-  'bb:rounded-full bb:border bb:border-solid bb:border-border',
+  'bb:box-border bb:relative bb:flex bb:h-switch bb:w-switch bb:flex-none bb:items-center',
+  'bb:rounded-full bb:border bb:border-solid bb:border-border-control',
   'bb:bg-surface-sunken',
   'bb:transition-[background-color,border-color,box-shadow]',
   'bb:duration-(--bb-duration-fast) bb:ease-standard',
   'bb:group-data-selected:border-accent bb:group-data-selected:bg-accent',
-  'bb:group-data-focus-visible:shadow-[0_0_0_2px_var(--bb-focus-ring-offset),0_0_0_4px_var(--bb-focus-ring)]',
-  'bb:group-data-disabled:border-border bb:group-data-disabled:bg-surface-disabled'
+  'bb:group-data-focused:border-focus-ring bb:group-data-focused:shadow-[0_0_0_4px_color-mix(in_oklab,var(--bb-focus-ring)_var(--bb-focus-ring-halo-strength),transparent)]',
+  'bb:group-data-disabled:border-border-control bb:group-data-disabled:bg-surface-disabled'
 );
 
 const LABEL = cx(
   'bb:group bb:box-border bb:flex bb:items-center bb:gap-x-3',
   // The hit area stays above the minimum at every density (doc 06 §3).
-  'bb:min-h-6 bb:w-fit bb:py-0.5',
+  'bb:min-h-hit bb:w-fit bb:py-0.5',
   'bb:font-sans bb:text-md bb:text-text bb:leading-normal',
   'bb:cursor-pointer bb:select-none',
   'bb:data-disabled:cursor-not-allowed bb:data-disabled:text-text-disabled'

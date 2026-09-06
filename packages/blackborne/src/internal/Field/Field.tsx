@@ -81,7 +81,15 @@ export function Field({
         className={cx(
           isLabelHidden
             ? 'bb:sr-only'
-            : 'bb:text-xs bb:font-strong bb:text-text',
+            : /*
+               * The same size as the value it labels, not smaller.
+               *
+               * Doc 03 §4.6a: hierarchy comes from colour and weight, not
+               * size. A 12px bold label used BOTH, which is the rule broken
+               * twice over — and the document says the fix makes an interface
+               * look calmer without anything shrinking.
+               */
+              'bb:text-md bb:font-strong bb:text-text',
           'bb:w-fit'
         )}
       >
