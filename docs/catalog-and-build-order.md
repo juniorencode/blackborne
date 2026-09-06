@@ -73,7 +73,7 @@ validates both.
 | `Skeleton`       | First load only. On a reload the previous content stays, dimmed ([doc 09](./foundations/09-behavior.md) §6)                  | **Done** |
 | `Separator`      | Semantic by default, decorative on request                                                                                   | **Done** |
 | `VisuallyHidden` | The base's is out of a consumer's reach: `react-aria-components` is our dependency, not a peer                               | **Done** |
-| Normalization    | Not a component: a pure function, composed by the consumer, shared by four fields ([doc 07](./foundations/07-forms.md) §2.1) | **Next** |
+| Normalization    | Not a component: a pure function, composed by the consumer, shared by four fields ([doc 07](./foundations/07-forms.md) §2.1) | **Done** |
 
 ### Level 1 · Primitives
 
@@ -98,9 +98,9 @@ validates both.
 | `Checkbox`      | The layout that made the field structure insufficient: the label sits beside the control, not above it                                                                                                                 | **Done** |
 | `RadioGroup`    | Two levels of label: one for the group, one per option. The base wires the description and error to both                                                                                                               | **Done** |
 | `Switch`        | Deliberately NOT a checkbox: immediate action, so no error state and no required (see decision 0009)                                                                                                                   | **Done** |
-| `SearchField`   | A text field with a clear button and search semantics, from the base. Probably the most used control on a listing screen                                                                                               | **Next** |
+| `SearchField`   | A text field with a clear button and search semantics, from the base. Probably the most used control on a listing screen                                                                                               | **Done** |
 | `PasswordField` | A reveal toggle with `aria-pressed` and a label that changes. Revealable even when read-only. It does NOT score the password — that is a policy, so the project passes a score                                         | **Next** |
-| `CheckboxGroup` | A component and not a mode on `Checkbox`. From the base                                                                                                                                                                | **Next** |
+| `CheckboxGroup` | A component and not a mode on `Checkbox`. From the base                                                                                                                                                                | **Done** |
 | `TagsInput`     | `TokenField` from the base wearing a removable `Badge`. Splits a pasted block on the separators and normalizes each value                                                                                              | **Next** |
 
 ### Level 3 · Layers — depend on the portal and focus infrastructure

@@ -8,6 +8,13 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Button } from '../Button';
 import { ConfigProvider } from '../../config';
+import {
+  allowOnly,
+  foldAccents,
+  normalize,
+  stripSpaces,
+  upperCase
+} from '../../normalize';
 import { TextField, type TextFieldSize } from './TextField';
 
 const SIZES: TextFieldSize[] = ['sm', 'md', 'lg'];
@@ -281,6 +288,49 @@ export const LongLabelsAndNarrow: Story = {
           errorMessage="Añade la parte posterior a la arroba para que podamos escribirte."
         />
       </div>
+    </div>
+  )
+};
+
+/**
+ * Normalization: what the field rewrites as you type.
+ *
+ * Doc 07 §2 is careful that this is a THIRD thing. Restriction refuses a
+ * keystroke, validation judges the result and belongs to the project, and this
+ * accepts the keystroke and changes it.
+ *
+ * The order is the whole thing, which is why it composes rather than being a
+ * set of booleans: `upperCase` then `allowOnly(/[A-Z]/)` keeps every letter,
+ * and the same two the other way round throws the lower-case ones away.
+ *
+ * **The thing to actually test here is the caret.** Click into the middle of a
+ * value and keep typing. Without the correction the cursor jumps to the end on
+ * every keystroke that rewrites something, which is doc 09 §7 broken once per
+ * key. jsdom cannot see it; a browser check asserts it.
+ */
+export const Normalization: Story = {
+  render: () => (
+    <div className="catalog-stack">
+      <TextField
+        label="Registration plate"
+        data-testid="plate"
+        defaultValue=""
+        placeholder="ab 12 cd"
+        description="Upper case, spaces removed, letters and digits only."
+        normalize={normalize(stripSpaces, upperCase, allowOnly(/[A-Z0-9]/))}
+      />
+      <TextField
+        label="Username"
+        data-testid="username"
+        placeholder="ada.lovelace"
+        description="Lower case, accents folded away."
+        normalize={normalize(foldAccents, stripSpaces)}
+      />
+      <TextField
+        label="Full name"
+        placeholder="José Muñoz"
+        description="No normalization, deliberately. A name is spelled the way its owner spells it."
+      />
     </div>
   )
 };

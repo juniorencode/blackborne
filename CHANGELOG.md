@@ -12,6 +12,33 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **Normalization**, as pure functions you compose: `normalize`, `lowerCase`,
+  `upperCase`, `stripSpaces`, `trimEdges`, `foldAccents` and `allowOnly`, plus
+  a `normalize` prop on `TextField` and `TextArea`. Doc 07 §2 is careful that
+  this is a third thing, not part of restriction: it accepts a keystroke and
+  rewrites it, where restriction refuses one and validation judges the result.
+
+  It composes rather than being a set of booleans because the order is the
+  whole thing — `upperCase` then `allowOnly(/[A-Z]/)` keeps every letter, and
+  the same two the other way round throws the lower-case ones away.
+
+  What the library is actually contributing is not the transformations, which
+  are a few lines each. It is the caret: rewriting a value while somebody types
+  sends the cursor to the end mid-word, which is doc 09 §7 broken once per
+  keystroke. Asserted in a browser, because jsdom implements no selection.
+
+- `SearchField`. Probably the most used control on a listing screen, and the
+  library did not have one. What makes it a component rather than a `TextField`
+  with a clear button is not the button: it is `role="searchbox"`, Escape
+  cancelling the query — and passing Escape through to a surrounding dialog
+  when there is nothing to clear — and `onClear`/`onSubmit` being a listing
+  dropping its filter rather than a value becoming empty.
+- `CheckboxGroup`, a component and not a mode on `Checkbox`. The existing
+  `Checkbox` works inside it unchanged: the base publishes its group state
+  through context, so an option inherits the group's disabled, read-only,
+  required and invalid state on its own.
+- `--min-width-hit`, and `bb:min-w-hit` with it.
+
 - Seven pieces, filling out the levels that depend on nothing: `Separator`,
   `Skeleton`, `VisuallyHidden`, `Badge`, `Card`, `EmptyState` and `Alert`.
 - `Alert`, an inline message where the thing happened. `Toast` is deferred
@@ -131,6 +158,14 @@ minor versions. Every break is listed here with its migration.
   between them.
 
 ### Changed
+
+- `--width-hit` is gone, one week after it was added, and `--min-width-hit`
+  replaces it. The comment introducing it claimed it made `bb:min-w-hit`
+  writable and that was simply false — Tailwind resolves a min-width utility
+  from its own namespace, so the class compiled to nothing while looking
+  correct in the source, leaving a 14px target where 24px was required. Nothing
+  consumed `--width-hit`, so this breaks nobody; it is listed because a public
+  token disappearing is API either way.
 
 - `size` is `sm | md | lg` across the whole library, and a component uses the
   subset it needs ([doc 02](docs/foundations/02-api-conventions.md) §3.1). The

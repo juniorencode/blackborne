@@ -144,7 +144,7 @@ const REMOVE = cx(
    * as a utility and its width twin is not. Writing 28px here instead would be
    * a number that agrees with the token today and drifts from it in silence.
    */
-  'bb:min-h-hit bb:min-w-(--bb-control-hit-area)',
+  'bb:min-h-hit bb:min-w-hit',
   /*
    * Negative margins, so the target covers the badge's own padding instead of
    * sitting inside it. The button ends flush with the chip, and the cross then

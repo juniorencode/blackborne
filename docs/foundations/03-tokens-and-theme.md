@@ -385,6 +385,14 @@ A **small gap inside the field** — between label, control and message — and 
 A long form with disciplined spacing reads as compact even though the controls
 never changed size. It is the other half of the fix in (a).
 
+The two are VERTICAL, and a third arrived without being named: the gap
+**between options laid out in a row** — a horizontal group of checkboxes or
+radios. It is a larger step than the vertical one on purpose, because
+neighbouring options in a row need more air to read as separate than stacked
+ones do, and it is one value shared by every such group. Written down after two
+components picked the same number by copying each other, which is how a
+convention becomes a coincidence nobody can defend.
+
 **d) One standard icon size**, aligned with the text, used in almost
 everything. A second size only if justified. Icons at five sizes is what
 happens when every component picks its own, and it shows even when nobody can

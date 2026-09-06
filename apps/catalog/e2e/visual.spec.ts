@@ -106,7 +106,27 @@ const STATES: Array<[string, string]> = [
    * same width. If the hiding ever stops working, the picture changes — which
    * is the only way a sighted reviewer would ever notice.
    */
-  ['components-visuallyhidden--takes-no-space', 'visuallyhidden-takes-no-space']
+  [
+    'components-visuallyhidden--takes-no-space',
+    'visuallyhidden-takes-no-space'
+  ],
+  ['components-searchfield--states', 'searchfield-states'],
+  ['components-checkboxgroup--states', 'checkboxgroup-states'],
+  /*
+   * The trailing edge, which doc 07 §2.2 settles and which no other baseline
+   * would catch: the clear button present, absent because the field is empty,
+   * and absent because the field is busy. Three states of the same pixels,
+   * decided by rules that live in three different places.
+   */
+  ['components-searchfield--the-trailing-edge', 'searchfield-trailing-edge'],
+  /*
+   * Two components people pick the wrong one of. The same reason the catalog
+   * already puts Switch beside Checkbox — doc 09 §10.
+   */
+  [
+    'components-checkboxgroup--against-radio-group',
+    'checkboxgroup-vs-radiogroup'
+  ]
 ];
 
 for (const [id, name] of STATES) {

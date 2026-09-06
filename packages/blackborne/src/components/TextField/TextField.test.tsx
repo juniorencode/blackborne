@@ -7,6 +7,7 @@ import { createRef } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
+import { normalize, stripSpaces, upperCase } from '../../normalize';
 import { TextField } from './TextField';
 
 test('it works on its own, with no form and no library around it', () => {
@@ -153,4 +154,93 @@ test('it is reachable by keyboard, and the ref reaches the input', async () => {
   await user.tab();
   expect(document.activeElement).toBe(screen.getByRole('textbox'));
   expect(ref.current).toBe(screen.getByRole('textbox'));
+});
+
+/*
+ * Normalization. What jsdom CAN answer is which value comes out; where the
+ * caret ends up needs a browser and lives in the catalog's checks, because
+ * jsdom implements no selection (doc 07 §2.1).
+ */
+const code = normalize(stripSpaces, upperCase);
+
+test('a normalized field reports the rewritten value, not what was typed', async () => {
+  const onChange = vi.fn();
+  const user = userEvent.setup();
+  render(<TextField label="Plate" normalize={code} onChange={onChange} />);
+
+  await user.type(screen.getByRole('textbox'), 'ab 12');
+
+  expect(onChange).toHaveBeenLastCalledWith('AB12');
+});
+
+test('a rewrite that produces no change leaves the next keystroke alone', async () => {
+  /*
+   * The regression that named itself. Typing a space into `AB` normalizes back
+   * to `AB` — the state React already holds — so React declines to re-render,
+   * the caret correction never runs, and the position recorded for the SPACE
+   * survives into the next keystroke and is applied there.
+   *
+   * Measured with that hole open, typing "ab 12" produced "AB21".
+   */
+  const user = userEvent.setup();
+  render(<TextField label="Plate" normalize={code} />);
+
+  const input = screen.getByRole<HTMLInputElement>('textbox');
+  await user.type(input, 'ab  12');
+
+  expect(input.value).toBe('AB12');
+});
+
+test('an uncontrolled field SHOWS the rewritten value', async () => {
+  /*
+   * The case that silently does nothing if normalization is only passed up
+   * through onChange: with no value prop the base keeps its own state, so the
+   * input would go on displaying what was typed while onChange reported
+   * something else. Two different answers to "what is in this field".
+   */
+  const user = userEvent.setup();
+  render(<TextField label="Plate" normalize={code} />);
+
+  const input = screen.getByRole<HTMLInputElement>('textbox');
+  await user.type(input, 'ab 12');
+
+  expect(input.value).toBe('AB12');
+});
+
+test('a controlled field still lets its owner decide the value', async () => {
+  const user = userEvent.setup();
+  const seen: string[] = [];
+  render(
+    <TextField
+      label="Plate"
+      normalize={code}
+      value="XY"
+      onChange={value => seen.push(value)}
+    />
+  );
+
+  const input = screen.getByRole<HTMLInputElement>('textbox');
+  await user.type(input, 'z');
+
+  // The prop still wins: the field reports what it would become and paints
+  // what it was given, which is what controlled means (doc 02 §8).
+  expect(seen).toEqual(['XYZ']);
+  expect(input.value).toBe('XY');
+});
+
+test('without normalize, a field behaves exactly as it did before', async () => {
+  /*
+   * A new prop may not change what happens to anyone not using it, and this
+   * field has shipped. The hook returns nothing at all in that case; this is
+   * what says so.
+   */
+  const onChange = vi.fn();
+  const user = userEvent.setup();
+  render(<TextField label="Plate" onChange={onChange} />);
+
+  const input = screen.getByRole<HTMLInputElement>('textbox');
+  await user.type(input, 'ab 12');
+
+  expect(input.value).toBe('ab 12');
+  expect(onChange).toHaveBeenLastCalledWith('ab 12');
 });
