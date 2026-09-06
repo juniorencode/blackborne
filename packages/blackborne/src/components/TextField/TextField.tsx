@@ -57,6 +57,19 @@ const INPUT = cx(
   'bb:data-disabled:cursor-not-allowed'
 );
 
+/*
+ * The `Omit` is the whole prop list, and it is worth knowing what that
+ * includes: everything the base accepts, which is everything an `<input>`
+ * accepts. `maxLength`, `minLength`, `pattern`, `inputMode`, `autoComplete`,
+ * `name` and `type` are already here and already forwarded by the spread —
+ * there is nothing to add for them, and adding a named prop would break the
+ * spread for no gain (doc 02 §2).
+ *
+ * `maxLength` restricts and `minLength` cannot: a browser stops the
+ * thirty-third character, but nothing can stop somebody typing too few, so a
+ * minimum sets the attribute and the judgement stays the project's
+ * (doc 07 §1).
+ */
 export interface TextFieldProps extends Omit<
   AriaTextFieldProps,
   'children' | 'className' | 'style'

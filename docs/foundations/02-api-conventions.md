@@ -116,6 +116,20 @@ ways to do the same thing" of [doc 01](./01-principles.md) §7.
 `size` rather than replacing it. A `size="compact"` that has nothing to do with
 compact density is a collision that costs somebody an afternoon.
 
+### 3.2 One vocabulary for `align`
+
+**`start | center | end`, and it means the text inside the control.**
+
+Never `left` and `right`. That is doc 03 §5 rule 4 and half of the RTL support
+— a field aligned `right` in an Arabic form is aligned to the wrong edge, and
+lint catches the class but not a prop value, so the prop has to be named
+correctly in the first place.
+
+Worth being explicit about what it is not, because the two get conflated: this
+aligns the **value inside its box**, not the label against the control and not
+the field inside the form. Where the label sits is a property of the form and
+arrives with the structural pieces of [doc 07](./07-forms.md) §7.
+
 ## 4. Style against DOM state attributes
 
 React Aria exposes component state as attributes on the DOM: `[data-focused]`,
@@ -347,6 +361,8 @@ management interface belongs to a component that draws its own.
 - [ ] The component works controlled, and `defaultValue` works uncontrolled
 - [ ] The ref reaches the outermost element and nothing else
 - [ ] Nothing is exported that was not deliberately chosen
+- [ ] A `size` is `sm | md | lg` and an `align` is `start | center | end`,
+      never `left`/`right` and never a second vocabulary
 - [ ] Icons arrive as children, or as a named slot the consumer could not have
       placed themselves — never as `iconStart`/`iconEnd` and never by name
 - [ ] An icon's size and colour come from the slot, so the consumer passes

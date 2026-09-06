@@ -36,6 +36,41 @@ export function Example() {
 `onPress` is also the better handler — it covers mouse, touch, pen and keyboard
 uniformly.
 
+### Fields accept the input attributes you already know
+
+The prop names above are the ones that changed. The ordinary HTML input
+attributes did not: every text-based field forwards them to the `<input>` it
+renders, so they work without a wrapper and without a library-specific name.
+
+```tsx
+<TextField
+  label="Username"
+  maxLength={32}
+  minLength={3}
+  pattern="[a-z0-9_]+"
+  inputMode="text"
+  autoComplete="username"
+/>
+```
+
+`maxLength`, `minLength`, `pattern`, `inputMode`, `autoComplete`, `name`,
+`type` and the rest of the input attributes reach the control. This is written
+down because it is the kind of thing people ask for as a feature request: they
+are already here, and a prop nobody knows exists is as useless as one that is
+missing.
+
+Two of them are worth a note:
+
+- **`maxLength` restricts; `minLength` does not.** A browser stops the
+  thirty-third character, so a maximum is enforced. A minimum cannot be — you
+  cannot stop somebody typing too few — so it sets the attribute and nothing
+  more. Deciding a short value is invalid is the project's, like every other
+  judgement about whether a value is any good.
+- **`autoComplete` is left at the browser's default, which is on.** Turning it
+  off by default would break password managers and address autofill, and that
+  is not the library's call to make for your screen. Pass `"off"` where you
+  want it off.
+
 ## Theming
 
 Three independent axes, all set the same way: by putting attributes on a

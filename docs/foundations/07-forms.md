@@ -27,12 +27,16 @@ Direct consequence: **no schema library is a dependency of this package.**
 Fields expose "is invalid" and "error message"; where those come from is the
 consumer's business. The project uses whatever validation tool it likes.
 
-## 2. Two things that get called the same
+## 2. Three things that get called the same
 
-The usual confusion, and it deserves distinct names:
+The usual confusion, and each deserves a distinct name:
 
 - **Input restriction** — what the field will not let you type. It is widget
   behavior, it happens while you type, and it belongs to the library.
+- **Normalization** — what the field silently _rewrites_ as you type: forcing
+  upper case, stripping spaces, folding accents away. Also the library's, also
+  while typing, and **not the same thing as restriction**: restriction refuses
+  a keystroke, normalization accepts it and changes it.
 - **Validation** — the judgement about whether the value is any good. It
   happens on blur or on submit, it depends on the business, and it belongs to
   the project.
@@ -40,6 +44,72 @@ The usual confusion, and it deserves distinct names:
 When they are mixed, the pattern to avoid appears: business rules embedded in a
 component. That is what turns a reusable field into a field that only works for
 one application.
+
+### 2.1 Normalization is a pure function, never a set of props
+
+It was two categories here until a fourth component needed the same five
+transformations. That is the signal P6 describes: **a capability is a hook, not
+one more prop.**
+
+Three reasons it cannot be props, in order of how much they cost:
+
+1. **The order is the whole thing.** Upper case then strip accents is not the
+   same as strip accents then upper case. Five booleans have no order — either
+   the component fixes one, and the consumer cannot change what they most need
+   to change, or it exposes one, and they were never booleans.
+2. **Four components need it.** TextField, TextArea, a tags input and a numeric
+   field. Five props each is twenty props for one idea.
+3. **It is testable without rendering**, which is a box on the entry gate that
+   otherwise gets ticked on faith.
+
+**What it must not do:** decide a value is wrong. Folding `José` to `Jose` in a
+name field is a defect, not a feature, and the component cannot know which
+field it is in — so the consumer composes the pipeline and owns that call. The
+library ships the transformations and the order, not the policy.
+
+**And the part that only a browser can answer:** rewriting a value while
+somebody types **moves the caret**. Force upper case and the cursor jumps to
+the end mid-word, which is doc 09 §7 — nothing moves under the cursor —
+happening on every keystroke. jsdom does not implement selection, so a unit
+test cannot see it.
+
+### 2.2 The end of a field is contested space
+
+Six different things want to sit at the trailing edge of a control, and until
+they were counted, each was decided by whoever added it:
+
+| What                    | Whose it is         |
+| ----------------------- | ------------------- |
+| A suffix affix (`.com`) | The consumer's      |
+| The clear button        | The field's         |
+| The busy indicator      | The field's         |
+| The stepper (`±`)       | The numeric field's |
+| The reveal toggle       | The password field  |
+| An invalid marker       | The field's         |
+
+They cannot all be present, and the resolution is not "make room for all six".
+It is an order of precedence, decided once here:
+
+1. **Busy wins outright.** While a field is waiting or saving, the clear button
+   and the stepper are not rendered at all. Offering to clear a value that is
+   mid-flight is offering an action the field cannot honour, and doc 06 §4
+   point 7 is explicit that a control which cannot act is worse than one that
+   is absent.
+2. **The reveal toggle never yields**, because without it a password field
+   loses a capability rather than an affordance.
+3. **A suffix affix and a control never share the edge.** An affix is text the
+   consumer wrote; a button is a target. Putting them side by side halves the
+   target, and doc 06 §3's minimum hit area is not negotiable at compact
+   density. A field with both keeps the control and moves the affix ahead of
+   it.
+4. **At most one library-owned control at a time.** A field showing a stepper
+   does not also show a clear button: the arrows already reach every value
+   including the empty one.
+
+The rule behind all four: **the trailing edge belongs to at most one thing, and
+the field decides which.** A field that lets a consumer stack them is a field
+whose hit areas depend on how it was configured, which is not something anyone
+can test.
 
 ## 3. The core is controlled
 
@@ -216,6 +286,10 @@ form opens. Nothing is autofocused without the person having asked
 - [ ] Disabled and read-only look and behave differently
 - [ ] No error appears before the field has been touched
 - [ ] An error appearing does not displace what is below it (§4.1 — open)
+- [ ] Normalization is a pure function with its own tests, and the caret does
+      not move while typing (§2.1 — checked in a browser)
+- [ ] At most one library-owned control sits at the trailing edge, and busy
+      removes it (§2.2)
 - [ ] Number, date and currency formatting respects the locale; the time zone
       is the one received, not the browser's (doc 05)
 - [ ] Complete keyboard traversal, with focus visible in every state
