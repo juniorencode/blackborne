@@ -141,11 +141,23 @@
   --height-switch: var(--bb-control-switch-height);
   --height-hit: var(--bb-control-hit-area);
 
+  /*
+   * The minimum target is square, so it needs a floor on BOTH axes — and the
+   * two axes are not symmetric here, which is the part that caught us out.
+   *
+   * `min-h-hit` works off `--height-hit` and always did. `min-w-hit` does not
+   * work off `--width-hit`: Tailwind resolves a min-width utility from its own
+   * namespace, so the class compiled to nothing and left a 14px target while
+   * looking correct in the source. A `--width-hit` was added on that wrong
+   * assumption and is gone; this is the entry that was actually needed.
+   *
+   * Measured in the compiled sheet rather than reasoned about, after a
+   * component reported the class producing no rule at all.
+   */
+  --min-width-*: initial;
+  --min-width-hit: var(--bb-control-hit-area);
+
   --width-*: initial;
-  /* The minimum target is square, so it is a floor on both axes. Only the
-     height existed, which left `min-w-hit` unwritable and sent the first
-     component that needed it back to reading the variable by hand. */
-  --width-hit: var(--bb-control-hit-area);
   --width-box: var(--bb-control-box);
   --width-mark: var(--bb-control-box-mark);
   --width-switch: var(--bb-control-switch-width);
