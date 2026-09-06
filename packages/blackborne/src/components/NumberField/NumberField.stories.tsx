@@ -357,3 +357,56 @@ export const TheStepper: Story = {
     </div>
   )
 };
+
+/**
+ * Affixes and alignment on a numeric field.
+ *
+ * `align="end"` is the one worth knowing about: numbers in a column compare by
+ * magnitude at a glance only when their last digits line up, which is the same
+ * reason the value is set in tabular figures (doc 03 §4.2). Compare the two
+ * columns below — the left one is the default.
+ *
+ * With the stepper on, the affix lands BETWEEN the value and the button, which
+ * is doc 07 §2.2 rule 3: the affix moves ahead of the control, so the button
+ * keeps a full target at the edge and the unit stays next to its number.
+ */
+export const AffixesAndAlignment: Story = {
+  render: () => (
+    <div className="catalog-pair">
+      <div className="catalog-panel">
+        <p className="catalog-label">start — the default</p>
+        <div className="catalog-stack">
+          <NumberField label="Small" defaultValue={7} />
+          <NumberField label="Medium" defaultValue={1240} />
+          <NumberField label="Large" defaultValue={982400} />
+        </div>
+      </div>
+      <div className="catalog-panel">
+        <p className="catalog-label">align=&quot;end&quot;</p>
+        <div className="catalog-stack">
+          <NumberField label="Small" align="end" defaultValue={7} />
+          <NumberField label="Medium" align="end" defaultValue={1240} />
+          <NumberField label="Large" align="end" defaultValue={982400} />
+        </div>
+      </div>
+      <div className="catalog-panel">
+        <p className="catalog-label">Units, and one with a stepper</p>
+        <div className="catalog-stack">
+          <NumberField label="Weight" suffix="kg" defaultValue={72} />
+          <NumberField
+            label="Rate"
+            suffix="%"
+            align="end"
+            defaultValue={12.5}
+          />
+          <NumberField
+            label="Hours"
+            suffix="h"
+            defaultValue={8}
+            isStepperVisible
+          />
+        </div>
+      </div>
+    </div>
+  )
+};

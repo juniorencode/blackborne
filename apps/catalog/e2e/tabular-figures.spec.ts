@@ -8,6 +8,7 @@
  * question is how wide the browser drew a digit.
  */
 import { expect, test } from '@playwright/test';
+import { fieldBox } from './field';
 import { gotoStory } from './story';
 
 test('a number field declares tabular figures', async ({ page }) => {
@@ -82,8 +83,9 @@ test('a number field aligns with a text field and a button', async ({
      */
     const heights = {
       number: (await row.getByRole('group').boundingBox())?.height,
-      text: (await row.getByRole('textbox', { name: 'Text' }).boundingBox())
-        ?.height,
+      text: (
+        await fieldBox(row.getByRole('textbox', { name: 'Text' })).boundingBox()
+      )?.height,
       button: (await row.getByRole('button', { name: 'Save' }).boundingBox())
         ?.height
     };

@@ -68,6 +68,14 @@ This is caught rather than merely written down: the catalog asserts in a real
 browser that a field and a button of the same size have exactly the same
 height. Adding a component that forgets `box-border` fails that check.
 
+**A form control does not inherit `font-size`.** Browsers set a font on
+`input`, `textarea` and `select`, and with no reset to undo it, a type size
+that sits on a WRAPPER reaches the box and never the value. Measured: a numeric
+field whose size class lived on its group rendered its value at the browser's
+13.3px while every other field used the 14px token, in the same form, at the
+same nominal size — for as long as the component had existed. So a field's size
+map has two halves: the height goes on the frame, the type goes on the control.
+
 **A block of text renders as a `div`, not a `p`.** Same cause: with no reset, a
 `<p>` arrives carrying the browser's own block margins, which fight the gap the
 component already decided. Headings are a separate question and the answer is

@@ -4,7 +4,14 @@ import {
   TextField as AriaTextField,
   type TextFieldProps as AriaTextFieldProps
 } from 'react-aria-components';
-import { CONTROL_BOX, CONTROL_TEXT, Field } from '../../internal/Field';
+import {
+  ALIGN,
+  CONTROL_INSIDE,
+  CONTROL_TEXT,
+  ControlFrame,
+  Field,
+  type ControlAlign
+} from '../../internal/Field';
 import { cx } from '../../internal/cx';
 import { mergeRefs } from '../../internal/mergeRefs';
 import { useNormalizedField } from '../../internal/useNormalizedField';
@@ -18,13 +25,25 @@ export type TextFieldSize = 'sm' | 'md' | 'lg';
  * doc 03 §9, and one of the details that most gives away a system that is not
  * one.
  */
-const SIZE: Record<TextFieldSize, string> = {
-  sm: 'bb:h-control-sm bb:text-xs',
-  md: 'bb:h-control-md bb:text-md',
-  lg: 'bb:h-control-lg bb:text-lg'
-} satisfies Record<TextFieldSize, string>;
+interface SizeClasses {
+  /** The height, on the frame — it is the frame that draws the box. */
+  frame: string;
+  /** The type size, on the CONTROL: an input inherits no font. */
+  text: string;
+}
 
-const INPUT = cx(CONTROL_BOX, CONTROL_TEXT);
+const SIZE: Record<TextFieldSize, SizeClasses> = {
+  sm: { frame: 'bb:h-control-sm', text: 'bb:text-xs' },
+  md: { frame: 'bb:h-control-md', text: 'bb:text-md' },
+  lg: { frame: 'bb:h-control-lg', text: 'bb:text-lg' }
+} satisfies Record<TextFieldSize, SizeClasses>;
+
+/*
+ * The control no longer draws the box — ControlFrame does, so an affix can sit
+ * inside the border and in the flow beside the value. What is left here is the
+ * value's own typography and the fact that it fills the row.
+ */
+const INPUT = cx(CONTROL_INSIDE, CONTROL_TEXT);
 
 /*
  * The `Omit` is the whole prop list, and it is worth knowing what that
@@ -58,6 +77,22 @@ export interface TextFieldProps extends Omit<
   /** Height and type size. Aligns with a Button of the same size. */
   size?: TextFieldSize;
   placeholder?: string;
+  /**
+   * Before the value, inside the box: `@`, a currency symbol, an icon.
+   *
+   * Hidden from assistive technology (doc 02 §11.3), which carries a rule with
+   * it: a unit somebody NEEDS in order to answer belongs in the label or the
+   * description, not only here.
+   */
+  prefix?: React.ReactNode;
+  /** After the value, inside the box: `.com`, a unit. Same rules as `prefix`. */
+  suffix?: React.ReactNode;
+  /**
+   * Where the value sits in its box. `start | center | end`, never
+   * `left`/`right` — a field aligned to the right in an Arabic form is aligned
+   * to the wrong edge (doc 02 §3.2).
+   */
+  align?: ControlAlign;
   /**
    * Rewrite the value as it is typed: upper case, stripped spaces, folded
    * accents. Compose it from `normalize` and the transformations beside it.
@@ -109,6 +144,9 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
       isSaving = false,
       size = 'md',
       placeholder,
+      prefix,
+      suffix,
+      align = 'start',
       normalize,
       className,
       ...ariaProps
@@ -150,15 +188,27 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
           isLoading={isLoading}
           isSaving={isSaving}
         >
-          <Input
-            ref={mergeRefs(ref, normalized.ref)}
+          <ControlFrame
+            {...(prefix === undefined ? {} : { prefix })}
+            {...(suffix === undefined ? {} : { suffix })}
+            /*
+             * The room for the busy indicator goes on the FRAME, not on the
+             * control. Field draws that indicator over the trailing edge, and
+             * reserving the space here moves a suffix out from under it as
+             * well — where reserving it on the input alone would leave the
+             * affix and the spinner in the same place (doc 07 §2.2).
+             */
             className={cx(
-              INPUT,
-              SIZE[size],
+              SIZE[size].frame,
               (isLoading || isSaving) && 'bb:pe-9'
             )}
-            {...(placeholder === undefined ? {} : { placeholder })}
-          />
+          >
+            <Input
+              ref={mergeRefs(ref, normalized.ref)}
+              className={cx(INPUT, SIZE[size].text, ALIGN[align])}
+              {...(placeholder === undefined ? {} : { placeholder })}
+            />
+          </ControlFrame>
         </Field>
       </AriaTextField>
     );
