@@ -21,3 +21,4 @@ the folder is that you can see what was believed when.
 | [0008](./0008-the-rule-of-two-splits.md)          | The rule of two splits                      | Components are chosen; props still need a real case                      |
 | [0009](./0009-a-switch-has-no-error-state.md)     | A switch has no error state                 | Immediate action, so nothing to validate later; that is a Checkbox       |
 | [0010](./0010-the-card-declares-the-container.md) | The Card declares the container             | Something had to be first, or the container-query level stayed inert     |
+| [0011](./0011-the-stepper-is-opt-in.md)           | The stepper is opt-in                       | The arrows already step the value; the buttons only cost trailing space  |
