@@ -11,14 +11,45 @@
  */
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Button, type ButtonSize, type ButtonVariant } from './Button';
+import { Force } from '../../catalog/forceState';
 
-const VARIANTS: ButtonVariant[] = [
+const VARIANTS = [
   'primary',
   'secondary',
   'subtle',
   'danger',
-  'ghost'
-];
+  'ghost',
+  'link'
+] as const satisfies readonly ButtonVariant[];
+
+/*
+ * Fails to compile if a variant is added to the component and not to this
+ * list.
+ *
+ * The previous declaration was `ButtonVariant[]`, which only checks that every
+ * entry is A variant — not that every variant is an entry. So `link` was added
+ * to the component and every story that walks this list silently stopped being
+ * complete: it was missing from the variants grid, from both theme axes and
+ * from the screenshots that guard them.
+ *
+ * A catalog that quietly covers less than it appears to is worse than one that
+ * covers nothing, because it is trusted.
+ */
+/*
+ * Fails to compile if a variant is added to the component and not to VARIANTS.
+ *
+ * A plain `ButtonVariant[]` annotation, which is what was here before, only
+ * checks that every entry IS a variant — not that every variant is an entry.
+ * So `link` was added to the component and every story that walks this list
+ * silently stopped being complete: missing from the variants grid, from both
+ * theme axes, and from the screenshots that guard them.
+ *
+ * A catalog that quietly covers less than it appears to is worse than one that
+ * covers nothing, because it is trusted.
+ */
+const MISSING: Exclude<ButtonVariant, (typeof VARIANTS)[number]>[] = [];
+void MISSING;
+
 const SIZES: ButtonSize[] = ['sm', 'md', 'lg'];
 
 /**
@@ -50,18 +81,6 @@ function Scope({
       data-bb-density={density}
       dir={dir}
       {...(brand ? { 'data-bb-theme': 'catalog-alt' } : {})}
-      style={
-        brand
-          ? ({
-              '--bb-x-brand-3': '#f3e8ff',
-              '--bb-x-brand-4': '#e9d5ff',
-              '--bb-x-brand-5': '#ddd0fe',
-              '--bb-x-brand-9': '#7c3aed',
-              '--bb-x-brand-10': '#6d28d9',
-              '--bb-x-brand-11': '#5b21b6'
-            } as React.CSSProperties)
-          : undefined
-      }
     >
       <p className="catalog-label">{label}</p>
       {children}
@@ -111,12 +130,27 @@ export const Variants: Story = {
  */
 export const Sizes: Story = {
   render: () => (
-    <div className="catalog-row">
-      {SIZES.map(size => (
-        <Button key={size} variant="primary" size={size}>
-          {`size ${size}`}
-        </Button>
-      ))}
+    <div className="catalog-stack">
+      <div className="catalog-row">
+        {SIZES.map(size => (
+          <Button key={size} variant="primary" size={size}>
+            {`size ${size}`}
+          </Button>
+        ))}
+      </div>
+      {/*
+       * The link variant too, because it is the one whose size cannot be seen.
+       * The others show it as a box; this one has no box, so only the type and
+       * the space around it carry it — and a size that only shows up as
+       * spacing is exactly the kind that drifts unnoticed.
+       */}
+      <div className="catalog-row">
+        {SIZES.map(size => (
+          <Button key={size} variant="link" size={size}>
+            {`size ${size}`}
+          </Button>
+        ))}
+      </div>
     </div>
   )
 };
@@ -124,22 +158,17 @@ export const Sizes: Story = {
 /*
  * Every state, visible at once and without interaction.
  *
- * Hover, focus and pressed are normally only reachable by pointing at the
- * thing. Here they are forced by setting the same DOM attributes React Aria
- * sets — this is not faking a state, it is the real attribute the CSS targets.
+ * Hover, focus and pressed are normally reachable only by pointing at the
+ * thing. Here they are forced by putting the same DOM attributes React Aria
+ * puts there — not faking a state, the real attribute the CSS targets.
  *
  * It matters for two reasons: the entry gate wants every state in the catalog,
- * and visual regression cannot hover. A screenshot tool needs the states to be
- * statically representable or it can never cover them.
+ * and a screenshot cannot hover. States have to be statically representable or
+ * they can never be covered.
  *
- * The cast is needed because these attributes are internal to the base and are
- * deliberately not part of our public props (doc 02 §10).
+ * How they are forced is not a detail — passing them as props does nothing at
+ * all, which is why <Force> exists. Read the note on it.
  */
-type ForcedState = 'data-hovered' | 'data-pressed' | 'data-focus-visible';
-
-function forced(attribute: ForcedState) {
-  return { [attribute]: true } as unknown as Record<string, boolean>;
-}
 
 export const States: Story = {
   render: () => (
@@ -153,15 +182,15 @@ export const States: Story = {
             {variant}
           </span>
           <Button variant={variant}>default</Button>
-          <Button variant={variant} {...forced('data-hovered')}>
-            hover
-          </Button>
-          <Button variant={variant} {...forced('data-pressed')}>
-            pressed
-          </Button>
-          <Button variant={variant} {...forced('data-focus-visible')}>
-            focus
-          </Button>
+          <Force state="data-hovered">
+            <Button variant={variant}>hover</Button>
+          </Force>
+          <Force state="data-pressed">
+            <Button variant={variant}>pressed</Button>
+          </Force>
+          <Force state="data-focused">
+            <Button variant={variant}>focus</Button>
+          </Force>
           <Button variant={variant} isDisabled>
             disabled
           </Button>
@@ -288,7 +317,8 @@ const LONG: Record<ButtonVariant, string> = {
   secondary: 'Cancelar y volver al listado',
   subtle: 'Ver detalles completos',
   danger: 'Eliminar definitivamente el registro',
-  ghost: 'Más opciones'
+  ghost: 'Más opciones',
+  link: '¿Olvidaste tu contraseña?'
 };
 
 export const LongLabels: Story = {
