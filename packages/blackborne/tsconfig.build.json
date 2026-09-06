@@ -12,5 +12,11 @@
     "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo"
   },
   "include": ["src"],
-  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/**/*.stories.tsx"]
+  "exclude": [
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.stories.tsx",
+    // Catalog-only helpers. Not imported by anything that ships.
+    "src/catalog"
+  ]
 }
