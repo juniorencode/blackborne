@@ -11,8 +11,7 @@
  * browser actually painted the thumb, not which CSS property was set.
  */
 import { expect, test } from '@playwright/test';
-
-const story = (id: string) => `/iframe.html?id=${id}&viewMode=story`;
+import { gotoStory } from './story';
 
 const panel = (label: string) =>
   `.catalog-panel:has(.catalog-label:text-is("${label}"))`;
@@ -30,7 +29,7 @@ const thumbPosition = (locator: import('@playwright/test').Locator) =>
 
 test.describe('LTR', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(story('components-switch--direction'));
+    await gotoStory(page, 'components-switch--direction');
   });
 
   test('off sits at the left, on sits at the right', async ({ page }) => {
@@ -50,7 +49,7 @@ test.describe('LTR', () => {
 
 test.describe('RTL', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(story('components-switch--direction'));
+    await gotoStory(page, 'components-switch--direction');
   });
 
   test('the travel is mirrored: on sits at the LEFT', async ({ page }) => {
@@ -71,7 +70,7 @@ test.describe('RTL', () => {
 });
 
 test('flipping one moves the thumb across', async ({ page }) => {
-  await page.goto(story('components-switch--states'));
+  await gotoStory(page, 'components-switch--states');
 
   const off = page.locator('label').filter({ hasText: 'Off' }).first();
   const before = await thumbPosition(off);

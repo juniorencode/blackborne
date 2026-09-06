@@ -17,6 +17,7 @@
  */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
+import { gotoStory } from './story';
 
 type StoryEntry = { id: string; name: string; title: string; type: string };
 
@@ -58,7 +59,7 @@ test.describe('automated accessibility', () => {
 
   for (const entry of stories) {
     test(`${entry.title} / ${entry.name}`, async ({ page }) => {
-      await page.goto(`/iframe.html?id=${entry.id}&viewMode=story`);
+      await gotoStory(page, entry.id);
       await page.evaluate(() => document.fonts.ready);
 
       /*

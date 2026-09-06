@@ -12,6 +12,7 @@
  * test failure rather than something spotted in a screenshot weeks later.
  */
 import { expect, test } from '@playwright/test';
+import { gotoStory } from './story';
 
 /**
  * Radix slate step 2, which is what --bb-surface-control maps to in each mode.
@@ -27,15 +28,13 @@ const CONTROL_DARK = 'rgb(24, 25, 27)';
 /** Radix violet step 9 — the alternate brand, defined once in catalog.css. */
 const BRAND_ALT = 'rgb(110, 86, 207)';
 
-const story = (id: string) => `/iframe.html?id=${id}&viewMode=story`;
-
 /** A panel inside a story, found by the label it prints. */
 const panel = (label: string) =>
   `.catalog-panel:has(.catalog-label:text-is("${label}"))`;
 
 test.describe('mode', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(story('components-button--modes'));
+    await gotoStory(page, 'components-button--modes');
   });
 
   test('a control uses the control surface in light', async ({ page }) => {
@@ -94,7 +93,7 @@ test.describe('mode', () => {
 
 test.describe('brand', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(story('components-button--brand-override'));
+    await gotoStory(page, 'components-button--brand-override');
   });
 
   test('an override reaches the accent colour', async ({ page }) => {
@@ -123,7 +122,7 @@ test.describe('brand', () => {
 
 test.describe('density', () => {
   test('it moves the height and leaves the colour alone', async ({ page }) => {
-    await page.goto(story('components-button--densities'));
+    await gotoStory(page, 'components-button--densities');
 
     const at = (label: string) =>
       page.locator(panel(label)).getByRole('button', { name: 'secondary' });

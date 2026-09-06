@@ -30,6 +30,7 @@
  * dates, ids or random values.
  */
 import { expect, test } from '@playwright/test';
+import { gotoStory } from './story';
 
 /*
  * Refuse to run anywhere but linux.
@@ -56,8 +57,6 @@ test.beforeAll(() => {
   }
 });
 
-const story = (id: string) => `/iframe.html?id=${id}&viewMode=story`;
-
 /**
  * One screenshot of a whole story.
  *
@@ -70,8 +69,12 @@ const capture = async (
   id: string,
   name: string
 ) => {
-  await page.goto(story(id));
-  await page.evaluate(() => document.fonts.ready);
+  // gotoStory, not page.goto: it waits for the story to MOUNT. Without that
+  // this line can photograph an empty page, and --update-snapshots has nothing
+  // to match against, so the empty page becomes the committed reference. See
+  // the note on gotoStory.
+  await gotoStory(page, id);
+
   // The story root, not the viewport: a full-page shot would include the
   // scrollbar, which differs between platforms even inside one container.
   await expect(page.locator('body')).toHaveScreenshot(`${name}.png`);

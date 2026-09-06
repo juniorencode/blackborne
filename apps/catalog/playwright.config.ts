@@ -25,13 +25,28 @@ export default defineConfig({
   expect: {
     toHaveScreenshot: {
       /*
-       * ZERO tolerance, on purpose.
+       * ZERO tolerance, on purpose, and it takes BOTH of these.
        *
        * A pixel budget absorbs the difference between two machines AND real
        * one-pixel drift, and drift is exactly what this is for. The platform
        * problem is solved by generating every reference in the same container
        * (see the docker: scripts), not by agreeing to ignore differences.
+       *
+       * maxDiffPixelRatio alone does NOT do that, and for a long time this
+       * file claimed it did. It bounds HOW MANY pixels may differ; `threshold`
+       * bounds HOW MUCH one pixel may differ before it counts as differing at
+       * all, and its default is 0.2 — a fifth of the colour space, per pixel,
+       * silently allowed. Zero of an over-counted thing is still zero.
+       *
+       * Measured, with the default in place: moving a switch track from grey
+       * step 3 to step 2 changed roughly 1760 pixels of a 271,360 pixel
+       * capture, by nine units per channel, and the suite reported it as
+       * identical. That is precisely the change this exists to catch, and it
+       * is exactly the size of change small enough to slip under a per-pixel
+       * threshold — large colour moves still failed, which is what made the
+       * gap look like it was not there.
        */
+      threshold: 0,
       maxDiffPixelRatio: 0,
       /*
        * Animations frozen at their end state, per doc 10 §6: an animation

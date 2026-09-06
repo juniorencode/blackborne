@@ -12,8 +12,7 @@
  * Eyeballing two pixels is not a check, so it is asserted.
  */
 import { expect, test } from '@playwright/test';
-
-const story = (id: string) => `/iframe.html?id=${id}&viewMode=story`;
+import { gotoStory } from './story';
 
 const SIZES = ['sm', 'md', 'lg'] as const;
 
@@ -21,7 +20,7 @@ for (const size of SIZES) {
   test(`a field and a button of size ${size} are exactly the same height`, async ({
     page
   }) => {
-    await page.goto(story('components-textfield--aligns-with-button'));
+    await gotoStory(page, 'components-textfield--aligns-with-button');
 
     const row = page.getByTestId(`align-${size}`);
     const input = row.getByRole('textbox');
@@ -46,7 +45,7 @@ for (const size of SIZES) {
 test('the three sizes are a scale, not three arbitrary numbers', async ({
   page
 }) => {
-  await page.goto(story('components-textfield--aligns-with-button'));
+  await gotoStory(page, 'components-textfield--aligns-with-button');
 
   const heights: number[] = [];
   for (const size of SIZES) {
@@ -65,7 +64,7 @@ test('the three sizes are a scale, not three arbitrary numbers', async ({
 test('compact density shrinks the control and keeps it aligned', async ({
   page
 }) => {
-  await page.goto(story('components-textfield--densities'));
+  await gotoStory(page, 'components-textfield--densities');
 
   const panel = (label: string) =>
     page.locator(`.catalog-panel:has(.catalog-label:text-is("${label}"))`);
