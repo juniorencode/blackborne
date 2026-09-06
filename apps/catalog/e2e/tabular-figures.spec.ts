@@ -8,11 +8,10 @@
  * question is how wide the browser drew a digit.
  */
 import { expect, test } from '@playwright/test';
-
-const story = (id: string) => `/iframe.html?id=${id}&viewMode=story`;
+import { gotoStory } from './story';
 
 test('a number field declares tabular figures', async ({ page }) => {
-  await page.goto(story('components-numberfield--aligns-with-others'));
+  await gotoStory(page, 'components-numberfield--aligns-with-others');
 
   const variant = await page
     .getByTestId('nf-column')
@@ -27,7 +26,7 @@ test('a number field declares tabular figures', async ({ page }) => {
 });
 
 test('digits of different values occupy the same width', async ({ page }) => {
-  await page.goto(story('components-numberfield--aligns-with-others'));
+  await gotoStory(page, 'components-numberfield--aligns-with-others');
 
   /*
    * The real test of tabular figures. Measured by replacing the value with
@@ -70,7 +69,7 @@ test('digits of different values occupy the same width', async ({ page }) => {
 test('a number field aligns with a text field and a button', async ({
   page
 }) => {
-  await page.goto(story('components-numberfield--aligns-with-others'));
+  await gotoStory(page, 'components-numberfield--aligns-with-others');
 
   for (const size of ['sm', 'md', 'lg']) {
     const row = page.getByTestId(`nf-align-${size}`);

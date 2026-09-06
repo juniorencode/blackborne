@@ -22,8 +22,7 @@
  * the written form of that for Tab, and doc 07 §11 carries the rule.
  */
 import { expect, test } from '@playwright/test';
-
-const story = (id: string) => `/iframe.html?id=${id}&viewMode=story`;
+import { gotoStory } from './story';
 
 type Selection = 'all' | 'start' | 'other';
 
@@ -61,7 +60,7 @@ const tabTo = async (
 test('a single-line field arrives with its value selected', async ({
   page
 }) => {
-  await page.goto(story('components-textfield--states'));
+  await gotoStory(page, 'components-textfield--states');
 
   expect(await tabTo(page, 'Ada Lovelace')).toBe(true);
   // Typing replaces, which is what someone tabbing to a short value wants.
@@ -69,7 +68,7 @@ test('a single-line field arrives with its value selected', async ({
 });
 
 test('a number field arrives with its value selected', async ({ page }) => {
-  await page.goto(story('components-numberfield--states'));
+  await gotoStory(page, 'components-numberfield--states');
 
   expect(await tabTo(page, '1,234.5')).toBe(true);
   // Most true of all here: you tab to a quantity to change it, not to insert
@@ -80,7 +79,7 @@ test('a number field arrives with its value selected', async ({ page }) => {
 test('a multi-line field arrives with the caret at the start', async ({
   page
 }) => {
-  await page.goto(story('components-textarea--states'));
+  await gotoStory(page, 'components-textarea--states');
 
   const value = 'Delivered on Tuesday, signed for by reception.';
   expect(await tabTo(page, value)).toBe(true);
@@ -98,7 +97,7 @@ test('an empty field of any kind puts the caret at the start', async ({
     'components-textarea--states',
     'components-numberfield--states'
   ]) {
-    await page.goto(story(id));
+    await gotoStory(page, id);
     expect(await tabTo(page, ''), id).toBe(true);
     expect(await selectionState(page), id).toBe('start');
   }

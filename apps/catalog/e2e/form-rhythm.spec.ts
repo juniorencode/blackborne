@@ -14,8 +14,7 @@
  * asserts the rule and does not break when a wrapper is added.
  */
 import { expect, test, type Locator } from '@playwright/test';
-
-const story = (id: string) => `/iframe.html?id=${id}&viewMode=story`;
+import { gotoStory } from './story';
 
 /**
  * The vertical gap of the field that contains this control, in pixels.
@@ -42,7 +41,7 @@ const fieldGap = (control: Locator) =>
 test('a text field and a checkbox agree on the gap inside a field', async ({
   page
 }) => {
-  await page.goto(story('components-checkbox--in-a-form'));
+  await gotoStory(page, 'components-checkbox--in-a-form');
 
   const inText = await fieldGap(
     page.getByRole('textbox', { name: /Full name/ })
@@ -59,7 +58,7 @@ test('a text field and a checkbox agree on the gap inside a field', async ({
 test('the gap between fields is larger than the gap inside one', async ({
   page
 }) => {
-  await page.goto(story('components-checkbox--in-a-form'));
+  await gotoStory(page, 'components-checkbox--in-a-form');
 
   const between = Number.parseFloat(
     await page.getByTestId('form').evaluate(el => getComputedStyle(el).rowGap)
@@ -72,7 +71,7 @@ test('the gap between fields is larger than the gap inside one', async ({
 });
 
 test('compact trims both gaps rather than one of them', async ({ page }) => {
-  await page.goto(story('components-checkbox--in-a-form'));
+  await gotoStory(page, 'components-checkbox--in-a-form');
   const normalInside = await fieldGap(
     page.getByRole('textbox', { name: /Full name/ })
   );
@@ -80,7 +79,7 @@ test('compact trims both gaps rather than one of them', async ({ page }) => {
     await page.getByTestId('form').evaluate(el => getComputedStyle(el).rowGap)
   );
 
-  await page.goto(story('components-checkbox--in-a-form-dark-compact'));
+  await gotoStory(page, 'components-checkbox--in-a-form-dark-compact');
   const compactInside = await fieldGap(
     page.getByRole('textbox', { name: /Full name/ })
   );

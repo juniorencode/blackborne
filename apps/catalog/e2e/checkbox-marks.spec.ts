@@ -11,8 +11,9 @@
  * "what did the browser actually paint", and jsdom applies no stylesheet.
  */
 import { expect, test } from '@playwright/test';
+import { gotoStory } from './story';
 
-const story = '/iframe.html?id=components-checkbox--marks&viewMode=story';
+const STORY = 'components-checkbox--marks';
 
 const CASES = [
   { id: 'mark-none', check: false, dash: false },
@@ -39,7 +40,7 @@ const displays = async (page: import('@playwright/test').Page, id: string) =>
   }));
 
 test.beforeEach(async ({ page }) => {
-  await page.goto(story);
+  await gotoStory(page, STORY);
 });
 
 for (const { id, check, dash } of CASES) {
@@ -75,9 +76,7 @@ test.describe('select all', () => {
   const PARENT = 'All notifications';
 
   test.beforeEach(async ({ page }) => {
-    await page.goto(
-      '/iframe.html?id=components-checkbox--select-all-pattern&viewMode=story'
-    );
+    await gotoStory(page, 'components-checkbox--select-all-pattern');
   });
 
   /*
