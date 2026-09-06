@@ -13,11 +13,19 @@
  */
 import { expect, test } from '@playwright/test';
 
-/** Radix slate, the steps the semantic mapping uses for a control. */
-const CONTROL_LIGHT = 'rgb(240, 240, 243)';
-const CONTROL_DARK = 'rgb(33, 34, 37)';
-/** The alternate brand the catalog stories inject. */
-const BRAND_ALT = 'rgb(124, 58, 237)';
+/**
+ * Radix slate step 2, which is what --bb-surface-control maps to in each mode.
+ *
+ * Pinned to the palette on purpose: these three constants are the reason a
+ * token remap shows up as a named failure. They did exactly that when the
+ * control surface moved from step 3 to step 2 and the alternate brand became
+ * Radix violet — five red tests naming the token, rather than a difference
+ * somebody might or might not notice in a screenshot.
+ */
+const CONTROL_LIGHT = 'rgb(249, 249, 251)';
+const CONTROL_DARK = 'rgb(24, 25, 27)';
+/** Radix violet step 9 — the alternate brand, defined once in catalog.css. */
+const BRAND_ALT = 'rgb(110, 86, 207)';
 
 const story = (id: string) => `/iframe.html?id=${id}&viewMode=story`;
 

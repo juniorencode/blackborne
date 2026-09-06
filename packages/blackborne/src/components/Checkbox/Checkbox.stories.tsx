@@ -12,6 +12,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Button } from '../Button';
 import { Checkbox } from './Checkbox';
 import { TextField } from '../TextField';
+import { Force } from '../../catalog/forceState';
 
 function Scope({
   label,
@@ -58,9 +59,6 @@ export const Playground: Story = {};
  * screenshot tool. That is not faking a state — those are the attributes the
  * CSS targets.
  */
-type Forced = 'data-hovered' | 'data-pressed' | 'data-focus-visible';
-const forced = (attribute: Forced) =>
-  ({ [attribute]: true }) as unknown as Record<string, boolean>;
 
 export const States: Story = {
   render: () => (
@@ -74,9 +72,15 @@ export const States: Story = {
         for indeterminate behaving as it does in real use.
       */}
       <Checkbox isIndeterminate>Indeterminate (held)</Checkbox>
-      <Checkbox {...forced('data-hovered')}>Hovered</Checkbox>
-      <Checkbox {...forced('data-pressed')}>Pressed</Checkbox>
-      <Checkbox {...forced('data-focus-visible')}>Focused</Checkbox>
+      <Force state="data-hovered">
+        <Checkbox>Hovered</Checkbox>
+      </Force>
+      <Force state="data-pressed">
+        <Checkbox>Pressed</Checkbox>
+      </Force>
+      <Force state="data-focused">
+        <Checkbox>Focused</Checkbox>
+      </Force>
       <Checkbox isDisabled>Disabled</Checkbox>
       <Checkbox isDisabled defaultSelected>
         Disabled and checked
@@ -193,6 +197,38 @@ function SelectAll() {
 export const SelectAllPattern: Story = {
   name: 'Select all (indeterminate in use)',
   render: () => <SelectAll />
+};
+
+/**
+ * A brand override, which is level 1 of the customisation contract
+ * (doc 03 §7): redefine the brand scale and the semantic tokens recompute on
+ * their own. The mark, the fill and the focus ring all follow, without the
+ * component knowing a theme changed.
+ *
+ * `data-bb-theme` on the same element is what makes it work — a CSS var()
+ * resolves where it is declared, so without the attribute the override
+ * silently does nothing (doc 03 §3.1).
+ */
+export const BrandOverride: Story = {
+  render: () => (
+    <div className="catalog-pair">
+      <Scope label="Default brand">
+        <div className="catalog-stack">
+          <Checkbox defaultSelected>Checked</Checkbox>
+          <Checkbox isIndeterminate>Indeterminate</Checkbox>
+          <Checkbox>Unchecked</Checkbox>
+        </div>
+      </Scope>
+      <div className="catalog-panel" data-bb-theme="catalog-alt">
+        <p className="catalog-label">Overridden brand</p>
+        <div className="catalog-stack">
+          <Checkbox defaultSelected>Checked</Checkbox>
+          <Checkbox isIndeterminate>Indeterminate</Checkbox>
+          <Checkbox>Unchecked</Checkbox>
+        </div>
+      </div>
+    </div>
+  )
 };
 
 /** Light and dark side by side, never by toggling (doc 03 §6). */

@@ -248,19 +248,7 @@ export const BrandOverride: Story = {
           <TextField label="With value" defaultValue="ada@example.com" />
         </div>
       </Scope>
-      <div
-        className="catalog-panel"
-        data-bb-theme="catalog-alt"
-        style={
-          {
-            '--bb-x-brand-3': '#f3e8ff',
-            '--bb-x-brand-8': '#a78bfa',
-            '--bb-x-brand-9': '#7c3aed',
-            '--bb-x-brand-10': '#6d28d9',
-            '--bb-x-brand-11': '#5b21b6'
-          } as React.CSSProperties
-        }
-      >
+      <div className="catalog-panel" data-bb-theme="catalog-alt">
         <p className="catalog-label">Overridden brand</p>
         <div className="catalog-stack" style={{ gap: 'var(--bb-field-gap)' }}>
           <TextField label="Required" isRequired defaultValue="Ada Lovelace" />

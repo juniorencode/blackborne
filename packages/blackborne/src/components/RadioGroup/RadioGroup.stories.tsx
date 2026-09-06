@@ -121,6 +121,34 @@ export const Horizontal: Story = {
   )
 };
 
+/**
+ * A brand override, which is level 1 of the customisation contract
+ * (doc 03 §7): redefine the brand scale and the semantic tokens recompute on
+ * their own. The mark, the fill and the focus ring all follow, without the
+ * component knowing a theme changed.
+ *
+ * `data-bb-theme` on the same element is what makes it work — a CSS var()
+ * resolves where it is declared, so without the attribute the override
+ * silently does nothing (doc 03 §3.1).
+ */
+export const BrandOverride: Story = {
+  render: () => (
+    <div className="catalog-pair">
+      <Scope label="Default brand">
+        <RadioGroup label="Delivery" defaultValue="express">
+          {OPTIONS}
+        </RadioGroup>
+      </Scope>
+      <div className="catalog-panel" data-bb-theme="catalog-alt">
+        <p className="catalog-label">Overridden brand</p>
+        <RadioGroup label="Delivery" defaultValue="express">
+          {OPTIONS}
+        </RadioGroup>
+      </div>
+    </div>
+  )
+};
+
 /** Light and dark side by side, never by toggling (doc 03 §6). */
 export const Modes: Story = {
   render: () => (

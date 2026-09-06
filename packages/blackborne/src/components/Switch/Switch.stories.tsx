@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Checkbox } from '../Checkbox';
 import { Switch } from './Switch';
+import { Force } from '../../catalog/forceState';
 
 function Scope({
   label,
@@ -46,20 +47,21 @@ export const Playground: Story = {};
  * moment it is flipped, so there is no later point at which it can be found
  * invalid — see the next story.
  */
-type Forced = 'data-hovered' | 'data-pressed' | 'data-focus-visible';
-const forced = (attribute: Forced) =>
-  ({ [attribute]: true }) as unknown as Record<string, boolean>;
 
 export const States: Story = {
   render: () => (
     <div className="catalog-stack" style={{ maxWidth: 420 }}>
       <Switch>Off</Switch>
       <Switch defaultSelected>On</Switch>
-      <Switch {...forced('data-hovered')}>Hovered</Switch>
-      <Switch {...forced('data-focus-visible')}>Focused</Switch>
-      <Switch defaultSelected {...forced('data-focus-visible')}>
-        Focused and on
-      </Switch>
+      <Force state="data-hovered">
+        <Switch>Hovered</Switch>
+      </Force>
+      <Force state="data-focused">
+        <Switch>Focused</Switch>
+      </Force>
+      <Force state="data-focused">
+        <Switch defaultSelected>Focused and on</Switch>
+      </Force>
       <Switch isDisabled>Disabled</Switch>
       <Switch isDisabled defaultSelected>
         Disabled and on
@@ -110,6 +112,36 @@ export const AgainstCheckbox: Story = {
           >
             Accept the delivery conditions
           </Checkbox>
+        </div>
+      </div>
+    </div>
+  )
+};
+
+/**
+ * A brand override, which is level 1 of the customisation contract
+ * (doc 03 §7): redefine the brand scale and the semantic tokens recompute on
+ * their own. The mark, the fill and the focus ring all follow, without the
+ * component knowing a theme changed.
+ *
+ * `data-bb-theme` on the same element is what makes it work — a CSS var()
+ * resolves where it is declared, so without the attribute the override
+ * silently does nothing (doc 03 §3.1).
+ */
+export const BrandOverride: Story = {
+  render: () => (
+    <div className="catalog-pair">
+      <Scope label="Default brand">
+        <div className="catalog-stack">
+          <Switch defaultSelected>On</Switch>
+          <Switch>Off</Switch>
+        </div>
+      </Scope>
+      <div className="catalog-panel" data-bb-theme="catalog-alt">
+        <p className="catalog-label">Overridden brand</p>
+        <div className="catalog-stack">
+          <Switch defaultSelected>On</Switch>
+          <Switch>Off</Switch>
         </div>
       </div>
     </div>

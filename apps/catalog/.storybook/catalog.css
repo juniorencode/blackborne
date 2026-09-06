@@ -49,3 +49,42 @@ body {
   flex-direction: column;
   gap: 12px;
 }
+
+/*
+ * The alternate brand every "Overridden brand" story switches to.
+ *
+ * It lives here once instead of inline in each story file, because it WAS
+ * inline in five of them and the five had drifted apart: Button was missing
+ * step 8, TextField was missing 4 and 5, and none of them defined 12. Every
+ * step a copy left out fell back to the library's own indigo, so a story whose
+ * whole job was to prove the brand axis works was quietly proving it does not.
+ *
+ * It must declare every step the semantic layer reads — 3, 4, 5, 8, 9, 10, 11
+ * and 12 — which is the contract at the foot of semantic.css.
+ *
+ * TWO scales, not one. A brand is not a colour, it is a scale per mode: the
+ * light steps run light-to-dark and the dark ones run the other way. The old
+ * fixture had a single light scale and reused it inside the dark panel, which
+ * put a dark violet on a near-black page and made pressed and hover swap
+ * places. Radix violet, so the alternate brand is as real as the default.
+ */
+[data-bb-theme='catalog-alt'] {
+  --bb-x-brand-3: #f4f0fe;
+  --bb-x-brand-4: #ebe4ff;
+  --bb-x-brand-5: #e1d9ff;
+  --bb-x-brand-8: #aa99ec;
+  --bb-x-brand-9: #6e56cf;
+  --bb-x-brand-10: #654dc4;
+  --bb-x-brand-11: #6550b9;
+  --bb-x-brand-12: #2f265f;
+}
+[data-bb-theme='catalog-alt'][data-bb-mode='dark'] {
+  --bb-x-brand-3: #291f43;
+  --bb-x-brand-4: #33255b;
+  --bb-x-brand-5: #3c2e69;
+  --bb-x-brand-8: #6958ad;
+  --bb-x-brand-9: #6e56cf;
+  --bb-x-brand-10: #7d66d9;
+  --bb-x-brand-11: #baa7ff;
+  --bb-x-brand-12: #e2ddfe;
+}
