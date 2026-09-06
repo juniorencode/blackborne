@@ -159,6 +159,26 @@ minor versions. Every break is listed here with its migration.
 
 ### Changed
 
+- **Breaking — `NumberField` no longer shows its stepper buttons by default**
+  ([decision 0011](docs/decisions/0011-the-stepper-is-opt-in.md)). Pass
+  `isStepperVisible` where pressing is genuinely how the value is entered.
+
+  Nothing is lost without them: the arrow keys still step by `step`, Page Up
+  and Page Down still make larger jumps, the value is still announced, and the
+  control is still a `spinbutton`. All of that is the base's, not the buttons'.
+  What the buttons cost is the trailing edge of every numeric field on a form
+  trying to be dense — measured on the catalog's own story, 28px on the
+  trailing side and 56px across both.
+
+  ```diff
+  - <NumberField label="Quantity" />
+  + <NumberField label="Quantity" isStepperVisible />
+  ```
+
+  A default that is wrong for the common case is paid for by everyone who does
+  not know there is a prop; a default that is wrong for the rare case is paid
+  for once, deliberately, by whoever needs it.
+
 - `--width-hit` is gone, one week after it was added, and `--min-width-hit`
   replaces it. The comment introducing it claimed it made `bb:min-w-hit`
   writable and that was simply false — Tailwind resolves a min-width utility
@@ -228,6 +248,13 @@ minor versions. Every break is listed here with its migration.
 
 ### Fixed
 
+- `NumberField` drew its stepper buttons while loading or saving, so the busy
+  indicator was painted on top of the `+` button — two things in one place, and
+  the one you could press did nothing useful. Doc 07 §2.2 gives the trailing
+  edge to the busy state outright, and the field now honours it whatever
+  `isStepperVisible` says. Found by another component implementing the same
+  clause.
+
 - Two catalog checks that were passing without checking anything. The forced
   hover, pressed and focus states never reached the DOM — the base renders its
   own state attributes on the same element and wins — so every `*-states`
@@ -240,6 +267,9 @@ minor versions. Every break is listed here with its migration.
   with an installation built inside the container.
 
 ### Removed
+
+- `isSteppersHidden` on `NumberField`. It is the default now, so the migration
+  is to delete the prop.
 
 - The entire `0.1.1` codebase. It stays available under the `v0.1.1` git tag.
 - `react-router-dom` as a peer dependency. The library provides no routing

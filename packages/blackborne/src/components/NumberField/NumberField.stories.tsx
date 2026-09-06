@@ -73,7 +73,7 @@ export const States: Story = {
         minValue={1}
         maxValue={10}
       />
-      <NumberField label="No steppers" defaultValue={2400} isSteppersHidden />
+      <NumberField label="With the stepper" defaultValue={3} isStepperVisible />
       <NumberField label="Saving" defaultValue={12} isSaving />
     </div>
   )
@@ -197,24 +197,9 @@ export const AlignsWithOthers: Story = {
       <div className="catalog-panel" style={{ maxWidth: 240 }}>
         <p className="catalog-label">Tabular figures line up in a column</p>
         <div className="catalog-stack" data-testid="nf-column">
-          <NumberField
-            label="One"
-            isLabelHidden
-            defaultValue={1111.11}
-            isSteppersHidden
-          />
-          <NumberField
-            label="Two"
-            isLabelHidden
-            defaultValue={22.2}
-            isSteppersHidden
-          />
-          <NumberField
-            label="Three"
-            isLabelHidden
-            defaultValue={333333.3}
-            isSteppersHidden
-          />
+          <NumberField label="One" isLabelHidden defaultValue={1111.11} />
+          <NumberField label="Two" isLabelHidden defaultValue={22.2} />
+          <NumberField label="Three" isLabelHidden defaultValue={333333.3} />
         </div>
       </div>
     </div>
@@ -313,6 +298,62 @@ export const Narrow: Story = {
           />
         </div>
       </ConfigProvider>
+    </div>
+  )
+};
+
+/**
+ * The stepper, on and off — and off is the default
+ * ([decision 0011](../../../../docs/decisions/0011-the-stepper-is-opt-in.md)).
+ *
+ * This story exists because "the buttons are gone" reads as a regression until
+ * you see it was chosen. Nothing is lost with them hidden: the arrow keys still
+ * step, Page Up and Page Down still jump, and the control is still a
+ * `spinbutton`. All of that is the base's, not the buttons'.
+ *
+ * What the buttons cost is the third panel: about 40px off the trailing edge of
+ * every numeric field on a form trying to be dense. Compare the two widths of
+ * usable box, not the two heights.
+ *
+ * The last pair is the rule from doc 07 §2.2 in the one place it is visible:
+ * **busy takes the trailing edge outright**, so a stepper is not drawn while
+ * the field is loading or saving whatever this prop says. Before that rule the
+ * spinner was painted on top of the `+` button.
+ */
+export const TheStepper: Story = {
+  render: () => (
+    <div className="catalog-pair">
+      <div className="catalog-panel">
+        <p className="catalog-label">Default — no stepper</p>
+        <div className="catalog-stack">
+          <NumberField label="Quantity" defaultValue={3} />
+          <NumberField label="Amount" defaultValue={2400} />
+        </div>
+      </div>
+      <div className="catalog-panel">
+        <p className="catalog-label">isStepperVisible</p>
+        <div className="catalog-stack">
+          <NumberField label="Quantity" defaultValue={3} isStepperVisible />
+          <NumberField label="Amount" defaultValue={2400} isStepperVisible />
+        </div>
+      </div>
+      <div className="catalog-panel">
+        <p className="catalog-label">Busy wins the edge</p>
+        <div className="catalog-stack">
+          <NumberField
+            label="Loading"
+            defaultValue={3}
+            isStepperVisible
+            isLoading
+          />
+          <NumberField
+            label="Saving"
+            defaultValue={3}
+            isStepperVisible
+            isSaving
+          />
+        </div>
+      </div>
     </div>
   )
 };
