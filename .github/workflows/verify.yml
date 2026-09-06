@@ -29,14 +29,21 @@ jobs:
 
   # The slow layer, in its own job so it never delays the fast one.
   #
-  # It exists because two core guarantees cannot be checked without a browser:
-  # jsdom does not implement real tab order, so it cannot say where focus goes,
-  # and it does not resolve CSS variables, so it cannot say what colour an
-  # element ended up. A token cascade bug that made dark mode and brand
-  # overrides silently do nothing passed every unit test.
+  # It exists because several core guarantees cannot be checked without a
+  # browser. jsdom does not resolve CSS variables, does not implement real tab
+  # order, and applies no stylesheet — so it can answer neither "what colour
+  # did this end up", nor "where did focus go", nor "which mark is showing".
+  # Every one of those has caught a real defect here.
   browser:
-    name: Browser checks against the catalog
+    name: Browser checks, accessibility and visual regression
     runs-on: ubuntu-latest
+    # Runs in the same image the baselines were generated in, so a screenshot
+    # taken here is byte-identical to one taken locally through
+    # apps/catalog/docker-visual.sh. That is what lets the pixel tolerance stay
+    # at zero — see that script for why a tolerance would defeat the purpose.
+    container:
+      image: mcr.microsoft.com/playwright:v1.62.1-noble
+      options: --ipc=host
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -46,17 +53,29 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
-      # The catalog consumes the built package, exactly as a consumer does,
-      # so this has to run first.
+      # The catalog renders the built stylesheet, exactly as a consumer does,
+      # so this has to come first.
       - name: Build the package
         run: pnpm --filter blackborne build
 
-      - name: Install Chromium
-        run: pnpm --filter catalog exec playwright install --with-deps chromium
-
-      - name: Run browser checks
+      - name: Behaviour checks
         run: pnpm --filter catalog test:e2e
 
+      # Doc 06 §5 is clear that this layer catches "a small fraction" and is a
+      # cheap filter rather than a guarantee. It earns its place anyway: it
+      # found a filled danger button at 3.91:1 against a 4.5:1 requirement,
+      # which had been in the catalog since the first component.
+      - name: Automated accessibility
+        run: pnpm --filter catalog test:a11y
+
+      # Doc 10 §6: the safety net that says WHICH components changed appearance
+      # after a token edit. Demonstrated rather than assumed — changing one
+      # radius token failed 13 of 19 baselines and left 6 untouched.
+      - name: Visual regression
+        run: pnpm --filter catalog test:visual
+
+      # The diff images are the whole point of a visual failure: a report that
+      # says "13 differ" without showing them is unactionable.
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

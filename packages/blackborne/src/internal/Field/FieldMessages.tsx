@@ -56,7 +56,7 @@ export function FieldMessages({
            * The text itself is the second channel alongside any colour, which
            * is what keeps the state readable in greyscale (doc 06 §3).
            */
-          className={cx('bb:text-xs bb:text-danger')}
+          className={cx('bb:text-xs bb:text-danger-text')}
         >
           {errorMessage}
         </span>

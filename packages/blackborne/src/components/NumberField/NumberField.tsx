@@ -44,8 +44,9 @@ const GROUP = cx(
   // The ring lands on the GROUP, not the input, because the buttons are part
   // of the control as far as anyone looking at it is concerned.
   'bb:data-focus-within:border-border-focus',
-  'bb:data-focus-within:shadow-[0_0_0_2px_var(--bb-focus-ring-offset),0_0_0_4px_var(--bb-focus-ring)]',
+  'bb:data-focus-within:border-focus-ring bb:data-focus-within:shadow-[0_0_0_4px_color-mix(in_oklab,var(--bb-focus-ring)_var(--bb-focus-ring-halo-strength),transparent)]',
   'bb:data-invalid:border-danger',
+  'bb:data-invalid:[--bb-focus-ring:var(--bb-danger)]',
   'bb:data-disabled:bg-surface-disabled bb:data-disabled:text-text-disabled'
 );
 

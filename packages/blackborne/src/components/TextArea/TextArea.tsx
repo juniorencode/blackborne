@@ -30,8 +30,9 @@ const CONTROL = cx(
   // (doc 03 §4.7): raise the value, do not lower the placeholder.
   'bb:placeholder:text-text-muted',
   'bb:data-focused:border-border-focus',
-  'bb:data-focused:shadow-[0_0_0_2px_var(--bb-focus-ring-offset),0_0_0_4px_var(--bb-focus-ring)]',
+  'bb:data-focused:border-focus-ring bb:data-focused:shadow-[0_0_0_4px_color-mix(in_oklab,var(--bb-focus-ring)_var(--bb-focus-ring-halo-strength),transparent)]',
   'bb:data-invalid:border-danger',
+  'bb:data-invalid:[--bb-focus-ring:var(--bb-danger)]',
   'bb:data-readonly:bg-surface-sunken',
   'bb:data-disabled:bg-surface-disabled bb:data-disabled:text-text-disabled',
   'bb:data-disabled:cursor-not-allowed'

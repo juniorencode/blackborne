@@ -16,6 +16,8 @@ export default tseslint.config(
       '**/node_modules/**',
       '**/coverage/**',
       '**/storybook-static/**',
+      // Written by the Docker container's pnpm install; a cache, not source.
+      '.pnpm-store/**',
       // Generated from @radix-ui/colors; regenerate rather than edit.
       'packages/*/src/styles/primitives.css'
     ]

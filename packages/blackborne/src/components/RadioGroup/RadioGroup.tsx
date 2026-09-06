@@ -24,24 +24,26 @@ import { cx } from '../../internal/cx';
  */
 
 const DOT = cx(
-  'bb:box-border bb:flex bb:size-4 bb:flex-none bb:items-center bb:justify-center',
-  'bb:rounded-full bb:border bb:border-solid bb:border-border',
+  'bb-inline-control-box',
+  'bb:box-border bb:flex bb:h-box bb:w-box bb:flex-none bb:items-center bb:justify-center',
+  'bb:rounded-full bb:border bb:border-solid bb:border-border-control',
   'bb:bg-surface-control',
   'bb:transition-[background-color,border-color,box-shadow]',
   'bb:duration-(--bb-duration-fast) bb:ease-standard',
   'bb:group-data-selected:border-accent bb:group-data-selected:bg-accent',
   // The library's single focus ring, on the dot, because the real input is
   // visually hidden. Keyboard focus only — a ring on mouse click is noise.
-  'bb:group-data-focus-visible:shadow-[0_0_0_2px_var(--bb-focus-ring-offset),0_0_0_4px_var(--bb-focus-ring)]',
+  'bb:group-data-focused:border-focus-ring bb:group-data-focused:shadow-[0_0_0_4px_color-mix(in_oklab,var(--bb-focus-ring)_var(--bb-focus-ring-halo-strength),transparent)]',
   'bb:group-data-invalid:border-danger',
-  'bb:group-data-disabled:border-border bb:group-data-disabled:bg-surface-disabled'
+  'bb:group-data-invalid:[--bb-focus-ring:var(--bb-danger)]',
+  'bb:group-data-disabled:border-border-control bb:group-data-disabled:bg-surface-disabled'
 );
 
 const OPTION = cx(
   'bb:group bb:box-border bb:flex bb:items-start bb:gap-x-2',
   // The hit area is the whole option, above the minimum at every density
   // including compact (doc 06 §3).
-  'bb:min-h-6 bb:w-fit bb:py-0.5',
+  'bb:min-h-hit bb:w-fit bb:py-0.5',
   'bb:font-sans bb:text-md bb:text-text bb:leading-normal',
   'bb:cursor-pointer bb:select-none',
   'bb:data-disabled:cursor-not-allowed bb:data-disabled:text-text-disabled'
@@ -141,7 +143,7 @@ export const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(
           className={cx(
             isLabelHidden
               ? 'bb:sr-only'
-              : 'bb:text-xs bb:font-strong bb:text-text',
+              : 'bb:text-md bb:font-strong bb:text-text',
             'bb:w-fit'
           )}
         >
@@ -152,7 +154,7 @@ export const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(
              * aria-required on the group, so reading the asterisk aloud would
              * say it twice.
              */
-            <span aria-hidden="true" className="bb:text-danger bb:ms-1">
+            <span aria-hidden="true" className="bb:text-danger-text bb:ms-1">
               *
             </span>
           ) : null}
@@ -175,7 +177,7 @@ export const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(
           </Text>
         ) : null}
 
-        <FieldError className="bb:text-xs bb:text-danger">
+        <FieldError className="bb:text-xs bb:text-danger-text">
           {errorMessage}
         </FieldError>
       </AriaRadioGroup>

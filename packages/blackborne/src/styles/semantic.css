@@ -44,17 +44,19 @@
   --bb-surface-raised-on: var(--bb-x-gray-12);
   --bb-surface-sunken: var(--bb-x-gray-3);
   --bb-surface-sunken-on: var(--bb-x-gray-12);
-  /* The resting background of a CONTROL, as opposed to a page or a panel.
-     Step 3 is the scale's dedicated component background; steps 1-2 are
-     page backgrounds. Using a page step here is what made a button read as
-     a hole punched in its panel rather than a control sitting on it — in
-     dark mode the button came out darker than the surface behind it.
-     Its hover and pressed states are surface-hover and surface-active,
-     which are already steps 4 and 5. */
-  --bb-surface-control: var(--bb-x-gray-3);
+  /*
+   * The resting background of a CONTROL, as opposed to a page or a panel.
+   *
+   * Step 2, not the scale's nominal component step 3. Chosen by eye against
+   * the page: a field filled with step 3 read as a slab rather than as
+   * something you type into, and the point of the fill is to say "this is
+   * writable", not to draw a box. Its hover and pressed states are
+   * surface-hover and surface-active, which are steps 5 and 6.
+   */
+  --bb-surface-control: var(--bb-x-gray-2);
   --bb-surface-control-on: var(--bb-x-gray-12);
-  --bb-surface-hover: var(--bb-x-gray-4);
-  --bb-surface-active: var(--bb-x-gray-5);
+  --bb-surface-hover: var(--bb-x-gray-5);
+  --bb-surface-active: var(--bb-x-gray-6);
   --bb-surface-selected: var(--bb-x-brand-3);
   --bb-surface-selected-on: var(--bb-x-brand-11);
   --bb-surface-disabled: var(--bb-x-gray-2);
@@ -67,11 +69,64 @@
   --bb-text: var(--bb-x-gray-12);
   --bb-text-muted: var(--bb-x-gray-11);
   --bb-text-disabled: var(--bb-x-gray-9);
-  --bb-link: var(--bb-x-brand-11);
+  /*
+   * Accent used AS TEXT on the page surface — not the accent FILL. The two
+   * are different roles and they need different steps.
+   *
+   * Step 9 in light, step 11 in dark: a restatement, the case doc 03 §6.1
+   * allows, because the role behaves differently in the two modes. Step 9 is
+   * one colour in BOTH scales (#3e63dd), so it is the vivid solid over a white
+   * page and a murky blue over a near-black one. Measured: 5.08:1 in light,
+   * 3.62:1 in dark, which fails the 4.5:1 this text needs.
+   *
+   * The rule that resolves it is "as light as legibility allows", and the
+   * scales run in opposite directions, so it lands on a different step in each
+   * mode. In light, everything above 9 is DARKER and buys contrast nobody
+   * needs, so 9 stays. In dark, step 11 is #9eb1ff and measures 9.15:1.
+   *
+   * Step 10 was tried and rejected: #5472e4 measures 4.40:1, under the 4.5:1
+   * this text size needs. Radix has nothing between the two, because 11 is
+   * the step built to carry text and 10 is still a solid.
+   */
+  --bb-link: var(--bb-x-brand-9);
+  /* Pressed, one step further in whichever direction the mode runs. */
+  --bb-link-active: var(--bb-x-brand-11);
 
   /* --- Borders — one colour for almost everything (doc 03 §4.6b) ----- */
-  --bb-border: var(--bb-x-gray-7);
+  /*
+   * Step 6 in light, step 7 in dark — a restatement, not a second mapping,
+   * which is the case doc 03 §6.1 allows.
+   *
+   * Chosen by eye, and the ratios are recorded so the choice is not mistaken
+   * for an oversight: 1.34:1 in light and 1.35:1 in dark, against the field's
+   * fill. Nearly identical, which is why they look alike.
+   *
+   * Neither reaches the 3:1 WCAG 1.4.11 asks for what identifies a component,
+   * and no border step does — the first that would is step 9, the SOLID step,
+   * which turns a form into a heavy grid and contradicts §4.6b. So the border
+   * is not the only channel, and the others carry real weight: a label always
+   * present, a focus ring that does clear AA, and an invalid state that draws
+   * a border AND a message.
+   *
+   * Recorded so this is not quietly "corrected" by someone who measures the
+   * border alone and finds it wanting.
+   */
+  --bb-border: var(--bb-x-gray-6);
   --bb-border-strong: var(--bb-x-gray-8);
+  /*
+   * The border of a SMALL control — a checkbox, a radio, a switch — as
+   * distinct from a field or a panel.
+   *
+   * The same border colour does not read the same on 20px as it does on
+   * 300px: there is a twentieth of the surface carrying it. Doc 03 §4.6b
+   * allows a stronger border as a justified exception, and "small control"
+   * is the justification — it is a rule about perceived weight, not a second
+   * grey creeping in.
+   *
+   * In light mode it is the ordinary border: measured, the difference is
+   * already legible there. Dark mode restates it — see below.
+   */
+  --bb-border-control: var(--bb-border);
   --bb-border-focus: var(--bb-x-brand-8);
 
   /* --- Brand -------------------------------------------------------- */
@@ -80,44 +135,139 @@
   --bb-accent-hover: var(--bb-x-brand-10);
   --bb-accent-active: var(--bb-x-brand-11);
   --bb-accent-subtle: var(--bb-x-brand-3);
-  --bb-accent-subtle-on: var(--bb-x-brand-11);
+  /*
+   * Step 12, not 11, and this is a measured correction rather than taste.
+   *
+   * The subtle family is one text colour over THREE backgrounds — 3 at rest, 4
+   * hovered, 5 pressed — so the pairing has to hold on the darkest of them,
+   * not just the lightest. Step 11 on step 5 measures 4.46:1 against the 4.5:1
+   * this size needs. It was never visible: the pressed state of a button is
+   * not something a static page shows, so it took making that state real in
+   * the catalog for axe to see it at all.
+   *
+   * Restated for dark below, where the scale runs the other way.
+   */
+  --bb-accent-subtle-on: var(--bb-x-brand-12);
   /* Without these, a subtle button hovers from tinted to grey — it leaves
      its own colour family, which reads as a different component. */
   --bb-accent-subtle-hover: var(--bb-x-brand-4);
   --bb-accent-subtle-active: var(--bb-x-brand-5);
 
   /* --- States — all four with the same shape, so they interchange ---- */
-  --bb-danger: var(--bb-x-danger-9);
+  /*
+   * MEASURED, not chosen by eye. White on step 9 of these scales fails AA for
+   * text — red 3.91:1, green 3.16:1, blue 3.26:1, amber 1.58:1 against the
+   * 4.5:1 doc 03 §5 rule 2 requires. Step 9 is designed for GRAPHICAL
+   * elements, which need only 3:1; a filled button carrying a label is text.
+   *
+   * Step 11 clears it: red 5.21:1, green 4.72:1, blue 4.77:1, amber 4.61:1.
+   *
+   * Found by automated accessibility on the danger button, after the suite was
+   * fixed to actually run the contrast rule. It had been in the catalog since
+   * the first component.
+   *
+   * Accent is left at step 9 because indigo measures 5.21:1 there — but if the
+   * brand is overridden to a lighter colour, --bb-accent-on has to change with
+   * it, which is what the rule of pairs is for (§4.0).
+   */
+  --bb-danger: var(--bb-x-danger-11);
   --bb-danger-on: #fff;
+  /*
+   * Step 9 is the SOLID colour — meant for a filled background, where its
+   * pair carries the text. Used as text on a light surface it measures
+   * 3.82:1, below the 4.5:1 that doc 03 §5 rule 2 requires, and automated
+   * accessibility caught it on the field error message.
+   *
+   * Step 11 is the scale's low-contrast TEXT step: 5.08:1 on light, 8.95:1 on
+   * dark. Every state colour gets a -text pair for the same reason, so
+   * nobody reaches for the solid step again.
+   */
+  --bb-danger-text: var(--bb-x-danger-11);
   --bb-danger-subtle: var(--bb-x-danger-3);
   --bb-danger-subtle-on: var(--bb-x-danger-11);
 
-  /* Amber's solid step is a LIGHT colour, so its pair is dark text. This is
-     the documented per-family exception from doc 03 §1.1, and the reason the
-     rule of pairs exists at all. */
+  /*
+   * Amber is the documented per-family exception from doc 03 §1.1, and the
+   * reason the rule of pairs exists at all: its solid step is a LIGHT colour,
+   * so it keeps step 9 and pairs with DARK text. White on it measures 1.58:1
+   * — the worst in the set — while step 12 on it clears AA comfortably.
+   */
   --bb-warning: var(--bb-x-warning-9);
   --bb-warning-on: var(--bb-x-warning-12);
   --bb-warning-subtle: var(--bb-x-warning-3);
   --bb-warning-subtle-on: var(--bb-x-warning-11);
+  --bb-warning-text: var(--bb-x-warning-11);
 
-  --bb-success: var(--bb-x-success-9);
+  --bb-success: var(--bb-x-success-11);
   --bb-success-on: #fff;
   --bb-success-subtle: var(--bb-x-success-3);
   --bb-success-subtle-on: var(--bb-x-success-11);
+  --bb-success-text: var(--bb-x-success-11);
 
-  --bb-info: var(--bb-x-info-9);
+  --bb-info: var(--bb-x-info-11);
   --bb-info-on: #fff;
   --bb-info-subtle: var(--bb-x-info-3);
   --bb-info-subtle-on: var(--bb-x-info-11);
+  --bb-info-text: var(--bb-x-info-11);
 
   /* --- Focus — ONE ring for the whole library (doc 03 §4) ----------- */
-  --bb-focus-ring: var(--bb-x-brand-8);
-  --bb-focus-ring-offset: var(--bb-surface);
+  /*
+   * A solid edge plus a translucent halo, rather than a solid ring separated
+   * from the control by a gap in the surface colour.
+   *
+   * The previous model drew the page colour between the control and the ring,
+   * which is what made it read as two rings — one white, one blue. This draws
+   * the accent ON the control's edge and lets it bleed outward at low alpha.
+   *
+   * The halo is translucent on purpose: it lands on whatever surface the
+   * control happens to sit on — a white panel, a table row, a dark dialog —
+   * and a solid colour would need to know which. One ring for the whole
+   * library (doc 03 §4), and it has to work everywhere.
+   */
+  --bb-focus-ring: var(--bb-x-brand-9);
+  /*
+   * Derived from the ring colour, not picked from a parallel alpha scale.
+   *
+   * Two reasons, and the first is a bug this fixes. A consumer overriding
+   * the brand redefines the SOLID steps — that is what the customisation
+   * contract asks for — and would have no reason to touch the alpha ones.
+   * The border turned purple and the halo stayed blue.
+   *
+   * The second is that a state can now recolour its whole ring by setting
+   * one variable. An invalid field sets --bb-focus-ring to the danger
+   * colour and the halo follows, with no second declaration to keep in
+   * step.
+   */
+  /*
+   * The halo is mixed from the ring colour AT THE POINT OF USE, and only
+   * its strength is a token. That is not a stylistic choice — it is what
+   * makes the ring recolour correctly.
+   *
+   * A var() resolves where it is DECLARED. A halo declared here as a
+   * color-mix of the ring would freeze against this ring, and a control
+   * that recolours its own ring — an invalid field turning it red — would
+   * get a red edge and a blue halo. Mixing in the component instead means
+   * one variable governs both.
+   *
+   * Verified: setting --bb-focus-ring on an element now moves the halo with
+   * it, and a brand override moves both.
+   */
+  --bb-focus-ring-halo-strength: 24%;
 
   /* --- Shape -------------------------------------------------------- */
+  /*
+   * Three steps that are actually distinguishable. The previous scale ran
+   * 4/6/8, where the gaps are a pixel and a half and nobody perceives them —
+   * but everybody perceives that things almost match. Doc 03 §4.3: the problem
+   * is not the values, it is that they bear no relation to each other.
+   *
+   * lg moved with md, to keep the gap between them. A card and a control at
+   * nearly the same radius is what makes a nested corner look wrong — the
+   * nested radius rule in §4.3 needs room between the two to work at all.
+   */
   --bb-radius-sm: 4px;
-  --bb-radius-md: 6px;
-  --bb-radius-lg: 8px;
+  --bb-radius-md: 8px;
+  --bb-radius-lg: 12px;
   --bb-radius-full: 9999px;
 
   /* --- Elevation — own values in dark, not the same ones dimmed ----- */
@@ -136,7 +286,12 @@
   --bb-leading-tight: 1.25;
   --bb-leading-normal: 1.5;
   --bb-weight-normal: 400;
-  --bb-weight-strong: 600;
+  /*
+   * 500, not 600. A label at 600 next to body text at 400 is a bigger jump
+   * than the distinction needs, and it reads as heavy on a dense form. Doc 03
+   * §4.7: weight is what supplies the levels the three text colours do not.
+   */
+  --bb-weight-strong: 500;
 
   /* --- Motion — cancelled entirely under reduced motion ------------- */
   --bb-duration-fast: 100ms;
@@ -165,6 +320,42 @@
   --bb-surface-raised: var(--bb-x-gray-3);
   --bb-surface-sunken: var(--bb-x-gray-2);
 
+  /* Softer than light, deliberately: chosen by eye. See the note on
+     --bb-border above. */
+  --bb-border: var(--bb-x-gray-5);
+
+  /*
+   * Step 8 for small controls in dark, and this one IS about the ratio.
+   *
+   * An unchecked checkbox in dark is a near-black square on a near-black page:
+   * fill 1.19:1, border 1.44:1. Measured across the scale, step 8 is the first
+   * that reaches 3.01:1 — the 3:1 WCAG 1.4.11 asks for what identifies a
+   * component, and the only place in this library where that bar is actually
+   * met rather than argued around.
+   *
+   * It is affordable here precisely because these controls are small. The same
+   * step on every field would turn a form into a grid, which is what §4.6b
+   * warns against.
+   */
+  --bb-border-control: var(--bb-x-gray-8);
+
+  /* Step 11 is already the light end of the dark scale, and it clears every
+     subtle background comfortably. Step 12 here would be near-white on a
+     tinted chip, which is the reverse of what the light mode needs. */
+  --bb-accent-subtle-on: var(--bb-x-brand-11);
+
+  /* Lighter here, where the light mode goes darker. See --bb-link above. */
+  --bb-link: var(--bb-x-brand-11);
+  --bb-link-active: var(--bb-x-brand-12);
+
+  /* A step stronger than light: a translucent colour loses more of itself
+     over a dark surface than over a light one. */
+  /* A heavier mix in dark: a translucent colour loses more of itself over a
+     dark surface than over a light one. */
+  /* A heavier mix in dark: a translucent colour loses more of itself over a
+     dark surface than over a light one. */
+  --bb-focus-ring-halo-strength: 34%;
+
   /* Neither pure white on pure black nor the reverse (doc 03 §5, rule 6).
      Radix's step 12 is already an off-white here, so nothing to correct. */
 
@@ -176,6 +367,46 @@
 
   /* The scrim needs to be heavier to read against a dark page. */
   --bb-surface-overlay: rgb(0 0 0 / 0.6);
+
+  /*
+   * THE SOLID STATE COLOURS NEED THEIR OWN MAPPING HERE, and this is the case
+   * doc 03 §6.1 describes: a token restated because its ROLE behaves
+   * differently in the two modes, which is not a second mapping.
+   *
+   * Measured. In dark mode no step of these scales reaches 4.5:1 against white
+   * — red tops out at 3.91:1 — because the dark scales are built to sit on a
+   * dark page, not to carry white text. Against DARK text the same step 9
+   * clears it comfortably: red 4.82:1, green 5.97:1, info 5.78:1, amber
+   * 11.95:1.
+   *
+   * So in dark mode a filled state button is a bright fill with dark text.
+   * That is also how it looks right: a saturated red with white text reads as
+   * muddy on a dark page, which doc 03 §5 rule 6 already warns about.
+   *
+   * Light mode keeps step 11 with white text, where it measures 5.21:1.
+   *
+   * Found by automated accessibility once the contrast rule was actually
+   * running. Every number here came from a measurement, not from a preference.
+   */
+  --bb-danger: var(--bb-x-danger-9);
+  --bb-danger-on: var(--bb-x-gray-1);
+  --bb-success: var(--bb-x-success-9);
+  --bb-success-on: var(--bb-x-gray-1);
+  --bb-info: var(--bb-x-info-9);
+  --bb-info-on: var(--bb-x-gray-1);
+  /* Amber already paired with dark text in light mode; unchanged here. */
+
+  /*
+   * The ACCENT is deliberately not restated. Measured: indigo's step 9 gives
+   * 5.21:1 against white in dark mode, so the light-mode pairing already
+   * clears AA and a second mapping would be drift rather than a role that
+   * behaves differently (doc 03 §6.1).
+   *
+   * I did restate it first, on the assumption that if the state colours
+   * needed a dark pairing the accent must too. It did not, and the number said
+   * so: step 11 in dark is a pale blue at 2.06:1 against white. The assumption
+   * was the error, not the original mapping.
+   */
 }
 
 /* ===================================================================
@@ -201,14 +432,39 @@
   --bb-space-7: 32px;
   --bb-space-8: 48px;
 
-  --bb-control-height-sm: 32px;
-  --bb-control-height-md: 40px;
-  --bb-control-height-lg: 48px;
-  --bb-control-padding-x: 12px;
-  --bb-row-height: 40px;
+  --bb-control-height-sm: 36px;
+  --bb-control-height-md: 44px;
+  --bb-control-height-lg: 52px;
 
-  /* Exactly two vertical gaps in a form, decided once (doc 03 §4.6c). */
-  --bb-field-gap-inner: 4px;
+  /*
+   * The square controls — checkbox, radio — and the switch.
+   *
+   * These were fixed values until it became obvious they should not be: doc 03
+   * §3 says density moves control heights, and a checkbox is a control. In a
+   * dense table of selectable rows, a box that ignores compact density is the
+   * one thing on the row that did not get the message.
+   *
+   * The hit area is separate and always clears 24px, which is the minimum
+   * doc 06 §3 requires at EVERY density — compact trims the mark, never the
+   * target.
+   */
+  --bb-control-box: 20px;
+  --bb-control-box-mark: 14px;
+  --bb-control-switch-height: 24px;
+  --bb-control-switch-width: 44px;
+  --bb-control-hit-area: 28px;
+  --bb-control-padding-x: 12px;
+  --bb-row-height: 44px;
+
+  /*
+   * Exactly two vertical gaps in a form, decided once (doc 03 §4.6c).
+   *
+   * The inner one was 4px, which put the label almost against the control.
+   * 6px is enough air to separate them without the label starting to look
+   * detached from the field it names — and it touches only fields, so it is
+   * the cheapest change in the set.
+   */
+  --bb-field-gap-inner: 6px;
   --bb-field-gap: 16px;
 }
 
@@ -222,13 +478,21 @@
   --bb-space-7: 24px;
   --bb-space-8: 32px;
 
-  --bb-control-height-sm: 28px;
-  --bb-control-height-md: 32px;
-  --bb-control-height-lg: 40px;
-  --bb-control-padding-x: 8px;
-  --bb-row-height: 32px;
+  --bb-control-height-sm: 30px;
+  --bb-control-height-md: 36px;
+  --bb-control-height-lg: 44px;
 
-  --bb-field-gap-inner: 2px;
+  --bb-control-box: 16px;
+  --bb-control-box-mark: 11px;
+  --bb-control-switch-height: 20px;
+  --bb-control-switch-width: 36px;
+  /* 24px, and no lower: the WCAG minimum target size, which holds at every
+     density (doc 06 §3). */
+  --bb-control-hit-area: 24px;
+  --bb-control-padding-x: 8px;
+  --bb-row-height: 36px;
+
+  --bb-field-gap-inner: 4px;
   --bb-field-gap: 12px;
 }
 
@@ -244,6 +508,17 @@
  *     --bb-x-brand-9:  <their step 9>;
  *     ...
  *   }
+ *
+ * THE STEPS THIS LAYER ACTUALLY READS ARE 3, 4, 5, 8, 9, 10, 11 AND 12, and
+ * all eight have to be supplied. There is no partial override: a step left
+ * out is not inherited from their brand, it falls back to the library's own
+ * indigo, and the result is one violet control with an indigo pressed state
+ * that nobody traces back to a missing line. The list was left as "..." here
+ * and the catalog's own fixture promptly drifted to six of the eight.
+ *
+ * And a brand is a scale PER MODE, not a colour. The light steps run
+ * light-to-dark and the dark steps run the other way, so the same values in
+ * both scopes put a dark brand on a dark page.
  *
  * If their brand is a light colour, they must also set --bb-accent-on to a
  * dark value. The rule of pairs is what makes that a single, obvious line

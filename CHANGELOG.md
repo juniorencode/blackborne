@@ -65,6 +65,13 @@ minor versions. Every break is listed here with its migration.
 
 ### Changed
 
+- **Contrast fixes across the state colours**, found by automated
+  accessibility. A filled danger button measured 3.91:1 against a 4.5:1
+  requirement, and error text 3.91:1. Radix step 9 is designed for graphical
+  elements, not text; the solids now use step 11 in light mode, and dark mode
+  pairs step 9 with dark text — no step of the dark scales reaches 4.5:1
+  against white. New `--bb-*-text` tokens for state colours used as text.
+
 - The library is being rewritten from scratch. Nothing from `0.1.1` is carried
   over: no component, prop name, DOM structure or test id. The rewrite will
   ship as `0.2.0`.

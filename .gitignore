@@ -19,3 +19,13 @@ playwright-report/
 apps/catalog/storybook-static/
 apps/catalog/playwright-report/
 apps/catalog/test-results/
+
+# The Docker container writes its dependency store here when it installs.
+# It is a cache, not source, and must never be committed or linted.
+.pnpm-store/
+
+# Baselines are generated in the Docker container, so only -linux ones are
+# real. A -win32 file is one somebody took locally by mistake; the platform
+# suffix exists to make that visible in review rather than mysterious in CI.
+apps/catalog/e2e/__screenshots__/*-win32.png
+apps/catalog/e2e/__screenshots__/*-darwin.png

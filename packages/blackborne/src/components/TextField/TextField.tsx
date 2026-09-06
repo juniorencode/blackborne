@@ -35,8 +35,9 @@ const INPUT = cx(
   // placeholder drops below minimum contrast and stops being readable.
   'bb:placeholder:text-text-muted',
   'bb:data-focused:border-border-focus',
-  'bb:data-focused:shadow-[0_0_0_2px_var(--bb-focus-ring-offset),0_0_0_4px_var(--bb-focus-ring)]',
+  'bb:data-focused:border-focus-ring bb:data-focused:shadow-[0_0_0_4px_color-mix(in_oklab,var(--bb-focus-ring)_var(--bb-focus-ring-halo-strength),transparent)]',
   'bb:data-invalid:border-danger',
+  'bb:data-invalid:[--bb-focus-ring:var(--bb-danger)]',
   // Read-only and disabled deliberately look different. Read-only shows a
   // value you can read, select and copy; disabled says this does not apply
   // right now (doc 07 §6).

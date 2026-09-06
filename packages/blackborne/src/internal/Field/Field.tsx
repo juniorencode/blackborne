@@ -81,7 +81,15 @@ export function Field({
         className={cx(
           isLabelHidden
             ? 'bb:sr-only'
-            : 'bb:text-xs bb:font-strong bb:text-text',
+            : /*
+               * The same size as the value it labels, not smaller.
+               *
+               * Doc 03 §4.6a: hierarchy comes from colour and weight, not
+               * size. A 12px bold label used BOTH, which is the rule broken
+               * twice over — and the document says the fix makes an interface
+               * look calmer without anything shrinking.
+               */
+              'bb:text-md bb:font-strong bb:text-text',
           'bb:w-fit'
         )}
       >
@@ -93,7 +101,7 @@ export function Field({
            * Doc 07 §4 asks that "required" reach the reader — it does, through
            * the attribute, which is the channel screen readers already know.
            */
-          <span aria-hidden="true" className="bb:text-danger bb:ms-1">
+          <span aria-hidden="true" className="bb:text-danger-text bb:ms-1">
             *
           </span>
         ) : null}
@@ -128,7 +136,7 @@ export function Field({
        * the control. The text itself is the second channel alongside the border
        * colour, which is what keeps the state readable in greyscale (doc 06 §3).
        */}
-      <FieldError className="bb:text-xs bb:text-danger">
+      <FieldError className="bb:text-xs bb:text-danger-text">
         {errorMessage}
       </FieldError>
     </div>

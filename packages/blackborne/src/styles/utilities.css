@@ -22,3 +22,24 @@
 .bb-tabular {
   font-variant-numeric: tabular-nums slashed-zero;
 }
+
+/*
+ * A square control — checkbox, radio — centred against the FIRST LINE of its
+ * label, rather than against the whole label.
+ *
+ * The label uses items-start on purpose: a long label wraps, and a box centred
+ * against three lines of text floats in the middle of the paragraph instead of
+ * sitting beside the first line. But items-start alone puts the box at the very
+ * top, which reads as misaligned whenever the box is shorter than the line.
+ *
+ * That went unnoticed while the box was 20px and the line 21px — they matched
+ * by accident. Compact density dropped the box to 16px and the gap became
+ * visible, which is a good argument for expressing the relationship rather
+ * than relying on two numbers happening to agree.
+ *
+ * `1lh` is the inherited line height, so this stays correct at any density and
+ * any text size without another token to keep in step.
+ */
+.bb-inline-control-box {
+  margin-block-start: calc((1lh - var(--bb-control-box)) / 2);
+}

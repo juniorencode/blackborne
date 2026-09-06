@@ -228,6 +228,38 @@ export const Translated: Story = {
 };
 
 /**
+ * A brand override, which closes the one entry-gate box this component was
+ * missing.
+ *
+ * Level 1 of the customisation contract (doc 03 §7): redefine the brand scale
+ * and the semantic tokens recompute on their own. The field's focus ring and
+ * its required marker follow, without the component knowing a theme changed.
+ *
+ * `data-bb-theme` on the same element is what makes it work — a CSS var()
+ * resolves where it is declared, so without the attribute the override
+ * silently does nothing (doc 03 §3.1).
+ */
+export const BrandOverride: Story = {
+  render: () => (
+    <div className="catalog-pair">
+      <Scope label="Default brand">
+        <div className="catalog-stack" style={{ gap: 'var(--bb-field-gap)' }}>
+          <TextField label="Required" isRequired defaultValue="Ada Lovelace" />
+          <TextField label="With value" defaultValue="ada@example.com" />
+        </div>
+      </Scope>
+      <div className="catalog-panel" data-bb-theme="catalog-alt">
+        <p className="catalog-label">Overridden brand</p>
+        <div className="catalog-stack" style={{ gap: 'var(--bb-field-gap)' }}>
+          <TextField label="Required" isRequired defaultValue="Ada Lovelace" />
+          <TextField label="With value" defaultValue="ada@example.com" />
+        </div>
+      </div>
+    </div>
+  )
+};
+
+/**
  * Pseudo-localisation and a narrow container together — the two cheapest ways
  * to break a form. Nothing may be sized to fit one particular label.
  */
