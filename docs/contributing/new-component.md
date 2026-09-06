@@ -3,10 +3,32 @@
 The full recipe. Read it before writing anything — most of the cost of a
 component is decided before the first line.
 
-> **Note on the file layout.** The exact file layout is settled with the first
-> component, together with [02 · API conventions](../foundations/README.md),
-> which is written after the React Aria spike. Everything else on this page is
-> already decided and applies now.
+## 0. The file layout
+
+Settled by `Button` and unchanged since. One folder per component, under
+`packages/blackborne/src/components/`:
+
+```
+Badge/
+  Badge.tsx          the component, and its variant map
+  Badge.test.tsx     what can be asserted without a browser
+  Badge.stories.tsx  every state, because the catalog is a gate box
+  Badge.css          only if it needs one — see below
+  index.ts           two lines: the component and its prop types
+```
+
+`index.ts` exports the component and its types, nothing else. The package's
+public surface is `src/index.ts`, and a component is not public until it is
+listed there deliberately (doc 02 §10).
+
+**`Badge.css` is the exception, not the pattern.** Styling is Tailwind
+utilities in the component file. A layer-3 CSS file exists only where utilities
+cannot express what is needed — the case that produced the rule was a
+precedence between two states, where both utilities carried the same
+specificity and the winner was decided by the order a generator happened to
+emit. `Checkbox.css` states the reasoning at the top; read it before adding a
+second one. A component CSS file is also imported by hand in
+`src/styles/index.css`, one line per component, so the list stays visible.
 
 This page is the operational summary. The reasoning behind every rule lives in
 the [foundations](../foundations/README.md); when the two disagree, the
@@ -84,7 +106,7 @@ From [01 · Principles](../foundations/01-principles.md), §5.
 Thirteen checkboxes. **All thirteen, or it does not enter** — twelve out of
 thirteen stays in the project that needed it until it is thirteen.
 
-- [ ] Two real consumers ask for it
+- [ ] It belongs in the catalog, and any new prop it carries has a real case
 - [ ] Its name mentions no business domain
 - [ ] It does not need to know where its data comes from
 - [ ] It works with no provider around it

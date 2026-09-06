@@ -46,11 +46,11 @@ The full index, with what each one settles, is in
 | 09  | [Behavior and interaction](./foundations/09-behavior.md)                 | Adopted |
 | 10  | [Quality and verification](./foundations/10-quality-and-verification.md) | Adopted |
 
-Documents 02 and 08 were written last on purpose: they describe things only
-building can decide. Both mark what was verified in a browser and what was
-not — 08 §6 leaves one check openly pending rather than claiming it.
-by building, and writing them from imagination would produce rules the first
-real component contradicts.
+Documents 02 and 08 were written last on purpose: they describe the things only
+building can decide, and writing them from imagination would have produced
+rules the first real component contradicted. Both mark what was verified in a
+browser and what was not — 08 §6 leaves one check openly pending rather than
+claiming it.
 
 ## Where the project stands
 
@@ -64,6 +64,14 @@ The library is being rewritten from scratch. Phases, in order:
 | F4    | Foundations, written in English                                       | Done  |
 | F5    | One day with React Aria — decided documents 02 and 08                 | Done  |
 | F6    | Full pipeline with the first component (`Button`)                     | Done  |
+| F7    | The fields, and the browser checks that verify them                   | Done  |
+| F8    | The rest of level 0 and level 1: the pieces with no dependencies      | Now   |
+| F9    | The layer base, and everything that depends on a portal               | Next  |
+
+Which components exist and in what order is not a phase question: it lives in
+[catalog-and-build-order.md](./catalog-and-build-order.md), which is the list
+that changes weekly. The phases above only say which part of the architecture
+is being proved.
 
 Nothing from the `0.1.1` codebase is carried over. It stays available under the
 `v0.1.1` git tag.

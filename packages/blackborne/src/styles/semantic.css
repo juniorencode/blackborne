@@ -184,7 +184,25 @@
    */
   --bb-danger-text: var(--bb-x-danger-11);
   --bb-danger-subtle: var(--bb-x-danger-3);
-  --bb-danger-subtle-on: var(--bb-x-danger-11);
+  /*
+   * Step 12, not 11, and this is the same finding --bb-accent-subtle-on
+   * already carries: step 11 is the scale's low-contrast TEXT step, measured
+   * against the PAGE, and a subtle background is not the page.
+   *
+   * Measured on step 3: info 4.25:1, success 4.21:1, warning 4.25:1, danger
+   * 4.54:1 — three of the four below the 4.5:1 doc 03 §5 rule 2 requires, and
+   * the fourth close enough that a hover state would sink it. Step 12 gives
+   * 10.47 to 11.26:1 across all four.
+   *
+   * Danger is moved with them although it passed, because one rule that reads
+   * "in light the subtle text is step 12" is worth more than four families
+   * where three follow it and one is a near miss nobody remembers.
+   *
+   * Found by automated accessibility the moment Badge and Alert became the
+   * first components to render these families at all. They had been defined
+   * since the token layer and never read.
+   */
+  --bb-danger-subtle-on: var(--bb-x-danger-12);
 
   /*
    * Amber is the documented per-family exception from doc 03 §1.1, and the
@@ -195,19 +213,19 @@
   --bb-warning: var(--bb-x-warning-9);
   --bb-warning-on: var(--bb-x-warning-12);
   --bb-warning-subtle: var(--bb-x-warning-3);
-  --bb-warning-subtle-on: var(--bb-x-warning-11);
+  --bb-warning-subtle-on: var(--bb-x-warning-12);
   --bb-warning-text: var(--bb-x-warning-11);
 
   --bb-success: var(--bb-x-success-11);
   --bb-success-on: #fff;
   --bb-success-subtle: var(--bb-x-success-3);
-  --bb-success-subtle-on: var(--bb-x-success-11);
+  --bb-success-subtle-on: var(--bb-x-success-12);
   --bb-success-text: var(--bb-x-success-11);
 
   --bb-info: var(--bb-x-info-11);
   --bb-info-on: #fff;
   --bb-info-subtle: var(--bb-x-info-3);
-  --bb-info-subtle-on: var(--bb-x-info-11);
+  --bb-info-subtle-on: var(--bb-x-info-12);
   --bb-info-text: var(--bb-x-info-11);
 
   /* --- Focus — ONE ring for the whole library (doc 03 §4) ----------- */
@@ -394,7 +412,31 @@
   --bb-success-on: var(--bb-x-gray-1);
   --bb-info: var(--bb-x-info-9);
   --bb-info-on: var(--bb-x-gray-1);
-  /* Amber already paired with dark text in light mode; unchanged here. */
+  /*
+   * Amber needs the restatement too, and the reason it was left out is worth
+   * keeping: it pairs with step 12, which IS dark text — in light mode. The
+   * dark scale runs the other way, so the same step 12 is a pale cream, and
+   * bright amber under it measured 1.30:1. The worst pair in the library, in
+   * the one family the note above had reasoned was already safe.
+   *
+   * Doc 03 §6.1 is exactly about this: a step number is not a colour. Against
+   * gray-1 the same fill gives 11.95:1 — a number the paragraph above had
+   * already worked out and then not applied.
+   *
+   * It survived because nothing rendered a solid warning until Badge.
+   */
+  --bb-warning-on: var(--bb-x-gray-1);
+
+  /*
+   * And the subtle text steps go back to 11 here, which is the mirror of the
+   * light restatement above rather than a second decision: in dark, step 11
+   * on step 3 measures 7.08 to 10.26:1, while step 12 would be needlessly
+   * loud. Same role, opposite ends of the scale (doc 03 §6.1).
+   */
+  --bb-danger-subtle-on: var(--bb-x-danger-11);
+  --bb-warning-subtle-on: var(--bb-x-warning-11);
+  --bb-success-subtle-on: var(--bb-x-success-11);
+  --bb-info-subtle-on: var(--bb-x-info-11);
 
   /*
    * The ACCENT is deliberately not restated. Measured: indigo's step 9 gives

@@ -4,8 +4,8 @@
  * What it is for, precisely: changing a token and knowing within a minute
  * WHICH components changed appearance, instead of opening them one at a time.
  * Doc 10 §6 calls it the only thing that makes touching tokens safe once there
- * are thirty components — and it is adopted now, at ten, because approving ten
- * baselines is an afternoon and approving thirty is not.
+ * are thirty components — and it was adopted early, at ten, because approving
+ * ten baselines is an afternoon and approving thirty is not.
  *
  * It does not detect that something is wrong. It detects that something
  * CHANGED, and a person decides whether the change was intended. That decision
@@ -21,8 +21,8 @@
  *     surfaces
  *   - the pages that put components together, which doc 09 §10 calls the check
  *     that finds the most
- *   - the three theme axes, on the composite pages rather than on all ten
- *     components (doc 10 §6)
+ *   - the three theme axes, on the composite pages rather than on every
+ *     component (doc 10 §6)
  *
  * Doc 10 §6's four conditions are met in playwright.config.ts: animations
  * disabled, fixed viewport and scale, caret hidden, and every change approved
@@ -92,7 +92,21 @@ const STATES: Array<[string, string]> = [
   ['components-checkbox--states', 'checkbox-states'],
   ['components-radiogroup--states', 'radiogroup-states'],
   ['components-switch--states', 'switch-states'],
-  ['components-checkbox--marks', 'checkbox-marks']
+  ['components-checkbox--marks', 'checkbox-marks'],
+  ['components-badge--tones', 'badge-tones'],
+  ['components-badge--states', 'badge-states'],
+  ['components-alert--together', 'alert-together'],
+  ['components-emptystate--the-two-states', 'emptystate-two-states'],
+  ['components-separator--orientations', 'separator-orientations'],
+  ['components-skeleton--variants', 'skeleton-variants'],
+  ['components-card--containers', 'card-containers'],
+  /*
+   * A component with nothing to look at still earns a baseline, and this is
+   * the one that earns it most: the story is two rulers that must stay the
+   * same width. If the hiding ever stops working, the picture changes — which
+   * is the only way a sighted reviewer would ever notice.
+   */
+  ['components-visuallyhidden--takes-no-space', 'visuallyhidden-takes-no-space']
 ];
 
 for (const [id, name] of STATES) {

@@ -97,6 +97,22 @@ If a particular project needed to support an old browser, **that project loads
 the polyfill**: it is global, installed once in the application, and works the
 same. There is no reason for it to travel inside the package.
 
+### 4.3 Who declares the container
+
+A container query asks the nearest ancestor that has **declared itself a query
+container**. If nothing has, nothing matches — and by rule 4.1 the component
+simply stays narrow, which is why the failure is harmless rather than broken.
+
+But it also means the scale above is inert until something declares one.
+**`Card` does** ([decision 0010](../decisions/0010-the-card-declares-the-container.md)),
+which is what makes N2 usable by default for anything placed inside one. The
+decision records the two side effects that come with it, because they apply to
+every Card whether or not a query is ever written.
+
+A consumer can declare containers of their own, anywhere, and the library's
+components will query them correctly. What the library does not do is require
+it.
+
 ## 5. The one legitimate viewport exception
 
 There is one, and it deserves to be written down because it is not arbitrary:

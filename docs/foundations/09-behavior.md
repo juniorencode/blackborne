@@ -34,11 +34,19 @@ exist.
 Forbidden: staggered entrances, bounces, decorative appearances, page
 transitions, any effect whose purpose is to be pleasing.
 
-|                |                                                                                     |
-| -------------- | ----------------------------------------------------------------------------------- |
-| Duration       | 150–200 ms for interface transitions                                                |
-| Easing         | Fast out on appearing, gentle in on disappearing                                    |
-| Reduced motion | With the preference active, **nothing** animates. It is not softened: it is removed |
+|                     |                                                                                     |
+| ------------------- | ----------------------------------------------------------------------------------- |
+| Duration            | 150–200 ms for interface transitions                                                |
+| Easing              | Fast out on appearing, gentle in on disappearing                                    |
+| Reduced motion      | With the preference active, **nothing** animates. It is not softened: it is removed |
+| A looping indicator | ~700-1300 ms per cycle, and symmetric easing                                        |
+
+The last row is a different budget from the first, and conflating the two is
+how a loading indicator ends up flickering. 150-200 ms is what a change that
+happens **once** may cost; a cycle that repeats for as long as a request lasts
+is judged by whether it still reads as calm at the fiftieth repetition. The
+library's easing is deliberately asymmetric, which is right for something
+arriving and lopsided on a loop that returns to where it started.
 
 The justification, in case anyone asks for it: a 400 ms transition is elegant
 the first time and is forty seconds lost across a hundred repetitions.

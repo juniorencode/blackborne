@@ -1,0 +1,137 @@
+/*
+ * Layer 3: a component exception, derived from layer 2 (doc 03 §1).
+ *
+ * Three things live here and nothing else, because none of them is something a
+ * utility expresses: a keyframe, a fill derived from a semantic token, and the
+ * arithmetic that keeps a block of lines occupying exactly the height the real
+ * text will occupy. This is the narrow case doc 03 §4.4 allows, not a licence
+ * to start a second vocabulary.
+ */
+
+.bb-skeleton {
+  /*
+   * THE FILL, and the one decision in this file worth reading twice.
+   *
+   * --bb-surface-sunken is the right ROLE — a skeleton is a recess waiting to
+   * be filled, not a card sitting above the page — and in light mode the token
+   * alone is enough: #f0f0f3 on a #fcfcfd page measures 1.11:1, which is the
+   * quiet placeholder this wants.
+   *
+   * In dark it does not survive on its own, and this is why the token was
+   * checked rather than assumed. The dark scale runs the other way, so sunken
+   * is step 2 there: #18191b on a #111113 page measures 1.07:1. At that
+   * distance a paragraph of skeleton lines is a blank screen — the one thing
+   * doc 09 §6 says a loading state must not be — and the pulse below would
+   * spend half its cycle taking it even closer to the page.
+   *
+   * Mixing a little --bb-text into it corrects both modes with one line,
+   * because that token moves the opposite way per mode: dark on a light page,
+   * light on a dark one. So the mix always moves AWAY from the page, and the
+   * component never learns which mode it is in. Measured at 6%: 1.26:1 in
+   * light, 1.21:1 in dark. Present in both, and still fainter than any border
+   * in the system, because it is about to be replaced by the thing it is
+   * holding space for and must not compete with it (doc 09 §1).
+   */
+  background-color: color-mix(
+    in oklab,
+    var(--bb-surface-sunken),
+    var(--bb-text) 6%
+  );
+
+  /*
+   * The pulse, and it has to earn its place under doc 09 §2: an animation
+   * exists only if it communicates something. This one does. A static grey
+   * block is indistinguishable from a layout that finished loading and came
+   * back empty, and those are two states a person needs to tell apart — the
+   * movement is the whole of what says "pending" rather than "nothing here".
+   *
+   * The period comes from the motion token rather than being written as a
+   * number, so the reduced-motion rule at the foot of semantic.css — which
+   * sets that token to 0ms — reaches this without the file having to remember.
+   * Eight times it because this one LOOPS: doc 09's 150-200ms is the budget
+   * for a change that happens once, and 160ms repeating for the length of a
+   * request is a strobe, which is the opposite of an interface that does not
+   * call attention to itself.
+   *
+   * ease-in-out and not --bb-ease: the library's curve is asymmetric on
+   * purpose, fast out and gentle in, which is right for a transition that goes
+   * one way and lopsided on a cycle that returns to where it started.
+   */
+  animation: bb-skeleton-pulse calc(var(--bb-duration-normal) * 8) ease-in-out
+    infinite;
+}
+
+@keyframes bb-skeleton-pulse {
+  50% {
+    /* Not lower than this. In dark the fill starts closer to the page than it
+       does in light, so the trough is where it would disappear first: 0.6
+       keeps it at 1.12:1 there, still visible at the quietest point. */
+    opacity: 0.6;
+  }
+}
+
+/*
+ * Reduced motion REMOVES the animation. Doc 09 §2 is literal about it — "it is
+ * not softened: it is removed" — and Spinner.css is the precedent.
+ *
+ * The duration above already collapses to 0ms here, and this rule is on top of
+ * that deliberately: a zero-length animation is still an animation attached to
+ * the element, and stating the removal is worth more than leaving it to
+ * arithmetic that a later edit to the token could undo.
+ *
+ * What is left is the resting fill, which is a perfectly legible static
+ * placeholder. Unlike a spinner, a skeleton that has stopped moving does not
+ * read as something broken, so nothing has to be redrawn to replace the
+ * motion.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .bb-skeleton {
+    animation: none;
+  }
+}
+
+/*
+ * One line of the text variant.
+ *
+ * The bar is the height of the text and the leftover leading is split above
+ * and below it, so N lines reserve exactly N line boxes and nothing shifts
+ * when the real text lands — least of all under the cursor (doc 09 §3).
+ *
+ * Written as the relationship rather than as two numbers that happen to agree.
+ * The same lesson as .bb-inline-control-box in utilities.css: a checkbox and a
+ * line height matched by coincidence until compact density moved one of them.
+ * This stays correct at any density, any text size and either leading token.
+ *
+ * It depends on the root being a flex column: flex items do not collapse
+ * margins, and in a plain block container the two half-leadings between
+ * siblings would collapse into one and the block would come up short by a
+ * line's worth of air.
+ */
+.bb-skeleton-line {
+  block-size: 1em;
+  margin-block: calc((1lh - 1em) / 2);
+  /* And it must not be shrunk out of that. block-size is the MAIN size in a
+     column, so inside a container with a height of its own the default
+     flex-shrink would quietly compress every bar and the reserved height would
+     stop matching the text it is holding space for. */
+  flex: none;
+}
+
+/*
+ * The last line of a paragraph is short, and this is communication rather than
+ * decoration, which is the test doc 09 §2 sets. Bars of equal length read as a
+ * stack of rows — a table, a list — and the ragged last line is the single
+ * thing that says the content coming is prose.
+ *
+ * A lone line is excluded on purpose: one bar stands in for a label or a
+ * value, and shortening it would be claiming a shape the content does not
+ * have. Expressed as :not(:only-child) so the component does not have to count
+ * and the rule cannot disagree with the markup.
+ *
+ * inline-size, and the flex column leaves it aligned to the inline start, so
+ * the ragged edge lands on the end side in LTR and in RTL with no rule of its
+ * own (doc 03 §5, rule 4).
+ */
+.bb-skeleton-line:last-child:not(:only-child) {
+  inline-size: 62%;
+}

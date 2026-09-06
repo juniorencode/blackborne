@@ -24,6 +24,7 @@
    the list stays visible rather than hiding in a barrel file. */
 @import '../components/Checkbox/Checkbox.css';
 @import '../components/RadioGroup/RadioGroup.css';
+@import '../components/Skeleton/Skeleton.css';
 @import '../components/Spinner/Spinner.css';
 @import '../components/Switch/Switch.css';
 @import '../components/TextArea/TextArea.css';
@@ -44,15 +45,33 @@
   /* --- Colours: semantic only. No primitive is reachable from a utility. */
   --color-*: initial;
 
+  /*
+   * Every surface with an `-on` companion exposes both halves.
+   *
+   * Doc 03 §4.0 says a background and its text colour are used as a pair, and
+   * for a while only `surface-control` had both here — so a component reaching
+   * for the text colour of a sunken surface found no utility and had to read
+   * the variable directly, which is the same value spelled a second way. Two
+   * ways to write one thing is the warning sign in doc 01 §7, and it appeared
+   * because the pair rule was written in one layer and implemented in another.
+   *
+   * `inline` means these cost nothing: the value is substituted into each
+   * utility rather than emitted as a second variable (doc 03 §4.5).
+   */
   --color-surface: var(--bb-surface);
+  --color-surface-on: var(--bb-surface-on);
   --color-surface-raised: var(--bb-surface-raised);
+  --color-surface-raised-on: var(--bb-surface-raised-on);
   --color-surface-sunken: var(--bb-surface-sunken);
+  --color-surface-sunken-on: var(--bb-surface-sunken-on);
   --color-surface-control: var(--bb-surface-control);
   --color-surface-control-on: var(--bb-surface-control-on);
   --color-surface-hover: var(--bb-surface-hover);
   --color-surface-active: var(--bb-surface-active);
   --color-surface-selected: var(--bb-surface-selected);
+  --color-surface-selected-on: var(--bb-surface-selected-on);
   --color-surface-disabled: var(--bb-surface-disabled);
+  --color-surface-disabled-on: var(--bb-surface-disabled-on);
   --color-surface-overlay: var(--bb-surface-overlay);
 
   --color-text: var(--bb-text);
@@ -123,6 +142,10 @@
   --height-hit: var(--bb-control-hit-area);
 
   --width-*: initial;
+  /* The minimum target is square, so it is a floor on both axes. Only the
+     height existed, which left `min-w-hit` unwritable and sent the first
+     component that needed it back to reading the variable by hand. */
+  --width-hit: var(--bb-control-hit-area);
   --width-box: var(--bb-control-box);
   --width-mark: var(--bb-control-box-mark);
   --width-switch: var(--bb-control-switch-width);

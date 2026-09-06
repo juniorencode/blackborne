@@ -67,11 +67,11 @@ difference highlighted.
 Nineteen captures, not all sixty stories. Sixty would be slow and most would be
 near-duplicates that fail together and teach nothing.
 
-| Group        | What                                                                                                                                 |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
-| **States**   | One per component, showing every state. These are what a token change lands on                                                       |
-| **Together** | The form, and the alignment rows. Doc 09 §10 calls this the check that finds the most                                                |
-| **Axes**     | Modes, densities, direction, brand override, all three at once, and locales — on composite stories rather than on all ten components |
+| Group        | What                                                                                                                              |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| **States**   | One per component, showing every state. These are what a token change lands on                                                    |
+| **Together** | The form, and the alignment rows. Doc 09 §10 calls this the check that finds the most                                             |
+| **Axes**     | Modes, densities, direction, brand override, all three at once, and locales — on composite stories rather than on every component |
 
 ## When a component is added
 
