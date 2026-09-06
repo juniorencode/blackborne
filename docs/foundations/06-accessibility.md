@@ -80,6 +80,19 @@ keeps this from being a slippery slope is that it is a branch and not a
 replacement — the moment a divergence covers the main path, it is a
 reimplementation and needs the written justification non-goal 6 asks for.
 
+And its mirror image, which is the more tempting mistake: **the base leaving an
+attribute out is usually a decision, not an omission.** Its `RadioGroup` takes
+an `orientation` and sets `aria-orientation`; its `CheckboxGroup` takes no such
+prop, and that is correct — a radio group is one composite tab stop whose arrow
+keys need to know which axis they run along, and a group of checkboxes has no
+such navigation. Laying one out in a row is fine; announcing an orientation
+nobody can act on is inventing semantics.
+
+So a component may add the layout and may not add the ARIA. Where a component
+does fill a gap, the reason goes in the file — and where it declines to, that
+reason goes there too, because the next person will see the asymmetry between
+two sibling components and assume it is an oversight.
+
 And one sentence worth being clear about: the library **cannot** guarantee that
 an application is accessible. It can guarantee that its pieces do not prevent
 it.

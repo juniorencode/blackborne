@@ -44,7 +44,12 @@ export const en = {
    * two sentences is identical in every application there has ever been.
    */
   emptyStateNoData: 'Nothing here yet',
-  emptyStateNoResults: 'No results'
+  emptyStateNoResults: 'No results',
+  /**
+   * The button that empties a field. It carries a cross and no text, and what
+   * it clears is named by the field's own label beside it.
+   */
+  clear: 'Clear'
 } as const;
 
 export type DictionaryKey = keyof typeof en;
