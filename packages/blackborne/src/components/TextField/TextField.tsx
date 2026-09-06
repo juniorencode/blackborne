@@ -131,7 +131,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
          * project owns when it happens.
          */
         validationBehavior="aria"
-        className={cx('bb:w-full', className)}
+        className={cx('bb:group bb:w-full', className)}
         {...ariaProps}
         /*
          * After ariaProps, so the normalized value wins when there is one.

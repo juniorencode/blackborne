@@ -176,7 +176,7 @@ export const NumberField = forwardRef<HTMLInputElement, NumberFieldProps>(
     return (
       <AriaNumberField
         validationBehavior="aria"
-        className={cx('bb:w-full', className)}
+        className={cx('bb:group bb:w-full', className)}
         {...ariaProps}
         {...(formatOptions === undefined ? {} : { formatOptions })}
       >

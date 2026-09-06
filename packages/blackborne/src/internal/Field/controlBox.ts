@@ -72,7 +72,25 @@ export const CONTROL_BOX = cx(
    * right now (doc 07 §6). They are the two states most often painted the same
    * and they are not the same thing.
    */
-  'bb:data-readonly:bg-surface-sunken',
+  /*
+   * The read-only appearance lives in controlBox.css, not here.
+   *
+   * What was here was `data-readonly:bg-surface-sunken` on the control, and it
+   * never matched anything: measured, a read-only input gets the native
+   * `readonly` attribute and no data attribute at all, while the field's ROOT
+   * gets `data-readonly`. The rule was written, the class was written, and
+   * nothing connected them — so read-only and disabled looked identical, which
+   * doc 07 §6 says in as many words they must not.
+   *
+   * It survived every layer of checking, which is the instructive part: the
+   * unit test asserts the two BEHAVE differently and they do; the catalog has a
+   * read-only row and it looked like a field with a value, which is what it
+   * was; and a screenshot only says a picture changed, never that it was right
+   * to begin with.
+   *
+   * This class is the hook that file selects on.
+   */
+  'bb-field-box',
   'bb:data-disabled:bg-surface-disabled bb:data-disabled:text-text-disabled',
   'bb:data-disabled:cursor-not-allowed'
 );

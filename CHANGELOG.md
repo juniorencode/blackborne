@@ -248,6 +248,22 @@ minor versions. Every break is listed here with its migration.
 
 ### Fixed
 
+- **A read-only field never looked different from an editable one**, in any
+  field, since the first one shipped. The class was `data-readonly:` on the
+  control, and a read-only input gets the native `readonly` attribute and no
+  data attribute at all — the state lives on the field's root. The rule was
+  written, the class was written, and nothing connected them.
+
+  Read-only now drops the box: the page's own background and no visible edge,
+  so the value reads as text rather than as something you can type into. A
+  shape channel rather than another grey, and deliberately — measured, in dark
+  mode `--bb-surface-control`, `--bb-surface-sunken` and `--bb-surface-disabled`
+  are the same value, so any fill-based answer would have worked in light and
+  silently done nothing in dark.
+
+  Four baselines move. The check that would have caught it — comparing computed
+  colours, which is the only instrument that can — now exists.
+
 - `NumberField` drew its stepper buttons while loading or saving, so the busy
   indicator was painted on top of the `+` button — two things in one place, and
   the one you could press did nothing useful. Doc 07 §2.2 gives the trailing

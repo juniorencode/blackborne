@@ -1,0 +1,36 @@
+/*
+ * Layer 3: a field's read-only appearance, and it is a component exception for
+ * the reason Checkbox.css sets out — this is a PRECEDENCE rule, and utilities
+ * cannot state one.
+ *
+ * Read-only removes the box: the page's own background and no visible edge, so
+ * the value reads as text rather than as something you can type into. That is
+ * a SHAPE channel rather than another grey, which matters twice over. Doc 06
+ * §3 asks that a state never depend on colour alone; and measured, the three
+ * greys available were not different enough to carry it — in dark mode
+ * surface-control, surface-sunken and surface-disabled are the same value, so
+ * any fill-based answer would have worked in light and silently done nothing
+ * in dark.
+ *
+ * Why it cannot be a utility: the box paints its border on hover, and a
+ * read-only field must not answer the pointer as if it were editable. Written
+ * as `group-data-readonly:border-transparent` beside
+ * `data-hovered:border-border-strong`, both carry the same specificity and the
+ * winner is decided by the order a generator chose — which is the accident
+ * Checkbox.css was written to stop repeating.
+ *
+ * Unlayered on purpose: everything Tailwind emits lives in `@layer utilities`,
+ * and an unlayered rule outranks a layered one whatever its specificity. So
+ * this states the precedence instead of competing for it.
+ */
+
+[data-readonly] .bb-field-box {
+  background-color: var(--bb-surface);
+  /* The pair rule (doc 03 §4.0): a background brings its own text colour. The
+     value stays at full contrast — read-only is not disabled, and someone has
+     to be able to read and copy it. */
+  color: var(--bb-surface-on);
+  /* Transparent rather than removed, so the box keeps its size and nothing
+     shifts when a field becomes read-only (doc 09 §3). */
+  border-color: transparent;
+}
