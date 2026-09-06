@@ -47,8 +47,23 @@ echo "Repository: ${HOST_DIR}"
 
 # No -it: that flag needs a real terminal, and this runs from CI and from
 # tool-driven shells as often as from a prompt.
+# Anonymous volumes OVER every node_modules, and this is not an optimisation.
+#
+# The container installs into the mounted repository, as root and for Linux.
+# That replaces the host's node_modules with symlinks Windows cannot follow -
+# dangling reparse points that `pnpm install` cannot repair, that this repo's
+# own clean-install script cannot delete, and that `rmdir /s /q` walks straight
+# past. Recovering means deleting each link WITHOUT following it and installing
+# from scratch. One visual run cost exactly that.
+#
+# An anonymous volume shadows the path inside the container, so the install
+# lands in the volume and the host directory is never touched. --rm takes them
+# away with the container.
 docker run --rm \
   -v "${HOST_DIR}:${CONTAINER_DIR}" \
+  -v "${CONTAINER_DIR}/node_modules" \
+  -v "${CONTAINER_DIR}/apps/catalog/node_modules" \
+  -v "${CONTAINER_DIR}/packages/blackborne/node_modules" \
   -w "${CONTAINER_DIR}" \
   --ipc=host \
   -e CI=1 \
@@ -56,11 +71,16 @@ docker run --rm \
   bash -c "
     set -euo pipefail
     corepack enable
+    # pnpm refuses to write global config while its own bin directory is off
+    # PATH, and in a bare container it is. Both lines are needed: PNPM_HOME is
+    # where it wants to put that directory, PATH is the check it performs.
+    export PNPM_HOME=/tmp/pnpm-home
+    export PATH=\"\$PNPM_HOME:\$PATH\"
     # A store INSIDE the mounted repo would be written as root and then
-    # break the host installation, which is exactly what happened once.
-    pnpm config set store-dir /tmp/pnpm-store --global
+    # break the host installation, which is exactly what happened once. Passed
+    # as a flag rather than global config, so it needs no writable config file.
     # --frozen-lockfile, so the container installs exactly what is committed.
-    pnpm install --frozen-lockfile
+    pnpm install --frozen-lockfile --store-dir /tmp/pnpm-store
     pnpm --filter blackborne build
     pnpm --filter catalog exec playwright test e2e/visual.spec.ts $*
   "
