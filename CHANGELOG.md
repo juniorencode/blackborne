@@ -12,6 +12,27 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- A `link` variant on `Button`, for an action that has to weigh almost
+  nothing: "forgot your password", a secondary action in a table row. No
+  background and no border, but the same horizontal padding as every other
+  variant, so it lines up with the buttons beside it in an actions row. Its
+  focus indicator is an underline rather than the ring — the one place in the
+  library where the ring is replaced instead of drawn.
+- `--bb-link` and `--bb-link-active`. Accent used AS TEXT is a different role
+  from the accent FILL, and the two were sharing a token: measured, the fill
+  step gives 5.08:1 in light and 3.62:1 in dark, where 4.5:1 is required.
+- Density tokens for the small controls — `--bb-control-box`,
+  `--bb-control-box-mark`, `--bb-control-switch-height`,
+  `--bb-control-switch-width` and `--bb-control-hit-area`. Checkbox, radio and
+  switch were a fixed size, so compact density differed from normal by nothing
+  at all.
+- `--bb-focus-ring-halo-strength`, the opacity of the ring's halo, restated
+  per mode. A translucent colour loses more of itself over a dark surface than
+  over a light one.
+- `--bb-border-control`, the border of a small control as distinct from a
+  field or a panel. The same border colour does not read the same on 20px as
+  on 300px.
+
 - `TextArea`, for multi-line text. Its height comes from a row count rather
   than the control-height tokens, and it resizes vertically only.
 - `NumberField`, formatted and parsed in the active locale — separators, and
@@ -65,6 +86,26 @@ minor versions. Every break is listed here with its migration.
 
 ### Changed
 
+- **The visual language settles on the Radix scales** — slate for greys,
+  indigo for the brand — with radii, control heights, density spacing and a
+  single focus ring tuned in the semantic layer. No component holds a value of
+  its own. Fields trade a permanent heavy border for a fill, and the focus
+  ring becomes a coloured border plus a halo mixed from the ring colour at the
+  point of use, so an invalid field rings in danger and a branded one in the
+  brand without either carrying a second rule that can drift.
+
+- **Three tokens are now restated per mode rather than shared**, each with the
+  measurement that forced it recorded beside it: `--bb-border`, `--bb-link`
+  and `--bb-accent-subtle-on`. The Radix light and dark scales run in opposite
+  directions, so one role — "as light as legibility allows" — lands on a
+  different step in each mode.
+
+- **`--bb-accent-subtle-on` moves from step 11 to step 12 in light.** The
+  subtle family is one text colour over three backgrounds, and the pairing has
+  to hold on the darkest of them: pressed measured 4.46:1 against the 4.5:1 it
+  needs. Invisible until the pressed state became something the catalog could
+  actually render.
+
 - **Contrast fixes across the state colours**, found by automated
   accessibility. A filled danger button measured 3.91:1 against a 4.5:1
   requirement, and error text 3.91:1. Radix step 9 is designed for graphical
@@ -77,6 +118,19 @@ minor versions. Every break is listed here with its migration.
   ship as `0.2.0`.
 - Repository restructured as a pnpm workspace: the package lives in
   `packages/blackborne`, the visual catalog in `apps/catalog`.
+
+### Fixed
+
+- Two catalog checks that were passing without checking anything. The forced
+  hover, pressed and focus states never reached the DOM — the base renders its
+  own state attributes on the same element and wins — so every `*-states`
+  baseline had been approving six identical controls labelled as six different
+  states. And the alternate brand fixture was incomplete in all five of its
+  copies; a step left out falls back to the library's own indigo, so the
+  stories proving the brand axis works were proving the opposite.
+
+- The visual-regression runner no longer replaces the host's `node_modules`
+  with an installation built inside the container.
 
 ### Removed
 
