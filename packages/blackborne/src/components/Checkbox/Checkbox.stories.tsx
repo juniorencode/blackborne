@@ -81,6 +81,19 @@ export const States: Story = {
       <Force state="data-focused">
         <Checkbox>Focused</Checkbox>
       </Force>
+      {/*
+        The pair that can actually break. An unselected box moves along the
+        grey ramp and a selected one along the accent ramp, decided by a
+        stacked variant whose specificity beats either single rule. Without a
+        picture of the selected half, a collapse into "whichever was written
+        last" would look exactly like nothing.
+      */}
+      <Force state="data-hovered">
+        <Checkbox defaultSelected>Hovered and selected</Checkbox>
+      </Force>
+      <Force state="data-pressed">
+        <Checkbox defaultSelected>Pressed and selected</Checkbox>
+      </Force>
       <Checkbox isDisabled>Disabled</Checkbox>
       <Checkbox isDisabled defaultSelected>
         Disabled and checked

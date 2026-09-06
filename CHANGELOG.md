@@ -86,6 +86,25 @@ minor versions. Every break is listed here with its migration.
 
 ### Changed
 
+- **Every control now answers the pointer.** Checkbox, radio and switch styled
+  neither hover nor pressed — measured, both states were pixel-identical to
+  rest — so a control gave no sign it was a target until you had already
+  clicked it. They now move their FILL, matching what `Button` already did:
+  the grey ramp while unselected, the accent ramp once selected, one step
+  further when pressed. The whole label triggers it rather than the box alone,
+  because the label is the hit area and feedback confined to twenty pixels
+  would teach people the text is not pressable when it is.
+
+- **Fields move their border instead, and the difference is deliberate.** A
+  field is a large surface the pointer crosses constantly in a dense form, and
+  repainting its interior each time would make the form shimmer. Same reasoning
+  already accepted for `--bb-border-control`: the size of a thing changes what
+  reads correctly on it.
+
+- The switch track rests on `--bb-surface-control` rather than
+  `--bb-surface-sunken`, so all three small controls share one resting
+  surface. Nobody chose the difference; it accumulated.
+
 - **The visual language settles on the Radix scales** — slate for greys,
   indigo for the brand — with radii, control heights, density spacing and a
   single focus ring tuned in the semantic layer. No component holds a value of

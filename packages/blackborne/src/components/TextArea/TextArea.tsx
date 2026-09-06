@@ -29,6 +29,17 @@ const CONTROL = cx(
   // The placeholder uses the SECONDARY text colour, not a fourth lighter grey
   // (doc 03 §4.7): raise the value, do not lower the placeholder.
   'bb:placeholder:text-text-muted',
+  /*
+   * A field moves its BORDER on hover, where the small controls move their
+   * fill. The exception is deliberate and it is about size: a field is a large
+   * surface the pointer crosses constantly in a dense form, and repainting its
+   * interior every time would make the form shimmer. The border says "this is
+   * a target" without touching the area you are about to read.
+   *
+   * Same reasoning already accepted for --bb-border-control: the size of a
+   * thing changes what reads correctly on it.
+   */
+  'bb:data-hovered:border-border-strong',
   'bb:data-focused:border-border-focus',
   'bb:data-focused:border-focus-ring bb:data-focused:shadow-[0_0_0_4px_color-mix(in_oklab,var(--bb-focus-ring)_var(--bb-focus-ring-halo-strength),transparent)]',
   'bb:data-invalid:border-danger',
