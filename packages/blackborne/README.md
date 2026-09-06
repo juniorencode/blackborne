@@ -114,17 +114,21 @@ implementation detail and cannot collide with yours.
 
 Doc 10 is blunt about this: a budget without a number is not a budget,
 because when you exceed it you do not find out. Measured at `0.2.0`, with
-ten components:
+fifteen components:
 
-| What                    | Now                   | Budget                 |
-| ----------------------- | --------------------- | ---------------------- |
-| `dist/index.js`         | 18.1 kB (3.9 kB gzip) | — see below            |
-| `dist/styles.css`       | 26.3 kB (5.1 kB gzip) | 60 kB raw / 12 kB gzip |
-| Published tarball       | 36.8 kB               | —                      |
-| `pnpm verify`           | 46 s                  | 90 s                   |
-| Browser checks          | 191 s                 | 300 s                  |
-| Automated accessibility | 141 s                 | 240 s                  |
-| Visual regression       | 90 s                  | 240 s                  |
+| What                                   | Now                   | Budget                 |
+| -------------------------------------- | --------------------- | ---------------------- |
+| `dist/index.js`                        | 30.1 kB (6.2 kB gzip) | — see below            |
+| `dist/styles.css`                      | 38.2 kB (7.0 kB gzip) | 60 kB raw / 12 kB gzip |
+| Published tarball                      | 72.6 kB               | —                      |
+| `pnpm verify`                          | 43 s                  | 90 s                   |
+| Browser checks, accessibility included | 276 s                 | 540 s                  |
+| Visual regression                      | 58 s                  | 240 s                  |
+
+The browser row was two rows until the suite was split into two Playwright
+projects: behaviour and accessibility now run as one job, so one number is what
+there is to measure. The budget is the two former ceilings added together, not
+a relaxation.
 
 **The JavaScript budget is deliberately structural rather than a number.** With
 one component, any total figure would be a guess that gets raised every time a
@@ -134,9 +138,11 @@ Every module is side-effect free apart from the stylesheet, and no dependency
 is bundled — `react` and `react-aria-components` stay external so your
 bundler deduplicates them.
 
-The CSS number is a real ceiling. Most of the current 18 kB is the token layer,
-which is a fixed cost paid once; utilities grow slowly because the scales are
-restricted and only what components use is emitted.
+The CSS number is a real ceiling, and the shape of its growth is the thing
+worth watching rather than the total: most of it is the token layer, a fixed
+cost paid once. Seven components landing at once moved it by 12 kB raw and
+under 2 kB gzipped, because the scales are restricted and only what components
+actually use is emitted.
 
 **Why the slow layers get their own numbers.** Doc 10 §8 warns that a check
 which runs everything before every change ends up switched off, so the fast

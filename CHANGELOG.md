@@ -12,6 +12,52 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- Seven pieces, filling out the levels that depend on nothing: `Separator`,
+  `Skeleton`, `VisuallyHidden`, `Badge`, `Card`, `EmptyState` and `Alert`.
+- `Alert`, an inline message where the thing happened. `Toast` is deferred
+  because the base's API is still unstable, which left the library with no way
+  to show a section- or page-level message at all — and doc 09 §4 is explicit
+  that a global notice is a complement, never the only channel. It draws its
+  own status glyph per tone, so the state survives greyscale: verified in a
+  browser against a `grayscale(1)` copy, not assumed.
+- `Badge`, solid and soft, in six tones. The first component to read the
+  `--bb-success`, `--bb-warning` and `--bb-info` families — they had existed
+  since the token layer landed and nothing had ever rendered them. Its remove
+  button clears the minimum target at every density, which is asserted in a
+  browser rather than eyeballed: a cross drawn at 12px inside a chip is where
+  that rule is broken everywhere.
+- `Card`, which **declares the query container**
+  ([decision 0010](docs/decisions/0010-the-card-declares-the-container.md)).
+  The container scale had been defined since the token layer and nothing in
+  the library declared a container, so every container query would have matched
+  nothing — level N2 of doc 04 existed on paper and could not be used. Two
+  consequences come with it, in every Card: it no longer shrink-wraps its
+  content, and it becomes the containing block for absolutely and fixed
+  positioned descendants.
+- `EmptyState`, which distinguishes "there is nothing yet" from "the filter
+  matched nothing" — doc 09 §6 calls confusing them one of the most common
+  experience bugs there is. Titles fall back to the dictionary per variant.
+- `Skeleton`, in text, circle and rectangle. Under reduced motion the pulse is
+  removed rather than slowed. Its fill is derived from `--bb-surface-sunken`
+  rather than taken from it: measured, the role token alone reaches only
+  1.07:1 against the page in dark, where the placeholder stops being visible.
+- `Separator`, semantic by default and decorative on request. A vertical one is
+  visible in an ordinary flex row without the consumer setting a height, which
+  is the trap this component usually ships with.
+- `VisuallyHidden`. The base ships one, but it is out of a consumer's reach —
+  `react-aria-components` is this package's own dependency, not a peer — and
+  hand-rolling it is the classic silent accessibility bug.
+- The icon convention, which was a planned but unwritten piece of the catalog
+  ([doc 02](docs/foundations/02-api-conventions.md) §11): icons arrive as
+  children, their size and colour come from the slot, and there is no
+  `iconStart` prop and no `icon="save"` string.
+- `remove`, `emptyStateNoData` and `emptyStateNoResults` in the dictionary.
+- `--color-surface-on` and the other four surface `-on` utilities, plus
+  `--width-hit`. Doc 03 says a background and its text colour are used as a
+  pair, and only one of the five pairs was reachable from a utility — so a
+  component needing the other four read the variable by hand, which is the same
+  value spelled a second way.
+
 - A `link` variant on `Button`, for an action that has to weigh almost
   nothing: "forgot your password", a secondary action in a table row. No
   background and no border, but the same horizontal padding as every other
@@ -85,6 +131,13 @@ minor versions. Every break is listed here with its migration.
   between them.
 
 ### Changed
+
+- `size` is `sm | md | lg` across the whole library, and a component uses the
+  subset it needs ([doc 02](docs/foundations/02-api-conventions.md) §3.1). The
+  rule is written down because the alternative had already arrived: a second
+  vocabulary, defensible on its own, for an idea that already had one. And
+  `compact` is taken — it is a value of the density axis, which composes with
+  `size` rather than replacing it.
 
 - **Every control now answers the pointer.** Checkbox, radio and switch styled
   neither hover nor pressed — measured, both states were pixel-identical to
