@@ -7,6 +7,7 @@ import { createRef } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
+import { normalize, upperCase } from '../../normalize';
 import { TextArea } from './TextArea';
 
 const control = () => screen.getByRole('textbox') as HTMLTextAreaElement;
@@ -131,4 +132,19 @@ test('it is reachable by keyboard, and the ref reaches the textarea', async () =
   await user.tab();
   expect(document.activeElement).toBe(control());
   expect(ref.current).toBe(control());
+});
+
+test('it normalizes what is typed, through the same hook a text field uses', async () => {
+  /*
+   * One test rather than the full set: the mechanism is shared and is covered
+   * where it lives. What this asserts is that it is actually wired here, which
+   * is the part that can silently not be.
+   */
+  const user = userEvent.setup();
+  render(<TextArea label="Codes" normalize={normalize(upperCase)} />);
+
+  const control = screen.getByRole<HTMLTextAreaElement>('textbox');
+  await user.type(control, 'ab-12');
+
+  expect(control.value).toBe('AB-12');
 });

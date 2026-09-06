@@ -27,6 +27,24 @@ export type { AlertProps, AlertTone } from './components/Alert';
 export { Badge } from './components/Badge';
 export type { BadgeProps, BadgeTone, BadgeVariant } from './components/Badge';
 
+/*
+ * Normalization: pure functions, composed by the consumer, passed to a field's
+ * `normalize` prop. Doc 07 §2 is careful that this is a THIRD thing, not part
+ * of restriction — it accepts a keystroke and rewrites it, where restriction
+ * refuses one and validation judges the result.
+ */
+export {
+  allowOnly,
+  caretAfter,
+  foldAccents,
+  lowerCase,
+  normalize,
+  stripSpaces,
+  trimEdges,
+  upperCase
+} from './normalize';
+export type { Normalizer } from './normalize';
+
 export { Button } from './components/Button';
 export type {
   ButtonProps,

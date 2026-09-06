@@ -6,6 +6,9 @@ import {
 } from 'react-aria-components';
 import { Field } from '../../internal/Field';
 import { cx } from '../../internal/cx';
+import { mergeRefs } from '../../internal/mergeRefs';
+import { useNormalizedField } from '../../internal/useNormalizedField';
+import type { Normalizer } from '../../normalize';
 
 export type TextFieldSize = 'sm' | 'md' | 'lg';
 
@@ -89,6 +92,26 @@ export interface TextFieldProps extends Omit<
   /** Height and type size. Aligns with a Button of the same size. */
   size?: TextFieldSize;
   placeholder?: string;
+  /**
+   * Rewrite the value as it is typed: upper case, stripped spaces, folded
+   * accents. Compose it from `normalize` and the transformations beside it.
+   *
+   * ```tsx
+   * <TextField label="Plate" normalize={normalize(upperCase, stripSpaces)} />
+   * ```
+   *
+   * This is not validation and it is not restriction (doc 07 §2): it accepts
+   * the keystroke and changes it, rather than refusing it or judging the
+   * result. Deciding a value is wrong stays the project's.
+   *
+   * **Do not fold accents in a name.** Somebody's name is spelled the way they
+   * spell it, and only you know which field this is.
+   *
+   * What the field contributes over doing this in your own `onChange` is the
+   * caret: rewriting a value while somebody types moves the cursor to the end
+   * mid-word, and this puts it back.
+   */
+  normalize?: Normalizer;
   className?: string;
 }
 
@@ -120,11 +143,19 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
       isSaving = false,
       size = 'md',
       placeholder,
+      normalize,
       className,
       ...ariaProps
     },
     ref
   ) {
+    const normalized = useNormalizedField<HTMLInputElement>({
+      normalize,
+      value: ariaProps.value,
+      defaultValue: ariaProps.defaultValue,
+      onChange: ariaProps.onChange
+    });
+
     return (
       <AriaTextField
         /*
@@ -136,6 +167,13 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
         validationBehavior="aria"
         className={cx('bb:w-full', className)}
         {...ariaProps}
+        /*
+         * After ariaProps, so the normalized value wins when there is one.
+         * With no `normalize` the hook returns an empty object and this spread
+         * changes nothing — a field that does not use the prop behaves exactly
+         * as it did before the prop existed.
+         */
+        {...normalized.props}
       >
         <Field
           label={label}
@@ -147,7 +185,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
           isSaving={isSaving}
         >
           <Input
-            ref={ref}
+            ref={mergeRefs(ref, normalized.ref)}
             className={cx(
               INPUT,
               SIZE[size],

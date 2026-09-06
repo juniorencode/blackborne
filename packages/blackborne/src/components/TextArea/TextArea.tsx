@@ -6,6 +6,9 @@ import {
 } from 'react-aria-components';
 import { Field } from '../../internal/Field';
 import { cx } from '../../internal/cx';
+import { mergeRefs } from '../../internal/mergeRefs';
+import { useNormalizedField } from '../../internal/useNormalizedField';
+import type { Normalizer } from '../../normalize';
 
 /*
  * The one thing that makes a text area different from a text field: its height
@@ -87,6 +90,17 @@ export interface TextAreaProps extends Omit<
    */
   rows?: number;
   placeholder?: string;
+  /**
+   * Rewrite the value as it is typed. Composed from `normalize` and the
+   * transformations beside it, so the order is the thing you read
+   * (doc 07 §2.1).
+   *
+   * Worth a second thought here more than on a single-line field: a text area
+   * holds a note somebody wrote, and folding accents or forcing case on prose
+   * is a defect. It earns its place on the values that happen to be long —
+   * a pasted block of codes, a list of references.
+   */
+  normalize?: Normalizer;
   className?: string;
 }
 
@@ -114,11 +128,19 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
       isSaving = false,
       rows = 3,
       placeholder,
+      normalize,
       className,
       ...ariaProps
     },
     ref
   ) {
+    const normalized = useNormalizedField<HTMLTextAreaElement>({
+      normalize,
+      value: ariaProps.value,
+      defaultValue: ariaProps.defaultValue,
+      onChange: ariaProps.onChange
+    });
+
     return (
       <AriaTextField
         // `aria` rather than the base's `native`: native validation pops the
@@ -127,6 +149,8 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
         validationBehavior="aria"
         className={cx('bb:w-full', className)}
         {...ariaProps}
+        /* After ariaProps, so a normalized value wins. Empty without one. */
+        {...normalized.props}
       >
         <Field
           label={label}
@@ -138,7 +162,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
           isSaving={isSaving}
         >
           <AriaTextArea
-            ref={ref}
+            ref={mergeRefs(ref, normalized.ref)}
             rows={rows}
             className={cx(CONTROL, 'bb-textarea')}
             {...(placeholder === undefined ? {} : { placeholder })}
