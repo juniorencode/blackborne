@@ -101,6 +101,22 @@ export const CONTROL_BOX = cx(
  * Separate from the frame because a numeric field draws the frame on its group
  * and the type on the input inside it, and they are not the same element.
  */
+/*
+ * NOTE ON WHAT MUST NOT MOVE TO THE FRAME: the type size.
+ *
+ * An `<input>` does not inherit `font-size` — browsers set a font on form
+ * controls, and the package ships no reset to undo it (a library may not
+ * overwrite a consumer's styles). So a size class that sits on the wrapper
+ * reaches the box and not the value, and the value quietly renders at the
+ * browser's 13.33px instead of the token.
+ *
+ * It was found by a screenshot moving by about a pixel with every measurement
+ * saying the layout was unchanged: the text was the right distance from the
+ * edge, in a box of the right height, in the wrong size.
+ *
+ * So a field's size map has two halves — the height goes on the frame, the
+ * type goes on the control.
+ */
 export const CONTROL_TEXT = cx(
   'bb:px-(--bb-control-padding-x)',
   'bb:font-sans bb:leading-normal',
@@ -124,3 +140,21 @@ export const CONTROL_INSIDE = cx(
   'bb:outline-hidden bb:border-0',
   'bb:data-disabled:cursor-not-allowed'
 );
+
+/**
+ * Where the value sits inside its box.
+ *
+ * `start | center | end`, never `left`/`right` — doc 02 §3.2. The lint rule
+ * catches a physical class and cannot catch a physical prop VALUE, so the
+ * vocabulary has to be right at the point it is named.
+ *
+ * It aligns the value inside the control and nothing else: not the label
+ * against the field, and not the field inside the form.
+ */
+export type ControlAlign = 'start' | 'center' | 'end';
+
+export const ALIGN: Record<ControlAlign, string> = {
+  start: 'bb:text-start',
+  center: 'bb:text-center',
+  end: 'bb:text-end'
+} satisfies Record<ControlAlign, string>;

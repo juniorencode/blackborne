@@ -132,7 +132,14 @@ const STATES: Array<[string, string]> = [
    * and overruled by a busy state. What to look at is the width of usable
    * box, because that is the argument the decision makes.
    */
-  ['components-numberfield--the-stepper', 'numberfield-stepper']
+  ['components-numberfield--the-stepper', 'numberfield-stepper'],
+  /*
+   * Affixes and alignment, on both fields that take them. The Arabic panel is
+   * the one that earns its place: `end` is the left-hand side there, and a
+   * physical value would have been invisible in English.
+   */
+  ['components-textfield--affixes-and-alignment', 'textfield-affixes'],
+  ['components-numberfield--affixes-and-alignment', 'numberfield-affixes']
 ];
 
 for (const [id, name] of STATES) {

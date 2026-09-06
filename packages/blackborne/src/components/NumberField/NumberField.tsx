@@ -1,16 +1,17 @@
 import { forwardRef } from 'react';
 import {
   Button,
-  Group,
   Input,
   NumberField as AriaNumberField,
   type NumberFieldProps as AriaNumberFieldProps
 } from 'react-aria-components';
 import {
-  CONTROL_BOX,
+  ALIGN,
   CONTROL_INSIDE,
   CONTROL_TEXT,
-  Field
+  ControlFrame,
+  Field,
+  type ControlAlign
 } from '../../internal/Field';
 import { useConfig, useMessage } from '../../config';
 import { cx } from '../../internal/cx';
@@ -34,19 +35,18 @@ export type NumberFieldSize = 'sm' | 'md' | 'lg';
  * always takes the locale it is given.
  */
 
-const SIZE: Record<NumberFieldSize, string> = {
-  sm: 'bb:h-control-sm bb:text-xs',
-  md: 'bb:h-control-md bb:text-md',
-  lg: 'bb:h-control-lg bb:text-lg'
-} satisfies Record<NumberFieldSize, string>;
+interface SizeClasses {
+  /** The height, on the frame — it is the frame that draws the box. */
+  frame: string;
+  /** The type size, on the CONTROL: an input inherits no font. */
+  text: string;
+}
 
-const GROUP = cx(
-  CONTROL_BOX,
-  // A row, because the buttons sit beside the value inside one frame. The
-  // ring lands here rather than on the input, since the buttons are part of
-  // the control as far as anyone looking at it is concerned.
-  'bb:flex bb:items-stretch'
-);
+const SIZE: Record<NumberFieldSize, SizeClasses> = {
+  sm: { frame: 'bb:h-control-sm', text: 'bb:text-xs' },
+  md: { frame: 'bb:h-control-md', text: 'bb:text-md' },
+  lg: { frame: 'bb:h-control-lg', text: 'bb:text-lg' }
+} satisfies Record<NumberFieldSize, SizeClasses>;
 
 const INPUT = cx(
   CONTROL_INSIDE,
@@ -114,6 +114,25 @@ export interface NumberFieldProps extends Omit<
    */
   currency?: string;
   placeholder?: string;
+  /**
+   * Before the value, inside the box: a currency symbol.
+   *
+   * Note this is presentation only — passing `currency` is what makes the
+   * value FORMAT as money in the active locale, and only that reaches whoever
+   * reads the field aloud. An affix that a person needs in order to answer
+   * belongs in the label (doc 02 §11.3).
+   */
+  prefix?: React.ReactNode;
+  /** After the value: a unit — `kg`, `%`, `h`. Same rules as `prefix`. */
+  suffix?: React.ReactNode;
+  /**
+   * Where the value sits in its box.
+   *
+   * `end` is the one worth knowing about: numbers read in a column compare by
+   * magnitude at a glance only when their last digits line up, which is the
+   * same reason the value is set in tabular figures (doc 03 §4.2).
+   */
+  align?: ControlAlign;
   className?: string;
 }
 
@@ -142,6 +161,9 @@ export const NumberField = forwardRef<HTMLInputElement, NumberFieldProps>(
       isSaving = false,
       size = 'md',
       isStepperVisible = false,
+      prefix,
+      suffix,
+      align = 'start',
       currency,
       placeholder,
       className,
@@ -189,53 +211,53 @@ export const NumberField = forwardRef<HTMLInputElement, NumberFieldProps>(
           isLoading={isLoading}
           isSaving={isSaving}
         >
-          <Group className={cx(GROUP, SIZE[size])}>
-            {/*
-             * Decrement first in the DOM, so keyboard traversal follows the
-             * visual order — and in RTL the group flips with the writing
-             * direction, taking the buttons with it. There is no physical
-             * measurement to correct (doc 03 §5, rule 4).
-             *
-             * Each button carries an accessible name from the dictionary,
-             * because an icon-only button always needs one and the consumer
-             * cannot supply a name for a component's internal control.
-             */}
-            {hasStepper ? (
-              <Button slot="decrement" className={STEPPER}>
-                {/*
-                 * The dictionary word is the button's visually hidden TEXT
-                 * rather than an aria-label, because the base sets
-                 * aria-labelledby pointing at the button AND the field label
-                 * — and labelledby wins over label.
-                 *
-                 * Verified while building: with an aria-label the announced
-                 * name came out as "− Quantity", ignoring it entirely.
-                 * Letting the base compose gives "Decrease Quantity", which
-                 * is better than anything this component could say alone:
-                 * only the consumer knows what is being decreased.
-                 */}
-                <span className="bb:sr-only">{decreaseLabel}</span>
-                <span aria-hidden="true">−</span>
-              </Button>
-            ) : null}
+          <ControlFrame
+            {...(prefix === undefined ? {} : { prefix })}
+            {...(suffix === undefined ? {} : { suffix })}
+            /*
+             * The stepper buttons are `leading` and `trailing` rather than
+             * children, so an affix lands between the value and the button
+             * instead of outside it. Doc 07 §2.2 rule 3: the affix moves ahead
+             * of the control, which keeps the button's target whole and puts
+             * the unit next to the number it belongs to.
+             */
+            {...(hasStepper
+              ? {
+                  leading: (
+                    <Button slot="decrement" className={STEPPER}>
+                      {/*
+                       * The dictionary word is the button's visually hidden
+                       * TEXT rather than an aria-label, because the base sets
+                       * aria-labelledby pointing at the button AND the field
+                       * label — and labelledby wins over label.
+                       *
+                       * Verified while building: with an aria-label the
+                       * announced name came out as "− Quantity", ignoring it
+                       * entirely. Letting the base compose gives "Decrease
+                       * Quantity", which is better than anything this
+                       * component could say alone: only the consumer knows
+                       * what is being decreased.
+                       */}
+                      <span className="bb:sr-only">{decreaseLabel}</span>
+                      <span aria-hidden="true">−</span>
+                    </Button>
+                  ),
+                  trailing: (
+                    <Button slot="increment" className={STEPPER}>
+                      <span className="bb:sr-only">{increaseLabel}</span>
+                      <span aria-hidden="true">+</span>
+                    </Button>
+                  )
+                }
+              : {})}
+            className={cx(SIZE[size].frame, busy && 'bb:pe-9')}
+          >
             <Input
               ref={ref}
-              /*
-               * Room for the busy indicator, the same way TextField makes it.
-               * Only while busy: unlike a search field, this edge is empty in
-               * the ordinary case, so reserving it always would narrow every
-               * numeric field for a state most of them never enter.
-               */
-              className={cx(INPUT, busy && 'bb:pe-9')}
+              className={cx(INPUT, SIZE[size].text, ALIGN[align])}
               {...(placeholder === undefined ? {} : { placeholder })}
             />
-            {hasStepper ? (
-              <Button slot="increment" className={STEPPER}>
-                <span className="bb:sr-only">{increaseLabel}</span>
-                <span aria-hidden="true">+</span>
-              </Button>
-            ) : null}
-          </Group>
+          </ControlFrame>
         </Field>
       </AriaNumberField>
     );

@@ -334,3 +334,57 @@ export const Normalization: Story = {
     </div>
   )
 };
+
+/**
+ * Affixes and alignment.
+ *
+ * An affix sits INSIDE the border and in the flow, which is why it is a slot
+ * and not padding: `.com` is four characters wide and `@` is one, and no
+ * reserved space can be computed from CSS.
+ *
+ * **They are hidden from screen readers**, and that carries a rule with it
+ * (doc 02 §11.3). A unit somebody needs in order to answer belongs in the
+ * label or the description — the affix is orientation, like the `@` in an
+ * email address, not information.
+ *
+ * `align` is `start | center | end` and never `left`/`right`: the last panel
+ * is the same three fields in Arabic, where `end` is the left-hand side.
+ */
+export const AffixesAndAlignment: Story = {
+  render: () => (
+    <div className="catalog-pair">
+      <Scope label="Affixes">
+        <div className="catalog-stack">
+          <TextField label="Email" prefix="@" placeholder="ada" />
+          <TextField label="Site" suffix=".com" placeholder="example" />
+          <TextField
+            label="Both"
+            prefix="https://"
+            suffix=".com"
+            placeholder="example"
+          />
+          <TextField
+            label="With a description"
+            suffix="kg"
+            defaultValue="72"
+            description="The unit is here too, because the affix is not announced."
+          />
+        </div>
+      </Scope>
+      <Scope label="Alignment">
+        <div className="catalog-stack">
+          <TextField label="start — the default" defaultValue="Ada Lovelace" />
+          <TextField label="center" align="center" defaultValue="AB-1234" />
+          <TextField label="end" align="end" defaultValue="1,240.50" />
+        </div>
+      </Scope>
+      <Scope label="Arabic — end is the other side" dir="rtl">
+        <div className="catalog-stack">
+          <TextField label="بداية" defaultValue="١٢٣٤" />
+          <TextField label="نهاية" align="end" defaultValue="١٢٣٤" />
+          <TextField label="لاحقة" suffix="كغ" defaultValue="٧٢" />
+        </div>
+      </Scope>
+    </div>
+  )
+};

@@ -19,23 +19,32 @@
  * and jsdom resolves no variables.
  */
 import { expect, test } from '@playwright/test';
+import { fieldBox } from './field';
 import { gotoStory } from './story';
 
-/** The control that draws the box, found by its accessible name. */
+/**
+ * The element that draws the box. A single-line field paints it on the frame
+ * that wraps the control; a text area paints it on the control itself, having
+ * no frame.
+ */
 const box = (page: import('@playwright/test').Page, name: string) =>
   page
     .getByRole('textbox', { name })
     .or(page.getByRole('spinbutton', { name }));
 
-for (const story of [
-  'components-textfield--states',
-  'components-textarea--states'
-]) {
+for (const [story, framed] of [
+  ['components-textfield--states', true],
+  ['components-textarea--states', false]
+] as const) {
   test(`read-only is visibly not a box in ${story}`, async ({ page }) => {
     await gotoStory(page, story);
 
-    const ordinary = box(page, 'With value');
-    const readOnly = box(page, 'Read only');
+    const control = (name: string) => box(page, name);
+    const measured = (name: string) =>
+      framed ? fieldBox(control(name)) : control(name);
+
+    const ordinary = measured('With value');
+    const readOnly = measured('Read only');
 
     const paint = (locator: import('@playwright/test').Locator) =>
       locator.evaluate(node => {
@@ -74,7 +83,9 @@ for (const story of [
   }) => {
     await gotoStory(page, story);
 
-    const readOnly = box(page, 'Read only');
+    const readOnly = framed
+      ? fieldBox(box(page, 'Read only'))
+      : box(page, 'Read only');
     const edge = () =>
       readOnly.evaluate(node => getComputedStyle(node).borderTopColor);
 

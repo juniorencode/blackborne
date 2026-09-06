@@ -244,3 +244,29 @@ test('without normalize, a field behaves exactly as it did before', async () => 
   expect(input.value).toBe('ab 12');
   expect(onChange).toHaveBeenLastCalledWith('ab 12');
 });
+
+test('an affix is drawn but not announced', () => {
+  /*
+   * Doc 02 §11.3: a slot the library owns is hidden by the library, and the
+   * condition that makes it safe is that the label is always there. The rule
+   * this implies is the one worth protecting — a unit somebody NEEDS in order
+   * to answer belongs in the label, not only in the affix.
+   */
+  render(<TextField label="Weight" prefix="~" suffix="kg" defaultValue="72" />);
+
+  // The accessible name is the label alone; neither affix joins it.
+  expect(screen.getByRole('textbox').getAttribute('aria-label')).toBeNull();
+  expect(screen.getByRole('textbox', { name: 'Weight' })).toBeTruthy();
+
+  const affixes = document.querySelectorAll('[aria-hidden="true"]');
+  const texts = [...affixes].map(node => node.textContent);
+  expect(texts).toContain('~');
+  expect(texts).toContain('kg');
+});
+
+test('the affix slots are empty when nothing is passed', () => {
+  // A field that never asked for an affix renders no extra element for one,
+  // so nothing changes for anyone not using the prop.
+  const { container } = render(<TextField label="Name" />);
+  expect(container.querySelectorAll('[aria-hidden="true"]')).toHaveLength(0);
+});

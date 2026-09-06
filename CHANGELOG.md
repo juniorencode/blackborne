@@ -12,6 +12,20 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- `prefix` and `suffix` on `TextField` and `NumberField`: `@`, `.com`, a unit,
+  a currency symbol. They sit inside the border and in the flow, which is why
+  they are slots and not padding — `.com` is four characters wide and `@` is
+  one, and no reserved space can be computed from CSS.
+
+  **They are hidden from assistive technology** (doc 02 §11.3), and that
+  carries a rule: a unit somebody needs in order to answer belongs in the label
+  or the description, not only in the affix.
+
+- `align` on `TextField`, `TextArea` and `NumberField`: `start | center | end`,
+  never `left`/`right`. `end` is the one worth knowing about on a numeric
+  field — numbers in a column compare by magnitude at a glance only when their
+  last digits line up.
+
 - **Normalization**, as pure functions you compose: `normalize`, `lowerCase`,
   `upperCase`, `stripSpaces`, `trimEdges`, `foldAccents` and `allowOnly`, plus
   a `normalize` prop on `TextField` and `TextArea`. Doc 07 §2 is careful that
@@ -247,6 +261,17 @@ minor versions. Every break is listed here with its migration.
   `packages/blackborne`, the visual catalog in `apps/catalog`.
 
 ### Fixed
+
+- **A numeric field's value was never at the right type size.** Its size class
+  went on the group that wraps the input, and an `<input>` does not inherit
+  `font-size` — browsers set a font on form controls and this package ships no
+  reset to undo it. So the value rendered at the browser's 13.3px while every
+  other field used the token, in the same form, at the same nominal size.
+
+  It had been that way since the component was built. The alignment check
+  compares heights and they matched perfectly; the tabular-figures check
+  compares digit widths and they were still equal. Neither looks at type size,
+  and now one does.
 
 - **A read-only field never looked different from an editable one**, in any
   field, since the first one shipped. The class was `data-readonly:` on the

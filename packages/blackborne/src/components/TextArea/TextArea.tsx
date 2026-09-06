@@ -4,7 +4,13 @@ import {
   TextField as AriaTextField,
   type TextFieldProps as AriaTextFieldProps
 } from 'react-aria-components';
-import { CONTROL_BOX, CONTROL_TEXT, Field } from '../../internal/Field';
+import {
+  ALIGN,
+  CONTROL_BOX,
+  CONTROL_TEXT,
+  Field,
+  type ControlAlign
+} from '../../internal/Field';
 import { cx } from '../../internal/cx';
 import { mergeRefs } from '../../internal/mergeRefs';
 import { useNormalizedField } from '../../internal/useNormalizedField';
@@ -67,6 +73,12 @@ export interface TextAreaProps extends Omit<
   rows?: number;
   placeholder?: string;
   /**
+   * Where the value sits in its box. No affixes here, unlike the single-line
+   * fields: a `@` before a block of text has nothing to attach itself to, and
+   * the trailing corner belongs to the browser's own resize grip.
+   */
+  align?: ControlAlign;
+  /**
    * Rewrite the value as it is typed. Composed from `normalize` and the
    * transformations beside it, so the order is the thing you read
    * (doc 07 §2.1).
@@ -104,6 +116,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
       isSaving = false,
       rows = 3,
       placeholder,
+      align = 'start',
       normalize,
       className,
       ...ariaProps
@@ -140,7 +153,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
           <AriaTextArea
             ref={mergeRefs(ref, normalized.ref)}
             rows={rows}
-            className={cx(CONTROL, 'bb-textarea')}
+            className={cx(CONTROL, ALIGN[align], 'bb-textarea')}
             {...(placeholder === undefined ? {} : { placeholder })}
           />
         </Field>
