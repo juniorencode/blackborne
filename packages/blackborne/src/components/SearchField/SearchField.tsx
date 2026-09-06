@@ -5,7 +5,7 @@ import {
   SearchField as AriaSearchField,
   type SearchFieldProps as AriaSearchFieldProps
 } from 'react-aria-components';
-import { Field } from '../../internal/Field';
+import { CONTROL_BOX, CONTROL_TEXT, Field } from '../../internal/Field';
 import { useMessage } from '../../config';
 import { cx } from '../../internal/cx';
 
@@ -70,23 +70,8 @@ const SIZE: Record<SearchFieldSize, string> = {
  * usually the wrong one. The third field is when it earns a home.
  */
 const INPUT = cx(
-  'bb:box-border bb:w-full bb:min-w-0',
-  'bb:px-(--bb-control-padding-x)',
-  'bb:rounded-md bb:border bb:border-solid bb:border-border',
-  'bb:bg-surface-control bb:text-surface-control-on',
-  'bb:font-sans bb:leading-normal',
-  'bb:outline-hidden',
-  'bb:transition-[border-color,box-shadow,background-color]',
-  'bb:duration-(--bb-duration-fast) bb:ease-standard',
-  'bb:placeholder:text-text-muted',
-  'bb:data-hovered:border-border-strong',
-  'bb:data-focused:border-border-focus',
-  'bb:data-focused:border-focus-ring bb:data-focused:shadow-[0_0_0_4px_color-mix(in_oklab,var(--bb-focus-ring)_var(--bb-focus-ring-halo-strength),transparent)]',
-  'bb:data-invalid:border-danger',
-  'bb:data-invalid:[--bb-focus-ring:var(--bb-danger)]',
-  'bb:data-readonly:bg-surface-sunken',
-  'bb:data-disabled:bg-surface-disabled bb:data-disabled:text-text-disabled',
-  'bb:data-disabled:cursor-not-allowed',
+  CONTROL_BOX,
+  CONTROL_TEXT,
   /*
    * The trailing padding, so the value never runs under whatever is sitting
    * at that edge. Same mechanism and same 36px as TextField reserves for its
@@ -100,18 +85,7 @@ const INPUT = cx(
    * starts loading, which is doc 09 §3 broken twice. The space is reserved
    * before the content arrives instead.
    */
-  'bb:pe-9',
-  /*
-   * WebKit draws its OWN cancel button inside `input[type=search]`, and the
-   * base gives this input that type. Left alone there are two crosses at the
-   * trailing edge: ours, and one that is unstyled, untranslated, outside our
-   * dictionary and below the minimum target at any density. Removed with a
-   * utility rather than a layer-3 CSS file, which is the test the
-   * new-component recipe §0 sets for whether such a file is warranted.
-   */
-  'bb:appearance-none',
-  'bb:[&::-webkit-search-cancel-button]:hidden',
-  'bb:[&::-webkit-search-decoration]:hidden'
+  'bb:pe-9'
 );
 
 const CLEAR = cx(
