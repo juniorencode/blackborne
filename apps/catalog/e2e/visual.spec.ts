@@ -126,7 +126,13 @@ const STATES: Array<[string, string]> = [
   [
     'components-checkboxgroup--against-radio-group',
     'checkboxgroup-vs-radiogroup'
-  ]
+  ],
+  /*
+   * Decision 0011 in one picture: the same fields with the stepper off, on,
+   * and overruled by a busy state. What to look at is the width of usable
+   * box, because that is the argument the decision makes.
+   */
+  ['components-numberfield--the-stepper', 'numberfield-stepper']
 ];
 
 for (const [id, name] of STATES) {

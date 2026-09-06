@@ -98,14 +98,23 @@ export interface NumberFieldProps extends Omit<
   /** Height and type size. Aligns with a Button or TextField of the same size. */
   size?: NumberFieldSize;
   /**
-   * Hide the stepper buttons.
+   * Show the `+` and `−` buttons. **Off by default**
+   * ([decision 0011](../../../../docs/decisions/0011-the-stepper-is-opt-in.md)).
    *
-   * Worth doing for a value with a wide range — nobody reaches 2,400 by
-   * pressing a button. Keyboard stepping with the arrow keys still works, and
-   * so does the announcement, because both come from the base rather than from
-   * the buttons.
+   * Nothing is lost without them: the arrow keys still step by `step`, Page Up
+   * and Page Down still make larger jumps, the value is still announced, and
+   * the control is still a `spinbutton`. All of that comes from the base, not
+   * from the buttons. What the buttons cost is about 40px from the trailing
+   * edge of every numeric field on a form that is trying to be dense.
+   *
+   * Turn them on where pressing is genuinely how the value is entered — a
+   * small bounded quantity, where two presses beat selecting and retyping.
+   *
+   * They are not drawn while the field is loading or saving, whatever this is
+   * set to: doc 07 §2.2 gives the trailing edge to the busy indicator, and a
+   * stepper that cannot act is worse than one that is absent.
    */
-  isSteppersHidden?: boolean;
+  isStepperVisible?: boolean;
   /**
    * Format the value as currency, e.g. `PEN`.
    *
@@ -142,7 +151,7 @@ export const NumberField = forwardRef<HTMLInputElement, NumberFieldProps>(
       isLoading = false,
       isSaving = false,
       size = 'md',
-      isSteppersHidden = false,
+      isStepperVisible = false,
       currency,
       placeholder,
       className,
@@ -150,6 +159,14 @@ export const NumberField = forwardRef<HTMLInputElement, NumberFieldProps>(
     },
     ref
   ) {
+    /*
+     * Doc 07 §2.2, rule 1: busy wins the trailing edge outright. Before this,
+     * the spinner Field draws there landed on top of the `+` button — two
+     * things in one place, and the one you could press did nothing useful.
+     */
+    const busy = isLoading || isSaving;
+    const hasStepper = isStepperVisible && !busy;
+
     const increaseLabel = useMessage('increment');
     const decreaseLabel = useMessage('decrement');
     const { currency: configCurrency } = useConfig();
@@ -193,7 +210,7 @@ export const NumberField = forwardRef<HTMLInputElement, NumberFieldProps>(
              * because an icon-only button always needs one and the consumer
              * cannot supply a name for a component's internal control.
              */}
-            {isSteppersHidden ? null : (
+            {hasStepper ? (
               <Button slot="decrement" className={STEPPER}>
                 {/*
                  * The dictionary word is the button's visually hidden TEXT
@@ -210,18 +227,24 @@ export const NumberField = forwardRef<HTMLInputElement, NumberFieldProps>(
                 <span className="bb:sr-only">{decreaseLabel}</span>
                 <span aria-hidden="true">−</span>
               </Button>
-            )}
+            ) : null}
             <Input
               ref={ref}
-              className={INPUT}
+              /*
+               * Room for the busy indicator, the same way TextField makes it.
+               * Only while busy: unlike a search field, this edge is empty in
+               * the ordinary case, so reserving it always would narrow every
+               * numeric field for a state most of them never enter.
+               */
+              className={cx(INPUT, busy && 'bb:pe-9')}
               {...(placeholder === undefined ? {} : { placeholder })}
             />
-            {isSteppersHidden ? null : (
+            {hasStepper ? (
               <Button slot="increment" className={STEPPER}>
                 <span className="bb:sr-only">{increaseLabel}</span>
                 <span aria-hidden="true">+</span>
               </Button>
-            )}
+            ) : null}
           </Group>
         </Field>
       </AriaNumberField>
