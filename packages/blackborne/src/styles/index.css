@@ -59,10 +59,15 @@
   --color-text-muted: var(--bb-text-muted);
   --color-text-disabled: var(--bb-text-disabled);
   --color-link: var(--bb-link);
+  --color-link-active: var(--bb-link-active);
 
   --color-border: var(--bb-border);
   --color-border-strong: var(--bb-border-strong);
+  --color-border-control: var(--bb-border-control);
   --color-border-focus: var(--bb-border-focus);
+  /* The focus ring's own edge colour, so a control can put it on its border
+     rather than drawing a second ring outside itself. */
+  --color-focus-ring: var(--bb-focus-ring);
 
   --color-accent: var(--bb-accent);
   --color-accent-on: var(--bb-accent-on);
@@ -112,6 +117,15 @@
   --height-control-md: var(--bb-control-height-md);
   --height-control-lg: var(--bb-control-height-lg);
   --height-row: var(--bb-row-height);
+  --height-box: var(--bb-control-box);
+  --height-mark: var(--bb-control-box-mark);
+  --height-switch: var(--bb-control-switch-height);
+  --height-hit: var(--bb-control-hit-area);
+
+  --width-*: initial;
+  --width-box: var(--bb-control-box);
+  --width-mark: var(--bb-control-box-mark);
+  --width-switch: var(--bb-control-switch-width);
 
   /* --- Type: short scale, base 14, secondary 12. */
   --text-*: initial;

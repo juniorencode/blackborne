@@ -29,8 +29,18 @@ const FAMILIES = {
   info: ['blue', 'blueDark']
 };
 
-/** Translucent greys, for states over a background we do not control. */
-const ALPHA = { gray: ['slateA', 'slateDarkA'] };
+/**
+ * Translucent scales, for anything drawn OVER a background we do not control.
+ *
+ * The focus ring is the reason brand is here: a halo has to sit on whatever
+ * surface the control happens to be on — a white panel, a grey table row, a
+ * dark dialog — and a solid colour cannot do that without knowing what is
+ * underneath. A translucent one does not need to know.
+ */
+const ALPHA = {
+  gray: ['slateA', 'slateDarkA'],
+  brand: ['indigoA', 'indigoDarkA']
+};
 
 const stepsOf = scaleName => {
   const scale = radix[scaleName];
