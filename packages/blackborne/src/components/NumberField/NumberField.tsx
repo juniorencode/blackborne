@@ -6,7 +6,12 @@ import {
   NumberField as AriaNumberField,
   type NumberFieldProps as AriaNumberFieldProps
 } from 'react-aria-components';
-import { Field } from '../../internal/Field';
+import {
+  CONTROL_BOX,
+  CONTROL_INSIDE,
+  CONTROL_TEXT,
+  Field
+} from '../../internal/Field';
 import { useConfig, useMessage } from '../../config';
 import { cx } from '../../internal/cx';
 
@@ -36,33 +41,18 @@ const SIZE: Record<NumberFieldSize, string> = {
 } satisfies Record<NumberFieldSize, string>;
 
 const GROUP = cx(
-  'bb:box-border bb:flex bb:w-full bb:min-w-0 bb:items-stretch',
-  'bb:rounded-md bb:border bb:border-solid bb:border-border',
-  'bb:bg-surface-control bb:text-surface-control-on',
-  'bb:transition-[border-color,box-shadow,background-color]',
-  'bb:duration-(--bb-duration-fast) bb:ease-standard',
-  // The ring lands on the GROUP, not the input, because the buttons are part
-  // of the control as far as anyone looking at it is concerned.
-  // The border moves on hover, as on the other fields. See TextField for why a
-  // field moves its border where a checkbox moves its fill.
-  'bb:data-hovered:border-border-strong',
-  'bb:data-focus-within:border-border-focus',
-  'bb:data-focus-within:border-focus-ring bb:data-focus-within:shadow-[0_0_0_4px_color-mix(in_oklab,var(--bb-focus-ring)_var(--bb-focus-ring-halo-strength),transparent)]',
-  'bb:data-invalid:border-danger',
-  'bb:data-invalid:[--bb-focus-ring:var(--bb-danger)]',
-  'bb:data-disabled:bg-surface-disabled bb:data-disabled:text-text-disabled'
+  CONTROL_BOX,
+  // A row, because the buttons sit beside the value inside one frame. The
+  // ring lands here rather than on the input, since the buttons are part of
+  // the control as far as anyone looking at it is concerned.
+  'bb:flex bb:items-stretch'
 );
 
 const INPUT = cx(
-  'bb:box-border bb:w-full bb:min-w-0 bb:flex-1',
-  'bb:px-(--bb-control-padding-x)',
-  'bb:bg-transparent bb:text-inherit',
-  'bb:font-sans bb:leading-normal',
-  'bb:outline-hidden bb:border-0',
-  'bb:placeholder:text-text-muted',
-  'bb:data-disabled:cursor-not-allowed',
-  // Tabular figures, because a number read in a column has to line up with the
-  // ones above and below it (doc 03 §4.2).
+  CONTROL_INSIDE,
+  CONTROL_TEXT,
+  // Tabular figures, because a number read in a column has to line up with
+  // the ones above and below it (doc 03 §4.2).
   'bb-tabular'
 );
 

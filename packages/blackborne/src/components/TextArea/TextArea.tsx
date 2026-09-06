@@ -4,7 +4,7 @@ import {
   TextField as AriaTextField,
   type TextFieldProps as AriaTextFieldProps
 } from 'react-aria-components';
-import { Field } from '../../internal/Field';
+import { CONTROL_BOX, CONTROL_TEXT, Field } from '../../internal/Field';
 import { cx } from '../../internal/cx';
 import { mergeRefs } from '../../internal/mergeRefs';
 import { useNormalizedField } from '../../internal/useNormalizedField';
@@ -21,35 +21,11 @@ import type { Normalizer } from '../../normalize';
  */
 
 const CONTROL = cx(
-  'bb:box-border bb:w-full bb:min-w-0',
-  'bb:px-(--bb-control-padding-x) bb:py-2',
-  'bb:rounded-md bb:border bb:border-solid bb:border-border',
-  'bb:bg-surface-control bb:text-surface-control-on',
-  'bb:font-sans bb:text-md bb:leading-normal',
-  'bb:outline-hidden',
-  'bb:transition-[border-color,box-shadow,background-color]',
-  'bb:duration-(--bb-duration-fast) bb:ease-standard',
-  // The placeholder uses the SECONDARY text colour, not a fourth lighter grey
-  // (doc 03 §4.7): raise the value, do not lower the placeholder.
-  'bb:placeholder:text-text-muted',
-  /*
-   * A field moves its BORDER on hover, where the small controls move their
-   * fill. The exception is deliberate and it is about size: a field is a large
-   * surface the pointer crosses constantly in a dense form, and repainting its
-   * interior every time would make the form shimmer. The border says "this is
-   * a target" without touching the area you are about to read.
-   *
-   * Same reasoning already accepted for --bb-border-control: the size of a
-   * thing changes what reads correctly on it.
-   */
-  'bb:data-hovered:border-border-strong',
-  'bb:data-focused:border-border-focus',
-  'bb:data-focused:border-focus-ring bb:data-focused:shadow-[0_0_0_4px_color-mix(in_oklab,var(--bb-focus-ring)_var(--bb-focus-ring-halo-strength),transparent)]',
-  'bb:data-invalid:border-danger',
-  'bb:data-invalid:[--bb-focus-ring:var(--bb-danger)]',
-  'bb:data-readonly:bg-surface-sunken',
-  'bb:data-disabled:bg-surface-disabled bb:data-disabled:text-text-disabled',
-  'bb:data-disabled:cursor-not-allowed'
+  CONTROL_BOX,
+  CONTROL_TEXT,
+  // A block, so it has vertical padding of its own and a fixed type size:
+  // it is not part of the row the control heights line up in.
+  'bb:py-2 bb:text-md'
 );
 
 /*
