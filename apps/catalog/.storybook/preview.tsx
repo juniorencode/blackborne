@@ -33,7 +33,29 @@ import './catalog.css';
  * and the document becomes decorative.
  */
 const resizableContainer: Decorator = Story => (
-  <div className="catalog-resizable">
+  /*
+   * tabIndex, because `overflow: auto` makes this a scroll container and a
+   * region only a mouse can scroll is a real WCAG 2.1.1 failure — even in a
+   * catalog. It stays invisible until something inside actually overflows.
+   *
+   * Found by the automated pass on the first story with nothing focusable in
+   * it: until then every story happened to contain a control, which gave the
+   * region keyboard access by accident.
+   *
+   * Fixed here rather than silenced in the rule list, because that list is
+   * rule-wide: excluding scrollable-region-focusable to quiet the catalog
+   * would also excuse the first real scroll container the library ships.
+   *
+   * The lint rule below disagrees with axe here, and axe is the one measuring
+   * the actual page: the rule's heuristic is "only interactive elements take
+   * tabindex", which is right in general and wrong for a scroll container,
+   * where focusability IS the keyboard affordance. Disabled on this line
+   * rather than relaxed in eslint.config.js, so the exception stays one line
+   * with its reason attached instead of becoming a repo-wide allowance that
+   * also covers the library.
+   */
+  // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+  <div className="catalog-resizable" tabIndex={0}>
     <Story />
   </div>
 );

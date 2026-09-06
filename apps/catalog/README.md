@@ -48,9 +48,14 @@ axes. They exist because a CSS variable bug made dark mode and brand overrides
 silently do nothing while every unit test passed — jsdom cannot resolve
 variables, and cannot answer where focus goes either.
 
-## Still missing
+## What runs where
 
-- **Visual regression.** The safety net that tells you which twelve components
-  changed appearance after a token edit (doc 10 §6).
-- **Automated accessibility in CI.** The a11y addon runs in the UI; wiring it
-  into the browser job is not done.
+| Job                                 | What it covers                                                      |
+| ----------------------------------- | ------------------------------------------------------------------- |
+| `pnpm --filter catalog test:e2e`    | The behaviour checks, plus axe against **every** story              |
+| `pnpm --filter catalog test:visual` | Visual regression, in the container the baselines were generated in |
+
+The accessibility pass takes its story list from Storybook's own index, so a
+new story is covered the moment it exists rather than when somebody remembers
+to add it. That is the property worth protecting: a check you have to opt into
+is a check that quietly stops covering the newest thing.

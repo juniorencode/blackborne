@@ -145,8 +145,25 @@ test.describe('automated accessibility', () => {
         ...results.incomplete
       ].some(result => result.id === 'color-contrast');
 
+      /*
+       * One narrow exemption: a story with no text at all. A skeleton is
+       * placeholder shapes and nothing else, so the contrast rule has nothing
+       * to measure and reports neither a pass nor a violation — which is not
+       * the rule going missing, it is the rule having no work.
+       *
+       * Checked rather than listed by name, so it applies to the next text-free
+       * component too and cannot quietly cover a story that HAS text and lost
+       * the rule anyway.
+       */
+      const hasText = await page.evaluate(
+        () =>
+          (
+            document.querySelector('#storybook-root') as HTMLElement | null
+          )?.innerText.trim().length !== 0
+      );
+
       expect(
-        contrastChecked,
+        contrastChecked || !hasText,
         'the colour-contrast rule did not run; the suite is reporting less than it claims'
       ).toBe(true);
 
