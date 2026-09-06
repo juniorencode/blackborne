@@ -5,7 +5,7 @@
  * export later is easy while closing one is not (doc 02 §10).
  *
  * Before adding anything here, read docs/contributing/new-component.md. A
- * component becomes public only once it passes the twelve-checkbox entry gate
+ * component becomes public only once it passes the thirteen-checkbox entry gate
  * in docs/foundations/01-principles.md.
  *
  * Not exported on purpose: the internal Field that every field type is built
@@ -21,6 +21,12 @@ export type {
 } from './config';
 export { defaultDictionary } from './config';
 
+export { Alert } from './components/Alert';
+export type { AlertProps, AlertTone } from './components/Alert';
+
+export { Badge } from './components/Badge';
+export type { BadgeProps, BadgeTone, BadgeVariant } from './components/Badge';
+
 export { Button } from './components/Button';
 export type {
   ButtonProps,
@@ -28,8 +34,18 @@ export type {
   ButtonVariant
 } from './components/Button';
 
+export { Card } from './components/Card';
+export type { CardProps } from './components/Card';
+
 export { Checkbox } from './components/Checkbox';
 export type { CheckboxProps } from './components/Checkbox';
+
+export { EmptyState } from './components/EmptyState';
+export type {
+  EmptyStateProps,
+  EmptyStateSize,
+  EmptyStateVariant
+} from './components/EmptyState';
 
 export { NumberField } from './components/NumberField';
 export type {
@@ -39,6 +55,15 @@ export type {
 
 export { Radio, RadioGroup } from './components/RadioGroup';
 export type { RadioGroupProps, RadioProps } from './components/RadioGroup';
+
+export { Separator } from './components/Separator';
+export type {
+  SeparatorOrientation,
+  SeparatorProps
+} from './components/Separator';
+
+export { Skeleton } from './components/Skeleton';
+export type { SkeletonProps, SkeletonVariant } from './components/Skeleton';
 
 export { Spinner } from './components/Spinner';
 export type { SpinnerProps, SpinnerSize } from './components/Spinner';
@@ -51,3 +76,6 @@ export type { TextAreaProps } from './components/TextArea';
 
 export { TextField } from './components/TextField';
 export type { TextFieldProps, TextFieldSize } from './components/TextField';
+
+export { VisuallyHidden } from './components/VisuallyHidden';
+export type { VisuallyHiddenProps } from './components/VisuallyHidden';

@@ -27,7 +27,24 @@ export const en = {
    * controls of a component, not application content (doc 05 §2.1).
    */
   increment: 'Increase',
-  decrement: 'Decrease'
+  decrement: 'Decrease',
+  /**
+   * The button that takes a removable badge away. It carries a cross and no
+   * text, and what it removes is named by the badge beside it.
+   */
+  remove: 'Remove',
+  /**
+   * The two empty states, which doc 09 §6 insists are different states with
+   * different messages: "there is nothing yet" tells someone how to start,
+   * "the filter matched nothing" tells them what was searched.
+   *
+   * These are fallbacks, not the expected content. A consumer who knows what
+   * the list holds passes a better title, and only they can — but a component
+   * with no title at all shows an empty box, and the generic version of these
+   * two sentences is identical in every application there has ever been.
+   */
+  emptyStateNoData: 'Nothing here yet',
+  emptyStateNoResults: 'No results'
 } as const;
 
 export type DictionaryKey = keyof typeof en;
