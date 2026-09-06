@@ -123,7 +123,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
         // browser's own bubble, which the library cannot style, translate or
         // time. Presenting the error is our job (doc 07 §1).
         validationBehavior="aria"
-        className={cx('bb:w-full', className)}
+        className={cx('bb:group bb:w-full', className)}
         {...ariaProps}
         /* After ariaProps, so a normalized value wins. Empty without one. */
         {...normalized.props}
