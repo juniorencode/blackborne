@@ -76,6 +76,34 @@ Rules:
 - The invalid state is communicated beyond color: an icon, text, or both.
 - The required-field indicator is conveyed to the reader too, not only with a
   visual asterisk.
+- **An error appearing does not move what is below it.**
+
+### 4.1 The space the error occupies — open
+
+The last rule above is the one the field does not meet today, and it is written
+here rather than quietly left out.
+
+[Doc 09](./09-behavior.md) §3 is unconditional: nothing shifts when data
+arrives, least of all under the cursor. A validation message that appears on
+blur and pushes the next field down breaks it every time, and in a form of
+twelve fields it moves eleven of them.
+
+What is not decided is the mechanism, and both candidates cost something real:
+
+| Mechanism                                  | What it costs                                                                                             |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| Always reserve one message line            | Vertical space in every form, including the ones with no errors — against the density this library is for |
+| The form layout reserves it, not the field | Correct, and it does not exist yet: it belongs to the structural pieces in §7                             |
+
+**It is not settled by adding a boolean to the field.** A per-field switch is
+the loose boolean [doc 01](./01-principles.md) §7 names as a warning sign, and
+it puts the decision in the wrong place: whether a form reserves message space
+is a property of the form, uniform across it, not of each field independently.
+Set field by field, one omission is enough to leave a row misaligned.
+
+So it waits for the structural pieces, and until then the shift is a known
+limitation of the field — the kind [doc 06](./06-accessibility.md) §7 requires
+to be written down rather than shipped in silence.
 
 ## 5. When the error is shown
 
@@ -187,6 +215,7 @@ form opens. Nothing is autofocused without the person having asked
 - [ ] The invalid state is distinguishable in greyscale
 - [ ] Disabled and read-only look and behave differently
 - [ ] No error appears before the field has been touched
+- [ ] An error appearing does not displace what is below it (§4.1 — open)
 - [ ] Number, date and currency formatting respects the locale; the time zone
       is the one received, not the browser's (doc 05)
 - [ ] Complete keyboard traversal, with focus visible in every state

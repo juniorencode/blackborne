@@ -68,6 +68,12 @@ This is caught rather than merely written down: the catalog asserts in a real
 browser that a field and a button of the same size have exactly the same
 height. Adding a component that forgets `box-border` fails that check.
 
+**A block of text renders as a `div`, not a `p`.** Same cause: with no reset, a
+`<p>` arrives carrying the browser's own block margins, which fight the gap the
+component already decided. Headings are a separate question and the answer is
+also no — heading hierarchy belongs to the project (doc 06 §2), and a component
+cannot know what level it landed at. Emphasis comes from weight and colour.
+
 ## Components
 
 - Style against the DOM state attributes React Aria exposes, not against
@@ -79,6 +85,10 @@ height. Adding a component that forgets `box-border` fails that check.
   needs something, they get a named prop or composition.
 - Nothing has a fixed width. Use max-width. Nothing is sized to fit one
   particular label in one particular language.
+- **Icons arrive as children**, and the component sizes and colours them from
+  the slot — one standard size, `currentColor`, no `iconStart` prop and no
+  `icon="save"` string. A named slot is only for a place the consumer could not
+  have reached by ordering children. Doc 02 §11.
 - Empty, loading and error are part of the component, not the consumer's
   problem. "No data yet" and "the filter matched nothing" are two different
   states with two different messages.

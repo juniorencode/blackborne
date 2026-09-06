@@ -92,7 +92,7 @@ render, it still propagates. Design matters just as much.
 ## 6. Visual regression
 
 The safety net most missed in an interface library. It lets you change a token
-and know within a minute **which twelve components changed appearance**,
+and know within a minute **which components changed appearance**,
 instead of opening them one by one.
 
 It is the only thing that makes touching tokens safe once there are thirty

@@ -18,7 +18,7 @@ not copy from it.
 
 ```
 packages/blackborne/   the published package
-apps/catalog/          the visual catalog (Storybook) — arrives in phase F6
+apps/catalog/          the visual catalog (Storybook), and the browser checks
 docs/                  the source of truth
 .github/               CI, issue and pull request templates
 ```
@@ -32,18 +32,19 @@ this file is out of date. Fix this file.
 `docs/README.md` carries the phase table and is kept current. Check it before
 assuming anything exists.
 
-At the time of writing: the skeleton is up, **all ten foundations are written**,
-and **no component exists yet**. The first one, `Button`, arrives with the build
-pipeline.
+At the time of writing: all ten foundations are written, the pipeline is
+complete, and **eight components exist** — `Button` plus the six simple fields,
+and `Spinner`. The layers, and everything that needs a portal, do not.
 
 So the rules are settled and you should follow them rather than invent. Two
 things to keep in mind anyway:
 
 - **Some rules are marked as not yet verified.** Document 08 §6 leaves scroll
-  locking across nested layers openly pending. Where a document says something
+  locking across nested layers openly pending, and document 07 §4.1 leaves the
+  space an error message occupies openly open. Where a document says something
   is unverified, treat it as unverified — do not quietly promote it.
-- **The file layout of a component is still open.** It is settled with the
-  first component. If you need it before then, ask.
+- **The file layout of a component is settled**, by `Button`, and written down
+  in [`docs/contributing/new-component.md`](./docs/contributing/new-component.md) §0.
 
 ## Commands
 
@@ -103,9 +104,13 @@ that breaks one does not merge.
    existing component** is different: it needs a real place that needs it
    today. "While we're at it" is the reason things rot, and it rots through
    props, never through the component count.
+9. **Icons are received, never distributed.** They arrive as children, their
+   size and colour come from the slot, and there is no `iconStart` prop and no
+   `icon="save"` string. The convention is doc 02 §11.
 
-Six of these are meant to be enforced by lint rules that do not exist yet; they
-are written in phase F6, against real code. Until then they hold by reading.
+Most of these are enforced by the project's own lint rules, in
+`eslint.rules.js`, which run as part of `pnpm lint`. A rule you can argue with
+in review is a rule that yields to the first deadline, so they are errors.
 
 ## How work lands
 

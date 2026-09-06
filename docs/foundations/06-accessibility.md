@@ -67,6 +67,19 @@ makes accessibility nobody's job.
 cover a pattern, search first; building it by hand is the last resort and
 requires a written justification.
 
+There is a third case, and it was missing here until a component met it: **the
+base is correct and simply has no mode for what is needed.** React Aria's
+separator is right in every way except that it cannot be made decorative — its
+prop filter drops `role` and `aria-hidden` by design, so no combination of
+props produces a divider a screen reader ignores.
+
+The answer is not to reimplement the pattern, and not to ship the wrong
+semantics. It is to **diverge on that one branch and say so in the component**:
+the semantic separator comes from the base, the decorative one does not. What
+keeps this from being a slippery slope is that it is a branch and not a
+replacement — the moment a divergence covers the main path, it is a
+reimplementation and needs the written justification non-goal 6 asks for.
+
 And one sentence worth being clear about: the library **cannot** guarantee that
 an application is accessible. It can guarantee that its pieces do not prevent
 it.
@@ -107,6 +120,14 @@ page.
 **Asynchronous messages announced.** Alerts, "loading", "3 results found": they
 are announced through a live region. A silent change leaves a screen reader
 user unaware anything happened.
+
+**And announced once, by whoever caused the change.** This is the half that
+gets missed. A component that merely _appears_ cannot know whether it has been
+on screen since load or has just replaced a table because a filter came back
+empty, so it declares no live region — the thing that swapped the content does.
+Twenty skeleton lines that each announced would say "loading" twenty times, and
+an empty state that announced itself on every render would interrupt somebody
+who was already reading it.
 
 **Icons.** Decorative ones are hidden from the reader; ones carrying meaning
 have an accessible name. A button with only an icon always needs a name.
