@@ -58,6 +58,9 @@ export type { CardProps } from './components/Card';
 export { Checkbox } from './components/Checkbox';
 export type { CheckboxProps } from './components/Checkbox';
 
+export { CheckboxGroup } from './components/CheckboxGroup';
+export type { CheckboxGroupProps } from './components/CheckboxGroup';
+
 export { EmptyState } from './components/EmptyState';
 export type {
   EmptyStateProps,
@@ -73,6 +76,12 @@ export type {
 
 export { Radio, RadioGroup } from './components/RadioGroup';
 export type { RadioGroupProps, RadioProps } from './components/RadioGroup';
+
+export { SearchField } from './components/SearchField';
+export type {
+  SearchFieldProps,
+  SearchFieldSize
+} from './components/SearchField';
 
 export { Separator } from './components/Separator';
 export type {
