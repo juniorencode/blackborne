@@ -55,6 +55,28 @@ export default defineConfig({
    */
   snapshotPathTemplate: '{testDir}/__screenshots__/{arg}-{platform}{ext}',
 
+  /*
+   * Two projects, so that running "everything" cannot mean running the visual
+   * suite by accident.
+   *
+   * The references are linux-only by design — generated in the container, so
+   * that a screenshot taken here is byte-identical to one taken in CI, which
+   * is what lets the tolerance stay at zero. But {platform} is part of the
+   * path, so on Windows the suite looks for -win32 references, finds none,
+   * fails, AND WRITES nineteen of them into the repository. They look
+   * plausible, they carry a sensible name, and a stray `git add .` turns them
+   * into a second set of baselines that CI can never agree with.
+   *
+   * testIgnore alone does not work: measured, it hides the file even when the
+   * file is named on the command line, which would break the container run
+   * too. Splitting into projects is what lets one command mean "everything
+   * except the screenshots" and another mean "only the screenshots".
+   */
+  projects: [
+    { name: 'checks', testIgnore: ['**/visual.spec.ts'] },
+    { name: 'visual', testMatch: ['**/visual.spec.ts'] }
+  ],
+
   webServer: {
     command: 'pnpm dev',
     url: 'http://127.0.0.1:6006',

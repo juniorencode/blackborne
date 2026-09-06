@@ -31,6 +31,31 @@
  */
 import { expect, test } from '@playwright/test';
 
+/*
+ * Refuse to run anywhere but linux.
+ *
+ * The references exist for linux alone, on purpose — they are generated in the
+ * container so that a capture taken on a laptop is byte-identical to one taken
+ * in CI, which is what lets the tolerance stay at zero. The platform is part
+ * of the reference filename, so running this suite on Windows or macOS finds
+ * nothing to compare against, fails, and writes a fresh set of references
+ * named for that platform. They look entirely plausible. Committing them by
+ * accident gives the repository two sets of baselines that can never agree.
+ *
+ * A refusal that says where to go is better than a red run that leaves
+ * nineteen files behind.
+ */
+test.beforeAll(() => {
+  if (process.platform !== 'linux') {
+    throw new Error(
+      `The visual baselines exist for linux only, and this is ${process.platform}. ` +
+        'Run `pnpm visual` from the repository root: it runs this same suite ' +
+        'inside the container the references were generated in. Running it ' +
+        'here would write a second set that CI can never match.'
+    );
+  }
+});
+
 const story = (id: string) => `/iframe.html?id=${id}&viewMode=story`;
 
 /**

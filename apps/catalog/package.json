@@ -8,9 +8,9 @@
     "dev": "storybook dev -p 6006 --host 127.0.0.1 --no-open",
     "build": "storybook build -o storybook-static",
     "typecheck": "tsc -p tsconfig.json",
-    "test:e2e": "playwright test",
+    "test:e2e": "playwright test --project=checks",
     "test:a11y": "playwright test e2e/accessibility.spec.ts",
-    "test:visual": "playwright test e2e/visual.spec.ts"
+    "test:visual": "playwright test --project=visual"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",

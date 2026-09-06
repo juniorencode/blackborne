@@ -82,5 +82,5 @@ docker run --rm \
     # --frozen-lockfile, so the container installs exactly what is committed.
     pnpm install --frozen-lockfile --store-dir /tmp/pnpm-store
     pnpm --filter blackborne build
-    pnpm --filter catalog exec playwright test e2e/visual.spec.ts $*
+    pnpm --filter catalog exec playwright test --project=visual $*
   "
