@@ -5,7 +5,7 @@
 > It is what makes thirty components read as a system rather than a collection
 > that happens to share colors.
 
-**Status:** adopted · **Date:** 2026-09-02
+**Status:** adopted · **Date:** 2026-09-07
 **Depends on:** [01 · Principles](./01-principles.md) ·
 [03 · Tokens](./03-tokens-and-theme.md) ·
 [06 · Accessibility](./06-accessibility.md) · [07 · Forms](./07-forms.md)
@@ -53,12 +53,13 @@ the first time and is forty seconds lost across a hundred repetitions.
 
 ## 3. Timing and perception
 
-| Situation              | Rule                                                                                                            |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------- |
-| Response under ~300 ms | **Show no loading indicator.** Appearing and vanishing produces a flicker, and reads worse than showing nothing |
-| Between 300 ms and 1 s | A discreet indicator, in the place where it is happening                                                        |
-| More than 1 s          | Indicate it is still going; if possible, how much is left                                                       |
-| Any interaction        | A visible response **immediately**, even if only the pressed state                                              |
+| Situation                | Rule                                                                                                            |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| Response under ~300 ms   | **Show no loading indicator.** Appearing and vanishing produces a flicker, and reads worse than showing nothing |
+| Between 300 ms and 1 s   | A discreet indicator, in the place where it is happening                                                        |
+| More than 1 s            | Indicate it is still going; if possible, how much is left                                                       |
+| A layer opening on hover | ~600 ms to open, ~150 ms to close — and the two are **not** the same number (§3.1)                              |
+| Any interaction          | A visible response **immediately**, even if only the pressed state                                              |
 
 The last point is the most important: silence makes people click twice. And
 clicking twice in a management application usually means duplicating a record.
@@ -76,6 +77,32 @@ error appearing — and it holds absolutely there.
 The test is not "did it move" but **"was the person who moved it the person
 looking at it"**. Written down because the rule as it stood forbade a feature it
 was never about.
+
+### 3.1 The two hover delays, and why they differ
+
+A layer that opens on hover — a tooltip, a preview — needs a delay, or crossing
+a toolbar of six icon buttons fires six panels at somebody who was on their way
+somewhere else. And it needs a **different, much shorter** delay to close, or
+moving between two adjacent buttons leaves the first panel hanging over the
+second.
+
+The two numbers are one decision for the whole library and **not a prop**.
+Per-layer delays are the knob that makes two screens in the same application
+feel like two applications, and there is no screen where 600 ms is right and
+650 ms is wrong.
+
+**Why 600 ms and not the base's 1500 ms.** The headless base ships 1500 ms to
+open and 500 ms to close, and both are tuned for a different kind of product.
+In a management application somebody is scanning a dense toolbar, and a second
+and a half is long enough that they have concluded there is no tooltip and moved
+on. 600 ms is past the accidental crossing and inside the deliberate pause.
+
+**What makes a long first delay survivable at all is worth knowing**, because it
+is easy to read the base's number as careless: it keeps a global warmup timer,
+so once **any** hover layer has opened, moving to a neighbour opens
+**immediately**. The delay is paid once per approach to a group of controls, not
+once per control. That is behaviour to keep, and it is the reason the closing
+number matters more than the opening one.
 
 ## 4. Communicating the outcome
 
