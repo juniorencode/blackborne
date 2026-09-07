@@ -174,7 +174,30 @@ const STATES: Array<[string, string]> = [
    * cross, where the third panel is rule 4 refusing two controls at one edge.
    */
   ['components-radiogroup--cards', 'radiogroup-cards'],
-  ['components-numberfield--clearing', 'numberfield-clearing']
+  ['components-numberfield--clearing', 'numberfield-clearing'],
+  /*
+   * The first layer, and the first stories that had to solve a problem no flat
+   * component has: a dialog renders in a PORTAL, so `data-bb-mode` on a
+   * catalog panel never reaches it. These pictures work because the story
+   * passes its own page as the portal container, which means they are also the
+   * proof that doc 08 §8's received container works — in the wrong mode they
+   * would be visibly wrong.
+   *
+   * One dialog per picture, never two side by side. A fixed scrim fills the
+   * window so two would overlap, and two open modal layers make each other
+   * inert, which is the state axe skips — so a side-by-side story would also
+   * be the one story where contrast went unchecked.
+   *
+   * `dialog-scrolling` is the one to look at hardest: the header and footer pin
+   * INSIDE the scrolling element, which is the same element the base focuses,
+   * and that structure exists so the keyboard can scroll from the moment the
+   * dialog opens.
+   */
+  ['components-dialog--light', 'dialog-light'],
+  ['components-dialog--dark', 'dialog-dark'],
+  ['components-dialog--scrolling', 'dialog-scrolling'],
+  ['components-dialog--with-a-form', 'dialog-with-form'],
+  ['components-dialog--without-a-footer', 'dialog-no-footer']
 ];
 
 for (const [id, name] of STATES) {
@@ -213,7 +236,13 @@ const AXES: Array<[string, string]> = [
   ['components-button--brand-override', 'axis-brand'],
   ['components-button--all-axes', 'axis-all-at-once'],
   ['components-numberfield--locales', 'axis-locales'],
-  ['components-switch--direction', 'axis-switch-direction']
+  ['components-switch--direction', 'axis-switch-direction'],
+  /* The two axes a layer can genuinely differ on: the scrim's inset and the
+     panel's padding both follow density, and the cross and the footer's
+     actions both change end in RTL. */
+  ['components-dialog--compact', 'axis-dialog-compact'],
+  ['components-dialog--direction', 'axis-dialog-rtl'],
+  ['components-dialog--brand-override', 'axis-dialog-brand']
 ];
 
 for (const [id, name] of AXES) {

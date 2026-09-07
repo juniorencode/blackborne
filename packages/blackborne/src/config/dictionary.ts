@@ -65,7 +65,17 @@ export const en = {
    * visibility" tells somebody what it is and never what it will do.
    */
   showPassword: 'Show password',
-  hidePassword: 'Hide password'
+  hidePassword: 'Hide password',
+  /**
+   * The button that closes a layer — a dialog's cross, and a drawer's.
+   *
+   * It carries a cross and no text, and unlike the fields' `clear` there is
+   * nothing beside it naming what it acts on, so this is the whole name. Not
+   * "Close dialog": a screen reader already announces the dialog and its
+   * title when focus enters, so the word would be the second time in one
+   * breath (doc 06 §3).
+   */
+  close: 'Close'
 } as const;
 
 export type DictionaryKey = keyof typeof en;

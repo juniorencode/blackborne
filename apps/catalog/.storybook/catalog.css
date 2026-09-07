@@ -88,3 +88,47 @@ body {
   --bb-x-brand-11: #baa7ff;
   --bb-x-brand-12: #e2ddfe;
 }
+
+/*
+ * A whole-page host for photographing a layer, and the reason it is a PAGE
+ * rather than a panel.
+ *
+ * A dialog renders in a portal, so `data-bb-mode` on a `.catalog-panel` never
+ * reaches it — its ancestor is the document body. Every flat component gets
+ * light-beside-dark for free from that attribute; a layer gets nothing.
+ *
+ * The fix is the library's own mechanism: the story passes this element as
+ * `portalContainer` on `ConfigProvider` (doc 08 §8), so the layer becomes a DOM
+ * descendant of it and inherits the theme attributes it carries. Tokens cascade
+ * by DOM ancestry, which is all that is needed.
+ *
+ * What it deliberately does NOT try to do is confine the layer to a box, and
+ * that was measured the hard way. The first attempt gave the host
+ * `container-type: inline-size` on the belief — written down in decision 0010
+ * and now corrected there — that it would become a containing block for a
+ * fixed-position descendant. It does not: the computed `contain` is `none`, and
+ * three dialogs portalled into three panels all painted over the whole window,
+ * stacked on top of each other. Only `contain: layout` or a transform does it.
+ *
+ * So SIDE BY SIDE IS NOT AVAILABLE for a modal layer, for two independent
+ * reasons, and both are worth knowing before someone tries again:
+ *
+ * 1. Geometry. A `position: fixed` scrim fills the window, so two of them
+ *    overlap however their hosts are laid out. Containing them in a small box
+ *    would photograph a geometry nobody ships.
+ * 2. Modality. Several modal layers open at once make each other `inert` —
+ *    that is what modality means, and the base implements it that way — and
+ *    axe skips inert subtrees, so its colour-contrast rule finds nothing to
+ *    measure. Measured: three dialogs produce no contrast nodes at all; one
+ *    produces them.
+ *
+ * One layer per story, therefore, at the size it really is, and the axes get a
+ * story each instead of two halves of one picture.
+ */
+.catalog-layer-page {
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 24px;
+  background: var(--bb-surface);
+  color: var(--bb-text);
+}

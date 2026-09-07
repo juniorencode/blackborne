@@ -12,6 +12,43 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **`Dialog`**, and with it the layer base — the second of the two bottlenecks
+  in the build order. A titled panel above the page, with the page behind it
+  out of reach.
+
+  **Controlled, with no trigger component.** `isOpen` and `onOpenChange`, so a
+  dialog can be opened from a row action, a menu item or a route rather than
+  from a wrapper around a button. Focus still returns to whatever was focused
+  when it opened, because the base restores it unconditionally rather than by
+  knowing about a trigger — asserted against a decoy control, so "focus went
+  back to the page" does not pass for "focus went back to the trigger".
+
+  **It becomes full-screen in a narrow window automatically, not by a prop.** A
+  dialog that does not fit has one correct rendering, and a prop would let a
+  screen ship broken at 360px. The threshold is in `rem`, so a page at 200%
+  zoom crosses it too.
+
+  **The element that scrolls is the element the base focuses**, which is not a
+  detail: a browser scrolls the nearest scrollable _ancestor_ of what has focus,
+  so the obvious three-row grid — with the middle row scrolling — puts the
+  scroll container out of every key's reach. The header and footer are sticky
+  inside it instead.
+
+  Sizes come from the container scale, so a form inside a `sm` dialog resolves
+  its own container queries against exactly the width the dialog was sized by.
+
+- **`useDialog()`**, returning `{ close, isOpen }`. This is the hook
+  [doc 02](docs/foundations/02-api-conventions.md) §5 promises by name: render
+  props are not part of this API, and a consumer's own footer button needs some
+  route to `close`. Harmless with no dialog above it, so a footer shared between
+  a page and a dialog does not have to know which one it landed in.
+
+- **`portalContainer` on `ConfigProvider`** — where every layer mounts, the
+  toast region included. Received rather than assumed
+  ([doc 08](docs/foundations/08-layers-and-focus.md) §8, decision 0013). Omit it
+  and the base's `document.body` stands, so a lone `Dialog` still works with no
+  provider around it.
+
 - `variant="card"` on `RadioGroup`: each option becomes a card you press
   anywhere on. The variant belongs to the group and reaches the options through
   a private context, which is now a written convention
@@ -381,6 +418,34 @@ minor versions. Every break is listed here with its migration.
   `packages/blackborne`, the visual catalog in `apps/catalog`.
 
 ### Fixed
+
+- **`--bb-surface-raised` was elevation pointing the wrong way in light mode.**
+  It is the token named for menus, popovers and dialogs, defined since the token
+  layer and never rendered until now. Measured against the page: 0.9486 relative
+  luminance against 0.9741, so the "raised" surface was **darker** than what it
+  floats above, at 1.03:1 — imperceptible, and imperceptibly backwards. It is
+  now the page's own step in light, with the shadow carrying the elevation, and
+  stays two steps lighter in dark where a shadow is not visible. No component
+  read it before, so nothing changed appearance.
+
+- **A layer's exit animation swallowed `Escape`.** One was written for `Dialog`
+  and removed: the base keeps a layer mounted while it animates away, and a
+  mounted layer still consumes the key — so closing a dialog inside a dialog and
+  pressing `Escape` again did nothing. Measured with a varying gap between the
+  presses: dropped at 0ms, 16ms and 50ms, landing at 150ms, against a 100ms
+  exit. What proved it was emulating `prefers-reduced-motion`, where the
+  durations collapse to zero and both presses landed every time — so the
+  interaction worked for somebody who asks for less motion and failed for
+  everybody else. Now a rule:
+  [doc 09](docs/foundations/09-behavior.md) §2.1, a layer animates in and never
+  out.
+
+- **Decision 0010 claimed a consequence that does not exist.** It said a Card's
+  `container-type: inline-size` makes it a containing block for absolutely and
+  fixed positioned descendants. Measured in Chromium: it computes
+  `contain: none` and contains neither. A consumer's `position: fixed` element
+  inside a Card still positions against the window. The decision stands; its
+  list of costs is one shorter than it said.
 
 - `TextArea` carried `min-block-size: fit-content`, which made its height
   limit unenforceable: a CSS minimum outranks every maximum, so content taller

@@ -61,6 +61,14 @@ export type { CheckboxProps } from './components/Checkbox';
 export { CheckboxGroup } from './components/CheckboxGroup';
 export type { CheckboxGroupProps } from './components/CheckboxGroup';
 
+/*
+ * `useDialog` is exported alongside the component, and it is the hook doc 02
+ * §5 promises by name: render props are not part of this API, and the `close`
+ * a consumer needs for their own footer button has to arrive some other way.
+ */
+export { Dialog, useDialog } from './components/Dialog';
+export type { DialogProps, DialogSize, DialogState } from './components/Dialog';
+
 export { EmptyState } from './components/EmptyState';
 export type {
   EmptyStateProps,

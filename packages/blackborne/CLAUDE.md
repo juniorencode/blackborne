@@ -131,6 +131,37 @@ Dates, numbers, currency, sorting and plurals are formatted through the
 platform's locale APIs. The time zone is **received, never taken from the
 browser** — the browser's zone is the viewer's machine, not the data's context.
 
+## Layers
+
+Everything that renders in a portal. Four things were measured while building
+`Dialog` and every one of them will apply to the next layer.
+
+- **The element that scrolls must be the element the base focuses.** A browser
+  scrolls the nearest scrollable **ancestor** of what has focus, and the base
+  focuses the element carrying `role="dialog"`. So the obvious three-row grid,
+  with the middle row scrolling, puts the scroll container out of every key's
+  reach — the arrows look for a scrollable ancestor, find the clipped panel and
+  the locked page, and move nothing. Put the scroll on the focused element and
+  make the header and footer `sticky` inside it.
+- **A percentage max-height cannot bound a child of a max-height parent.**
+  `max-height: 100%` resolves against the parent's HEIGHT, and a panel with only
+  a `max-block-size` has no definite height, so the percentage computes to
+  `none`. Measured: 1658px of content inside a panel capped at 876px, the inner
+  element not scrollable at all, and the panel silently clipping the rest. Use
+  flex — `flex flex-col` on the panel, `min-h-0` on the child — so the child is
+  bounded by layout instead of by a percentage.
+- **No exit animation.** The base keeps a layer mounted while it animates away,
+  and a mounted layer still consumes `Escape`, so an inner layer closing eats
+  the press meant for the outer one. Doc 09 §2.1.
+- **`container-type: inline-size` does NOT contain a fixed-position child.** It
+  computes `contain: none`. Only `contain: layout` or a transform does. This
+  was written down wrongly in decision 0010 and is corrected there.
+
+And a note about looking at any of it: the catalog imports the **compiled**
+stylesheet, so a change to a layer's CSS is invisible until
+`pnpm build:css` runs, and a long-lived dev server serves whatever it started
+with. Build, restart, then look (doc 08 §9).
+
 ## Dependencies
 
 Two, both **pinned exactly, with no caret**, and they move together:

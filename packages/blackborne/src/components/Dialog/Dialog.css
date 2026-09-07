@@ -1,0 +1,146 @@
+/*
+ * Layer 3: a component exception, derived from layer 2 (doc 03 §1).
+ *
+ * Three things live here because no utility expresses them, not because a
+ * second vocabulary is being started (doc 03 §4.4):
+ *
+ * 1. A **viewport media query**, which the theme deletes on purpose:
+ *    `--breakpoint-*: initial` means there is no `bb:md:` variant to write.
+ *    Doc 04 §5 grants exactly one exception — a component rendered in a
+ *    portal, whose real container IS the window — and the theme's own comment
+ *    says those "declare their own media query in plain CSS, with the reason
+ *    written next to it". This is that file, and the reason is below.
+ * 2. **The visual viewport**, read from a variable the base publishes.
+ * 3. **Keyframes**, which a utility cannot hold.
+ */
+
+/*
+ * The panel's ceiling, measured against the VISUAL viewport rather than the
+ * layout one.
+ *
+ * `--visual-viewport-height` is set by the base on the overlay element, from
+ * `useViewportSize`, and it is inherited here. The difference matters in one
+ * situation and it is a common one: an on-screen keyboard shrinks the visual
+ * viewport and leaves the layout viewport alone, so a dialog sized to `100dvh`
+ * has its footer — the buttons — underneath the keyboard the moment somebody
+ * focuses a field inside it. This is the measurement doc 04 §5 permits, and
+ * the base already took it, so there is nothing to detect here.
+ *
+ * The fallback covers the first paint and any environment without the API.
+ *
+ * `2 * --bb-space-4` is the inset the scrim holds the panel at, and it is
+ * subtracted here rather than relied on from the parent's padding so the two
+ * cannot disagree when the full-screen rule below removes one of them.
+ */
+.bb-dialog-panel {
+  max-block-size: calc(
+    var(--visual-viewport-height, 100dvh) - 2 * var(--bb-space-4)
+  );
+}
+
+/*
+ * FULL SCREEN IN A NARROW WINDOW, and why it is not a prop.
+ *
+ * A dialog that does not fit the window has exactly one correct rendering, so
+ * making this a choice would let a consumer ship a broken screen at 360px. It
+ * is the fluid-by-default level of doc 04's hierarchy applied to the one place
+ * where the window is the right thing to ask.
+ *
+ * 30rem, and the unit is the point. In **rem**, so it follows the user's own
+ * font size: a page at 200% zoom crosses this threshold and goes full-screen,
+ * which is the correct outcome and is what doc 04 §10's zoom check wants. A
+ * pixel value would have held a phone-shaped dialog on a zoomed desktop.
+ *
+ * The number is where an inset stops being worth its cost: below it, the
+ * margin around the panel takes room the content needs more than the page
+ * behind it needs to be visible. It is deliberately NOT named for a device —
+ * doc 04 §4 forbids that — and it is not `--container-narrow` either, because
+ * that scale describes how wide a CONTAINER is, not when a window has run out
+ * of room. The two mean different things and tying them together would make
+ * one unchangeable without the other.
+ */
+@media (max-width: 30rem) {
+  .bb-dialog-scrim {
+    padding: 0;
+  }
+
+  .bb-dialog-panel {
+    max-inline-size: none;
+    inline-size: 100%;
+    /* The full visual viewport now, with no inset to subtract. */
+    max-block-size: var(--visual-viewport-height, 100dvh);
+    block-size: var(--visual-viewport-height, 100dvh);
+    /*
+     * No radius and no border: both are how a panel says it is a panel sitting
+     * on something else, and there is nothing beside it to be distinct from.
+     * Doc 03 §4.3 — a corner radius against a window edge is the corner of the
+     * screen, which is not ours to round.
+     */
+    border-radius: 0;
+    border: 0;
+    /* And no shadow, for the same reason: nothing to cast onto. */
+    box-shadow: none;
+  }
+}
+
+/*
+ * The entry, and it communicates something — which is the only licence doc 09
+ * §2 gives. The scrim establishes that the page behind is out of reach; the
+ * panel rising a few pixels says where it came from.
+ *
+ * The duration comes from the token, so the reduced-motion rule in
+ * semantic.css reaches it: it sets --bb-duration-normal to 0ms, which makes
+ * this instant rather than slow. Doc 09 §2 is absolute that motion is REMOVED
+ * under the preference, not softened, and zero is removal.
+ *
+ * THERE IS NO EXIT ANIMATION, and that is not an omission.
+ *
+ * One was written, and it broke `Escape`. The base keeps a layer MOUNTED while
+ * it animates out, and a mounted layer is still the innermost one — so it goes
+ * on consuming the key. With a dialog open inside a dialog, closing the inner
+ * one and immediately pressing Escape again did nothing at all: the second
+ * press went to a panel that was already invisible and on its way out.
+ *
+ * Measured rather than reasoned about, with two dialogs and a varying gap
+ * between the presses: dropped at 0ms, 16ms and 50ms, and working at 150ms —
+ * which lines up with the 100ms exit this file used to declare. Focus was not
+ * the cause; at 50ms it had already returned to the outer dialog. The proof
+ * was emulating `prefers-reduced-motion`, where the durations collapse to zero
+ * and both presses landed every time.
+ *
+ * That last part is the reason this is a defect and not a trade: the
+ * interaction worked for somebody who asks for less motion and failed for
+ * everybody else. Doc 09 §8 — one exception in one component destroys trust in
+ * the other twenty-nine — and an exit animation communicates nothing anyway,
+ * because the person is the one who just asked it to close.
+ */
+.bb-dialog-scrim[data-entering] {
+  animation: bb-dialog-scrim-in var(--bb-duration-normal) var(--bb-ease);
+}
+
+.bb-dialog-panel[data-entering] {
+  animation: bb-dialog-panel-in var(--bb-duration-normal) var(--bb-ease);
+}
+
+@keyframes bb-dialog-scrim-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes bb-dialog-panel-in {
+  from {
+    opacity: 0;
+    /*
+     * Eight pixels, and upward. Small enough that it reads as the panel
+     * settling rather than as a slide, which is the difference between telling
+     * somebody where it came from and performing for them.
+     *
+     * `translateY` and not a logical equivalent: there is none, and the block
+     * axis does not flip in the languages this library supports (doc 05 §4 is
+     * about direction, not writing mode). A horizontal offset here would have
+     * needed the direction, which is `Drawer`'s problem and not this one.
+     */
+    transform: translateY(8px);
+  }
+}
