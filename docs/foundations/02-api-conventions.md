@@ -5,7 +5,7 @@
 > Written after a day with the headless base, not before — these are the rules
 > that only building can decide.
 
-**Status:** adopted · **Date:** 2026-09-06
+**Status:** adopted · **Date:** 2026-09-07
 **Depends on:** [01 · Principles](./01-principles.md), in particular P6 and
 non-goal 10 · [03 · Tokens and theme](./03-tokens-and-theme.md) §4.4 ·
 [05 · Languages](./05-languages-and-formatting.md) §4 ·
@@ -157,6 +157,51 @@ Worth being explicit about what it is not, because the two get conflated: this
 aligns the **value inside its box**, not the label against the control and not
 the field inside the form. Where the label sits is a property of the form and
 arrives with the structural pieces of [doc 07](./07-forms.md) §7.
+
+### 3.3 One vocabulary for `placement`, and it is exactly twelve
+
+Where a floating layer sits against the thing that opened it — a tooltip, a
+popover, a menu, a select's list. One closed set, shared by every one of them,
+so that "below, aligned to the start" is spelled the same way everywhere.
+
+**Twelve values: four sides, three alignments each.**
+
+|            | centred  | aligned to start | aligned to end |
+| ---------- | -------- | ---------------- | -------------- |
+| **above**  | `top`    | `top start`      | `top end`      |
+| **below**  | `bottom` | `bottom start`   | `bottom end`   |
+| **before** | `start`  | `start top`      | `start bottom` |
+| **after**  | `end`    | `end top`        | `end bottom`   |
+
+The number is not a coincidence and it is worth knowing where it comes from.
+The base's own union has **twenty-four** names: these twelve, and twelve
+physical duplicates — `bottom left`, `bottom right`, `left`, `left top`,
+`right bottom` and the rest. The physical half is not extra capability. It says
+the same thing as the logical half in an LTR interface and the **wrong** thing
+in an RTL one, which is the whole of doc 03 §5 rule 4 and §3.2 above.
+
+So the twelve are not a subset we picked for tidiness: they are the complete
+set of positions, and the other twelve are the same positions named in a way
+that breaks in Arabic. **A public prop never accepts a physical value**, and
+because a prop value is not a class, lint cannot catch this one — the type has
+to be right in the first place.
+
+Two consequences to know before styling anything against it:
+
+- **The reflected attribute is coarser than the prop.** The base writes
+  `data-placement` on the layer, and it carries only the **axis** — `top`,
+  `bottom`, `left`, `right`. So CSS can orient an arrow, and it cannot tell
+  `bottom start` from `bottom end`. Anything that needs the alignment has to
+  read the prop.
+- **The physical names in that attribute are the base's, not ours.** Reading
+  `[data-placement="left"]` in a stylesheet is fine and unavoidable; putting
+  `left` in a prop, a token or a class is not.
+
+`offset` is deliberately **not** part of this. The distance between a layer and
+its trigger is spacing, it comes from a token, and it is one value for the whole
+library — the point of having a system is that every tooltip sits the same
+distance from the thing it describes. A consumer passing `offset={13}` is a
+literal, and [doc 03](./03-tokens-and-theme.md) §5 rule 1 admits none.
 
 ## 4. Style against DOM state attributes
 
@@ -391,6 +436,10 @@ management interface belongs to a component that draws its own.
 - [ ] Nothing is exported that was not deliberately chosen
 - [ ] A `size` is `sm | md | lg` and an `align` is `start | center | end`,
       never `left`/`right` and never a second vocabulary
+- [ ] A `placement` is one of the twelve logical values, and no public prop
+      accepts a physical one — the base offers twenty-four names and half of
+      them are wrong in RTL (§3.3)
+- [ ] The distance between a layer and its trigger is not a prop
 - [ ] Icons arrive as children, or as a named slot the consumer could not have
       placed themselves — never as `iconStart`/`iconEnd` and never by name
 - [ ] An icon's size and colour come from the slot, so the consumer passes

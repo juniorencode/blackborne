@@ -56,22 +56,29 @@ claiming it.
 
 The library is being rewritten from scratch. Phases, in order:
 
-| Phase | What                                                                  | State |
-| ----- | --------------------------------------------------------------------- | ----- |
-| F1    | Close the past: tag, prune branches, empty the repo, deprecate on npm | Done  |
-| F2    | Skeleton: workspace, root files, CI, templates                        | Done  |
-| F3    | Documentation for AI agents                                           | Done  |
-| F4    | Foundations, written in English                                       | Done  |
-| F5    | One day with React Aria — decided documents 02 and 08                 | Done  |
-| F6    | Full pipeline with the first component (`Button`)                     | Done  |
-| F7    | The fields, and the browser checks that verify them                   | Done  |
-| F8    | The rest of level 0 and level 1: the pieces with no dependencies      | Now   |
-| F9    | The layer base, and everything that depends on a portal               | Next  |
+| Phase | What                                                                  | State    |
+| ----- | --------------------------------------------------------------------- | -------- |
+| F1    | Close the past: tag, prune branches, empty the repo, deprecate on npm | Done     |
+| F2    | Skeleton: workspace, root files, CI, templates                        | Done     |
+| F3    | Documentation for AI agents                                           | Done     |
+| F4    | Foundations, written in English                                       | Done     |
+| F5    | One day with React Aria — decided documents 02 and 08                 | Done     |
+| F6    | Full pipeline with the first component (`Button`)                     | Done     |
+| F7    | The fields, and the browser checks that verify them                   | Done     |
+| F8    | The rest of level 0 and level 1: the pieces with no dependencies      | Two left |
+| F9    | The layer base, and everything that depends on a portal               | Now      |
 
 Which components exist and in what order is not a phase question: it lives in
 [catalog-and-build-order.md](./catalog-and-build-order.md), which is the list
 that changes weekly. The phases above only say which part of the architecture
 is being proved.
+
+**F8 is deliberately left open**, not finished and not abandoned: `Progress` and
+`ButtonGroup` are the two pieces of level 1 still pending, and neither blocks
+anything. F9 went ahead of them because the layer base is a bottleneck that more
+than twenty components wait on, which is criterion 1 of the catalog's own
+ordering. Recorded here rather than marked Done, because a phase table that
+rounds up is a phase table nobody believes.
 
 Nothing from the `0.1.1` codebase is carried over. It stays available under the
 `v0.1.1` git tag.

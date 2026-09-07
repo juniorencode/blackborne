@@ -263,6 +263,23 @@ minor versions. Every break is listed here with its migration.
 
 ### Changed
 
+- **`react-aria` is now a direct dependency**, pinned at exactly `3.52.0`. It
+  was already in your tree — `react-aria-components` depends on it at that
+  same exact version — so nothing new installs and no version can drift. It is
+  declared for one thing: `UNSAFE_PortalProvider`, which
+  `react-aria-components` does not re-export and which is the only route that
+  reaches every layer, the toast region included
+  ([decision 0013](docs/decisions/0013-the-portal-container-arrives-with-the-configuration.md)).
+
+- `Toast` stops being deferred, and the reversal is on the record rather than
+  quietly dropped ([doc 08](docs/foundations/08-layers-and-focus.md) §7.1). The
+  `UNSTABLE_` prefix is still there in 1.21.0, and measured, it is on the base's
+  six **component** exports and nowhere else — the hooks and the queue class
+  underneath are unprefixed. What was marked unstable is the assembly, which is
+  the layer a wrapper replaces. The reason to stop waiting is not the version:
+  doc 09 §5 prefers **undo** over confirmation, and a `ConfirmDialog` with no
+  `Toast` beside it leaves the preferred half of that pair nowhere to live.
+
 - `SearchField`'s clear button moved from an absolutely positioned overlay into
   the field's frame, and its unconditional trailing padding went with it. There
   is now **one** mechanism for the contested trailing edge across every field,

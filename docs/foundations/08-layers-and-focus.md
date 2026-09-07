@@ -5,12 +5,12 @@
 > One of the two bottlenecks of the build order: more than twenty components
 > depend on this, and redesigning it later forces a change to everything.
 
-**Status:** adopted · **Date:** 2026-09-03
+**Status:** adopted · **Date:** 2026-09-07
 **Depends on:** [01 · Principles](./01-principles.md) P3 ·
 [03 · Tokens and theme](./03-tokens-and-theme.md) §4.5 ·
 [04 · Responsive](./04-responsive.md) §5 ·
 [06 · Accessibility](./06-accessibility.md) ·
-[09 · Behavior](./09-behavior.md) §7
+[09 · Behavior](./09-behavior.md) §5 and §7
 
 ---
 
@@ -24,7 +24,7 @@ are not the same thing.
 | Behavior                                                                       | State                                                  |
 | ------------------------------------------------------------------------------ | ------------------------------------------------------ |
 | `Escape` closes one level at a time, innermost first                           | **Verified** — in the browser and by an automated test |
-| Focus moves into the layer on open and is contained while it is open           | **Verified** in the browser                            |
+| Focus moves into the layer on open, and is contained in a **modal** one        | **Verified** in the browser                            |
 | Focus returns to the trigger on close                                          | **Verified** in the browser                            |
 | A toast appears above a modal layer and is keyboard reachable while it is open | **Verified** in the browser                            |
 | Page scroll is locked while a modal layer is open                              | **Verified** in the browser, at one level of nesting   |
@@ -66,9 +66,19 @@ The rule for anything new: a layer never closes a layer it did not open.
 - **On open**, focus moves into the layer. The base puts it on the layer
   container itself rather than the first control, and the first `Tab` then
   reaches the first control. This is correct and is left alone.
-- **While open**, focus is contained. Tabbing in a loop stays inside. In a
-  modal layer this is intentional and required; anywhere else, trapping focus
-  is a bug ([doc 06](./06-accessibility.md) §4, point 10).
+- **While open**, focus is contained **in a modal layer only**. Tabbing in a
+  loop stays inside a dialog or a drawer, and that is intentional and required.
+  In a popover, a menu or a tooltip, tabbing leaves — trapping focus there is a
+  bug ([doc 06](./06-accessibility.md) §4, point 10).
+
+  **So containment is not configurable.** It follows from what the layer is,
+  not from a prop, and the base already draws the line in the same place:
+  measured in 1.21.0, its `Overlay` sets `restoreFocus: true` unconditionally
+  while containment is opt-in — `Modal` asks for it and `Popover` does not. A
+  `shouldTrapFocus` prop would let a consumer produce the case point 10 calls a
+  bug, and there is no version of "trap the focus in this popover" that is not
+  better served by a dialog.
+
 - **On close**, focus returns to the element that opened the layer.
 - **Nothing is autofocused** beyond the layer container itself. Focusing a
   specific control on open is a per-component decision that needs a reason
@@ -92,6 +102,32 @@ A layer holding no input — a menu, a popover showing detail, a select — is
 dismissable, and should be. Being forced to aim at a close button to dismiss a
 menu is the opposite failure.
 
+### 5.1 The case this rule does not cover — open
+
+The two halves above assume that "holds unsaved input" and "is modal" arrive
+together, and there is one common shape where they do not: **a popover holding
+a small form.** A filter panel with two fields and an Apply button is the
+single most ordinary thing in a management application, and it lands on both
+sides of the rule at once — it holds unsaved input, so it should not be
+dismissed by a stray click, and it is a popover, so being forced to aim at a
+close button is the failure the second half names.
+
+Three ways out, none of them chosen yet:
+
+1. **A popover never holds input**, and this shape is a dialog. Consistent, and
+   it turns a lightweight interaction into a modal one.
+2. **The Apply button is what makes it safe**: dismissing discards a filter
+   nobody had applied yet, which is not the same loss as discarding a typed
+   record. Plausible, and it depends on the popover's content in a way a
+   component cannot inspect.
+3. **The consumer says so**, which is a prop, and §5 exists precisely because
+   this was decided rather than left as one.
+
+**Written down as openly open.** It is decided when `Popover` is built, and by
+then there should be a real screen to decide it against. Until then no
+component may assume an answer, and a `Popover` that grows an input in it is
+the trigger to come back here.
+
 ## 6. Scroll locking, and the case that is not verified
 
 While a modal layer is open, the page behind it does not scroll. Otherwise you
@@ -110,18 +146,26 @@ this was never exercised.
 `Drawer` is built, and the check is: open dialog, open drawer, close drawer,
 try to scroll the page. It must not scroll.
 
+**The prediction, on the record before the measurement.** Read in the base's
+`usePreventScroll`: there is a module-level `preventScrollCount`, incremented
+when a layer locks, decremented when it cleans up, and the restore runs only
+when it reaches zero. It is reference-counted, so the nested case should hold.
+
+That is a prediction and not the check, and the difference matters enough to
+say why: reading the source says nothing about React's effect ordering, about
+`StrictMode` invoking the lock twice, or about the mobile WebKit branch, which
+is a separate code path in the same file. The value of writing it here is that
+the prediction can be **wrong** — and a prediction written after the fact is
+worth nothing, because it always agrees with what was found.
+
 ## 7. Toasts
 
 Two findings, both consequential.
 
 **The base's toast API is still unstable.** In `react-aria-components` 1.21.0
 the toast exports carry an `UNSTABLE_` prefix — the only six unstable exports
-out of two hundred and ninety-five.
-
-**Decision: `Toast` is deferred**, and on the API alone. Building a
-first-class component on exports the base itself marks unstable buys a
-migration nobody scheduled, and toasts are not a piece you want to rewrite once
-consumers depend on their queue. Revisited when the prefix goes away.
+out of two hundred and ninety-five. Counted again while writing §7.1, and both
+numbers still hold.
 
 **The queue is state, and it is not ours.** The base's toast queue is created
 outside React, at module level. That is global state, and P3 forbids the
@@ -133,17 +177,89 @@ This is consistent with P2 and P3 rather than an exception to them, and it is
 recorded now so that whoever builds `Toast` later does not reach for the
 module-level default because it is what the base's examples show.
 
+### 7.1 The deferral, and why it was lifted
+
+**This section used to say `Toast` is deferred, on the API alone.** The
+reasoning was that building a first-class component on exports the base marks
+unstable buys a migration nobody scheduled, "and toasts are not a piece you
+want to rewrite once consumers depend on their queue".
+
+That premise turned out to be removable, and the amendment is recorded here
+rather than quietly replacing it.
+
+**Where the instability actually lives.** Measured in the installed tree: the
+`UNSTABLE_` prefix is on the six **component** exports of
+`react-aria-components` and nowhere else. The pieces underneath them are
+exported without any prefix — `useToast` and `useToastRegion` from `react-aria`,
+`useToastState`, `useToastQueue` and the `ToastQueue` class from
+`react-stately`. What the base marks as unstable is the _assembly into
+components_, which is precisely the layer a wrapper of ours replaces. The
+behaviour is not experimental; the composition is.
+
+**What removes the premise.** The one part we hand to a consumer is the queue,
+and that is the one part a wrapper cannot shim — a rename inside our files
+costs them nothing, a change to a class in their own type signatures costs them
+a migration. So the queue is created by **a hook of ours**, and the base's class
+never appears in a consumer's types. Ownership does not move: the consumer
+holds what the hook returns, adds to it from wherever they can reach it, and
+the library still owns no queue. Only the constructor moves.
+
+**The reason it is not deferred any longer is not the version number.** It is
+[doc 09](./09-behavior.md) §5: confirm or undo, never both, and **prefer undo**
+whenever it is technically possible, because a confirmation repeated a hundred
+times is answered automatically and stops protecting anything. A `ConfirmDialog`
+with no `Toast` beside it ships the discouraged half of that pair and leaves the
+preferred half with nowhere to live, which nudges every consumer toward the
+thing this library's own foundation tells them to avoid. That is a coherence
+problem, and it does not improve by waiting.
+
+**What is still not absorbable, stated plainly.** A rename the wrapper eats. What
+it cannot eat is behaviour we document as a guarantee and the base changes when
+it stabilises: the timer pausing on hover and on focus, the overflow going to a
+backlog rather than evicting, the announcement being assertive with no polite
+mode, and landmark navigation being the keyboard route in. If any of those move,
+our documented behaviour moves with them. The library is on `0.x`, where
+[non-goal 11](./01-principles.md) permits exactly that break — and it never gets
+cheaper than it is now.
+
+**`Toast` is therefore built last in the layer batch**, after every other layer
+has landed. If the prefix goes away in the meantime the migration costs nothing,
+and if the component turns out badly it blocks nothing, because nothing else
+waits on it.
+
 ## 8. Portals
 
 Layers render in a portal. Two consequences:
 
-- **The container is the consumer's business.** A component accepts where to
-  mount and does not assume `document.body`. An application with its own
-  stacking context needs this, and the library must not reach for the document
-  on its own (P3).
-- **DOM order stops matching visual order**, which is why focus containment and
-  focus return are not optional niceties here — they are the only thing keeping
-  keyboard traversal coherent ([doc 06](./06-accessibility.md) §3).
+- **The container is received, not assumed.** It arrives through
+  `ConfigProvider`, beside the locale, the dictionary and the time zone,
+  because it is the same category as those: something the project tells the
+  library rather than something the library reaches out and takes (P3). An
+  application with its own stacking context needs it, and with nothing supplied
+  the base's own default — `document.body` — stands, so a component still works
+  with no provider around it.
+
+  **It is one provider and not a prop per component**, and that is measured
+  rather than preferred. `ToastRegion` has no container prop at all: it reads
+  the portal context and nothing else, so a per-component route cannot reach
+  the toast region even in principle. And the per-component prop the base does
+  expose — `UNSTABLE_portalContainer` on `Modal`, `Popover` and `Tooltip` — is
+  deprecated in 1.21.0 in favour of that same provider.
+
+  The provider is called `UNSAFE_PortalProvider`, and the prefix is not the one
+  that deferred the toasts: in this base's vocabulary `UNSTABLE_` marks an API
+  subject to change while `UNSAFE_` marks one that is supported but easy to hurt
+  yourself with — the prefix `UNSAFE_className` has carried for years in React
+  Spectrum as stable API. The deprecation notice points at it, so it is the
+  route the base recommends, not a back door.
+
+- **DOM order stops matching visual order**, which is why the focus rules in §4
+  are not optional niceties here — moving focus into the layer, returning it to
+  the trigger, and containing it in the modal case are the only thing keeping
+  keyboard traversal coherent ([doc 06](./06-accessibility.md) §3). A portalled
+  layer sits at the end of the document, so without them `Tab` from the trigger
+  goes to whatever follows it on the page and not into the thing that just
+  opened.
 
 Portalled components are also the one legitimate place to query the viewport
 ([doc 04](./04-responsive.md) §5): their real container _is_ the window.
@@ -169,19 +285,24 @@ needs one sooner than its layer table implies.
 ## 10. Verification
 
 - [ ] `Escape` closes the innermost layer only, one press at a time
-- [ ] Focus moves into the layer on open, is contained while open, and returns
-      to the trigger on close
+- [ ] Focus moves into the layer on open and returns to the trigger on close
+- [ ] Focus is contained in a modal layer and **is not** in a popover, a menu
+      or a tooltip, and neither is configurable
 - [ ] Nothing beyond the layer container is autofocused without a written
       reason
 - [ ] A layer holding unsaved input is not dismissable by clicking outside; one
       holding none is
+- [ ] No public prop takes a physical placement value
+      ([doc 02](./02-api-conventions.md) §3.3)
 - [ ] Page scroll is locked while a modal layer is open
 - [ ] **Nested case:** dialog open, drawer opened and closed, page still does
       not scroll
 - [ ] Stacking values come from the public tokens, with no literal z-index
       anywhere
-- [ ] The mount container can be supplied by the consumer; `document.body` is
-      never assumed
+- [ ] The mount container is supplied through `ConfigProvider` and reaches
+      every layer, the toast region included; with none supplied the base's
+      default stands and no component needs a provider
 - [ ] Toasts are reachable by keyboard while a modal layer is open
-- [ ] Any toast queue is owned by the consumer, not by the library
+- [ ] Any toast queue is owned by the consumer, not by the library — and the
+      base's queue class appears nowhere in a consumer's types (§7.1)
 - [ ] Behavior confirmed in a real browser, after a full reload
