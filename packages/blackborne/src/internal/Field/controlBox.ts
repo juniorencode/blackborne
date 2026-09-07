@@ -158,3 +158,57 @@ export const ALIGN: Record<ControlAlign, string> = {
   center: 'bb:text-center',
   end: 'bb:text-end'
 } satisfies Record<ControlAlign, string>;
+
+/*
+ * A control the FIELD owns at an edge of its frame: a clear cross, a reveal
+ * toggle, a stepper arrow.
+ *
+ * Extracted at the third, and the case for it is stronger than the count: the
+ * cross's list and the toggle's were byte-identical apart from one line. That
+ * is not two things that happen to agree, it is one thing written twice — and
+ * the second was written by copying the first, which is how the third would
+ * have been.
+ *
+ * WHAT IS NOT HERE, on purpose:
+ *
+ * - The hit area and the radius, which belong to the two that FLOAT inside the
+ *   frame. A stepper spans the frame's full height flush against its inner
+ *   edge, where a rounded highlight inside a square corner reads as a mistake.
+ * - The crosses that sit on a tinted CHIP — Badge's and a tag's. They take
+ *   their colour from `currentColor` and mix their own hover out of it, because
+ *   they are on the chip's fill rather than on the field's surface. Two of
+ *   them, in one context, and merging them into this would be forcing one
+ *   abstraction over two problems.
+ *
+ * The one thing that changes by extracting this: the stepper gains the
+ * transition the other two already had. It is invisible at rest, so no
+ * baseline moves, and it means hover feels the same on every control in the
+ * library rather than on two of the three (doc 09 §8).
+ */
+export const EDGE_CONTROL = cx(
+  'bb:box-border bb:flex bb:items-center bb:justify-center',
+  'bb:cursor-pointer bb:border-0 bb:bg-transparent bb:text-text-muted',
+  'bb:transition-[background-color,color]',
+  'bb:duration-(--bb-duration-fast) bb:ease-standard',
+  'bb:data-hovered:bg-surface-hover bb:data-hovered:text-text',
+  'bb:data-pressed:bg-surface-active',
+  // Inside the frame's own ring, so it must not draw a second one — the
+  // library has one ring and two nested is noise.
+  'bb:outline-hidden',
+  'bb:data-focus-visible:bg-surface-hover bb:data-focus-visible:text-text',
+  'bb:data-disabled:cursor-not-allowed bb:data-disabled:text-text-disabled'
+);
+
+/**
+ * The two edge controls that float inside the frame rather than spanning it.
+ *
+ * The hit area is the part of a control like this that is usually wrong: a
+ * cross drawn at 14px is a 14px target unless something says otherwise, and
+ * doc 06 §3 wants the minimum at EVERY density. Both axes take the token, so
+ * compact trims the mark and never the target.
+ */
+export const EDGE_BUTTON = cx(
+  EDGE_CONTROL,
+  'bb:min-h-hit bb:min-w-hit',
+  'bb:rounded-md'
+);

@@ -1,6 +1,6 @@
 import { Button } from 'react-aria-components';
 import { useMessage } from '../../config';
-import { cx } from '../cx';
+import { EDGE_BUTTON } from './controlBox';
 
 /*
  * INTERNAL. The cross that empties a field.
@@ -23,30 +23,7 @@ export interface ClearButtonProps {
   onPress?: () => void;
 }
 
-const CLEAR = cx(
-  'bb:box-border bb:flex bb:items-center bb:justify-center',
-  /*
-   * The target, and the part of a control like this that is usually wrong.
-   *
-   * A cross drawn at 14px is a 14px target unless something says otherwise,
-   * and doc 06 §3 wants the minimum at EVERY density, compact included. Both
-   * axes take the hit-area token, so compact trims the mark and never the
-   * target — 28px normal, 24px compact, with the mark going 14px to 11px
-   * underneath it.
-   */
-  'bb:min-h-hit bb:min-w-hit',
-  'bb:cursor-pointer bb:border-0 bb:bg-transparent bb:text-text-muted',
-  'bb:rounded-md',
-  'bb:transition-[background-color,color]',
-  'bb:duration-(--bb-duration-fast) bb:ease-standard',
-  'bb:data-hovered:bg-surface-hover bb:data-hovered:text-text',
-  'bb:data-pressed:bg-surface-active',
-  // Inside the frame's own ring, so it must not draw a second one — the
-  // library has one ring and two nested is noise.
-  'bb:outline-hidden',
-  'bb:data-focus-visible:bg-surface-hover bb:data-focus-visible:text-text',
-  'bb:data-disabled:cursor-not-allowed bb:data-disabled:text-text-disabled'
-);
+const CLEAR = EDGE_BUTTON;
 
 export function ClearButton({ onPress }: ClearButtonProps): React.ReactNode {
   const label = useMessage('clear');

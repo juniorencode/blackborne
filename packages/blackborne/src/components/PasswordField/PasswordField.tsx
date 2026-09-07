@@ -9,6 +9,7 @@ import {
   CONTROL_INSIDE,
   CONTROL_TEXT,
   ControlFrame,
+  EDGE_BUTTON,
   Field
 } from '../../internal/Field';
 import { useMessage } from '../../config';
@@ -85,20 +86,14 @@ const INPUT = cx(CONTROL_INSIDE, CONTROL_TEXT);
  * is the one that survives greyscale (doc 06 §3).
  */
 const TOGGLE = cx(
-  'bb:box-border bb:flex bb:items-center bb:justify-center',
-  'bb:min-h-hit bb:min-w-hit',
-  'bb:cursor-pointer bb:border-0 bb:bg-transparent bb:text-text-muted',
-  'bb:rounded-md',
-  'bb:transition-[background-color,color]',
-  'bb:duration-(--bb-duration-fast) bb:ease-standard',
-  'bb:data-selected:text-text',
-  'bb:data-hovered:bg-surface-hover bb:data-hovered:text-text',
-  'bb:data-pressed:bg-surface-active',
-  // Inside the frame's own ring, so it must not draw a second one — the
-  // library has one ring and two nested is noise.
-  'bb:outline-hidden',
-  'bb:data-focus-visible:bg-surface-hover bb:data-focus-visible:text-text',
-  'bb:data-disabled:cursor-not-allowed bb:data-disabled:text-text-disabled'
+  EDGE_BUTTON,
+  /*
+   * The only thing this adds to a clear cross: the glyph brightens while the
+   * value is revealed, so the button says which state it is IN as well as what
+   * pressing it will do. Doc 06 §3 — a toggle whose only signal is its label
+   * has one channel.
+   */
+  'bb:data-selected:text-text'
 );
 
 /*
