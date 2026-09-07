@@ -173,6 +173,21 @@ dialog) · `surface-sunken` (sunken: table header, background zones) ·
 `surface-overlay` (the scrim behind a dialog) · `surface-hover` ·
 `surface-active` · `surface-selected` · `surface-disabled`
 
+**`surface-raised` deliberately equals `surface` in light mode**, and that is
+the clearest example of §6.1's rule that a token may be restated when its role
+genuinely differs between modes. In light, elevation is carried by the SHADOW,
+so a floating panel takes the lightest surface there is and the shadow does the
+lifting. In dark it cannot — §5 rule 5, a shadow is barely visible on a dark
+ground — so the dark block restates it two steps up, which the dark scale makes
+lighter than the page.
+
+It was step 2 until `Dialog` became its first reader, and measured against the
+page that was elevation pointing the wrong way: 0.9486 relative luminance
+against the page's 0.9741, so the "raised" surface was **darker** than what it
+floats above, at 1.03:1 — imperceptible, and imperceptibly backwards. A scrim
+hides it, which is why a dialog would never have exposed it; a popover has no
+scrim.
+
 **Content** — three levels, no more:
 `text` (primary) · `text-muted` (secondary) · `text-disabled` · `link`
 

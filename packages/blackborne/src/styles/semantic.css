@@ -40,7 +40,31 @@
   /* --- Surfaces ------------------------------------------------------ */
   --bb-surface: var(--bb-x-gray-1);
   --bb-surface-on: var(--bb-x-gray-12);
-  --bb-surface-raised: var(--bb-x-gray-2);
+  /*
+   * The surface of something that FLOATS: a dialog, a drawer, a popover, a
+   * menu (doc 03 §4, and doc 08 for what "floats" means here).
+   *
+   * Step 1, the same value as the page, and that identity is chosen rather
+   * than left over. In light mode elevation is carried by the SHADOW — that is
+   * what a shadow is for — so a floating panel takes the lightest surface
+   * there is and the shadow does the lifting. In dark mode it cannot: doc 03
+   * §5 rule 5, a shadow is barely visible on a dark ground, so the dark block
+   * below restates this at step 3, which the dark scale makes LIGHTER than the
+   * page. One token, two mechanisms, exactly the case §6.1 allows a restatement
+   * for.
+   *
+   * It used to be step 2, and measured against the page that was elevation
+   * pointing the wrong way: 0.9486 against 0.9741 relative luminance, so the
+   * "raised" surface was DARKER than the thing it floats above, at 1.03:1 —
+   * imperceptible, and imperceptibly backwards. Nothing had ever rendered it:
+   * this token has been named for menus, popovers and dialogs since the token
+   * layer was written, and `Dialog` is its first reader. The same situation
+   * --bb-surface-selected was in, and that one was wrong too.
+   *
+   * Under a scrim it makes no difference, which is why a dialog would never
+   * have exposed it. A popover has no scrim and sits directly on the page.
+   */
+  --bb-surface-raised: var(--bb-x-gray-1);
   --bb-surface-raised-on: var(--bb-x-gray-12);
   --bb-surface-sunken: var(--bb-x-gray-3);
   --bb-surface-sunken-on: var(--bb-x-gray-12);
@@ -332,8 +356,14 @@
 [data-bb-mode='dark'] {
   /* Elevation in dark is communicated by a LIGHTER surface, not by a
      shadow — shadows are barely visible on a dark ground (doc 03 §5,
-     rule 5). The dark scales run dark-to-light, so the same step indices
-     produce the correct direction without a second mapping. */
+     rule 5). The dark scales run dark-to-light, so a HIGHER step is a
+     lighter colour, and raised/sunken keep their direction by index.
+
+     `raised` is the one that genuinely differs between modes, and it is
+     the reason §6.1 allows a restatement at all: in light it is step 1
+     and the shadow lifts it; here it is step 3 and the surface does.
+     Measured, that is 0.0160 against the page's 0.0057 relative
+     luminance — lighter, which is the direction this mode needs. */
   --bb-surface: var(--bb-x-gray-1);
   --bb-surface-raised: var(--bb-x-gray-3);
   --bb-surface-sunken: var(--bb-x-gray-2);
