@@ -410,3 +410,59 @@ export const AffixesAndAlignment: Story = {
     </div>
   )
 };
+
+/**
+ * Clearing a number, and why the edge only holds one thing.
+ *
+ * Emptying a numeric field means **`NaN`**, not zero: zero is a number somebody
+ * chose, and the base reports `NaN` for the absence of one — the same thing
+ * deleting the last digit reports.
+ *
+ * The third panel is doc 07 §2.2 rule 4. Ask for the cross and the stepper
+ * together and the stepper wins, because two library-owned controls at one edge
+ * means a hit area that depends on how the field was configured. Development
+ * warns rather than guessing quietly.
+ */
+export const Clearing: Story = {
+  render: () => (
+    <div className="catalog-pair">
+      <div className="catalog-panel">
+        <p className="catalog-label">With something to clear</p>
+        <div className="catalog-stack">
+          <NumberField label="Quantity" isClearable defaultValue={12} />
+          <NumberField
+            label="Amount"
+            isClearable
+            align="end"
+            defaultValue={2400}
+            description="Press the cross, and the cursor comes back here."
+          />
+        </div>
+      </div>
+      <div className="catalog-panel">
+        <p className="catalog-label">Nothing to offer — the room stays</p>
+        <div className="catalog-stack">
+          <NumberField label="Empty" isClearable placeholder="0" />
+          <NumberField
+            label="Read only"
+            isClearable
+            defaultValue={12}
+            isReadOnly
+          />
+          <NumberField label="Saving" isClearable defaultValue={12} isSaving />
+        </div>
+      </div>
+      <div className="catalog-panel">
+        <p className="catalog-label">Both asked for — the stepper wins</p>
+        <div className="catalog-stack">
+          <NumberField
+            label="Quantity"
+            isClearable
+            isStepperVisible
+            defaultValue={3}
+          />
+        </div>
+      </div>
+    </div>
+  )
+};

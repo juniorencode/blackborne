@@ -1,4 +1,4 @@
-import { forwardRef } from 'react';
+import { forwardRef, useRef } from 'react';
 import {
   Button,
   Input,
@@ -9,13 +9,17 @@ import {
   ALIGN,
   CONTROL_INSIDE,
   CONTROL_TEXT,
+  ClearButton,
   ControlFrame,
   EDGE_CONTROL,
   Field,
+  useOwnedValue,
   type ControlAlign
 } from '../../internal/Field';
 import { useConfig, useMessage } from '../../config';
 import { cx } from '../../internal/cx';
+import { mergeRefs } from '../../internal/mergeRefs';
+import { useDevWarning } from '../../internal/useDevWarning';
 
 export type NumberFieldSize = 'sm' | 'md' | 'lg';
 
@@ -138,6 +142,19 @@ export interface NumberFieldProps extends Omit<
    * same reason the value is set in tabular figures (doc 03 §4.2).
    */
   align?: ControlAlign;
+  /**
+   * Show a cross that empties the field.
+   *
+   * **Not together with `isStepperVisible`.** Doc 07 §2.2 rule 4 gives the
+   * trailing edge to at most one control the library owns, because two of them
+   * there means a hit area that depends on how the field was configured. The
+   * stepper wins if both are set, and development says so.
+   *
+   * Emptying a numeric field means `NaN`, which is what the base reports when
+   * somebody deletes the last digit. Not zero — zero is a number somebody
+   * chose.
+   */
+  isClearable?: boolean;
   className?: string;
 }
 
@@ -169,6 +186,7 @@ export const NumberField = forwardRef<HTMLInputElement, NumberFieldProps>(
       prefix,
       suffix,
       align = 'start',
+      isClearable = false,
       currency,
       placeholder,
       className,
@@ -183,6 +201,43 @@ export const NumberField = forwardRef<HTMLInputElement, NumberFieldProps>(
      * breaking doc 09 §3. The frame makes the buttons unreachable instead.
      */
     const busy = isLoading || isSaving;
+
+    /*
+     * Rule 4 of the contested edge, enforced rather than documented: two
+     * library-owned controls at one edge is a hit area that depends on how the
+     * field was configured, which is not something anybody can test.
+     */
+    useDevWarning(
+      isClearable && isStepperVisible,
+      'isClearable and isStepperVisible both claim the trailing edge; the stepper wins.'
+    );
+    const hasCross = isClearable && !isStepperVisible;
+
+    const control = useRef<HTMLInputElement | null>(null);
+    const owned = useOwnedValue<number>({
+      isTracked: hasCross,
+      value: ariaProps.value,
+      defaultValue: ariaProps.defaultValue,
+      /*
+       * NaN, not zero. It is what the base reports when the last digit is
+       * deleted, and zero is a number somebody chose — a field seeded with
+       * zero would show a 0 nobody typed.
+       */
+      empty: Number.NaN,
+      onChange: ariaProps.onChange
+    });
+
+    const hasNothingToClear =
+      busy ||
+      owned.current === undefined ||
+      Number.isNaN(owned.current) ||
+      (ariaProps.isDisabled ?? false) ||
+      (ariaProps.isReadOnly ?? false);
+
+    const clear = (): void => {
+      owned.set(Number.NaN);
+      control.current?.focus();
+    };
 
     const increaseLabel = useMessage('increment');
     const decreaseLabel = useMessage('decrement');
@@ -206,6 +261,7 @@ export const NumberField = forwardRef<HTMLInputElement, NumberFieldProps>(
         className={cx('bb:group bb:w-full', className)}
         {...ariaProps}
         {...(formatOptions === undefined ? {} : { formatOptions })}
+        {...owned.props}
       >
         <Field
           label={label}
@@ -255,8 +311,19 @@ export const NumberField = forwardRef<HTMLInputElement, NumberFieldProps>(
                   )
                 }
               : {})}
+            {...(hasCross
+              ? {
+                  /*
+                   * `slot={null}` opts out of the base's button context. A
+                   * numeric field publishes NAMED slots — increment and
+                   * decrement — and a slotless button inside it throws. There
+                   * is no clear slot to fill, so this fills none of them.
+                   */
+                  trailing: <ClearButton onPress={clear} slot={null} />
+                }
+              : {})}
             isLeadingHidden={busy}
-            isTrailingHidden={busy}
+            isTrailingHidden={hasCross ? hasNothingToClear : busy}
             /*
              * Room for the busy indicator only when nothing else already
              * holds that edge. With a stepper the `+` is already 28px of
@@ -265,11 +332,11 @@ export const NumberField = forwardRef<HTMLInputElement, NumberFieldProps>(
              */
             className={cx(
               SIZE[size].frame,
-              busy && !isStepperVisible && 'bb:pe-9'
+              busy && !isStepperVisible && !hasCross && 'bb:pe-9'
             )}
           >
             <Input
-              ref={ref}
+              ref={mergeRefs(ref, control)}
               className={cx(INPUT, SIZE[size].text, ALIGN[align])}
               {...(placeholder === undefined ? {} : { placeholder })}
             />

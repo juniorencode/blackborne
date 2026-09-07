@@ -21,11 +21,29 @@ export interface ClearButtonProps {
    * gives the button its behaviour and adding a handler would run it twice.
    */
   onPress?: () => void;
+  /**
+   * Which of the surrounding component's button slots this fills, or `null` to
+   * fill none of them.
+   *
+   * **This is not optional decoration.** A base component that publishes NAMED
+   * button slots throws on a slotless button inside it — measured, twice:
+   * inside a numeric field the error reads "A slot prop is required. Valid slot
+   * names are increment and decrement", and inside a tag the valid name is
+   * `remove`. A shared button therefore has to be able to say which slot it is,
+   * or say that it is none of them.
+   *
+   * Left undefined inside a search field, where the base publishes an unnamed
+   * context and that context IS the behaviour.
+   */
+  slot?: string | null;
 }
 
 const CLEAR = EDGE_BUTTON;
 
-export function ClearButton({ onPress }: ClearButtonProps): React.ReactNode {
+export function ClearButton({
+  onPress,
+  slot
+}: ClearButtonProps): React.ReactNode {
   const label = useMessage('clear');
 
   return (
@@ -47,6 +65,7 @@ export function ClearButton({ onPress }: ClearButtonProps): React.ReactNode {
        */
       aria-label={label}
       {...(onPress === undefined ? {} : { onPress })}
+      {...(slot === undefined ? {} : { slot })}
     >
       {/*
        * Drawn rather than received: doc 02 §11.4 lets the library draw and

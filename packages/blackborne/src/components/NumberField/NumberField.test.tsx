@@ -272,3 +272,73 @@ test('a busy field has no stepper, whatever it was asked for', () => {
   rerender(<NumberField label="Quantity" isStepperVisible />);
   expect(screen.queryAllByRole('button')).toHaveLength(2);
 });
+
+test('the cross empties the field to NaN, not to zero', async () => {
+  const seen: number[] = [];
+  const user = userEvent.setup();
+  render(
+    <NumberField
+      label="Quantity"
+      isClearable
+      defaultValue={12}
+      onChange={next => seen.push(next)}
+    />
+  );
+
+  await user.click(screen.getByRole('button', { name: 'Clear' }));
+
+  /*
+   * NaN and not 0. Zero is a number somebody chose; empty is the absence of
+   * one, and the base reports NaN for it — the same thing deleting the last
+   * digit reports.
+   */
+  expect(seen).toHaveLength(1);
+  expect(Number.isNaN(seen[0])).toBe(true);
+  expect(value()).toBe('');
+});
+
+test('the stepper wins the edge, and development says so', () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  render(
+    <NumberField
+      label="Quantity"
+      defaultValue={3}
+      isClearable
+      isStepperVisible
+    />
+  );
+
+  /*
+   * Doc 07 §2.2 rule 4: at most one library-owned control at that edge,
+   * because two means a hit area that depends on how the field was
+   * configured. Two stepper buttons and no cross.
+   */
+  expect(screen.queryByRole('button', { name: 'Clear' })).toBeNull();
+  expect(screen.queryAllByRole('button')).toHaveLength(2);
+
+  const ours = warn.mock.calls.filter(([first]) =>
+    String(first).startsWith('blackborne:')
+  );
+  expect(ours).toHaveLength(1);
+  warn.mockRestore();
+});
+
+test('the cross is unreachable when it has nothing to offer', () => {
+  const cross = () => screen.queryByRole('button', { name: 'Clear' });
+
+  const { rerender } = render(
+    <NumberField label="Q" isClearable defaultValue={12} />
+  );
+  expect(cross(), 'with a value').not.toBeNull();
+
+  rerender(<NumberField label="Q" isClearable defaultValue={12} isSaving />);
+  expect(cross(), 'saving').toBeNull();
+
+  rerender(<NumberField label="Q" isClearable defaultValue={12} isReadOnly />);
+  expect(cross(), 'read-only').toBeNull();
+});
+
+test('an empty clearable numeric field has nothing to clear', () => {
+  render(<NumberField label="Q" isClearable />);
+  expect(screen.queryByRole('button', { name: 'Clear' })).toBeNull();
+});

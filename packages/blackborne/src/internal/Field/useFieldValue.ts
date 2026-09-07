@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef, useState } from 'react';
+import { useOwnedValue } from './useOwnedValue';
 import { caretAfter, type Normalizer } from '../../normalize';
 
 /*
@@ -72,7 +73,21 @@ export function useFieldValue<
 }: Options): Result<E> {
   const element = useRef<E | null>(null);
   const caret = useRef<number | null>(null);
-  const [uncontrolled, setUncontrolled] = useState(defaultValue ?? '');
+  /*
+   * The controlled-or-not dance lives in useOwnedValue, which a numeric field
+   * needs too — its value is a number and its emptiness is NaN, so it could
+   * not use the string-shaped version this used to carry inline.
+   *
+   * Always tracked here: a normalizer has to own the value in order to rewrite
+   * it, and a caller that asked for tracking said so.
+   */
+  const owned = useOwnedValue<string>({
+    isTracked: normalize !== undefined || isTracked,
+    value,
+    defaultValue,
+    empty: '',
+    onChange
+  });
   /*
    * Only here to guarantee a render, and it earns its place.
    *
@@ -101,7 +116,7 @@ export function useFieldValue<
     element.current.setSelectionRange(position, position);
   });
 
-  const current = value ?? uncontrolled;
+  const current = owned.current ?? '';
 
   if (normalize === undefined) {
     /*
@@ -111,9 +126,9 @@ export function useFieldValue<
      * exactly as its consumer wrote it.
      */
     return {
-      props: isTracked ? { value: current, onChange: handleTracked } : {},
+      props: owned.props,
       ref: node => void (element.current = node),
-      value: isTracked ? current : undefined
+      value: owned.current
     };
   }
 
@@ -144,15 +159,9 @@ export function useFieldValue<
           }
         }
 
-        if (value === undefined) setUncontrolled(next);
-        onChange?.(next);
+        owned.set(next);
       }
     },
     ref: node => void (element.current = node)
   };
-
-  function handleTracked(typed: string): void {
-    if (value === undefined) setUncontrolled(typed);
-    onChange?.(typed);
-  }
 }

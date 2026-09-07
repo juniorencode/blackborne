@@ -12,6 +12,31 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- `variant="card"` on `RadioGroup`: each option becomes a card you press
+  anywhere on. The variant belongs to the group and reaches the options through
+  a private context, which is now a written convention
+  ([doc 02](docs/foundations/02-api-conventions.md) §3.1.1) since it is the
+  library's first.
+
+  The card moves **both** its border and its fill, and they say different
+  things: the border answers a pointer arriving — the field's rule, earned
+  twice over on the largest surface in the library that answers one — and the
+  fill answers a press, following `Button`, because the shimmer argument does
+  not reach something deliberate and momentary. The circle stays in both
+  variants and keeps its own hover, which is the clearest statement that the
+  whole card is the target.
+
+  First component to read `--bb-surface-selected` and its pair. They had been
+  defined since the token layer and never rendered; measured now, and axe
+  reports no contrast violation on them, brand override included.
+
+- `isClearable` on `NumberField`. Emptying a numeric field means `NaN`, not
+  zero — zero is a number somebody chose, and `NaN` is what the base reports
+  when the last digit is deleted. It is refused together with
+  `isStepperVisible`: doc 07 §2.2 rule 4 gives that edge to one library-owned
+  control, the stepper wins, and development says so rather than guessing
+  quietly.
+
 - `TagsInput`. Values typed one at a time or pasted as a block and split on
   Enter, comma, semicolon or pipe, each one through the normalizer. Backspace
   in an empty box removes the last tag.

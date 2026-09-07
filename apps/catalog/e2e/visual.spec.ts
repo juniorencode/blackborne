@@ -166,7 +166,15 @@ const STATES: Array<[string, string]> = [
     'components-passwordfield--the-trailing-edge',
     'passwordfield-trailing-edge'
   ],
-  ['components-textarea--growing', 'textarea-growing']
+  ['components-textarea--growing', 'textarea-growing'],
+  ['components-radiogroup--card-states', 'radiogroup-card-states'],
+  /*
+   * The card variant beside the plain one, which is the only way to see
+   * whether the two read as one component (doc 09 §10) — and the numeric
+   * cross, where the third panel is rule 4 refusing two controls at one edge.
+   */
+  ['components-radiogroup--cards', 'radiogroup-cards'],
+  ['components-numberfield--clearing', 'numberfield-clearing']
 ];
 
 for (const [id, name] of STATES) {
