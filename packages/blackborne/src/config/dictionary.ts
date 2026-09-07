@@ -58,7 +58,14 @@ export const en = {
    * the next keystroke is dropped and nothing else says so, which is a change
    * happening in silence for anyone who cannot see the counter (doc 06 §3).
    */
-  characterLimitReached: 'Character limit reached'
+  characterLimitReached: 'Character limit reached',
+  /**
+   * The two halves of a password field's reveal toggle. The label changes with
+   * the state rather than staying fixed, because a button called "Toggle
+   * visibility" tells somebody what it is and never what it will do.
+   */
+  showPassword: 'Show password',
+  hidePassword: 'Hide password'
 } as const;
 
 export type DictionaryKey = keyof typeof en;

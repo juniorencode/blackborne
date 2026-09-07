@@ -151,7 +151,22 @@ const STATES: Array<[string, string]> = [
    * nothing to offer and still holds its width. If the room ever stops being
    * reserved, those four boxes get wider than the ones beside them.
    */
-  ['components-textfield--clearing', 'textfield-clearing']
+  ['components-textfield--clearing', 'textfield-clearing'],
+  ['components-tagsinput--states', 'tagsinput-states'],
+  ['components-passwordfield--states', 'passwordfield-states'],
+  /*
+   * The three stories that photograph a rule rather than a component.
+   *
+   * A pasted block split into values; the reveal toggle surviving a busy state
+   * where every other edge control yields (doc 07 §2.2 rule 2); and a text
+   * area grown to its content beside a fixed one with the same words in it.
+   */
+  ['components-tagsinput--pasting-a-block', 'tagsinput-pasting'],
+  [
+    'components-passwordfield--the-trailing-edge',
+    'passwordfield-trailing-edge'
+  ],
+  ['components-textarea--growing', 'textarea-growing']
 ];
 
 for (const [id, name] of STATES) {

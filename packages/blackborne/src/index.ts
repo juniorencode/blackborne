@@ -68,6 +68,12 @@ export type {
   EmptyStateVariant
 } from './components/EmptyState';
 
+export { PasswordField } from './components/PasswordField';
+export type {
+  PasswordFieldProps,
+  PasswordFieldSize
+} from './components/PasswordField';
+
 export { NumberField } from './components/NumberField';
 export type {
   NumberFieldProps,
@@ -97,6 +103,9 @@ export type { SpinnerProps, SpinnerSize } from './components/Spinner';
 
 export { Switch } from './components/Switch';
 export type { SwitchProps } from './components/Switch';
+
+export { TagsInput } from './components/TagsInput';
+export type { TagsInputProps, TagsInputSize } from './components/TagsInput';
 
 export { TextArea } from './components/TextArea';
 export type { TextAreaProps } from './components/TextArea';
