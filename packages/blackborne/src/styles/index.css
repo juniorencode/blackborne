@@ -24,6 +24,7 @@
    the list stays visible rather than hiding in a barrel file. */
 @import '../internal/Field/controlBox.css';
 @import '../components/Checkbox/Checkbox.css';
+@import '../components/Dialog/Dialog.css';
 @import '../components/RadioGroup/RadioGroup.css';
 @import '../components/Skeleton/Skeleton.css';
 @import '../components/Spinner/Spinner.css';

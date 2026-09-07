@@ -154,6 +154,14 @@ test.describe('automated accessibility', () => {
        * Checked rather than listed by name, so it applies to the next text-free
        * component too and cannot quietly cover a story that HAS text and lost
        * the rule anyway.
+       *
+       * A second exemption was added here and then removed, and the reason is
+       * worth keeping: several modal layers open at once make each other
+       * `inert`, and axe skips inert subtrees, so a story showing two dialogs
+       * side by side has no measurable text and would need excusing. The
+       * exemption was the wrong fix — the STORY was wrong. A layer is now
+       * photographed one at a time, so nothing needs excusing and this guard
+       * stays strict.
        */
       const hasText = await page.evaluate(
         () =>

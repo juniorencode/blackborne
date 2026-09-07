@@ -51,6 +51,35 @@ arriving and lopsided on a loop that returns to where it started.
 The justification, in case anyone asks for it: a 400 ms transition is elegant
 the first time and is forty seconds lost across a hundred repetitions.
 
+### 2.1 A layer does not animate out
+
+**Rule: something that renders in a portal animates IN and never OUT.** A
+dialog, a drawer, a popover, a menu, a toast being dismissed.
+
+It is not a taste preference; it was measured, and an exit animation costs a
+keypress. The headless base keeps a layer **mounted** while it animates away,
+and a mounted layer is still the innermost one — so it goes on consuming
+`Escape`. With a dialog open inside a dialog, closing the inner one and
+pressing `Escape` again did nothing: the second press reached a panel that was
+already invisible and on its way out.
+
+Measured with two dialogs and a varying gap between the presses: the second was
+dropped at 0 ms, 16 ms and 50 ms, and landed at 150 ms — against a 100 ms exit.
+Focus was not the cause, since at 50 ms it had already returned to the outer
+dialog. What proved it was emulating `prefers-reduced-motion`, where the
+duration tokens collapse to zero: with no exit animation, both presses landed
+every time.
+
+**And that is what makes it a defect rather than a trade.** The interaction
+worked for somebody who asks for less motion and failed for everybody else. §8
+below says one exception in one component destroys trust in the other
+twenty-nine, and a rule that holds only for some readers is worse than that —
+it is a rule nobody can predict.
+
+The entry is kept, because it communicates: where the panel came from, and that
+the page behind it is out of reach. The exit communicates nothing, since the
+person watching it is the one who just asked for it.
+
 ## 3. Timing and perception
 
 | Situation                | Rule                                                                                                            |

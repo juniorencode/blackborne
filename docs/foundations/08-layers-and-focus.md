@@ -28,7 +28,15 @@ are not the same thing.
 | Focus returns to the trigger on close                                          | **Verified** in the browser                            |
 | A toast appears above a modal layer and is keyboard reachable while it is open | **Verified** in the browser                            |
 | Page scroll is locked while a modal layer is open                              | **Verified** in the browser, at one level of nesting   |
-| Scroll locking survives _nested_ modal layers                                  | **Not verified** — see §6                              |
+| Scroll locking survives _nested_ modal layers                                  | **Verified** with `Dialog` — see §6                    |
+
+Everything in that table now has an automated check behind it, in
+`apps/catalog/e2e/layer.spec.ts`, rather than a memory of a spike. Two rows
+gained something the spike could not give them: focus return is asserted
+against a **decoy** control, so "focus went back to the page" does not pass for
+"focus went back to the trigger"; and containment is asserted over twelve `Tab`
+presses rather than one lap, because a trap that leaks on the second lap passes
+the first.
 
 ## 2. The layers, and their tokens
 
@@ -158,6 +166,22 @@ is a separate code path in the same file. The value of writing it here is that
 the prediction can be **wrong** — and a prediction written after the fact is
 worth nothing, because it always agrees with what was found.
 
+### 6.1 The prediction held, and it was checked early
+
+**Verified with `Dialog`, not with `Drawer`.** Two nested dialogs use the same
+`usePreventScroll`, so the mechanism could be exercised as soon as there was one
+layer: open a dialog, open a second, close the second, and the page still does
+not scroll.
+
+Both halves are checked, and the second is the one a lock bug hides behind: a
+reference count that never reaches zero leaves the page **permanently** frozen,
+which is a worse failure than the one above and looks like nothing at all. So
+there is also a check that the page scrolls again once every layer has closed.
+
+The drawer case in the checklist stays as written. It is a different component
+and it will be checked when it exists — the mechanism holding for two dialogs is
+good evidence and not a substitute.
+
 ## 7. Toasts
 
 Two findings, both consequential.
@@ -266,14 +290,31 @@ Portalled components are also the one legitimate place to query the viewport
 
 ## 9. A note on how this is tested
 
-Two findings about verification itself, both learned the hard way while writing
-this document.
+Findings about verification itself, all learned the hard way — the first two
+while writing this document, the rest while building `Dialog` against it.
 
 **Verify after a full reload, never after a hot reload.** The spike showed a
 dialog closing on `Tab` that, after a full page reload, did not reproduce on
 any variant. Hot module replacement leaves layer and focus state stale —
 unsurprisingly, given the module-level queue in §7. A layer bug observed on a
 hot-reloaded page is not a bug until it survives a reload.
+
+**And a reload is not enough if the server is older than the code.** A
+Storybook process left running from the previous day survived a merge, a branch
+switch and a `pnpm verify:clean` that deleted and recreated every
+`node_modules` underneath it. It went on serving a catalog from before any of
+that, and the first symptom was an indexing error naming a story file that had
+not existed when it started. Anything reviewed by eye in that window was
+reviewed against yesterday's code.
+
+The layer batch makes this worse than it sounds, because the catalog imports
+the library's **compiled** stylesheet: a change to a component's CSS is invisible
+until `pnpm --filter blackborne build:css` runs. Two of `Dialog`'s checks were
+diagnosed twice over against a stylesheet that did not contain the fix.
+
+So: for a layer, the sequence is build the CSS, restart the server, then look.
+A long-lived dev server is the one instrument in this repository that reports
+green while checking nothing, and it does it silently.
 
 **jsdom cannot answer focus questions.** A reproduction of that same behavior
 was written and every case passed, because jsdom does not implement real

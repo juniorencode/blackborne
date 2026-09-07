@@ -88,8 +88,37 @@ export default defineConfig({
    * except the screenshots" and another mean "only the screenshots".
    */
   projects: [
-    { name: 'checks', testIgnore: ['**/visual.spec.ts'] },
-    { name: 'visual', testMatch: ['**/visual.spec.ts'] }
+    {
+      name: 'checks',
+      testIgnore: ['**/visual.spec.ts', '**/*.narrow.spec.ts']
+    },
+    { name: 'visual', testMatch: ['**/visual.spec.ts'] },
+    /*
+     * A third project, because this is the first batch of components whose
+     * behaviour depends on the size of the WINDOW.
+     *
+     * Doc 04 §5 grants portalled components the one legitimate viewport
+     * exception — their real container is the window — and `Dialog` uses it to
+     * become full-screen when there is no room to be inset. None of that can
+     * be checked at the fixed 1280×900 above, and widening the check by
+     * resizing inside a test would fight the fixed viewport that every
+     * screenshot depends on.
+     *
+     * 360×640 is a real small window rather than a device: doc 04 §4 forbids
+     * naming these after hardware, and what matters is only that it is below
+     * the threshold the CSS uses and above nothing.
+     *
+     * **Assertions only, no screenshots.** A screenshot here would need its own
+     * baseline set, and `snapshotPathTemplate` carries the platform but not the
+     * project — two projects photographing the same name would overwrite each
+     * other's reference. Bounding boxes and computed styles need no baseline
+     * and say more precisely what is being claimed.
+     */
+    {
+      name: 'narrow',
+      testMatch: ['**/*.narrow.spec.ts'],
+      use: { viewport: { width: 360, height: 640 } }
+    }
   ],
 
   webServer: {

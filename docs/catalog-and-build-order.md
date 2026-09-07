@@ -105,17 +105,17 @@ validates both.
 
 ### Level 3 · Layers — depend on the portal and focus infrastructure
 
-| Component     | Notes                                                                                                                                                                                                                         | Status  |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| Layer base    | **Bottleneck.** Portal, focus, cascading dismissal, scroll locking ([doc 08](./foundations/08-layers-and-focus.md)). Lands **with** `Dialog`, not before it: a token nobody renders is how this library keeps finding defects | Pending |
-| `Dialog`      | The legitimate viewport exception ([doc 04](./foundations/04-responsive.md), §5). Full-screen in a narrow window is automatic, not a variant                                                                                  | Pending |
-| `Drawer`      | Four sides, `start`/`end` flipping with direction. Where doc 08 §6's nested scroll-lock check gets paid                                                                                                                       | Pending |
-| `Tooltip`     | Never the only route to information ([doc 06](./foundations/06-accessibility.md)). A description, not a name: an icon-only button still needs its own                                                                         | Pending |
-| `Popover`     | Does not contain focus, and that is not configurable (doc 08 §4). Publishes the trigger's width, which `Select` and `ComboBox` need                                                                                           | Pending |
-| `Preview`     | The hover card. Named for the base's `PreviewTrigger`, which opens on hover, focus **or long press** — so "hover" would name the one route it is not limited to                                                               | Pending |
-| `Menu`        | Not in the layer batch, by decision. `SplitButton` waits with it                                                                                                                                                              | Pending |
-| `SplitButton` | A primary action plus an arrow opening the secondary ones. Blocked by `Menu`, not by doctrine. The destructive option is not the one focused by default ([doc 09](./foundations/09-behavior.md) §5)                           | Pending |
-| `Toast`       | **Deferral lifted** ([doc 08](./foundations/08-layers-and-focus.md) §7.1): the unstable prefix is on the base's component layer, which a wrapper replaces. Built **last** in the batch                                        | Pending |
+| Component     | Notes                                                                                                                                                                                                                       | Status   |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| Layer base    | **Bottleneck.** Portal, focus, cascading dismissal, scroll locking ([doc 08](./foundations/08-layers-and-focus.md)). Landed **with** `Dialog`, because a token nobody renders is how this library keeps finding defects     | **Done** |
+| `Dialog`      | The legitimate viewport exception ([doc 04](./foundations/04-responsive.md), §5). Full-screen in a narrow window is automatic, not a variant. The scrolling element is the one the base focuses, so the keyboard reaches it | **Done** |
+| `Drawer`      | Four sides, `start`/`end` flipping with direction. Doc 08 §6's nested lock is already verified with two dialogs; the drawer case stays on the checklist                                                                     | Pending  |
+| `Tooltip`     | Never the only route to information ([doc 06](./foundations/06-accessibility.md)). A description, not a name: an icon-only button still needs its own                                                                       | Pending  |
+| `Popover`     | Does not contain focus, and that is not configurable (doc 08 §4). Publishes the trigger's width, which `Select` and `ComboBox` need                                                                                         | Pending  |
+| `Preview`     | The hover card. Named for the base's `PreviewTrigger`, which opens on hover, focus **or long press** — so "hover" would name the one route it is not limited to                                                             | Pending  |
+| `Menu`        | Not in the layer batch, by decision. `SplitButton` waits with it                                                                                                                                                            | Pending  |
+| `SplitButton` | A primary action plus an arrow opening the secondary ones. Blocked by `Menu`, not by doctrine. The destructive option is not the one focused by default ([doc 09](./foundations/09-behavior.md) §5)                         | Pending  |
+| `Toast`       | **Deferral lifted** ([doc 08](./foundations/08-layers-and-focus.md) §7.1): the unstable prefix is on the base's component layer, which a wrapper replaces. Built **last** in the batch                                      | Pending  |
 
 ### Level 4 · Composed fields — `Field` + layers
 
