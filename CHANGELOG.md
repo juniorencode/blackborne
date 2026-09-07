@@ -12,6 +12,37 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- `TagsInput`. Values typed one at a time or pasted as a block and split on
+  Enter, comma, semicolon or pipe, each one through the normalizer. Backspace
+  in an empty box removes the last tag.
+
+  Built on `TagGroup` rather than `TokenField`, and the difference is not
+  cosmetic: `TokenField`'s value is a segment model of tokens interleaved with
+  free text — a rich-text surface for a composer — and it publishes no error
+  slot, so doc 07 §4's label-control-description-error unit could not be
+  assembled on it without hand-wiring the association (non-goal 6). `TagGroup`
+  brings the part that matters: arrow navigation that follows the writing
+  direction, Delete on a focused tag, and a live region announcing additions.
+
+  Duplicates are refused, compared after normalizing, and **`onDuplicate` says
+  so** — refusing in silence is the other half of the mistake, and the message
+  is text about the user's own data, which doc 07 §1 puts with the project.
+
+- `PasswordField`, with a reveal toggle whose accessible name changes with its
+  state. It works while read-only — a value you may need to check — and it is
+  the one control that does not yield the trailing edge to a busy state, because
+  removing it removes a capability rather than an affordance (doc 07 §2.2 rule
+  2). It does **not** score the password: that is a policy, so the project
+  passes a judgement and the library presents it.
+- `showPassword` and `hidePassword` in the dictionary. Two keys and not one: a
+  button called "Toggle visibility" says what it is and never what it will do.
+- `isGrowable` and `maxRows` on `TextArea`: the box follows its content, from
+  `rows` as a floor to `maxRows` as a ceiling, then scrolls
+  ([decision 0012](docs/decisions/0012-growing-is-a-prop-not-a-public-hook.md)).
+  The limit is not optional — unbounded growth turns a long note into a
+  page-length box — and it is expressed in rows because that is the unit the
+  floor is already in.
+
 - `isClearable` on `TextField`: a cross that empties the field and hands focus
   back to it.
 
@@ -308,6 +339,13 @@ minor versions. Every break is listed here with its migration.
   `packages/blackborne`, the visual catalog in `apps/catalog`.
 
 ### Fixed
+
+- `TextArea` carried `min-block-size: fit-content`, which made its height
+  limit unenforceable: a CSS minimum outranks every maximum, so content taller
+  than the ceiling stretched the box to fit all of it. The page-length field
+  the limit exists to prevent, with a limit set. Also removed the drag grip on
+  a growing field, where a dragged height is overwritten by the next keystroke
+  — a grip that appears to work and then undoes itself.
 
 - **A numeric field's value was never at the right type size.** Its size class
   went on the group that wraps the input, and an `<input>` does not inherit
