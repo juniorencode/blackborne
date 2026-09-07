@@ -172,12 +172,12 @@ export const NumberField = forwardRef<HTMLInputElement, NumberFieldProps>(
     ref
   ) {
     /*
-     * Doc 07 §2.2, rule 1: busy wins the trailing edge outright. Before this,
-     * the spinner Field draws there landed on top of the `+` button — two
-     * things in one place, and the one you could press did nothing useful.
+     * Doc 07 §2.2 rule 1: busy takes the edge, and the room the stepper
+     * occupies STAYS. Rendering nothing there closed the gap, so a field
+     * starting to save slid its value 28px across — the field's own busy state
+     * breaking doc 09 §3. The frame makes the buttons unreachable instead.
      */
     const busy = isLoading || isSaving;
-    const hasStepper = isStepperVisible && !busy;
 
     const increaseLabel = useMessage('increment');
     const decreaseLabel = useMessage('decrement');
@@ -221,7 +221,7 @@ export const NumberField = forwardRef<HTMLInputElement, NumberFieldProps>(
              * of the control, which keeps the button's target whole and puts
              * the unit next to the number it belongs to.
              */
-            {...(hasStepper
+            {...(isStepperVisible
               ? {
                   leading: (
                     <Button slot="decrement" className={STEPPER}>
@@ -250,7 +250,18 @@ export const NumberField = forwardRef<HTMLInputElement, NumberFieldProps>(
                   )
                 }
               : {})}
-            className={cx(SIZE[size].frame, busy && 'bb:pe-9')}
+            isLeadingHidden={busy}
+            isTrailingHidden={busy}
+            /*
+             * Room for the busy indicator only when nothing else already
+             * holds that edge. With a stepper the `+` is already 28px of
+             * reserved width and the indicator sits over it; without one the
+             * edge is empty and has to be cleared.
+             */
+            className={cx(
+              SIZE[size].frame,
+              busy && !isStepperVisible && 'bb:pe-9'
+            )}
           >
             <Input
               ref={ref}

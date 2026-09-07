@@ -12,6 +12,20 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- `isClearable` on `TextField`: a cross that empties the field and hands focus
+  back to it.
+
+  It holds its width in every state, including the four where it has nothing to
+  offer — empty, disabled, read-only, busy. A cross that arrived with the first
+  character typed would narrow the box on that keystroke and widen it again on
+  the delete, which is doc 09 §3 broken twice per edit. So turning it on costs
+  the room whether or not there is a value, and that is why it is a prop rather
+  than something every field does.
+
+  Unreachable is literal: the wrapper is `inert` and `aria-hidden`, so the
+  button leaves focus order and the accessibility tree rather than being
+  painted over.
+
 - `isCounterVisible` on `TextField` and `TextArea`, showing how much of
   `maxLength` has been used.
 
@@ -192,6 +206,19 @@ minor versions. Every break is listed here with its migration.
   between them.
 
 ### Changed
+
+- `SearchField`'s clear button moved from an absolutely positioned overlay into
+  the field's frame, and its unconditional trailing padding went with it. There
+  is now **one** mechanism for the contested trailing edge across every field,
+  which is what doc 07 §2.2 exists to guarantee — and the four conditions that
+  make a cross useless are computed in one place instead of three of them in
+  CSS and the fourth in a render branch.
+- A numeric field keeps its stepper's room while loading or saving. It used to
+  render nothing there, which closed the gap and slid the value 28px across —
+  the field's own busy state breaking doc 09 §3.
+- Doc 07 §2.2 rule 1 now says **unreachable, not absent**. It said "not
+  rendered at all", which describes the same thing to a reader and a different
+  thing to a layout. Corrected by building it.
 
 - **Breaking — `NumberField` no longer shows its stepper buttons by default**
   ([decision 0011](docs/decisions/0011-the-stepper-is-opt-in.md)). Pass

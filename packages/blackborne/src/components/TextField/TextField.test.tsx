@@ -349,3 +349,64 @@ test('a counter without a maximum warns instead of drawing a slash', () => {
   expect(document.querySelector('[aria-hidden="true"]')).toBeNull();
   warn.mockRestore();
 });
+
+test('the clear button empties the field and hands focus back', async () => {
+  const user = userEvent.setup();
+  render(<TextField label="Search term" isClearable defaultValue="Ada" />);
+
+  const input = screen.getByRole<HTMLInputElement>('textbox');
+  await user.click(screen.getByRole('button', { name: 'Clear' }));
+
+  expect(input.value).toBe('');
+  /*
+   * Focus goes back into the field, because clearing is the start of typing
+   * something else — and the button has just made itself unreachable, so
+   * leaving focus on it would strand it (doc 06 §3).
+   */
+  expect(document.activeElement).toBe(input);
+});
+
+test('the clear button is unreachable when it has nothing to offer', () => {
+  /*
+   * Four states, one mechanism (doc 07 §2.2 rule 1). Unreachable rather than
+   * absent, because removing it closes its 28px and the value slides across —
+   * the field twitching on the first character typed.
+   *
+   * `queryByRole` is the assertion that matters: the wrapper is aria-hidden
+   * and inert, so the button is out of the accessibility tree and out of
+   * focus order, not merely painted over.
+   */
+  const cross = () => screen.queryByRole('button', { name: 'Clear' });
+
+  /*
+   * Mounted WITH a value and then re-rendered, because `defaultValue` is read
+   * once. Re-rendering with a different one changes nothing — which is what a
+   * default means, and which is why the empty case gets its own mount below.
+   */
+  const { rerender } = render(
+    <TextField label="Q" isClearable defaultValue="Ada" />
+  );
+  expect(cross(), 'with a value').not.toBeNull();
+
+  rerender(<TextField label="Q" isClearable defaultValue="Ada" isLoading />);
+  expect(cross(), 'loading').toBeNull();
+
+  rerender(<TextField label="Q" isClearable defaultValue="Ada" isSaving />);
+  expect(cross(), 'saving').toBeNull();
+
+  rerender(<TextField label="Q" isClearable defaultValue="Ada" isDisabled />);
+  expect(cross(), 'disabled').toBeNull();
+
+  rerender(<TextField label="Q" isClearable defaultValue="Ada" isReadOnly />);
+  expect(cross(), 'read-only').toBeNull();
+});
+
+test('an empty clearable field has nothing to clear', () => {
+  render(<TextField label="Q" isClearable />);
+  expect(screen.queryByRole('button', { name: 'Clear' })).toBeNull();
+});
+
+test('a field that did not ask for a cross does not have one', () => {
+  render(<TextField label="Name" defaultValue="Ada" />);
+  expect(screen.queryByRole('button')).toBeNull();
+});
