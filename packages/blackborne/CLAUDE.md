@@ -131,6 +131,23 @@ Dates, numbers, currency, sorting and plurals are formatted through the
 platform's locale APIs. The time zone is **received, never taken from the
 browser** — the browser's zone is the viewer's machine, not the data's context.
 
+## Dependencies
+
+Two, both **pinned exactly, with no caret**, and they move together:
+`react-aria-components` and `react-aria`.
+
+`react-aria` is there for one thing — `UNSAFE_PortalProvider`, which
+`react-aria-components` does not re-export
+([decision 0013](../../docs/decisions/0013-the-portal-container-arrives-with-the-configuration.md)).
+The pin is not a style choice: `react-aria-components` 1.21.0 depends on
+`react-aria` at exactly `3.52.0`, so **a bump of one must move the other in the
+same commit.** Two copies in the tree do not share the portal context, and the
+symptom is a layer mounting in the wrong place with no error anywhere.
+
+And after touching this file's dependencies, `pnpm verify:clean` — a local
+`pnpm install` reuses what is already in `node_modules`, so a half-applied
+change passes here and fails on CI's clean install.
+
 ## Exports
 
 Expose the minimum. Opening a token or an export later is easy; closing one is
