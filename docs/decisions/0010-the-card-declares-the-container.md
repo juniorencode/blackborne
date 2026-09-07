@@ -56,11 +56,13 @@ a container query:
    as wide as its text, it will not be. This produces no error — it looks
    wrong, which is the harder kind to trace, and is the reason it is written
    here.
-2. **It becomes the containing block for absolutely and fixed positioned
+2. ~~**It becomes the containing block for absolutely and fixed positioned
    descendants.** Our own layers are unaffected: they render in a portal
    ([doc 08](../foundations/08-layers-and-focus.md)). A consumer's own
    `position: fixed` element inside a Card is affected — it will position
-   against the Card rather than against the window.
+   against the Card rather than against the window.~~
+   **Withdrawn on 2026-09-07 — this consequence does not exist.** See the
+   correction below.
 
 And one that is the point of the exercise:
 
@@ -72,9 +74,41 @@ container queries, so a unit test cannot tell whether this is in effect —
 the same reason the visual harness exists
 ([doc 10](../foundations/10-quality-and-verification.md)).
 
+## Correction · 2026-09-07
+
+**Consequence 2 above was wrong, and it is struck through rather than deleted
+so that what was believed stays visible.** It was reasoned from the CSS
+containment spec — layout containment does establish a containing block for
+absolutely and fixed positioned descendants — without checking whether
+`container-type: inline-size` actually applies layout containment.
+
+It does not. Measured in Chromium, by giving one element each of five
+declarations and putting an absolutely and a fixed positioned child inside:
+
+| On the parent                 | computed `contain` | contains `absolute` | contains `fixed` |
+| ----------------------------- | ------------------ | ------------------- | ---------------- |
+| nothing                       | `none`             | no                  | no               |
+| `container-type: inline-size` | `none`             | **no**              | **no**           |
+| `contain: layout`             | `layout`           | yes                 | yes              |
+| both of the above             | `layout`           | yes                 | yes              |
+| `transform: translateZ(0)`    | `none`             | yes                 | yes              |
+
+So a `position: fixed` child of a Card still positions against the window, and
+a consumer relying on that behaviour is not affected by this decision at all.
+**Consequence 1 — no shrink-wrapping — stands**, and remains the only cost.
+
+It was found while building the catalog for `Dialog`, where the plan depended
+on the wrong version being true: portalling three dialogs into three panels was
+supposed to lay each one out inside its panel, and instead all three painted
+over the whole window on top of one another. A claim that had been written down
+and read several times, wrong in the direction that makes something look easy.
+
+The decision itself does not change. What changes is that its list of costs is
+one shorter than it said.
+
 ## Revisit when
 
-A consumer reports the shrink-wrap or the containing-block consequence as a
-real problem in a real screen. The fallback is not to remove it: it is to name
-the container, which keeps N2 working for anything that asks for the Card by
-name while narrowing what matches by accident.
+A consumer reports the shrink-wrap consequence as a real problem in a real
+screen. The fallback is not to remove it: it is to name the container, which
+keeps N2 working for anything that asks for the Card by name while narrowing
+what matches by accident.

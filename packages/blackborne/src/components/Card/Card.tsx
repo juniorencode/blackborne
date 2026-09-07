@@ -92,10 +92,14 @@ export interface CardProps {
  *    to be as wide as its text and it will not be. This is also what doc 04 §3
  *    already asks of every component — max-width, never width — so a
  *    shrink-wrapping Card was swimming against the rule anyway.
- * 2. **It becomes the containing block for absolutely and fixed positioned
- *    descendants.** The library's own layers are unaffected: they render in a
- *    portal (doc 08). A consumer's own `position: fixed` element inside a Card
- *    positions against the Card, not against the window.
+ * 2. ~~It becomes the containing block for absolutely and fixed positioned
+ *    descendants.~~ **This was wrong and is withdrawn.** Measured in Chromium:
+ *    `container-type: inline-size` computes `contain: none` and contains
+ *    neither an absolutely nor a fixed positioned child. Layout containment
+ *    would do it, and `container-type: inline-size` does not apply layout
+ *    containment. So a consumer's `position: fixed` element inside a Card
+ *    still positions against the window, and this costs them nothing. The
+ *    correction and the measurements are in decision 0010.
  *
  * Failure in the other direction is benign, which is what made this safe to do
  * before a real consumer exists: doc 04 §4.1 requires queries to be written
