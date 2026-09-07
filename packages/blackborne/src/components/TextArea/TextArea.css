@@ -13,3 +13,28 @@
      into an unusable sliver. */
   min-block-size: fit-content;
 }
+
+/*
+ * And the two declarations above taken back where the component measures the
+ * height itself (`isGrowable`). Both are the rule above being right for the
+ * wrong field, not an exception bolted on.
+ *
+ * `min-block-size` is the one that does not merely disagree — it BREAKS the
+ * feature, silently and in the one direction that matters. A CSS minimum
+ * outranks every maximum, so with the content taller than `maxRows` the box
+ * would stretch to fit all of it and the limit would do nothing: the
+ * page-length field the limit exists to prevent, with a limit set and a
+ * consumer sure it is honoured. Nothing is lost by dropping it, because the
+ * floor moves into the measurement — `rows` is where the growth starts from,
+ * and a drag can no longer collapse anything.
+ *
+ * `resize` goes because the grip and a height that follows the content answer
+ * the same question, and both together answer it worse than either alone: a
+ * drag writes a height, and the next keystroke overwrites it. That is not a
+ * grip that is ignored — it is one that appears to work and then quietly
+ * undoes itself, which doc 09 §7 puts among the ways to lose somebody's work.
+ */
+.bb-textarea-growable {
+  resize: none;
+  min-block-size: 0;
+}

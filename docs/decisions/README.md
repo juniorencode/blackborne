@@ -9,16 +9,17 @@ follow from it, and when it is worth revisiting.
 A decision is superseded by a later one, never edited in place — the point of
 the folder is that you can see what was believed when.
 
-| #                                                 | Decision                                    | In one line                                                              |
-| ------------------------------------------------- | ------------------------------------------- | ------------------------------------------------------------------------ |
-| [0001](./0001-toolchain-versions.md)              | TypeScript stays on 5.9, ESLint moves to 10 | The lint that enforces the foundations does not support TypeScript 7 yet |
-| [0002](./0002-headless-base.md)                   | React Aria Components as the headless base  | Interaction patterns are inherited, not rewritten                        |
-| [0003](./0003-compiled-prefixed-css.md)           | CSS ships compiled and prefixed             | Tailwind is internal; consumers override variables, not classes          |
-| [0004](./0004-versioned-package-distribution.md)  | Distribution as a versioned package         | No copy-paste templates; every need surfaces as a request                |
-| [0005](./0005-validation-stays-in-the-project.md) | Validation stays in the project             | The library restricts input and presents errors; no schema dependency    |
-| [0006](./0006-no-container-query-polyfill.md)     | No container query polyfill                 | Narrow-first queries degrade gracefully; a project can add one globally  |
-| [0007](./0007-prop-names-follow-the-base.md)      | Prop names follow the headless base         | `isDisabled` and `onPress`, not `disabled` and `onClick`                 |
-| [0008](./0008-the-rule-of-two-splits.md)          | The rule of two splits                      | Components are chosen; props still need a real case                      |
-| [0009](./0009-a-switch-has-no-error-state.md)     | A switch has no error state                 | Immediate action, so nothing to validate later; that is a Checkbox       |
-| [0010](./0010-the-card-declares-the-container.md) | The Card declares the container             | Something had to be first, or the container-query level stayed inert     |
-| [0011](./0011-the-stepper-is-opt-in.md)           | The stepper is opt-in                       | The arrows already step the value; the buttons only cost trailing space  |
+| #                                                     | Decision                                    | In one line                                                              |
+| ----------------------------------------------------- | ------------------------------------------- | ------------------------------------------------------------------------ |
+| [0001](./0001-toolchain-versions.md)                  | TypeScript stays on 5.9, ESLint moves to 10 | The lint that enforces the foundations does not support TypeScript 7 yet |
+| [0002](./0002-headless-base.md)                       | React Aria Components as the headless base  | Interaction patterns are inherited, not rewritten                        |
+| [0003](./0003-compiled-prefixed-css.md)               | CSS ships compiled and prefixed             | Tailwind is internal; consumers override variables, not classes          |
+| [0004](./0004-versioned-package-distribution.md)      | Distribution as a versioned package         | No copy-paste templates; every need surfaces as a request                |
+| [0005](./0005-validation-stays-in-the-project.md)     | Validation stays in the project             | The library restricts input and presents errors; no schema dependency    |
+| [0006](./0006-no-container-query-polyfill.md)         | No container query polyfill                 | Narrow-first queries degrade gracefully; a project can add one globally  |
+| [0007](./0007-prop-names-follow-the-base.md)          | Prop names follow the headless base         | `isDisabled` and `onPress`, not `disabled` and `onClick`                 |
+| [0008](./0008-the-rule-of-two-splits.md)              | The rule of two splits                      | Components are chosen; props still need a real case                      |
+| [0009](./0009-a-switch-has-no-error-state.md)         | A switch has no error state                 | Immediate action, so nothing to validate later; that is a Checkbox       |
+| [0010](./0010-the-card-declares-the-container.md)     | The Card declares the container             | Something had to be first, or the container-query level stayed inert     |
+| [0011](./0011-the-stepper-is-opt-in.md)               | The stepper is opt-in                       | The arrows already step the value; the buttons only cost trailing space  |
+| [0012](./0012-growing-is-a-prop-not-a-public-hook.md) | Growing is a prop, not a public hook        | P6 asks for logic testable without rendering, and a measurement is not   |

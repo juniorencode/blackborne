@@ -66,6 +66,17 @@ clicking twice in a management application usually means duplicating a record.
 **Reserve the space before you have the content.** Nothing should shift when
 the data arrives, and least of all under the cursor.
 
+**The one movement that is allowed is the one the person caused.** A text area
+growing as somebody types into it is feedback, not a surprise: they are the
+reason it moved, they are looking at the place it moved, and the alternative is
+a scrollbar hiding what they just wrote. The rule is about content ARRIVING and
+displacing what somebody was aiming at — a list settling, an image loading, an
+error appearing — and it holds absolutely there.
+
+The test is not "did it move" but **"was the person who moved it the person
+looking at it"**. Written down because the rule as it stood forbade a feature it
+was never about.
+
 ## 4. Communicating the outcome
 
 - **What goes well and was expected, in silence.** Confirming every routine

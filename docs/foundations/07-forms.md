@@ -67,6 +67,13 @@ name field is a defect, not a feature, and the component cannot know which
 field it is in — so the consumer composes the pipeline and owns that call. The
 library ships the transformations and the order, not the policy.
 
+**A field holding SEVERAL values normalizes at commit, not while typing.**
+"As you type" has no meaning when what is being typed is a draft that becomes
+one of many values — and following it literally breaks the field outright: a
+pipeline of `allowOnly(/[A-Z0-9]/)` eats the comma, so nothing can ever be
+committed. So each value goes through the pipeline as it is accepted, and the
+consolation is that the caret problem below does not arise at all.
+
 **And the part that only a browser can answer:** rewriting a value while
 somebody types **moves the caret**. Force upper case and the cursor jumps to
 the end mid-word, which is doc 09 §7 — nothing moves under the cursor —
@@ -111,6 +118,24 @@ It is an order of precedence, decided once here:
 
 2. **The reveal toggle never yields**, because without it a password field
    loses a capability rather than an affordance.
+
+   Which has a consequence the rule did not anticipate: the busy indicator is
+   drawn at that same edge, so it lands on the glyph. The field clears the
+   indicator's lane while busy and the toggle moves inward for the duration.
+   The value does not move — it is aligned from the other end and the box only
+   narrows — and the alternative was a spinner painted across the one control
+   that is meant to stay usable.
+
+   A **disabled** field is different from a busy one, and the toggle is
+   disabled with it. Read-only means "read this", so revealing is that state's
+   own affordance; disabled means "this does not apply", so nothing inside it
+   acts. Disabled rather than removed, so nothing shifts and the reason is
+   visible in the field around it.
+
+   Nothing re-masks on its own — not on blur, not on submit, not on a timer.
+   When a secret should stop being visible is a policy, and policy is the
+   project's.
+
 3. **A suffix affix and a control never share the edge.** An affix is text the
    consumer wrote; a button is a target. Putting them side by side halves the
    target, and doc 06 §3's minimum hit area is not negotiable at compact
@@ -119,6 +144,12 @@ It is an order of precedence, decided once here:
 4. **At most one library-owned control at a time.** A field showing a stepper
    does not also show a clear button: the arrows already reach every value
    including the empty one.
+
+And one exception to the reservation, for a field whose box **wraps**: it
+reserves the indicator's lane in every state rather than only while busy. 36px
+appearing at the end of a wrapping row can push a value onto a new line, which
+changes the height of the field while somebody waits — a worse shift than the
+one reserving the lane was meant to prevent.
 
 The rule behind all four: **the trailing edge belongs to at most one thing, and
 the field decides which.** A field that lets a consumer stack them is a field

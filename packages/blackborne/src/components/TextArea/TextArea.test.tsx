@@ -148,3 +148,157 @@ test('it normalizes what is typed, through the same hook a text field uses', asy
 
   expect(control.value).toBe('AB-12');
 });
+
+/*
+ * ---------------------------------------------------------------------------
+ * Height that follows the content (`isGrowable`).
+ *
+ * BE CLEAR ABOUT WHAT THIS ENVIRONMENT CAN SAY: nothing about height. jsdom
+ * has no layout engine, so `scrollHeight`, `offsetHeight` and `clientHeight`
+ * are all zero, every element is zero tall, and a box that grew and a box that
+ * did not are indistinguishable. There is no assertion to write here that
+ * would fail if growing stopped working — a green run below means the wiring
+ * is right, never that the feature works.
+ *
+ * The feature itself is checked in a browser, against the `Growing` story,
+ * where "type into it and watch it get taller" is one measurement and is worth
+ * more than everything in this file.
+ *
+ * What IS worth asserting here is the part that has nothing to do with layout:
+ * that the prop is off by default and changes nothing for a field that did not
+ * ask for it, that growing does not disturb the value, and that the two ways
+ * of wiring it wrong say so.
+ */
+
+test('growing is off by default, and writes no height when it is off', () => {
+  render(
+    <TextArea label="Notes" defaultValue={'one\ntwo\nthree\nfour\nfive'} />
+  );
+
+  /*
+   * The component has shipped, so the bar is that a field not using the prop
+   * is byte-for-byte what it was: the row count it was given, and no inline
+   * height from anybody.
+   *
+   * Where the real assertion would go: that this box is exactly three rows
+   * tall with five rows of content in it, scrolled. It needs a layout engine.
+   */
+  expect(control().rows).toBe(3);
+  expect(control().getAttribute('style')).toBeNull();
+});
+
+test('an untracked field still holds its own value when growing is off', async () => {
+  /*
+   * The regression this exists to catch is invisible: growing turns the shared
+   * value tracking on, and tracking makes the field internally controlled. If
+   * that ever leaked to fields that did not ask for it, an uncontrolled text
+   * area would stop accepting what is typed into it, everywhere in the
+   * library, and no test about height would notice.
+   */
+  const user = userEvent.setup();
+  render(<TextArea label="Notes" />);
+
+  await user.type(control(), 'typed');
+  expect(control().value).toBe('typed');
+});
+
+test('growing does not disturb the value, uncontrolled or controlled', async () => {
+  const onChange = vi.fn();
+  const user = userEvent.setup();
+
+  const { unmount } = render(
+    <TextArea label="A" isGrowable defaultValue="start" />
+  );
+  await user.type(control(), '!');
+  expect(control().value).toBe('start!');
+  unmount();
+
+  render(<TextArea label="B" isGrowable value="fixed" onChange={onChange} />);
+  await user.type(control(), 'x');
+  expect(onChange).toHaveBeenCalledWith('fixedx');
+  // Still the consumer's value on screen: tracking mirrors, it does not take
+  // over.
+  expect(control().value).toBe('fixed');
+});
+
+test('the height answers a value replaced from outside, not a keystroke', async () => {
+  /*
+   * The mechanism is keyed on the value in a layout effect, which is what
+   * makes a reset, a paste and a controlled value replaced from outside the
+   * same event as typing. Nothing here can see the height change — what it
+   * asserts is that the replacement arrives at the control at all, which is
+   * the input the effect runs on.
+   */
+  const { rerender } = render(
+    <TextArea label="Notes" isGrowable value="one" />
+  );
+  expect(control().value).toBe('one');
+
+  rerender(
+    <TextArea label="Notes" isGrowable value={'one\ntwo\nthree\nfour'} />
+  );
+  expect(control().value).toBe('one\ntwo\nthree\nfour');
+
+  // And the reset, which is the case a keystroke handler would miss entirely.
+  rerender(<TextArea label="Notes" isGrowable value="" />);
+  expect(control().value).toBe('');
+});
+
+test('nothing is measured or written when there is no layout', () => {
+  /*
+   * The one question this environment is the right instrument for. A field in
+   * a collapsed panel or a hidden tab has an offset height of zero, and this
+   * is exactly that: measuring it would write a zero height and the field
+   * would come back invisible.
+   *
+   * The guard leaves the browser's own sizing alone, which is also why the row
+   * count is still what React wrote — the limit is measured by borrowing the
+   * `rows` attribute and putting it back, and a run that bailed never borrowed
+   * it.
+   */
+  render(
+    <TextArea
+      label="Notes"
+      isGrowable
+      maxRows={9}
+      defaultValue={'a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk'}
+    />
+  );
+
+  expect(control().rows).toBe(3);
+  expect(control().getAttribute('style')).toBeNull();
+});
+
+test('maxRows without isGrowable warns rather than doing nothing quietly', () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  render(<TextArea label="Notes" maxRows={8} />);
+
+  // Filtered by prefix rather than counted: the spy also catches whatever
+  // React and the base have to say.
+  const ours = warn.mock.calls.filter(([first]) =>
+    String(first).startsWith('blackborne:')
+  );
+  expect(ours).toHaveLength(1);
+  warn.mockRestore();
+});
+
+test('a ceiling below the floor warns, and the floor wins', () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  render(<TextArea label="Notes" isGrowable rows={6} maxRows={2} />);
+
+  const ours = warn.mock.calls.filter(([first]) =>
+    String(first).startsWith('blackborne:')
+  );
+  expect(ours).toHaveLength(1);
+
+  /*
+   * The floor is still six rows, and it is the row count that says so —
+   * `rows` is a height the field has whether or not it grows, so a smaller
+   * ceiling is a contradiction rather than a limit.
+   *
+   * Where the real assertion would go: that the box never renders shorter than
+   * six rows. It needs a layout engine.
+   */
+  expect(control().rows).toBe(6);
+  warn.mockRestore();
+});

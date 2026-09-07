@@ -62,6 +62,24 @@ content.
    moves in — that is package content earning its place, the same test a new
    prop faces (P5).
 
+### 2.3 Some strings are the base's, and the dictionary cannot reach them
+
+The base ships its own translations, in thirty-odd locales, for the
+instructions attached to patterns it implements — "Press Delete to remove tag"
+on a tag, the name of a search field's clear button. They follow the locale the
+provider supplies, so they are never in the wrong language.
+
+But they are **not overridable from the dictionary**, and that is worth knowing
+before somebody spends an afternoon looking for the key. Where it matters — a
+name a project would want in its own words — the library sets it explicitly and
+wins, which is what `clear` and the numeric steppers do. Where it does not, the
+base's wording stands.
+
+The line: a string a project would plausibly want to change is ours and lives
+in the dictionary. An instruction about how a widget works is the base's, and
+re-declaring all of them would be maintaining a second translation set for
+nothing.
+
 ## 3. Formatting
 
 Delegated to the platform's locale capabilities and to the headless base. The

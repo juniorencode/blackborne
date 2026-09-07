@@ -223,3 +223,120 @@ export const CharacterCount: Story = {
     </div>
   )
 };
+
+/**
+ * **The height follows the content, up to a limit.**
+ *
+ * This story is the instrument, not an illustration. jsdom has no layout
+ * engine, so `scrollHeight` is zero there and the unit tests cannot assert one
+ * thing about height — everything below is only checkable here.
+ *
+ * What to do with it, in order:
+ *
+ * 1. Type into **Grows as you type**. It gets taller with every line, under
+ *    your own caret. Delete back and it comes down again, and stops at three
+ *    rows however empty it gets — `rows` is the floor.
+ * 2. Keep going past six rows. It stops and scrolls, exactly as the field
+ *    without the prop does from the first row. `maxRows` defaults to twice
+ *    `rows`, and unbounded is not on offer: a note in a box with no ceiling
+ *    becomes a page-length field that pushes the rest of the form out of view.
+ * 3. Compare the first two. Same content, same rows, one scrolling and one
+ *    grown to fit — and the grown one arrived that way on mount, not after a
+ *    keystroke, which is the part a handler hung off typing gets wrong.
+ * 4. Look for the resize grip on a growing field. There is none, and that is
+ *    deliberate: a drag writes a height that the next keystroke would
+ *    overwrite, so it would appear to work and then undo itself.
+ *
+ * **On doc 09 §3, which forbids layout shifts.** The growth is one, and it is
+ * the exception the rule does not spell out: §3 is about content ARRIVING and
+ * moving what somebody is aiming at. Here the person typing caused it, at a
+ * caret the growth follows — the box opening up to hold their own sentence is
+ * feedback. The ceiling is what keeps it feedback rather than a surprise.
+ */
+export const Growing: Story = {
+  render: () => (
+    <div
+      className="catalog-stack"
+      style={{ maxWidth: 460, gap: 'var(--bb-field-gap)' }}
+    >
+      <TextArea
+        label="Scrolls at its rows (no isGrowable)"
+        data-testid="fixed"
+        rows={3}
+        defaultValue={
+          'Delivered on Tuesday morning.\n' +
+          'Signed for at reception.\n' +
+          'The driver asked for afternoon slots next time.\n' +
+          'Pallet two was short by a box.'
+        }
+      />
+      <TextArea
+        label="Grown to fit, from the first render"
+        data-testid="grown"
+        isGrowable
+        rows={3}
+        defaultValue={
+          'Delivered on Tuesday morning.\n' +
+          'Signed for at reception.\n' +
+          'The driver asked for afternoon slots next time.\n' +
+          'Pallet two was short by a box.'
+        }
+      />
+      <TextArea
+        label="Grows as you type"
+        data-testid="growing"
+        isGrowable
+        rows={3}
+        description="Three rows to start, six at most, then it scrolls."
+        placeholder="Add a line, then another"
+      />
+      <TextArea
+        label="At its ceiling"
+        data-testid="capped"
+        isGrowable
+        rows={2}
+        maxRows={4}
+        defaultValue={
+          'One.\nTwo.\nThree.\nFour.\nFive.\nSix.\nSeven.\nEight.\nNine.'
+        }
+      />
+      <TextArea
+        label="Never below its floor"
+        data-testid="floor"
+        isGrowable
+        rows={5}
+        defaultValue="One short line."
+      />
+    </div>
+  )
+};
+
+/**
+ * Growing inside a 320px container, which is where wrapping does the work: the
+ * same sentence needs four rows here and two at 460px, and the box arrives at
+ * the height it needs either way.
+ *
+ * **A known limitation is visible here if you go looking**, and it is written
+ * down rather than left to be discovered: the height answers the value, not
+ * the width. Drag the container narrower with the value untouched and the text
+ * re-wraps onto more rows while the box keeps the height it had, until the
+ * next keystroke corrects it. Answering that means observing the element's own
+ * size, which nothing in the library does yet.
+ */
+export const GrowingNarrow: Story = {
+  render: () => (
+    <div
+      data-testid="narrow"
+      style={{ width: 320, border: '1px solid var(--bb-border)', padding: 12 }}
+    >
+      <TextArea
+        label="Observaciones sobre la entrega"
+        isGrowable
+        rows={2}
+        maxRows={8}
+        description="Se guardará junto al registro del pedido."
+        defaultValue="El paquete llegó el martes por la mañana y fue recibido en recepción por la persona de turno, que firmó el albarán sin incidencias."
+      />
+    </div>
+  )
+};
