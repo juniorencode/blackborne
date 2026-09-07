@@ -229,3 +229,213 @@ test('it is controlled, and uncontrolled with a default', async () => {
     true
   );
 });
+
+/*
+ * The card variant.
+ *
+ * What is worth asserting is everything the variant must NOT change. A card is
+ * an appearance, so the accessibility tree, the keyboard and the wiring have to
+ * come out identical — and the one thing that is structural rather than
+ * cosmetic: the card IS the label, so the whole surface is the target.
+ *
+ * Appearance itself is not asserted here. A class name proves nothing about
+ * what an element looks like and turns every refactor into a wall of false
+ * failures; the catalog covers it.
+ */
+
+const cardOptions = (
+  <>
+    <Radio value="basic">Basic</Radio>
+    <Radio value="team">Team</Radio>
+    <Radio value="scale">Scale</Radio>
+  </>
+);
+
+/** The element the state attributes and the press both land on. */
+const cardOf = (name: string) =>
+  screen.getByRole('radio', { name }).closest('label') as HTMLElement;
+
+test('the appearance is the group’s, and nothing about it reaches the DOM', () => {
+  render(
+    <RadioGroup label="Plan" variant="card">
+      {cardOptions}
+    </RadioGroup>
+  );
+
+  // A closed prop on the group, not a value repeated on every option — so a
+  // group of two cards and one bare circle cannot be expressed. And it is
+  // ours, so it must not be spread onto an element as an unknown attribute.
+  const group = screen.getByRole('radiogroup', { name: 'Plan' });
+  expect(group.hasAttribute('variant')).toBe(false);
+  for (const name of ['Basic', 'Team', 'Scale']) {
+    expect(cardOf(name).hasAttribute('variant')).toBe(false);
+  }
+});
+
+test('a card group reads to assistive technology exactly like a plain one', () => {
+  const { unmount } = render(
+    <RadioGroup label="Plan" description="Billed monthly.">
+      {cardOptions}
+    </RadioGroup>
+  );
+  const plain = {
+    described: describedText(screen.getByRole('radiogroup')),
+    names: screen.getAllByRole('radio').map(r => r.getAttribute('value'))
+  };
+  unmount();
+
+  render(
+    <RadioGroup label="Plan" variant="card" description="Billed monthly.">
+      {cardOptions}
+    </RadioGroup>
+  );
+
+  expect(describedText(screen.getByRole('radiogroup'))).toBe(plain.described);
+  expect(
+    screen.getAllByRole('radio').map(r => r.getAttribute('value'))
+  ).toEqual(plain.names);
+  expect(screen.getByRole('radio', { name: 'Team' })).toBeTruthy();
+});
+
+test('the whole card is the target, not the circle inside it', async () => {
+  const onChange = vi.fn();
+  const user = userEvent.setup();
+  render(
+    <RadioGroup label="Plan" variant="card" onChange={onChange}>
+      {cardOptions}
+    </RadioGroup>
+  );
+
+  /*
+   * The card element itself, pressed — not the text, and not the circle. It
+   * selects because the card IS the base's label element rather than a div
+   * decorated to look like one, which is the whole point of the variant: a
+   * card whose only target were a 20px circle would be worse than no card.
+   */
+  await user.click(cardOf('Team'));
+  expect(onChange).toHaveBeenCalledWith('team');
+  expect(screen.getByRole('radio', { name: 'Team' })).toHaveProperty(
+    'checked',
+    true
+  );
+});
+
+test('the card carries the state attributes its appearance is keyed off', async () => {
+  const user = userEvent.setup();
+  render(
+    <RadioGroup label="Plan" variant="card" isInvalid errorMessage="Pick one.">
+      {cardOptions}
+    </RadioGroup>
+  );
+
+  /*
+   * Asserted for the reason CheckboxGroup's group attributes are: every state
+   * of a card is styled from one of these (doc 02 §4), and an upgrade that
+   * moved one would remove an appearance silently — the failure a screenshot
+   * cannot catch, because a baseline only proves a picture has not changed.
+   */
+  expect(cardOf('Basic').hasAttribute('data-invalid')).toBe(true);
+
+  await user.click(cardOf('Scale'));
+  expect(cardOf('Scale').hasAttribute('data-selected')).toBe(true);
+  expect(cardOf('Basic').hasAttribute('data-selected')).toBe(false);
+});
+
+test('cards are one tab stop and the arrows still move within them', async () => {
+  const onChange = vi.fn();
+  const user = userEvent.setup();
+  render(
+    <>
+      <RadioGroup label="Plan" variant="card" onChange={onChange}>
+        {cardOptions}
+      </RadioGroup>
+      <button type="button">After</button>
+    </>
+  );
+
+  await user.tab();
+  expect(screen.getAllByRole('radio')[0]).toHaveProperty('tabIndex', 0);
+
+  await user.keyboard('{ArrowDown}');
+  expect(onChange).toHaveBeenLastCalledWith('team');
+
+  // Keyboard behaviour comes from the base and the variant does not touch it:
+  // one more Tab leaves the group rather than moving to the next card.
+  await user.tab();
+  expect(document.activeElement).toBe(
+    screen.getByRole('button', { name: 'After' })
+  );
+});
+
+test('a disabled card group does not respond', async () => {
+  const onChange = vi.fn();
+  const user = userEvent.setup();
+  render(
+    <RadioGroup label="Plan" variant="card" isDisabled onChange={onChange}>
+      {cardOptions}
+    </RadioGroup>
+  );
+
+  await user.click(cardOf('Team'));
+  expect(onChange).not.toHaveBeenCalled();
+  expect(cardOf('Team').hasAttribute('data-disabled')).toBe(true);
+});
+
+test('a read-only card group shows the choice and refuses to change it', async () => {
+  const onChange = vi.fn();
+  const user = userEvent.setup();
+  render(
+    <RadioGroup
+      label="Plan"
+      variant="card"
+      isReadOnly
+      value="team"
+      onChange={onChange}
+    >
+      {cardOptions}
+    </RadioGroup>
+  );
+
+  await user.click(cardOf('Scale'));
+  expect(onChange).not.toHaveBeenCalled();
+  expect(screen.getByRole('radio', { name: 'Team' })).toHaveProperty(
+    'checked',
+    true
+  );
+
+  /*
+   * Read-only and disabled are not the same thing (doc 07 §6), and the two
+   * attributes are what keeps them looking different: a read-only card loses
+   * its border, a disabled one changes its fill. Read-only also stays
+   * reachable, which is why the appearance may not simply reuse disabled's.
+   */
+  expect(cardOf('Team').hasAttribute('data-readonly')).toBe(true);
+  expect(cardOf('Team').hasAttribute('data-disabled')).toBe(false);
+  await user.tab();
+  expect(screen.getAllByRole('radio')[1]).toHaveProperty('tabIndex', 0);
+});
+
+test('cards work in both orientations, controlled and uncontrolled', () => {
+  const orientations = ['vertical', 'horizontal'] as const;
+
+  for (const orientation of orientations) {
+    const { unmount } = render(
+      <RadioGroup
+        label="Plan"
+        variant="card"
+        orientation={orientation}
+        defaultValue="scale"
+      >
+        {cardOptions}
+      </RadioGroup>
+    );
+    expect(
+      screen.getByRole('radiogroup').getAttribute('aria-orientation')
+    ).toBe(orientation);
+    expect(screen.getByRole('radio', { name: 'Scale' })).toHaveProperty(
+      'checked',
+      true
+    );
+    unmount();
+  }
+});

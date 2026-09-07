@@ -18,3 +18,64 @@
 [data-selected] .bb-radio-dot {
   display: block;
 }
+
+/*
+ * The card variant's INERT states, and they are here rather than in the
+ * variant map for the reason controlBox.css sets out: a precedence rule
+ * cannot be written as a utility.
+ *
+ * A card is the first element in this library that can be selected and
+ * disabled at once, or selected and read-only at once, on one surface — a
+ * circle carries selection in a fill nothing else competes for, and a field
+ * has no selected state at all. Written as utilities,
+ * `data-disabled:bg-surface-disabled` and `data-selected:bg-surface-selected`
+ * carry the same specificity, so the winner is whichever the generator
+ * emitted last. That is the accident Checkbox.css was written to stop
+ * repeating.
+ *
+ * Unlayered on purpose: everything Tailwind emits lives in `@layer utilities`,
+ * and an unlayered rule outranks a layered one whatever its specificity. So
+ * this states the precedence instead of competing for it.
+ */
+
+/*
+ * Disabled wins over everything, including selection: a disabled card shows
+ * WHICH option is selected through the circle and says the group does not
+ * apply through the surface. Safe to write this broadly because a disabled
+ * radio is not focusable, so this can never reach the focus ring.
+ */
+.bb-radio-card[data-disabled] {
+  background-color: var(--bb-surface-disabled);
+  /* The pair rule (doc 03 §4.0): a background brings its own text colour. It
+     holds the same value as --bb-text-disabled, and the pair is what stays
+     correct if that ever stops being true. */
+  color: var(--bb-surface-disabled-on);
+  border-color: var(--bb-border);
+}
+
+/*
+ * Read-only removes the card's EDGE, which is the same answer controlBox.css
+ * gives a field: the frame is what says "you can act on this", so taking it
+ * away says you cannot, through shape rather than through a fourth grey. Doc
+ * 06 §3 wants a channel that survives greyscale, and doc 07 §6 wants read-only
+ * and disabled to look different — a disabled card keeps its border and
+ * changes its fill, a read-only one does the opposite.
+ *
+ * The selected tint deliberately stays: a read-only group exists to show what
+ * was chosen.
+ *
+ * Transparent rather than removed, so the box keeps its size and nothing
+ * shifts when a group becomes read-only (doc 09 §3).
+ *
+ * Two things this knowingly overrides, both the same trade controlBox.css
+ * already makes: a read-only radio is still focusable and arrow-navigable, so
+ * on focus the halo carries the ring on its own with no edge under it.
+ *
+ * `:not([data-invalid])` is the one exception. An invalid group keeps its
+ * danger edge even when read-only, because the border is the only mark of the
+ * error that lands on the option itself — the message below the group is the
+ * other channel, and losing one of two is not a trade worth making silently.
+ */
+.bb-radio-card[data-readonly]:not([data-invalid]) {
+  border-color: transparent;
+}
