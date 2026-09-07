@@ -10,6 +10,7 @@ import {
   CONTROL_INSIDE,
   CONTROL_TEXT,
   ControlFrame,
+  EDGE_CONTROL,
   Field,
   type ControlAlign
 } from '../../internal/Field';
@@ -57,16 +58,20 @@ const INPUT = cx(
 );
 
 const STEPPER = cx(
-  'bb:box-border bb:flex bb:w-7 bb:flex-none bb:items-center bb:justify-center',
-  'bb:bg-transparent bb:text-text-muted',
-  'bb:border-0 bb:cursor-pointer',
-  'bb:data-hovered:bg-surface-hover bb:data-hovered:text-text',
-  'bb:data-pressed:bg-surface-active',
-  // The buttons sit inside the group's focus ring, so they must not draw a
-  // second one — the library has one ring, and two nested is noise.
-  'bb:outline-hidden',
-  'bb:data-focus-visible:bg-surface-hover bb:data-focus-visible:text-text',
-  'bb:data-disabled:cursor-not-allowed bb:data-disabled:text-text-disabled'
+  EDGE_CONTROL,
+  /*
+   * A column rather than a floating target: it spans the frame's full height
+   * flush against the inner edge, so it takes a fixed width and no radius
+   * where the cross and the toggle take the hit-area token and round
+   * themselves.
+   *
+   * Worth knowing that this makes it 28px at BOTH densities where the others
+   * go to 24px at compact. It is deliberate here — the height already comes
+   * from the frame, so the width is the whole target — but it is also the one
+   * edge control that does not follow the density token, which is recorded
+   * rather than settled.
+   */
+  'bb:w-7 bb:flex-none'
 );
 
 export interface NumberFieldProps extends Omit<
