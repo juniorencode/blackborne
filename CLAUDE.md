@@ -33,24 +33,30 @@ this file is out of date. Fix this file.
 assuming anything exists.
 
 At the time of writing: all ten foundations are written, the pipeline is
-complete, and **twenty components exist** — the ten simple fields and controls,
-`Button`, and the flat pieces around them (`Alert`, `Badge`, `Card`,
-`EmptyState`, `Separator`, `Skeleton`, `Spinner`, `VisuallyHidden`).
+complete, and **twenty-two components exist** — the ten simple fields and
+controls, `Button`, the flat pieces around them (`Alert`, `Badge`, `Card`,
+`EmptyState`, `Separator`, `Skeleton`, `Spinner`, `VisuallyHidden`), and the
+first two layers, `Dialog` and `Drawer`.
 
-**Nothing that needs a portal exists yet**, and that batch is what is being
-built now: the layer base with `Dialog`, then `Drawer`, `ConfirmDialog`,
-`Tooltip`, `Popover`, `Preview` and `Toast`. `Menu` is deliberately not in it,
-and `SplitButton` waits with `Menu`.
+**The layer batch is what is being built now.** The base landed with `Dialog`,
+`Drawer` came next, and what is left is `ConfirmDialog`, `Tooltip`, `Popover`,
+`Preview` and `Toast` — in that order, with `Toast` last. `Menu` is
+deliberately not in this batch, and `SplitButton` waits with `Menu`.
+
+The shared parts of a modal layer live in `src/internal/Layer/`. A new one
+takes the scrim and the panel from there and decides two things of its own:
+where the panel lands and which of its edges is free.
 
 So the rules are settled and you should follow them rather than invent. Two
 things to keep in mind anyway:
 
-- **Some rules are marked as not yet verified, or openly open.** Document 08 §6
-  leaves scroll locking across nested layers openly pending — with a written
-  prediction, so it can be wrong — and §5.1 leaves it undecided whether a
-  popover holding a small form may be dismissed by a click outside. Document 07
-  §4.1 leaves the space an error message occupies open. Where a document says
-  something is unverified, treat it as unverified — do not quietly promote it.
+- **Some rules are openly open.** Document 08 §5.1 leaves it undecided whether
+  a popover holding a small form may be dismissed by a click outside, and
+  document 07 §4.1 leaves the space an error message occupies open. Where a
+  document says something is unverified, treat it as unverified — do not
+  quietly promote it. Document 08 §6's nested scroll lock used to be on this
+  list and is now verified; the prediction written before the measurement is
+  kept in §6.1, because a prediction recorded afterwards is worth nothing.
 - **The file layout of a component is settled**, by `Button`, and written down
   in [`docs/contributing/new-component.md`](./docs/contributing/new-component.md) §0.
 

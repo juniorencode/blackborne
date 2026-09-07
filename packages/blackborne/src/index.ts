@@ -69,6 +69,9 @@ export type { CheckboxGroupProps } from './components/CheckboxGroup';
 export { Dialog, useDialog } from './components/Dialog';
 export type { DialogProps, DialogSize, DialogState } from './components/Dialog';
 
+export { Drawer } from './components/Drawer';
+export type { DrawerProps, DrawerSide, DrawerSize } from './components/Drawer';
+
 export { EmptyState } from './components/EmptyState';
 export type {
   EmptyStateProps,

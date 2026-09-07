@@ -12,6 +12,35 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **`Drawer`** — a modal panel anchored to an edge of the window: a detail view
+  beside a listing, a filter panel, a bottom sheet.
+
+  **Four sides, and `start`/`end` flip with the writing direction.** A
+  `side="start"` drawer is on the left in English and on the right in Arabic,
+  with its border and its slide flipping too. `top` and `bottom` are literal,
+  deliberately: doc 05 §4 is about direction and not about writing mode, and
+  this library supports RTL rather than vertical text.
+
+  **One meaning for `size`: how thick, on whichever axis the side chose.** The
+  numbers are the container scale, the same three a dialog's widths come from,
+  so a form inside resolves its own container queries against exactly the value
+  the drawer was sized by.
+
+  **It needs no narrow-window rule**, where a dialog has one. The thickness is
+  a maximum, so a drawer thicker than its window fills the window instead of
+  overflowing it. One less rule and one less number to choose.
+
+  It is a separate component rather than a `variant` on `Dialog`, for the reason
+  the catalog already used to reject a multiple-value `NumberField`: a `side`
+  means nothing on a centred dialog, and `size` would measure a different axis
+  depending on `side`. `useDialog()` works inside it — a drawer is a dialog in
+  the sense that matters, so a footer button closes it the same way.
+
+  The slide is the most justified animation in the library, and the one place
+  logical CSS runs out: there is no logical `translate`, so its direction is
+  read from the locale rather than from a physical prop. Doc 05 §4 records that
+  gap now.
+
 - **`Dialog`**, and with it the layer base — the second of the two bottlenecks
   in the build order. A titled panel above the page, with the page behind it
   out of reach.
@@ -418,6 +447,20 @@ minor versions. Every break is listed here with its migration.
   `packages/blackborne`, the visual catalog in `apps/catalog`.
 
 ### Fixed
+
+- **The container scale was not injectable, though doc 04 said it was.** It was
+  declared inside `@theme inline`, which substitutes the value into each utility
+  and emits no variable — measured, `--bb-container-narrow` appeared nowhere in
+  the compiled stylesheet, so redefining it changed nothing. It is now declared
+  outside that block, and `bb:max-w-narrow` compiles to
+  `max-width: var(--bb-container-narrow)`.
+
+  **Half of it still cannot be injected, and that is a CSS limit rather than a
+  choice:** a container query's condition may not contain `var()`, so the
+  generator bakes the number into `@container (width >= 24rem)`. Redefining the
+  token moves every width measured against the scale and leaves the query
+  thresholds where they were. Doc 04 §4.0 states that asymmetry instead of
+  promising both.
 
 - **`--bb-surface-raised` was elevation pointing the wrong way in light mode.**
   It is the token named for menus, popovers and dialogs, defined since the token

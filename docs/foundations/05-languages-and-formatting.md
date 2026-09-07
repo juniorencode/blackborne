@@ -113,6 +113,20 @@ operates in. It receives it.
 
 - **Never physical measurements.** Always start and end, never left and right.
   It is half of the support, and it is watched by lint (doc 03, rule 4).
+- **The block axis is not part of this, and `top`/`bottom` are literal.** This
+  rule is about direction — which way the inline axis runs — and not about
+  writing mode. The library supports RTL; it does not support vertical text, and
+  in every locale it claims to support the block start is the top. So a drawer
+  takes `start | end | top | bottom` and only the first two flip. Written down
+  because the asymmetry looks like an oversight, and somebody will otherwise
+  "fix" it into `block-start`, which nobody reading a prop list understands.
+- **There is no logical `translate`, and that is the one gap you will hit.**
+  Placement, padding, borders and radii all have logical properties that flip on
+  their own. Movement does not: a percentage on the x axis is physical, positive
+  meaning right, in every direction. Anything that SLIDES therefore needs the
+  direction as a value — read from the locale with the base's `useLocale`, never
+  detected, and confined to as few rules as possible with the reason beside
+  them. `Drawer` is the worked example.
 - **Direction is derived from the language**, not passed separately: switching
   to an RTL language flips the interface on its own.
 - **Directional icons do flip** (navigation arrows, previous/next indicators,
