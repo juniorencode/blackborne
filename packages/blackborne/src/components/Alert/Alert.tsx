@@ -1,88 +1,42 @@
 import { forwardRef } from 'react';
+import { ToneGlyph, type Tone } from '../../internal/ToneGlyph';
 import { cx } from '../../internal/cx';
 
-export type AlertTone = 'info' | 'success' | 'warning' | 'danger';
+/*
+ * The same four the rest of the library uses, re-exported under this
+ * component's own name because it is public API and renaming a type is a
+ * breaking change (doc 02 §10). The glyphs that carry them are shared —
+ * see internal/ToneGlyph for why they are not copied per component.
+ */
+export type AlertTone = Tone;
 
-interface ToneStyle {
-  /**
-   * The soft background and the text colour that goes on it, always together.
-   * There is no standalone "text on info" token — there is a pair, and the two
-   * halves are never taken from different families (doc 03 §4.0).
-   */
-  surface: string;
-  /** The shapes drawn inside the shared `<svg>`. See the note above GLYPH. */
-  glyph: React.ReactNode;
-}
+/**
+ * The soft background and the text colour that goes on it, always together.
+ * There is no standalone "text on info" token — there is a pair, and the two
+ * halves are never taken from different families (doc 03 §4.0).
+ *
+ * The glyph used to live here too, and moved to internal/ToneGlyph when a
+ * second component needed three of the four. What is left is the only thing
+ * that is an Alert's own: which surface it paints.
+ */
+type ToneSurface = string;
 
 /*
- * WHY THIS COMPONENT DRAWS ANYTHING AT ALL.
+ * Which surface each tone paints. The GLYPH that goes with it is shared —
+ * internal/ToneGlyph, which carries the reasoning for why the library draws
+ * one at all: doc 06 §3 forbids colour as the only channel, and these four
+ * soft backgrounds are four near-identical greys once the hue is gone.
  *
- * Doc 06 §3 forbids colour as the only channel: in greyscale a warning and a
- * danger alert must still be tellable apart, and the four soft backgrounds are
- * four near-identical greys once the hue is gone. Something else has to carry
- * the tone.
- *
- * It cannot be a received icon. Icons arrive as children and the library
- * distributes none (doc 02 §11), so depending on the consumer to pass one
- * would make the accessibility guarantee optional — and doc 02 §11.5 names an
- * icon as the only carrier of meaning as the thing never accepted.
- *
- * So the Alert draws its own. That is not an icon set arriving by the back
- * door: doc 02 §11.4 already separates icons the library DRAWS — a select's
- * chevron, a pagination arrow — from icons it RECEIVES, and this is the same
- * case Checkbox's tick and Spinner's arc are. Deliberately primitive: circles,
- * straight lines and one triangle, four shapes total, and nothing that would
- * ever be mistaken for a general-purpose icon.
- *
- * The silhouettes are what does the work, so they are chosen to differ before
- * the interior does: the warning is the only triangle, and the "i" and the "!"
- * are each other's inverse — dot above stem against stem above dot — so the
- * two most confusable tones read differently even at 16px in greyscale.
- *
- * They are decorative in the accessibility sense: the message says what
- * happened, and a glyph announced as well would be one more thing to listen
- * past. Hidden from the reader accordingly (doc 06 §3).
+ * Only the surface is an Alert's own, and the pairing rule is why it is one
+ * entry rather than two: a background and the text colour that goes on it are
+ * taken together, never from different families (doc 03 §4.0).
  */
-const TONE: Record<AlertTone, ToneStyle> = {
-  info: {
-    surface: 'bb:bg-info-subtle bb:text-info-subtle-on',
-    glyph: (
-      <>
-        <circle cx="8" cy="8" r="6.25" />
-        <circle cx="8" cy="4.9" r="0.9" fill="currentColor" stroke="none" />
-        <path d="M8 7.4 L8 11.4" />
-      </>
-    )
-  },
-  success: {
-    surface: 'bb:bg-success-subtle bb:text-success-subtle-on',
-    glyph: (
-      <>
-        <circle cx="8" cy="8" r="6.25" />
-        <path d="M5.1 8.2 L7.1 10.2 L10.9 6" strokeLinejoin="round" />
-      </>
-    )
-  },
-  warning: {
-    surface: 'bb:bg-warning-subtle bb:text-warning-subtle-on',
-    glyph: (
-      <>
-        <path d="M8 2.2 L14.6 13.4 L1.4 13.4 Z" strokeLinejoin="round" />
-        <path d="M8 6.6 L8 9.9" />
-        <circle cx="8" cy="11.7" r="0.9" fill="currentColor" stroke="none" />
-      </>
-    )
-  },
-  danger: {
-    surface: 'bb:bg-danger-subtle bb:text-danger-subtle-on',
-    glyph: (
-      <>
-        <circle cx="8" cy="8" r="6.25" />
-        <path d="M5.8 5.8 L10.2 10.2 M10.2 5.8 L5.8 10.2" />
-      </>
-    )
-  }
-} satisfies Record<AlertTone, ToneStyle>;
+const TONE: Record<AlertTone, ToneSurface> = {
+  info: 'bb:bg-info-subtle bb:text-info-subtle-on',
+  success: 'bb:bg-success-subtle bb:text-success-subtle-on',
+  warning: 'bb:bg-warning-subtle bb:text-warning-subtle-on',
+  danger: 'bb:bg-danger-subtle bb:text-danger-subtle-on'
+} satisfies Record<AlertTone, ToneSurface>;
 
 /*
  * Shared by every tone. Notes on the parts that are not obvious:
@@ -175,7 +129,7 @@ export const Alert = forwardRef<HTMLDivElement, AlertProps>(function Alert(
   { tone = 'info', title, children, className, style },
   ref
 ) {
-  const { surface, glyph } = TONE[tone];
+  const surface = TONE[tone];
 
   return (
     <div
@@ -192,28 +146,7 @@ export const Alert = forwardRef<HTMLDivElement, AlertProps>(function Alert(
       className={cx(BASE, surface, className)}
       {...(style === undefined ? {} : { style })}
     >
-      <svg
-        /*
-         * Width is the library's one icon size (doc 03 §4.6d); HEIGHT is one
-         * line box, so the glyph centres against the FIRST line of the message
-         * rather than against the whole paragraph. The viewBox does the
-         * centring itself — preserveAspectRatio keeps the drawing 16×16 and
-         * places it mid-height — so this stays correct at any density and any
-         * text size, with no second number to keep in step. The same problem
-         * .bb-inline-control-box solves for a checkbox, without needing a
-         * class of its own.
-         */
-        className="bb:w-4 bb:h-[1lh] bb:flex-none"
-        viewBox="0 0 16 16"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        // Decorative: the text says what happened (doc 06 §3).
-        aria-hidden="true"
-      >
-        {glyph}
-      </svg>
+      <ToneGlyph tone={tone} />
 
       <div
         className={cx(
