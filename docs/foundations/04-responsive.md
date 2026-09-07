@@ -66,9 +66,36 @@ screen.
 Naming things `mobile`, `tablet` or `desktop` is forbidden: it drags in false
 assumptions about the device, the pointer type and the window size.
 
-The scale is **short** (three or four steps) and **injectable**: a project can
-redefine the thresholds the same way it redefines tokens. Every additional step
-multiplies the test matrix, so they are justified one at a time.
+The scale is **short** (three or four steps). Every additional step multiplies
+the test matrix, so they are justified one at a time.
+
+### 4.0 How injectable it actually is
+
+This section used to say the scale was injectable — "a project can redefine the
+thresholds the same way it redefines tokens" — and that was **half true and
+never checked**. It is stated precisely here instead.
+
+Measured in the compiled stylesheet: the scale was declared inside
+`@theme inline`, which substitutes a value into each utility and emits no
+variable, so `--bb-container-narrow` appeared nowhere at all. A consumer
+redefining it changed nothing. The claim had been false since the token layer
+was written, and nothing had read the scale hard enough to notice.
+
+It is now declared outside that block, and the two halves behave differently:
+
+- **What reads the scale as a length is injectable.** `bb:max-w-narrow`
+  compiles to `max-width: var(--bb-container-narrow)`, so redefining the token
+  moves it — at runtime, in one scope, like any other token.
+- **A query threshold is not, and cannot be.** A container query's condition may
+  not contain `var()`, so the number is baked into
+  `@container (width >= 24rem)` by the generator. This is a CSS limit and not a
+  decision; there is no version of this library where that value is
+  overridable.
+
+So redefining `--bb-container-narrow` moves every width measured against it and
+leaves the breakpoints where they were. That asymmetry is worth knowing before
+relying on either half, and it is the reason this is written out rather than
+summarised as "injectable".
 
 ### 4.1 Narrow to wide, always
 

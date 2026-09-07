@@ -25,6 +25,7 @@
 @import '../internal/Field/controlBox.css';
 @import '../components/Checkbox/Checkbox.css';
 @import '../components/Dialog/Dialog.css';
+@import '../components/Drawer/Drawer.css';
 @import '../components/RadioGroup/RadioGroup.css';
 @import '../components/Skeleton/Skeleton.css';
 @import '../components/Spinner/Spinner.css';
@@ -207,15 +208,49 @@
   /* --- Container sizes instead: a SHORT scale, named relative to the
          container and never to a device. "mobile", "tablet" and "desktop"
          are forbidden names — they smuggle in assumptions about the device,
-         the pointer and the window (doc 04 §4). Injectable: a consumer
-         redefines these like any other token. */
+         the pointer and the window (doc 04 §4).
+
+         Cleared here and DECLARED BELOW, outside the inline block. See the
+         note there: `inline` would make this scale unreachable at runtime,
+         which is the one thing doc 04 §4 promises about it. */
   --container-*: initial;
-  --container-narrow: 24rem;
-  --container-medium: 30rem;
-  --container-wide: 48rem;
 
   /* --- Spacing is left FREE on purpose. Doc 03 §4.4 warns that
          over-restricting backfires: a system that gets in the way every day
          gets switched off. Padding, margins and gaps are already used
          coherently, so they are not policed. */
+}
+
+/*
+ * The container scale, declared OUTSIDE `@theme inline` — the only part of the
+ * theme that is.
+ *
+ * `inline` substitutes a value into each utility and emits no variable, which
+ * is right for everything above: it halves the CSS and keeps one public name
+ * per token. For this scale it is wrong, and the reason is a promise doc 04 §4
+ * makes about it: "injectable — a consumer redefines these like any other
+ * token".
+ *
+ * Measured, with the scale inline: `--bb-container-narrow` appears nowhere in
+ * the compiled sheet, so a consumer redefining it changed nothing at all. The
+ * claim was false and had been since the token layer was written. Declared
+ * here, `bb:max-w-narrow` compiles to `max-width: var(--bb-container-narrow)`
+ * and the override works.
+ *
+ * **One half of it still cannot be injected, and that is a CSS limit rather
+ * than a choice:** a container query's condition cannot contain `var()`, so
+ * Tailwind bakes the number into `@container (width >= 24rem)`. Redefining the
+ * token moves every width that READS the scale and leaves the query thresholds
+ * where they were. Doc 04 §4 says so now instead of promising both.
+ *
+ * It also gives a layer's thickness somewhere to come from. `--container-*`
+ * feeds `max-w-*` and not `max-h-*` — measured, `max-h-narrow` compiles to
+ * nothing — and a drawer on the block axis needs the same three numbers as one
+ * on the inline axis. Reading the variable directly is what lets both axes
+ * share a single source instead of a parallel scale with the same values in it.
+ */
+@theme {
+  --container-narrow: 24rem;
+  --container-medium: 30rem;
+  --container-wide: 48rem;
 }
