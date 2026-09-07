@@ -90,11 +90,25 @@ they were counted, each was decided by whoever added it:
 They cannot all be present, and the resolution is not "make room for all six".
 It is an order of precedence, decided once here:
 
-1. **Busy wins outright.** While a field is waiting or saving, the clear button
-   and the stepper are not rendered at all. Offering to clear a value that is
+1. **Busy wins outright — but the space stays.** While a field is waiting or
+   saving, the clear button and the stepper stop being reachable: hidden from
+   the reader, unfocusable, unclickable. Offering to clear a value that is
    mid-flight is offering an action the field cannot honour, and doc 06 §4
    point 7 is explicit that a control which cannot act is worse than one that
    is absent.
+
+   What must NOT happen is the space closing up behind it. A control at the
+   edge occupies real width, so removing it widens the box and the value slides
+   across — doc 09 §3, nothing moves when data arrives, broken by the field's
+   own busy state. The same applies to a clear button that appears with the
+   first character typed: reserve its room from the start, or every field grows
+   a twitch.
+
+   So the rule is **unreachable, not absent**. That was written as "not
+   rendered at all" and it was wrong in a way only building it showed: the two
+   phrases describe the same thing to a reader and different things to a
+   layout.
+
 2. **The reveal toggle never yields**, because without it a password field
    loses a capability rather than an affordance.
 3. **A suffix affix and a control never share the edge.** An affix is text the

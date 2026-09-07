@@ -451,3 +451,64 @@ export const CharacterCount: Story = {
     </div>
   )
 };
+
+/**
+ * The clear button — and what it costs.
+ *
+ * It holds its width in **every** state, including the four where it has
+ * nothing to offer: empty, disabled, read-only, busy. Doc 07 §2.2 rule 1 calls
+ * that unreachable rather than absent, and the reason is the second panel: a
+ * cross that arrived with the first character typed would narrow the box on
+ * that keystroke and widen it again on the delete, which is doc 09 §3 broken
+ * twice per edit.
+ *
+ * So the room is spent whether or not there is a value. That is the trade, and
+ * it is why this is a prop rather than something every field does.
+ *
+ * Unreachable is literal: the wrapper is `inert` and `aria-hidden`, so the
+ * button is out of focus order and out of the accessibility tree, not painted
+ * over. Tab through the second panel — nothing stops on a cross you cannot
+ * see.
+ */
+export const Clearing: Story = {
+  render: () => (
+    <div className="catalog-pair">
+      <Scope label="With something to clear">
+        <div className="catalog-stack">
+          <TextField label="Filter" isClearable defaultValue="Lovelace" />
+          <TextField
+            label="With a description"
+            isClearable
+            defaultValue="AB-1234"
+            description="Press the cross, and the cursor comes back here."
+          />
+          <TextField
+            label="And a counter beside it"
+            isClearable
+            isCounterVisible
+            maxLength={20}
+            defaultValue="Both at once"
+          />
+        </div>
+      </Scope>
+      <Scope label="Nothing to offer — the room stays">
+        <div className="catalog-stack">
+          <TextField label="Empty" isClearable placeholder="Type to see it" />
+          <TextField
+            label="Disabled"
+            isClearable
+            defaultValue="Ada"
+            isDisabled
+          />
+          <TextField
+            label="Read only"
+            isClearable
+            defaultValue="Ada"
+            isReadOnly
+          />
+          <TextField label="Saving" isClearable defaultValue="Ada" isSaving />
+        </div>
+      </Scope>
+    </div>
+  )
+};

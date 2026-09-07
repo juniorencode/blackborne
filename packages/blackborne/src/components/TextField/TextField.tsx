@@ -1,4 +1,4 @@
-import { forwardRef } from 'react';
+import { forwardRef, useRef } from 'react';
 import {
   Input,
   TextField as AriaTextField,
@@ -10,6 +10,7 @@ import {
   CONTROL_TEXT,
   ControlFrame,
   CharacterCounter,
+  ClearButton,
   Field,
   useFieldValue,
   type ControlAlign
@@ -128,6 +129,20 @@ export interface TextFieldProps extends Omit<
    * announced once, because that is the moment something stops working.
    */
   isCounterVisible?: boolean;
+  /**
+   * Show a cross that empties the field.
+   *
+   * It holds its width in every state, including the ones where it has nothing
+   * to offer — empty, disabled, read-only, busy. Doc 07 §2.2 rule 1: a control
+   * that appears with the first character typed makes the box narrower on that
+   * keystroke and wider again when it is deleted, which is doc 09 §3 broken
+   * twice per edit.
+   *
+   * So turning this on costs the room whether or not there is a value. That is
+   * the trade, and it is why it is a prop rather than something every field
+   * does.
+   */
+  isClearable?: boolean;
   className?: string;
 }
 
@@ -164,18 +179,40 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
       align = 'start',
       normalize,
       isCounterVisible = false,
+      isClearable = false,
       className,
       ...ariaProps
     },
     ref
   ) {
+    const control = useRef<HTMLInputElement | null>(null);
     const normalized = useFieldValue<HTMLInputElement>({
       normalize,
-      isTracked: isCounterVisible,
+      // Either feature needs the value: one to count it, one to know
+      // whether there is anything to clear.
+      isTracked: isCounterVisible || isClearable,
       value: ariaProps.value,
       defaultValue: ariaProps.defaultValue,
       onChange: ariaProps.onChange
     });
+
+    const busy = isLoading || isSaving;
+    const hasNothingToClear =
+      busy ||
+      (normalized.value ?? '') === '' ||
+      (ariaProps.isDisabled ?? false) ||
+      (ariaProps.isReadOnly ?? false);
+
+    const clear = (): void => {
+      normalized.props.onChange?.('');
+      /*
+       * And put the cursor back in the field. Clearing is the start of typing
+       * something else, and leaving focus on a button that has just made
+       * itself unreachable would strand it — focus has to land somewhere
+       * predictable (doc 06 §3).
+       */
+      control.current?.focus();
+    };
 
     /*
      * A counter with nothing to count against is a number and a slash. Loud in
@@ -234,13 +271,14 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
              * well — where reserving it on the input alone would leave the
              * affix and the spinner in the same place (doc 07 §2.2).
              */
-            className={cx(
-              SIZE[size].frame,
-              (isLoading || isSaving) && 'bb:pe-9'
-            )}
+            {...(isClearable
+              ? { trailing: <ClearButton onPress={clear} /> }
+              : {})}
+            isTrailingHidden={hasNothingToClear}
+            className={cx(SIZE[size].frame, busy && !isClearable && 'bb:pe-9')}
           >
             <Input
-              ref={mergeRefs(ref, normalized.ref)}
+              ref={mergeRefs(ref, normalized.ref, control)}
               className={cx(INPUT, SIZE[size].text, ALIGN[align])}
               {...(placeholder === undefined ? {} : { placeholder })}
             />

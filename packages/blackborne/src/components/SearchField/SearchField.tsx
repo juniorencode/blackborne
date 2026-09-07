@@ -1,12 +1,17 @@
 import { forwardRef } from 'react';
 import {
-  Button,
   Input,
   SearchField as AriaSearchField,
   type SearchFieldProps as AriaSearchFieldProps
 } from 'react-aria-components';
-import { CONTROL_BOX, CONTROL_TEXT, Field } from '../../internal/Field';
-import { useMessage } from '../../config';
+import {
+  CONTROL_INSIDE,
+  CONTROL_TEXT,
+  ClearButton,
+  ControlFrame,
+  Field,
+  useFieldValue
+} from '../../internal/Field';
 import { cx } from '../../internal/cx';
 
 export type SearchFieldSize = 'sm' | 'md' | 'lg';
@@ -52,11 +57,18 @@ export type SearchFieldSize = 'sm' | 'md' | 'lg';
  * makes a field, a select and a button of the same size line up in a row
  * (doc 03 §9).
  */
-const SIZE: Record<SearchFieldSize, string> = {
-  sm: 'bb:h-control-sm bb:text-xs',
-  md: 'bb:h-control-md bb:text-md',
-  lg: 'bb:h-control-lg bb:text-lg'
-} satisfies Record<SearchFieldSize, string>;
+interface SizeClasses {
+  /** The height, on the frame — it is the frame that draws the box. */
+  frame: string;
+  /** The type size, on the CONTROL: an input inherits no font. */
+  text: string;
+}
+
+const SIZE: Record<SearchFieldSize, SizeClasses> = {
+  sm: { frame: 'bb:h-control-sm', text: 'bb:text-xs' },
+  md: { frame: 'bb:h-control-md', text: 'bb:text-md' },
+  lg: { frame: 'bb:h-control-lg', text: 'bb:text-lg' }
+} satisfies Record<SearchFieldSize, SizeClasses>;
 
 /*
  * The control's appearance is TextField's, class for class, down to the
@@ -70,89 +82,13 @@ const SIZE: Record<SearchFieldSize, string> = {
  * usually the wrong one. The third field is when it earns a home.
  */
 const INPUT = cx(
-  CONTROL_BOX,
-  CONTROL_TEXT,
   /*
-   * The trailing padding, so the value never runs under whatever is sitting
-   * at that edge. Same mechanism and same 36px as TextField reserves for its
-   * busy indicator — one measurement for the contested edge, not two.
-   *
-   * Unconditional here, where TextField makes it conditional, and that is the
-   * one deliberate divergence: on this field the trailing edge is occupied in
-   * almost every state — the clear button as soon as there is a value, the
-   * indicator whenever a search is in flight. Following the state would
-   * resize the text box on the first keystroke and again when the listing
-   * starts loading, which is doc 09 §3 broken twice. The space is reserved
-   * before the content arrives instead.
+   * No box and no reserved trailing padding, both of which this component used
+   * to carry. The frame draws the box and the cross is a flow sibling inside
+   * it, so there is nothing to reserve: the button IS the space.
    */
-  'bb:pe-9'
-);
-
-const CLEAR = cx(
-  'bb:absolute',
-  /*
-   * The inset is written from the tokens, not as a number.
-   *
-   * The target is centred on a 14px mark, so the button reaches
-   * (hit - mark) / 2 further towards the border than the mark does. Subtract
-   * that from the padding the text gets on the other side and the mark ends
-   * the same distance from its border as the value starts from its own.
-   *
-   * A fixed number is right at one density and wrong at the other: compact
-   * moves the three tokens by different amounts — 12/28/14 becomes 8/24/11 —
-   * so the correct inset is 5px in one and 1.5px in the other. Expressing the
-   * relationship rather than trusting two numbers to agree is the same
-   * argument .bb-inline-control-box already had with itself.
-   */
-  'bb:end-[calc(var(--bb-control-padding-x)_-_var(--bb-control-hit-area)/2_+_var(--bb-control-box-mark)/2)]',
-  'bb:box-border bb:flex bb:items-center bb:justify-center',
-  /*
-   * The target, and the part of a component like this that is usually wrong.
-   *
-   * A cross drawn at 14px is a 14px target unless something says otherwise,
-   * and doc 06 §3 wants the minimum at EVERY density, compact included. Both
-   * axes take the hit-area token, so compact trims the mark and never the
-   * target — 28px normal, 24px compact, with the mark going 14px to 11px
-   * underneath it.
-   *
-   * The two axes were not symmetric until this component asked for both.
-   * `min-h-hit` worked off `--height-hit` and always had; `min-w-hit` compiled
-   * to NOTHING, because Tailwind resolves a min-width utility from its own
-   * namespace rather than from `--width-*` — so the class looked right in the
-   * source and left a 14px target behind. Found by grepping the generated
-   * sheet, which is the only place a utility that does not exist shows up.
-   */
-  'bb:min-h-hit bb:min-w-hit',
-  // Round because it floats over the input rather than sitting flush inside
-  // its frame, so there is no edge for the nested-radius rule to match.
-  'bb:rounded-full',
-  'bb:bg-transparent bb:text-text-muted',
-  // The transparent border reserves the focus ring's edge at rest, so nothing
-  // shifts when it appears. It is the library's single ring (doc 06 §3).
-  'bb:border bb:border-solid bb:border-transparent',
-  'bb:cursor-pointer bb:outline-hidden',
-  'bb:transition-[background-color,border-color,box-shadow,color]',
-  'bb:duration-(--bb-duration-fast) bb:ease-standard',
-  'bb:data-hovered:bg-surface-hover bb:data-hovered:text-text',
-  'bb:data-pressed:bg-surface-active',
-  'bb:data-focused:border-focus-ring bb:data-focused:shadow-[0_0_0_4px_color-mix(in_oklab,var(--bb-focus-ring)_var(--bb-focus-ring-halo-strength),transparent)]',
-  /*
-   * The three states in which the button is present but has nothing to offer,
-   * keyed off the attributes the base already puts on the root rather than a
-   * class computed in render (doc 02 §4).
-   *
-   * Empty: there is no value to clear. Disabled and read-only: the value is
-   * not the person's to change, and the base disables the button in both —
-   * doc 06 §4 point 7 says a control that cannot act is worse than one that
-   * is absent, which is the same clause that removes it while busy below.
-   *
-   * The busy case is NOT here, and deliberately: it is `isLoading`/`isSaving`
-   * on our own props, not a state the base publishes to the DOM, and doc 07
-   * §2.2 says not rendered at all rather than not painted.
-   */
-  'bb:group-data-empty:hidden',
-  'bb:group-data-disabled:hidden',
-  'bb:group-data-readonly:hidden'
+  CONTROL_INSIDE,
+  CONTROL_TEXT
 );
 
 /*
@@ -218,8 +154,28 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(
     },
     ref
   ) {
-    const clearLabel = useMessage('clear');
     const busy = isLoading || isSaving;
+
+    /*
+     * The value, so the four conditions that make the cross useless can be
+     * computed here rather than half of them in CSS. They used to be: empty,
+     * disabled and read-only were classes reading the base's own attributes,
+     * and busy was a branch in the render. One behaviour, two mechanisms —
+     * and only one of them visible to a test with no stylesheet.
+     */
+    const tracked = useFieldValue<HTMLInputElement>({
+      normalize: undefined,
+      isTracked: true,
+      value: ariaProps.value,
+      defaultValue: ariaProps.defaultValue,
+      onChange: ariaProps.onChange
+    });
+
+    const hasNothingToClear =
+      busy ||
+      (tracked.value ?? '') === '' ||
+      (ariaProps.isDisabled ?? false) ||
+      (ariaProps.isReadOnly ?? false);
 
     return (
       <AriaSearchField
@@ -234,6 +190,7 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(
         // attributes from the root it puts them on.
         className={cx('bb:group bb:w-full', className)}
         {...ariaProps}
+        {...tracked.props}
       >
         <Field
           label={label}
@@ -244,61 +201,27 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(
           isLoading={isLoading}
           isSaving={isSaving}
         >
-          <Input
-            ref={ref}
-            className={cx(INPUT, SIZE[size])}
-            {...(placeholder === undefined ? {} : { placeholder })}
-          />
-          {/*
-           * Doc 07 §2.2, rule 1, taken literally: busy wins outright and the
-           * clear button is not rendered, not merely hidden. Field puts the
-           * indicator at this exact spot, absolutely positioned, and two
-           * things over the same pixels is how a hit area ends up depending
-           * on which state a field happens to be in.
-           */}
-          {busy ? null : (
-            <Button
-              className={CLEAR}
-              /*
-               * The name comes from our dictionary, replacing the base's own
-               * localised "Clear search". Two dictionaries in one interface
-               * is one too many: a project that translates `clear` would see
-               * its word on every other cross in the library and not on this
-               * one. Ours wins because the base merges its context props
-               * underneath the element's — verified against the installed
-               * source, not assumed.
-               *
-               * An `aria-label` and not visually hidden text, which is the
-               * opposite of NumberField's steppers: there the base points
-               * aria-labelledby at the field's label and labelledby beats
-               * label, so a name given here would be dropped. There is no
-               * labelledby on this button, so doc 02 §11.3 applies plainly —
-               * the name of an icon-only control goes on the control.
-               */
-              aria-label={clearLabel}
-            >
-              {/*
-               * Drawn rather than received: doc 02 §11.4 lets the library
-               * draw and size the icons belonging to its own controls. The
-               * same cross and the same mark size Badge's remove button uses,
-               * so the marks inside small controls are one size and follow
-               * density together.
-               */}
-              <svg
-                viewBox="0 0 16 16"
-                className="bb:h-mark bb:w-mark"
-                fill="none"
-                aria-hidden="true"
-              >
-                <path
-                  d="M4.5 4.5 11.5 11.5M11.5 4.5 4.5 11.5"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </Button>
-          )}
+          <ControlFrame
+            trailing={<ClearButton />}
+            /*
+             * Doc 07 §2.2 rule 1: unreachable, not absent. The cross holds its
+             * width in every state, so a search field does not widen on the
+             * first character typed and narrow again when the listing starts
+             * loading — which is what following the state used to cost, twice
+             * per search (doc 09 §3).
+             *
+             * No `onPress`: inside a search field the base's own context gives
+             * this button its behaviour, and a handler here would clear twice.
+             */
+            isTrailingHidden={hasNothingToClear}
+            className={SIZE[size].frame}
+          >
+            <Input
+              ref={ref}
+              className={cx(INPUT, SIZE[size].text)}
+              {...(placeholder === undefined ? {} : { placeholder })}
+            />
+          </ControlFrame>
         </Field>
       </AriaSearchField>
     );

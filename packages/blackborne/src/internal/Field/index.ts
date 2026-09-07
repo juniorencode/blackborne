@@ -9,3 +9,5 @@ export type { ControlFrameProps } from './ControlFrame';
 export { useFieldValue } from './useFieldValue';
 export { CharacterCounter } from './CharacterCounter';
 export type { CharacterCounterProps } from './CharacterCounter';
+export { ClearButton } from './ClearButton';
+export type { ClearButtonProps } from './ClearButton';

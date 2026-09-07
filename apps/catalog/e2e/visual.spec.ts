@@ -145,7 +145,13 @@ const STATES: Array<[string, string]> = [
    * languages — the one place a field writes a number of its own.
    */
   ['components-textfield--character-count', 'textfield-counter'],
-  ['components-textarea--character-count', 'textarea-counter']
+  ['components-textarea--character-count', 'textarea-counter'],
+  /*
+   * The clear button, and the panel that matters: four states where it has
+   * nothing to offer and still holds its width. If the room ever stops being
+   * reserved, those four boxes get wider than the ones beside them.
+   */
+  ['components-textfield--clearing', 'textfield-clearing']
 ];
 
 for (const [id, name] of STATES) {

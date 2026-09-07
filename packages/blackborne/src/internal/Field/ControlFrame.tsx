@@ -42,8 +42,23 @@ export interface ControlFrameProps {
    * target, and the minimum hit area is not negotiable at compact density.
    */
   leading?: React.ReactNode;
-  /** A control the field owns at the trailing edge — a stepper's `+`. */
+  /** A control the field owns at the trailing edge — a stepper's `+`, a cross. */
   trailing?: React.ReactNode;
+  /**
+   * Make the edge controls unreachable while keeping the room they occupy.
+   *
+   * Doc 07 §2.2 rule 1, and the frame owns the mechanism so no field can get
+   * it wrong: hidden from the reader, unfocusable, unclickable — and still
+   * taking up its width, because closing the gap widens the box and slides
+   * the value across. A clear button that appears with the first character
+   * typed does the same thing in reverse.
+   *
+   * The CONDITION belongs to the field: busy for a stepper, busy or empty for
+   * a cross. The frame only knows how to make one disappear without moving
+   * anything.
+   */
+  isLeadingHidden?: boolean;
+  isTrailingHidden?: boolean;
   /** The control itself. */
   children: React.ReactNode;
   className?: string;
@@ -66,11 +81,37 @@ const AFFIX = cx(
   'bb:select-none bb:pointer-events-none'
 );
 
+/**
+ * Unreachable in every sense that matters, and still the same width.
+ *
+ * `inert` rather than a class, because `visibility: hidden` is invisible to a
+ * test environment with no stylesheet: the control would keep answering to
+ * `getByRole` and a check asserting it is gone would pass for the wrong
+ * reason. `inert` takes it out of focus order and hit testing, `aria-hidden`
+ * out of the accessibility tree, and the class out of sight.
+ */
+function edge(content: React.ReactNode, isHidden: boolean): React.ReactNode {
+  if (content === undefined) return null;
+  return (
+    <span
+      className={cx(
+        'bb:flex bb:flex-none bb:items-stretch',
+        isHidden && 'bb:invisible'
+      )}
+      {...(isHidden ? { inert: true, 'aria-hidden': true } : {})}
+    >
+      {content}
+    </span>
+  );
+}
+
 export function ControlFrame({
   prefix,
   suffix,
   leading,
   trailing,
+  isLeadingHidden = false,
+  isTrailingHidden = false,
   children,
   className
 }: ControlFrameProps): React.ReactNode {
@@ -81,7 +122,7 @@ export function ControlFrame({
    */
   return (
     <Group className={cx(CONTROL_BOX, 'bb:flex bb:items-stretch', className)}>
-      {leading}
+      {edge(leading, isLeadingHidden)}
       {prefix === undefined ? null : (
         <span
           aria-hidden="true"
@@ -99,7 +140,7 @@ export function ControlFrame({
           {suffix}
         </span>
       )}
-      {trailing}
+      {edge(trailing, isTrailingHidden)}
     </Group>
   );
 }
