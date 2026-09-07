@@ -8,12 +8,14 @@ import {
   ALIGN,
   CONTROL_BOX,
   CONTROL_TEXT,
+  CharacterCounter,
   Field,
+  useFieldValue,
   type ControlAlign
 } from '../../internal/Field';
 import { cx } from '../../internal/cx';
+import { useDevWarning } from '../../internal/useDevWarning';
 import { mergeRefs } from '../../internal/mergeRefs';
-import { useNormalizedField } from '../../internal/useNormalizedField';
 import type { Normalizer } from '../../normalize';
 
 /*
@@ -89,6 +91,19 @@ export interface TextAreaProps extends Omit<
    * a pasted block of codes, a list of references.
    */
   normalize?: Normalizer;
+  /**
+   * Show how much of `maxLength` has been used.
+   *
+   * `maxLength` is a silent restriction: past the limit the browser drops the
+   * keystroke and says nothing, which is the clearest case there is of an
+   * interaction with no response (doc 09 §3). It needs a `maxLength` to count
+   * against, and warns in development without one.
+   *
+   * The counter is not announced on every keystroke — a number changing under
+   * a screen reader would turn typing into a drum roll. Reaching the limit is
+   * announced once, because that is the moment something stops working.
+   */
+  isCounterVisible?: boolean;
   className?: string;
 }
 
@@ -118,17 +133,37 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
       placeholder,
       align = 'start',
       normalize,
+      isCounterVisible = false,
       className,
       ...ariaProps
     },
     ref
   ) {
-    const normalized = useNormalizedField<HTMLTextAreaElement>({
+    const normalized = useFieldValue<HTMLTextAreaElement>({
       normalize,
+      isTracked: isCounterVisible,
       value: ariaProps.value,
       defaultValue: ariaProps.defaultValue,
       onChange: ariaProps.onChange
     });
+
+    /*
+     * A counter with nothing to count against is a number and a slash. Loud in
+     * development, silent in production (doc 05 §2.2, rule 3 sets the
+     * precedent for warning rather than guessing).
+     */
+    useDevWarning(
+      isCounterVisible && ariaProps.maxLength === undefined,
+      'isCounterVisible needs a maxLength to count against.'
+    );
+
+    const counter =
+      isCounterVisible && ariaProps.maxLength !== undefined ? (
+        <CharacterCounter
+          length={(normalized.value ?? '').length}
+          max={ariaProps.maxLength}
+        />
+      ) : undefined;
 
     return (
       <AriaTextField
@@ -149,6 +184,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
           isLabelHidden={isLabelHidden}
           isLoading={isLoading}
           isSaving={isSaving}
+          {...(counter === undefined ? {} : { counter })}
         >
           <AriaTextArea
             ref={mergeRefs(ref, normalized.ref)}

@@ -192,3 +192,34 @@ export const LongContentNarrow: Story = {
     </div>
   )
 };
+
+/**
+ * The character counter, on the field that needs it most.
+ *
+ * A note is where a limit actually bites: somebody writes three paragraphs,
+ * the box silently stops accepting characters, and nothing says why. The count
+ * turns from muted to ordinary text at the limit — not to the danger colour,
+ * because being full is not being wrong.
+ */
+export const CharacterCount: Story = {
+  render: () => (
+    <div className="catalog-stack" style={{ maxWidth: 460 }}>
+      <TextArea label="Empty" maxLength={280} isCounterVisible rows={3} />
+      <TextArea
+        label="With a description"
+        maxLength={280}
+        isCounterVisible
+        rows={3}
+        defaultValue="Delivered to the loading bay, signed for by the warehouse supervisor."
+        description="Anything the driver should know."
+      />
+      <TextArea
+        label="At the limit"
+        maxLength={24}
+        isCounterVisible
+        rows={2}
+        defaultValue="Twenty four characters!!"
+      />
+    </div>
+  )
+};

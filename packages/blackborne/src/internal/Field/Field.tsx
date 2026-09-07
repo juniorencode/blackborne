@@ -42,6 +42,15 @@ export interface FieldStructureProps {
   isSaving?: boolean;
   /** Hide the label visually while keeping it for assistive technology. */
   isLabelHidden?: boolean;
+  /**
+   * How much of a limit has been used, at the trailing end of the description
+   * row.
+   *
+   * Beside the description rather than under the control, because it is help
+   * text and not part of the value — and doc 03 §4.6c allows a form exactly
+   * two vertical gaps, so a third row here would be a third gap.
+   */
+  counter?: React.ReactNode;
   className?: string;
   children: React.ReactNode;
 }
@@ -54,6 +63,7 @@ export function Field({
   isLoading = false,
   isSaving = false,
   isLabelHidden = false,
+  counter,
   className,
   children
 }: FieldStructureProps): React.ReactNode {
@@ -125,11 +135,35 @@ export function Field({
         {busy ? busyMessage : ''}
       </span>
 
-      {description ? (
-        <Text slot="description" className="bb:text-xs bb:text-text-muted">
-          {description}
-        </Text>
-      ) : null}
+      {/*
+       * With a counter the description shares a row with it; without one, the
+       * description is rendered exactly as it was before counters existed.
+       *
+       * The branch is deliberate rather than tidy. Wrapping unconditionally
+       * would put every description in the library inside a flex row, and a
+       * text node's baseline in a flex row is not always where it was as a
+       * block — so a field that never asked for a counter would move by a
+       * pixel and every baseline in the catalog would need reapproving for a
+       * feature it does not use.
+       */}
+      {counter === undefined ? (
+        description ? (
+          <Text slot="description" className="bb:text-xs bb:text-text-muted">
+            {description}
+          </Text>
+        ) : null
+      ) : (
+        <div className="bb:flex bb:items-baseline bb:gap-(--bb-space-3)">
+          {description ? (
+            <Text slot="description" className="bb:text-xs bb:text-text-muted">
+              {description}
+            </Text>
+          ) : null}
+          {/* `ms-auto` on the counter itself, so it sits at the trailing end
+              whether or not there is a description beside it. */}
+          {counter}
+        </div>
+      )}
 
       {/*
        * Rendered by the base only while the field is invalid, and referenced by

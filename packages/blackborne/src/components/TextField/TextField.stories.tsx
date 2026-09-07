@@ -388,3 +388,66 @@ export const AffixesAndAlignment: Story = {
     </div>
   )
 };
+
+/**
+ * The character counter.
+ *
+ * It exists because `maxLength` is a **silent** restriction: past the limit the
+ * browser drops the keystroke and says nothing at all, which is the clearest
+ * case there is of an interaction with no response (doc 09 §3).
+ *
+ * Type into the third field to see the two things worth noticing. The count
+ * goes from muted to ordinary text at the limit — emphasis by colour, not by
+ * size, and deliberately not the danger colour, because at the limit nothing
+ * is wrong: there is simply no more room. And the number is formatted through
+ * the locale, which the last panel shows.
+ *
+ * What it does NOT do is announce on every keystroke. A number changing under
+ * a screen reader would turn typing into a drum roll, and the count is derived
+ * from a value the reader already has. Reaching the limit is announced once,
+ * because that is the moment something stops working.
+ */
+export const CharacterCount: Story = {
+  render: () => (
+    <div className="catalog-pair">
+      <Scope label="Counting">
+        <div className="catalog-stack">
+          <TextField label="Empty" maxLength={40} isCounterVisible />
+          <TextField
+            label="With a description too"
+            maxLength={40}
+            isCounterVisible
+            defaultValue="Ada Lovelace"
+            description="The counter sits at the other end of this row."
+          />
+          <TextField
+            label="At the limit — type here"
+            maxLength={12}
+            isCounterVisible
+            defaultValue="Almost full"
+          />
+        </div>
+      </Scope>
+      <Scope label="Formatted, not concatenated">
+        <div className="catalog-stack">
+          <ConfigProvider locale="de-DE">
+            <TextField
+              label="Deutsch — 2.000"
+              maxLength={2000}
+              isCounterVisible
+              defaultValue="Notiz"
+            />
+          </ConfigProvider>
+          <ConfigProvider locale="en-US">
+            <TextField
+              label="English — 2,000"
+              maxLength={2000}
+              isCounterVisible
+              defaultValue="Note"
+            />
+          </ConfigProvider>
+        </div>
+      </Scope>
+    </div>
+  )
+};
