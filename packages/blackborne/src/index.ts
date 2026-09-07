@@ -81,7 +81,11 @@ export type {
 } from './components/NumberField';
 
 export { Radio, RadioGroup } from './components/RadioGroup';
-export type { RadioGroupProps, RadioProps } from './components/RadioGroup';
+export type {
+  RadioGroupProps,
+  RadioGroupVariant,
+  RadioProps
+} from './components/RadioGroup';
 
 export { SearchField } from './components/SearchField';
 export type {

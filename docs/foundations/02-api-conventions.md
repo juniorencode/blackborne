@@ -116,6 +116,34 @@ ways to do the same thing" of [doc 01](./01-principles.md) §7.
 `size` rather than replacing it. A `size="compact"` that has nothing to do with
 compact density is a collision that costs somebody an afternoon.
 
+### 3.1.1 A group's appearance reaches its options through context
+
+Some variants belong to a **set** rather than to a component: a radio group of
+selectable cards is cards all the way down, and a group with two cards and one
+bare circle is not a thing anyone wants. But the options are elements the
+consumer writes as children, so the variant has to travel.
+
+**It travels by context, and the context is never exported.** §10 already puts
+contexts on the not-public list, and exporting this one would be non-goal 10's
+escape hatch arriving by another route — a consumer reaching past the group to
+dress one option differently.
+
+Two alternatives, and why neither works:
+
+- **A render prop** is excluded by §5, and its replacement — a hook — is for
+  state a consumer needs to READ. This travels the other way, from us to our
+  own children, so there is nothing for a hook to expose.
+- **The variant repeated on every option** types the mixed set as legal, which
+  is the impossible combination §3 rejects booleans for. It also puts one value
+  in five places, so the group's appearance becomes whatever the fifth child
+  says.
+
+Two constraints come with it. The context carries **appearance only** —
+behaviour and accessibility wiring already come down the base's own context,
+and a second channel for the same thing is [doc 01](./01-principles.md) §7. And
+the value stays a primitive, so there is no object identity to memoise and no
+way for a consumer to be surprised by a re-render.
+
 ### 3.2 One vocabulary for `align`
 
 **`start | center | end`, and it means the text inside the control.**

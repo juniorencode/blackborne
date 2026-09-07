@@ -93,6 +93,12 @@ cannot know what level it landed at. Emphasis comes from weight and colour.
   needs something, they get a named prop or composition.
 - Nothing has a fixed width. Use max-width. Nothing is sized to fit one
   particular label in one particular language.
+- **A shared button inside a base component must declare its slot.** Several of
+  the base's components publish NAMED button slots — a numeric field's
+  `increment`/`decrement`, a tag's `remove` — and a slotless `Button` inside one
+  **throws**: "A slot prop is required." So a button written once and reused
+  needs a `slot` prop it can set, or `null` to fill none of them. Measured
+  twice, in two different components, before it was written down.
 - **Icons arrive as children**, and the component sizes and colours them from
   the slot — one standard size, `currentColor`, no `iconStart` prop and no
   `icon="save"` string. A named slot is only for a place the consumer could not
