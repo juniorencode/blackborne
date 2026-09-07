@@ -1,18 +1,10 @@
 import { forwardRef } from 'react';
 import {
-  Dialog as AriaDialog,
-  Heading,
   Modal,
   ModalOverlay,
   type ModalOverlayProps
 } from 'react-aria-components';
-/*
- * OUR Button, not the base's. The base exports one too and it is deliberately
- * not imported here: the close button needs this library's focus ring, hit
- * area and hover states, which is the whole reason the component exists.
- */
-import { Button } from '../Button';
-import { useMessage } from '../../config';
+import { ModalSheet, PANEL, SCRIM } from '../../internal/Layer';
 import { cx } from '../../internal/cx';
 
 export type DialogSize = 'sm' | 'md' | 'lg';
@@ -39,160 +31,28 @@ const SIZE: Record<DialogSize, string> = {
 } satisfies Record<DialogSize, string>;
 
 /*
- * The scrim, and the box that centres the panel in the window.
+ * A dialog centres its panel in the window and holds it off the edges.
  *
- * `fixed inset-0` rather than anything measured: the overlay is portalled to
- * the document (or to wherever the consumer said, doc 08 §8), so the window is
- * its container and this is the legitimate viewport case of doc 04 §5.
- *
- * The stacking value is the public token. There is no literal z-index in this
- * library and doc 08 §2 is why: a consumer has their own fixed header to
- * coordinate with, and if our numbers are closed their only route is to fight
- * our CSS from outside.
+ * `place-items-center` is what centres it while still letting it shrink; a
+ * flex row with an auto margin cannot do the second part reliably once the
+ * panel has hit its maximum height.
  */
-const SCRIM = cx(
+const DIALOG_SCRIM = cx(
   'bb-dialog-scrim',
-  'bb:fixed bb:inset-0 bb:z-(--bb-layer-overlay)',
-  'bb:bg-surface-overlay',
-  // grid + place-items-center is what centres the panel while still letting it
-  // shrink; a flex row with margin auto cannot do the second part reliably
-  // once the panel hits its max height.
-  'bb:grid bb:place-items-center',
+  SCRIM,
+  'bb:place-items-center',
   'bb:p-(--bb-space-4)'
 );
 
 /*
- * The panel: the box that floats.
- *
- * `surface-raised` is the token named for exactly this — doc 03 §4 calls it
- * "menu, popover, dialog" — and this component is its first reader since the
- * token layer was written. It was measured on the way in, and it was wrong:
- * see the note in semantic.css.
- *
- * `overflow-hidden` here and `overflow-y-auto` on the sheet inside. Two
- * elements, and the split does real work: this one clips, so the sticky header
- * cannot paint over the rounded corners and the scrollbar stays inside the
- * radius. Putting the scroll here instead would break something worse — see
- * the note on SHEET.
- *
- * `container-type: inline-size`, following the Card
- * ([decision 0010](../../../../docs/decisions/0010-the-card-declares-the-container.md)).
- * A dialog is a region with a width of its own, which is the thing a container
- * is, so anything placed inside can ask how wide it is without the consumer
- * configuring anything. The side effect that decision records — no
- * shrink-wrapping — is what we want here anyway: the panel takes the width
- * `SIZE` gives it.
+ * A dialog is bordered and rounded on all four sides: it floats clear of every
+ * window edge, so every edge of it is a free edge. That is exactly what a
+ * drawer is not, and it is the whole of the difference between the two.
  */
-const PANEL = cx(
+const DIALOG_PANEL = cx(
   'bb-dialog-panel',
-  // box-border because the package ships no reset. With a border and padding
-  // on the same element, content-box makes a declared width measure wider
-  // than it was asked for.
-  'bb:box-border bb:w-full',
-  /*
-   * A column flex container, and this is what makes the scrolling work at all.
-   *
-   * The height limit lives here (see Dialog.css). The sheet inside has to be
-   * bounded BY it, and a percentage cannot do that: `max-height: 100%`
-   * resolves against the parent's height, this element has no definite height
-   * — only a maximum — so the percentage computes to `none` and the sheet
-   * grows without limit.
-   *
-   * Measured, with that mistake in place: content of 1658px inside a panel
-   * capped at 876px, the sheet reporting `scrollHeight === clientHeight` so it
-   * was not scrollable, and this element clipping the rest with
-   * `overflow: hidden`. A dialog that silently hid two thirds of its content
-   * and offered no way to reach it.
-   *
-   * Flex layout bounds the item instead of asking it to measure a percentage:
-   * the sheet keeps its content-based size, shrinks when this element hits its
-   * ceiling, and scrolls what does not fit.
-   *
-   * The check that caught it was the one that pressed a key. The screenshot
-   * looked entirely plausible.
-   */
-  'bb:flex bb:flex-col',
-  'bb:bg-surface-raised bb:text-surface-raised-on',
-  'bb:border bb:border-border bb:rounded-lg bb:shadow-lg',
-  'bb:overflow-hidden',
-  'bb:font-sans bb:text-md bb:leading-normal',
-  'bb:[container-type:inline-size]'
-);
-
-/*
- * The sheet: the element that carries `role="dialog"`, and the one that
- * SCROLLS. Those two being the same element is not incidental.
- *
- * The base moves focus to this element when the dialog opens (doc 08 §4), and
- * a browser scrolls the nearest scrollable ANCESTOR of whatever has focus. So
- * with the scroll here, the arrow keys and Page Down work from the moment the
- * dialog appears. Put the scroll on an inner body element instead — the
- * obvious three-row grid — and the scroll container becomes a DESCENDANT of
- * the focused element, which no key reaches: the arrows would look for a
- * scrollable ancestor, find the clipped panel, then the locked page, and move
- * nothing at all.
- *
- * That failure has already happened once in this repository, on the catalog's
- * own resizable panel, and it is invisible to every check that does not press
- * a key.
- */
-const SHEET = cx(
-  'bb:box-border bb:flex bb:flex-col',
-  /*
-   * `min-h-0` and not `max-h-full`. A flex item's automatic minimum size is
-   * its content, so without this it refuses to shrink and overflows the panel
-   * however low the panel's ceiling is — the same failure, arrived at from the
-   * other direction. `overflow-y-auto` then has something to do.
-   */
-  'bb:min-h-0 bb:overflow-y-auto',
-  // The scrim is not the page: a wheel gesture that reaches the bottom of the
-  // dialog must not start scrolling whatever is behind it (doc 09 §7).
-  'bb:overscroll-contain',
-  // The focus ring belongs on interactive things. This element is focused
-  // programmatically on open, as a container, and ringing the whole panel
-  // says "you are here" about something nobody chose to focus.
-  'bb:outline-none'
-);
-
-/*
- * Header, body and footer.
- *
- * The header and footer are `sticky` INSIDE the scroll container rather than
- * siblings outside it, which follows from the decision above: one scrolling
- * element means they have to travel with the content and pin themselves.
- *
- * They carry the panel's own background because sticky elements are painted
- * over by nothing — content scrolls behind them, and a transparent header
- * would show the body sliding underneath the title.
- */
-const HEADER = cx(
-  'bb:sticky bb:top-0 bb:z-1',
-  'bb:box-border bb:flex bb:items-start bb:gap-(--bb-space-3)',
-  'bb:bg-surface-raised',
-  'bb:border-b bb:border-border',
-  'bb:p-(--bb-space-5)'
-);
-
-const TITLE = cx(
-  // A heading, and the level is the base's: it puts `level: 2` on the title
-  // slot's context. Which is the right answer and worth saying why, because
-  // Alert deliberately does the opposite — an Alert sits IN the page and
-  // cannot know what level it landed at (doc 06 §2), while a dialog is a
-  // boundary and the outline restarts inside it.
-  'bb:m-0 bb:min-w-0 bb:flex-1',
-  'bb:text-lg bb:font-strong bb:leading-tight',
-  'bb:[overflow-wrap:break-word]'
-);
-
-const BODY = cx('bb:box-border bb:p-(--bb-space-5)');
-
-const FOOTER = cx(
-  'bb:sticky bb:bottom-0 bb:z-1',
-  'bb:box-border bb:flex bb:flex-wrap bb:items-center bb:justify-end',
-  'bb:gap-(--bb-space-3)',
-  'bb:bg-surface-raised',
-  'bb:border-t bb:border-border',
-  'bb:p-(--bb-space-5)'
+  PANEL,
+  'bb:w-full bb:border bb:rounded-lg'
 );
 
 /*
@@ -310,8 +170,6 @@ export const Dialog = forwardRef<HTMLDivElement, DialogProps>(function Dialog(
   { title, children, footer, size = 'md', className, style, ...overlayProps },
   ref
 ) {
-  const closeLabel = useMessage('close');
-
   return (
     /*
      * ModalOverlay and Modal, rather than Modal alone. Using `Modal` on its own
@@ -319,91 +177,15 @@ export const Dialog = forwardRef<HTMLDivElement, DialogProps>(function Dialog(
      * base warns in development if overlay-level props are put on the inner
      * element, so the split has to be explicit either way.
      */
-    <ModalOverlay className={SCRIM} {...overlayProps}>
+    <ModalOverlay className={DIALOG_SCRIM} {...overlayProps}>
       <Modal
         ref={ref}
-        className={cx(PANEL, SIZE[size], className)}
+        className={cx(DIALOG_PANEL, SIZE[size], className)}
         {...(style === undefined ? {} : { style })}
       >
-        <AriaDialog className={SHEET}>
-          <header className={HEADER}>
-            {/*
-             * `Heading slot="title"` and not a plain `<h2>`. This is the only
-             * route that gives the dialog a name.
-             *
-             * The base generates the id its `aria-labelledby` points at and
-             * hands it down through the title slot's context. Measured with a
-             * hand-written heading instead: the id comes from `useSlotId`,
-             * which returns undefined when nothing claims the slot, so
-             * `aria-labelledby` is never set — and the accessible name comes
-             * back empty. The dialog is announced as "dialog", which says that
-             * something happened and not what.
-             *
-             * Development does catch it: the base checks the rendered element
-             * in an effect and warns. What it cannot catch is production, where
-             * that check is compiled out and the only symptom is a screen
-             * reader saying nothing useful — which is why the name is asserted
-             * in a test rather than left to a console message somebody has to
-             * be looking at.
-             *
-             * The context also supplies `level: 2`, so the element is an
-             * `<h2>` without this file choosing.
-             */}
-            <Heading slot="title" className={TITLE}>
-              {title}
-            </Heading>
-            {/*
-             * `slot="close"` is the base's own: the Dialog publishes a button
-             * slot by that name whose `onPress` closes the dialog, so there is
-             * no handler to write and no state to reach for. Our Button
-             * forwards `slot` by spread (doc 02 §2).
-             *
-             * Always rendered, with no prop to remove it. Doc 09 §7 is about
-             * accidental closing, not about deliberate exits: `Escape` is
-             * invisible, and a dialog that is not dismissable by clicking
-             * outside would otherwise have no visible way out at all unless
-             * its footer happened to provide one. A dialog that must be
-             * answered rather than dismissed is a different component, with a
-             * different role.
-             */}
-            <Button
-              slot="close"
-              variant="ghost"
-              size="sm"
-              aria-label={closeLabel}
-              // -my/-me pull the button's own padding back so the cross aligns
-              // with the title's first line and the panel's inner edge, rather
-              // than sitting a hair inside both.
-              className="bb:-my-1 bb:-me-2 bb:flex-none"
-            >
-              {/*
-               * Drawn, not received: doc 02 §11.4 separates the icons the
-               * library draws for its own controls from the ones it receives.
-               * The same cross and stroke as the fields' clear button, so the
-               * marks inside the library's own controls are one shape.
-               */}
-              <svg
-                viewBox="0 0 16 16"
-                className="bb:h-4 bb:w-4"
-                fill="none"
-                aria-hidden="true"
-              >
-                <path
-                  d="M4.5 4.5 11.5 11.5M11.5 4.5 4.5 11.5"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </Button>
-          </header>
-
-          <div className={BODY}>{children}</div>
-
-          {footer === undefined || footer === null ? null : (
-            <footer className={FOOTER}>{footer}</footer>
-          )}
-        </AriaDialog>
+        <ModalSheet title={title} {...(footer === undefined ? {} : { footer })}>
+          {children}
+        </ModalSheet>
       </Modal>
     </ModalOverlay>
   );
