@@ -54,4 +54,36 @@ export async function gotoStory(page: Page, id: string): Promise<void> {
   );
 
   await page.evaluate(() => document.fonts.ready);
+
+  /*
+   * And wait for a frame to have been PAINTED with all of that in place.
+   *
+   * Everything above proves that things have arrived — the story mounted, the
+   * stylesheet resolved, the fonts loaded. None of it proves the browser has
+   * laid out and painted with them. axe measures rendered geometry and
+   * rendered colour, and a screenshot photographs a frame, so both want the
+   * frame rather than the promises.
+   *
+   * Two ticks and not one: the first is scheduled before the pending layout,
+   * the second runs after it.
+   *
+   * **This is a precondition made stricter, not a diagnosed fix, and the
+   * difference is worth being honest about.** `Components/EmptyState / Narrow
+   * Container` failed the contrast rule once, in one of two full runs of the
+   * same code on the same machine — roughly one story-check in six hundred —
+   * and passed seven times out of seven in isolation. The cause was not found.
+   * What is known is that this suite has produced exactly this shape of
+   * failure before, from exactly this cause: the notes above describe axe
+   * reporting a contrast violation against a half-applied stylesheet, on a
+   * different story each run. `retries` is deliberately zero here, so a check
+   * that can report either answer for the same input is a defect rather than
+   * weather — and if it recurs with this in place, the next person knows that
+   * the paint was not it.
+   */
+  await page.evaluate(
+    () =>
+      new Promise<void>(resolve => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      })
+  );
 }
