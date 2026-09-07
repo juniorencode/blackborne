@@ -12,6 +12,26 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- `isCounterVisible` on `TextField` and `TextArea`, showing how much of
+  `maxLength` has been used.
+
+  It exists because `maxLength` is a **silent** restriction: past the limit the
+  browser drops the keystroke and says nothing, which is the clearest case
+  there is of an interaction with no response (doc 09 §3).
+
+  Three things about it are deliberate. It is **not announced while counting** —
+  a number changing under a screen reader would turn typing into a drum roll,
+  and the count is derived from a value the reader already has. **Reaching the
+  limit is announced once**, because that is the moment something stops
+  working. And at the limit the count turns from muted to ordinary text rather
+  than to the danger colour: being full is not being wrong, and deciding a
+  value is invalid stays the project's.
+
+  The number goes through the locale, like every other number the library
+  writes — `2.000` in German, `2,000` in English.
+
+- `characterLimitReached` in the dictionary.
+
 - `prefix` and `suffix` on `TextField` and `NumberField`: `@`, `.com`, a unit,
   a currency symbol. They sit inside the border and in the flow, which is why
   they are slots and not padding — `.com` is four characters wide and `@` is

@@ -6,3 +6,6 @@ export { ALIGN, CONTROL_BOX, CONTROL_INSIDE, CONTROL_TEXT } from './controlBox';
 export type { ControlAlign } from './controlBox';
 export { ControlFrame } from './ControlFrame';
 export type { ControlFrameProps } from './ControlFrame';
+export { useFieldValue } from './useFieldValue';
+export { CharacterCounter } from './CharacterCounter';
+export type { CharacterCounterProps } from './CharacterCounter';

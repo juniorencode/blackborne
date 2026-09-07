@@ -7,6 +7,7 @@ import { createRef } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
+import { ConfigProvider } from '../../config';
 import { normalize, stripSpaces, upperCase } from '../../normalize';
 import { TextField } from './TextField';
 
@@ -269,4 +270,82 @@ test('the affix slots are empty when nothing is passed', () => {
   // so nothing changes for anyone not using the prop.
   const { container } = render(<TextField label="Name" />);
   expect(container.querySelectorAll('[aria-hidden="true"]')).toHaveLength(0);
+});
+
+test('the counter counts, and is not announced while it does', async () => {
+  const user = userEvent.setup();
+  render(<TextField label="Note" maxLength={10} isCounterVisible />);
+
+  const counter = () =>
+    document.querySelector('[aria-hidden="true"]')?.textContent;
+
+  expect(counter()).toBe('0/10');
+  await user.type(screen.getByRole('textbox'), 'abc');
+  expect(counter()).toBe('3/10');
+
+  /*
+   * Silent while counting. A live region here would read a new number on every
+   * keystroke, and the number is derived from a value the reader already has.
+   */
+  expect(screen.queryByText('Character limit reached')).toBeNull();
+});
+
+test('reaching the limit is announced once', async () => {
+  const user = userEvent.setup();
+  render(<TextField label="Code" maxLength={3} isCounterVisible />);
+
+  await user.type(screen.getByRole('textbox'), 'ab');
+  expect(screen.queryByText('Character limit reached')).toBeNull();
+
+  /*
+   * At the limit the next keystroke is dropped and nothing else reports it, so
+   * without this the field simply stops responding for anyone who cannot see
+   * the counter (doc 06 §3).
+   */
+  await user.type(screen.getByRole('textbox'), 'c');
+  const announcement = screen.getByText('Character limit reached');
+  // In a live region, not merely painted — Field has one of its own for the
+  // busy state, so this asserts the text and its container together.
+  expect(announcement.getAttribute('aria-live')).toBe('polite');
+});
+
+test('the counter formats its numbers in the active language', () => {
+  render(
+    <ConfigProvider
+      locale="de-DE"
+      dictionary={{ characterLimitReached: 'Grenze erreicht' }}
+    >
+      <TextField
+        label="Notiz"
+        maxLength={2000}
+        isCounterVisible
+        defaultValue="x"
+      />
+    </ConfigProvider>
+  );
+  // 2.000 in German, not 2,000 — the one place a field writes a number of its
+  // own, so it goes through the locale like every other number (doc 05 §3).
+  expect(document.querySelector('[aria-hidden="true"]')?.textContent).toBe(
+    '1/2.000'
+  );
+});
+
+test('a counter without a maximum warns instead of drawing a slash', () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  render(<TextField label="Note" isCounterVisible />);
+
+  /*
+   * Ours, and once — from an effect. In the render body it fires again on
+   * every render, so a field would warn per keystroke and bury the message.
+   *
+   * Filtered by prefix rather than counted, because the spy also catches
+   * whatever React and the base have to say, and asserting a total makes this
+   * test fail for reasons that have nothing to do with it.
+   */
+  const ours = warn.mock.calls.filter(([first]) =>
+    String(first).startsWith('blackborne:')
+  );
+  expect(ours).toHaveLength(1);
+  expect(document.querySelector('[aria-hidden="true"]')).toBeNull();
+  warn.mockRestore();
 });

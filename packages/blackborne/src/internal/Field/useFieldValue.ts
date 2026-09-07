@@ -1,8 +1,22 @@
 import { useLayoutEffect, useRef, useState } from 'react';
-import { caretAfter, type Normalizer } from '../normalize';
+import { caretAfter, type Normalizer } from '../../normalize';
 
 /*
- * INTERNAL. The half of normalization that is not a pure function.
+ * INTERNAL. What a field knows about its own value.
+ *
+ * Two callers, and they want the same awkward thing for different reasons.
+ * Normalization has to own the value in order to rewrite it; a character
+ * counter has to know its length. Both are trivial when a field is controlled
+ * and neither works when it is not — the base keeps its own state, and a
+ * component with no `value` prop cannot see it.
+ *
+ * So one hook holds the value when either asks, and holds nothing when neither
+ * does: a field using none of this behaves exactly as it did before any of it
+ * existed, which matters because these components have shipped.
+ *
+ * ---
+ *
+ * The half of normalization that is not a pure function.
  *
  * The transformations in `src/normalize` are a few lines each and anyone could
  * write them in their own `onChange`. This is the part they could not: keeping
@@ -31,21 +45,31 @@ import { caretAfter, type Normalizer } from '../normalize';
 
 interface Options {
   normalize: Normalizer | undefined;
+  /** Own the value even with no normalizer — for a counter that needs its length. */
+  isTracked?: boolean;
   value: string | undefined;
   defaultValue: string | undefined;
   onChange: ((value: string) => void) | undefined;
 }
 
 interface Result<E> {
-  /** Spread onto the base's field. Empty when there is nothing to normalize. */
+  /** Spread onto the base's field. Empty when nobody asked for anything. */
   props: { value?: string; onChange?: (value: string) => void };
   /** Merged onto the input, so the caret can be put back after a rewrite. */
   ref: React.RefCallback<E>;
+  /** The current value, when it is being held. `undefined` when it is not. */
+  value: string | undefined;
 }
 
-export function useNormalizedField<
+export function useFieldValue<
   E extends HTMLInputElement | HTMLTextAreaElement
->({ normalize, value, defaultValue, onChange }: Options): Result<E> {
+>({
+  normalize,
+  isTracked = false,
+  value,
+  defaultValue,
+  onChange
+}: Options): Result<E> {
   const element = useRef<E | null>(null);
   const caret = useRef<number | null>(null);
   const [uncontrolled, setUncontrolled] = useState(defaultValue ?? '');
@@ -77,13 +101,24 @@ export function useNormalizedField<
     element.current.setSelectionRange(position, position);
   });
 
-  if (normalize === undefined) {
-    return { props: {}, ref: node => void (element.current = node) };
-  }
-
   const current = value ?? uncontrolled;
 
+  if (normalize === undefined) {
+    /*
+     * Nothing to rewrite, so nothing to correct and no caret to restore. The
+     * value is still reported when somebody asked to track it, which is the
+     * counter's whole need — and the field is left controlled or uncontrolled
+     * exactly as its consumer wrote it.
+     */
+    return {
+      props: isTracked ? { value: current, onChange: handleTracked } : {},
+      ref: node => void (element.current = node),
+      value: isTracked ? current : undefined
+    };
+  }
+
   return {
+    value: normalize(current),
     props: {
       value: normalize(current),
       onChange: typed => {
@@ -115,4 +150,9 @@ export function useNormalizedField<
     },
     ref: node => void (element.current = node)
   };
+
+  function handleTracked(typed: string): void {
+    if (value === undefined) setUncontrolled(typed);
+    onChange?.(typed);
+  }
 }

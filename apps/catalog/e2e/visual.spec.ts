@@ -139,7 +139,13 @@ const STATES: Array<[string, string]> = [
    * physical value would have been invisible in English.
    */
   ['components-textfield--affixes-and-alignment', 'textfield-affixes'],
-  ['components-numberfield--affixes-and-alignment', 'numberfield-affixes']
+  ['components-numberfield--affixes-and-alignment', 'numberfield-affixes'],
+  /*
+   * The counter, including the panel where the same limit is written in two
+   * languages — the one place a field writes a number of its own.
+   */
+  ['components-textfield--character-count', 'textfield-counter'],
+  ['components-textarea--character-count', 'textarea-counter']
 ];
 
 for (const [id, name] of STATES) {

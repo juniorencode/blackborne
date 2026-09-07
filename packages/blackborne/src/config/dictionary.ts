@@ -49,7 +49,16 @@ export const en = {
    * The button that empties a field. It carries a cross and no text, and what
    * it clears is named by the field's own label beside it.
    */
-  clear: 'Clear'
+  clear: 'Clear',
+  /**
+   * Announced once, when a field with a maximum reaches it.
+   *
+   * The counter itself is silent — a number that changed on every keystroke
+   * would turn typing into a drum roll. But the moment the limit is reached
+   * the next keystroke is dropped and nothing else says so, which is a change
+   * happening in silence for anyone who cannot see the counter (doc 06 §3).
+   */
+  characterLimitReached: 'Character limit reached'
 } as const;
 
 export type DictionaryKey = keyof typeof en;
