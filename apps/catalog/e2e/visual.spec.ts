@@ -197,7 +197,16 @@ const STATES: Array<[string, string]> = [
   ['components-dialog--dark', 'dialog-dark'],
   ['components-dialog--scrolling', 'dialog-scrolling'],
   ['components-dialog--with-a-form', 'dialog-with-form'],
-  ['components-dialog--without-a-footer', 'dialog-no-footer']
+  ['components-dialog--without-a-footer', 'dialog-no-footer'],
+  /*
+   * The drawer. `drawer-rtl` is the one that earns its place: the SAME
+   * `side="start"` has to be on the other side of the window in Arabic, with
+   * its border on the other edge, and that is invisible in English.
+   */
+  ['components-drawer--light', 'drawer-light'],
+  ['components-drawer--dark', 'drawer-dark'],
+  ['components-drawer--bottom-sheet', 'drawer-bottom'],
+  ['components-drawer--scrolling', 'drawer-scrolling']
 ];
 
 for (const [id, name] of STATES) {
@@ -242,7 +251,11 @@ const AXES: Array<[string, string]> = [
      actions both change end in RTL. */
   ['components-dialog--compact', 'axis-dialog-compact'],
   ['components-dialog--direction', 'axis-dialog-rtl'],
-  ['components-dialog--brand-override', 'axis-dialog-brand']
+  ['components-dialog--brand-override', 'axis-dialog-brand'],
+  /* The drawer's own two axes: the direction, where start and end swap sides
+     and the border swaps with them, and density on every padding inside. */
+  ['components-drawer--direction', 'axis-drawer-rtl'],
+  ['components-drawer--compact', 'axis-drawer-compact']
 ];
 
 for (const [id, name] of AXES) {

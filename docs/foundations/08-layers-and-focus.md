@@ -28,7 +28,7 @@ are not the same thing.
 | Focus returns to the trigger on close                                          | **Verified** in the browser                            |
 | A toast appears above a modal layer and is keyboard reachable while it is open | **Verified** in the browser                            |
 | Page scroll is locked while a modal layer is open                              | **Verified** in the browser, at one level of nesting   |
-| Scroll locking survives _nested_ modal layers                                  | **Verified** with `Dialog` — see §6                    |
+| Scroll locking survives _nested_ modal layers                                  | **Verified** with `Dialog` and with `Drawer` — §6      |
 
 Everything in that table now has an automated check behind it, in
 `apps/catalog/e2e/layer.spec.ts`, rather than a memory of a spike. Two rows
@@ -136,23 +136,25 @@ then there should be a real screen to decide it against. Until then no
 component may assume an answer, and a `Popover` that grows an input in it is
 the trigger to come back here.
 
-## 6. Scroll locking, and the case that is not verified
+## 6. Scroll locking, and the case that was not verified
 
 While a modal layer is open, the page behind it does not scroll. Otherwise you
 move the background while the layer stays put.
 
-That works. What is **not verified** is nesting, and the failure mode is
-specific enough to name: open a dialog (scroll locks), then open a drawer on
-top of it (locks again). When the drawer closes, does the lock lift while the
-dialog is still open?
+That works. What was **not verified** for most of this document's life was
+nesting, and the failure mode is specific enough to name: open a dialog (scroll
+locks), then open a drawer on top of it (locks again). When the drawer closes,
+does the lock lift while the dialog is still open?
 
 If the lock is not reference-counted, it does — and you are left with an open
 dialog over a scrolling page. The spike had only one level of modal layer, so
 this was never exercised.
 
-**Written here as a pending check, not as a guarantee.** It is verified when
-`Drawer` is built, and the check is: open dialog, open drawer, close drawer,
-try to scroll the page. It must not scroll.
+**It was written here as a pending check rather than as a guarantee**, with the
+check named in advance: open dialog, open drawer, close drawer, try to scroll
+the page. It must not scroll. That is now done — §6.1 — and the paragraphs
+below are kept as they were written, because the prediction being on the record
+before the measurement is the only thing that made it a prediction.
 
 **The prediction, on the record before the measurement.** Read in the base's
 `usePreventScroll`: there is a module-level `preventScrollCount`, incremented
@@ -166,21 +168,36 @@ is a separate code path in the same file. The value of writing it here is that
 the prediction can be **wrong** — and a prediction written after the fact is
 worth nothing, because it always agrees with what was found.
 
-### 6.1 The prediction held, and it was checked early
+### 6.1 The prediction held, twice
 
-**Verified with `Dialog`, not with `Drawer`.** Two nested dialogs use the same
+**First with `Dialog`, ahead of time.** Two nested dialogs use the same
 `usePreventScroll`, so the mechanism could be exercised as soon as there was one
 layer: open a dialog, open a second, close the second, and the page still does
 not scroll.
 
-Both halves are checked, and the second is the one a lock bug hides behind: a
-reference count that never reaches zero leaves the page **permanently** frozen,
-which is a worse failure than the one above and looks like nothing at all. So
-there is also a check that the page scrolls again once every layer has closed.
+**Then with `Drawer`, which is the case this section actually describes.** A
+dialog open, a drawer opened over it and closed, and the page still does not
+scroll — two different components, two different mounts, and the one thing two
+dialogs could not rule out is that each locks by a route the other does not.
+Both hold.
 
-The drawer case in the checklist stays as written. It is a different component
-and it will be checked when it exists — the mechanism holding for two dialogs is
-good evidence and not a substitute.
+Both halves are checked in each case, and the second is the one a lock bug hides
+behind: a reference count that never reaches zero leaves the page
+**permanently** frozen, which is a worse failure than the one above and looks
+like nothing at all. So there is also a check that the page scrolls again once
+every layer has closed.
+
+**This section is no longer pending.** The row in §1's table says verified, and
+what verified it is `apps/catalog/e2e/drawer.spec.ts` rather than a memory of
+having tried it.
+
+One thing found while checking it, and worth knowing before measuring any layer
+that moves: **a drawer cannot be measured the moment it becomes visible.** It
+slides, so between appearing and coming to rest it is partly off the edge it
+came from — measured mid-flight, a 480px panel against the right edge of a
+1280px window reported its far side at 1520. The base removes `data-entering`
+when the entry ends, and that is the thing to wait for. A dialog never needed
+this because it fades without travelling.
 
 ## 7. Toasts
 
@@ -336,8 +353,8 @@ needs one sooner than its layer table implies.
 - [ ] No public prop takes a physical placement value
       ([doc 02](./02-api-conventions.md) §3.3)
 - [ ] Page scroll is locked while a modal layer is open
-- [ ] **Nested case:** dialog open, drawer opened and closed, page still does
-      not scroll
+- [x] **Nested case:** dialog open, drawer opened and closed, page still does
+      not scroll — §6.1
 - [ ] Stacking values come from the public tokens, with no literal z-index
       anywhere
 - [ ] The mount container is supplied through `ConfigProvider` and reaches

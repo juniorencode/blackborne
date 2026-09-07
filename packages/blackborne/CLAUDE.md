@@ -156,6 +156,17 @@ Everything that renders in a portal. Four things were measured while building
 - **`container-type: inline-size` does NOT contain a fixed-position child.** It
   computes `contain: none`. Only `contain: layout` or a transform does. This
   was written down wrongly in decision 0010 and is corrected there.
+- **A layer-3 rule does not COMBINE with a utility — it replaces it.** These
+  files are unlayered so they outrank utilities, which is the point, and it
+  cuts both ways: a `max-h-*` class on an element whose layer-3 rule also
+  declares `max-block-size` is simply ignored. Measured: a bottom drawer asked
+  for 30rem and rendered the window's full 900px. Where two constraints have to
+  hold together, the CSS composes them itself — `min()` of a variable the
+  component feeds and the window — rather than hoping the cascade will.
+- **A layer that moves cannot be measured the moment it is visible.** A drawer
+  slides, so between appearing and coming to rest it is partly off its edge: a
+  480px panel against the right of a 1280px window reported its far side at
+  1520 mid-flight. Wait for the base to drop `data-entering`.
 
 And a note about looking at any of it: the catalog imports the **compiled**
 stylesheet, so a change to a layer's CSS is invisible until

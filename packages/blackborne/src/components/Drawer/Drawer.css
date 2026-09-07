@@ -1,0 +1,131 @@
+/*
+ * Layer 3: a component exception, derived from layer 2 (doc 03 §1).
+ *
+ * Two things live here because no utility expresses them: the ceiling measured
+ * against the visual viewport, and keyframes. And one because a utility must
+ * not — the direction-aware slide, which is the only place in this library
+ * where a physical value is unavoidable, so it is confined to four rules with
+ * the reason beside them.
+ */
+
+/*
+ * The block ceiling: the smaller of what the drawer asked for and what the
+ * window has.
+ *
+ * TWO constraints in ONE declaration, and that is not tidiness — it is
+ * required. A layer-3 rule is unlayered, so it outranks every utility (doc 03
+ * §7), which is the whole reason these files exist. So a `max-h-*` utility on
+ * the panel and a `max-block-size` here are not two constraints that combine:
+ * this one simply wins. Measured, with them written separately: a `bottom`
+ * drawer asked for 30rem and rendered the full 900px window height, because
+ * the ceiling declared here replaced the thickness instead of capping it.
+ *
+ * `min()` is what makes them compose. A side drawer sets no thickness on this
+ * axis, so `100%` fills the window; a top or bottom one sets the variable and
+ * the window is still the last word.
+ *
+ * `--visual-viewport-height` is set by the base on the overlay element, from
+ * `useViewportSize`, and inherited here. The difference from `100dvh` matters
+ * in one common situation: an on-screen keyboard shrinks the visual viewport
+ * and leaves the layout viewport alone, so a bottom drawer sized to `100dvh`
+ * puts its footer — the buttons — underneath the keyboard the moment somebody
+ * focuses a field inside it. This is the measurement doc 04 §5 permits, and
+ * the base already took it.
+ */
+.bb-drawer-panel {
+  max-block-size: min(
+    var(--bb-drawer-block-thickness, 100%),
+    var(--visual-viewport-height, 100dvh)
+  );
+}
+
+/*
+ * THE SLIDE, AND THE ONE PLACE `start` AND `end` CANNOT DO THE WORK.
+ *
+ * Everything about WHERE the panel sits is logical and needs no help: the
+ * scrim is a grid and `justify-items: start` means the inline start, which
+ * flips with the writing direction on its own.
+ *
+ * The movement cannot be. There is no logical `translate` — a percentage on
+ * the x axis is physical, positive meaning right, in every direction. So a
+ * drawer at the inline start enters from the left in English and from the
+ * right in Arabic, and the sign has to come from somewhere.
+ *
+ * It comes from `dir`, which the component sets on the panel from
+ * `useLocale().direction` — the base's own locale context, which
+ * `ConfigProvider` feeds. That is what doc 05 §4 asks for: direction derived
+ * from the language rather than passed separately, and never detected. It also
+ * works when the consumer has not set `dir` in their own DOM, which a CSS-only
+ * solution would not.
+ *
+ * The two block-axis sides need no equivalent. Doc 05 §4 is about direction,
+ * not about writing mode, and this library supports RTL rather than vertical
+ * text — so `top` and `bottom` are the block start and end in every locale it
+ * claims to support. Written down because it looks like an omission.
+ */
+.bb-drawer-panel[data-side='start'] {
+  --bb-drawer-shift: -100%;
+}
+.bb-drawer-panel[data-side='start'][dir='rtl'] {
+  --bb-drawer-shift: 100%;
+}
+.bb-drawer-panel[data-side='end'] {
+  --bb-drawer-shift: 100%;
+}
+.bb-drawer-panel[data-side='end'][dir='rtl'] {
+  --bb-drawer-shift: -100%;
+}
+.bb-drawer-panel[data-side='top'] {
+  --bb-drawer-shift: -100%;
+}
+.bb-drawer-panel[data-side='bottom'] {
+  --bb-drawer-shift: 100%;
+}
+
+/*
+ * The entry, and it is the most justified animation in the library: doc 09 §2
+ * allows one that communicates "where a panel came from", and a drawer's whole
+ * identity is the edge it came from. A drawer that simply appears is the one
+ * case where removing the motion removes information.
+ *
+ * The duration is the token, so the reduced-motion rule in semantic.css
+ * reaches it: it sets --bb-duration-normal to 0ms, which makes this instant
+ * rather than slow. Doc 09 §2 is absolute that motion is REMOVED under the
+ * preference, not softened, and zero is removal — which costs nothing here,
+ * because the edge is also stated by where the panel is.
+ *
+ * There is NO EXIT, and that is doc 09 §2.1 rather than an omission: the base
+ * keeps a layer mounted while it animates away, a mounted layer still consumes
+ * `Escape`, and a drawer opened over a dialog would then eat the press meant
+ * for the dialog. Measured on `Dialog`, where an exit animation widened that
+ * window from a frame to a hundred milliseconds.
+ */
+.bb-drawer-panel[data-entering][data-axis='inline'] {
+  animation: bb-drawer-in-inline var(--bb-duration-normal) var(--bb-ease);
+}
+
+.bb-drawer-panel[data-entering][data-axis='block'] {
+  animation: bb-drawer-in-block var(--bb-duration-normal) var(--bb-ease);
+}
+
+.bb-drawer-scrim[data-entering] {
+  animation: bb-drawer-scrim-in var(--bb-duration-normal) var(--bb-ease);
+}
+
+@keyframes bb-drawer-scrim-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes bb-drawer-in-inline {
+  from {
+    translate: var(--bb-drawer-shift) 0;
+  }
+}
+
+@keyframes bb-drawer-in-block {
+  from {
+    translate: 0 var(--bb-drawer-shift);
+  }
+}
