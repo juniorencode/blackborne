@@ -117,6 +117,23 @@ cannot know what level it landed at. Emphasis comes from weight and colour.
 - Empty, loading and error are part of the component, not the consumer's
   problem. "No data yet" and "the filter matched nothing" are two different
   states with two different messages.
+- **`Link` navigates; `Button` acts** — including `Button variant="link"`. The
+  test is whether there is an address. An anchor is what a browser can
+  middle-click, ctrl-click, offer to copy and list among a page's links, and
+  none of that is reachable from a `<button>` however it is dressed. Doc 02
+  §7.1, and the two must keep looking different: accent and underlined at rest
+  is a link, ordinary text until pointed at is a button.
+- **A focus ring on a run of text is an outline, not a border.** A border
+  widens an inline box and moves the words after it every time focus lands.
+  Doc 06 §3.1 has the rule and the table; the browser check measures the text
+  not moving.
+- **How a link navigates arrives on the provider**, like the portal container
+  and for the same reason: the base's router provider is an export of OUR
+  dependency, so a consumer cannot reach it. With nothing passed, a link is an
+  anchor and loads the page — correct with no provider, and a restart in a
+  single-page application. The base checks `target`, `download` and every
+  modifier before handing a press over, so a `navigate` that only pushes onto
+  a history stack is complete (decision 0016).
 - **A group and its member can be one component.** `Accordion` and
   `Collapsible` are the accordion pattern and the disclosure pattern, and the
   only difference in the markup is the heading — so a section alone renders
