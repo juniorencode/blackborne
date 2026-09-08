@@ -284,6 +284,36 @@ a wrong one, and they are a route around the accessibility guarantees in
 — a link that looks like a button — that is a named component, decided
 deliberately.
 
+### 7.1 The first time that escape was used
+
+**Date:** 2026-09-08. For a long time nothing used it. A link in this library
+was `Button variant="link"`, which is the same shape from the other side: a
+button that looks like a link. It was enough for what it was for — an action
+that should not shout, in an empty state or beside a field.
+
+**`Breadcrumbs` is what made it insufficient**, and not for a reason about
+appearance. A breadcrumb trail is the thing people open in another tab. A
+`<button>` cannot be middle-clicked, offers no "copy link address", ignores
+ctrl-click and cmd-click, and does not appear in the list a screen reader
+builds of the links on a page. None of that is styling. It is what the element
+is for.
+
+So `Link` exists, and the two are not two ways to do one thing:
+
+> **`Link` navigates. `Button` acts** — including `Button variant="link"`.
+
+The test is whether there is an address. If the thing has one, an anchor is the
+right element and everything a browser does with links comes free. If pressing
+it runs a function, it is a button whatever it is wearing.
+
+**And this is where a prop would have been the expensive answer.** The
+alternative was an `href` on `Breadcrumb`, on `Tab` and on a pagination page —
+three components acquiring anchor semantics, each with its own version of what
+happens when the address is missing. P5's asymmetry, out loud: one component
+too many sits apart, and one prop too many lives in three places forever. The
+navigation half of the decision is in
+[decision 0016](../decisions/0016-a-link-is-a-component.md).
+
 ## 8. Controlled, with an uncontrolled shortcut
 
 Every value-bearing component works controlled: a value prop and a change
