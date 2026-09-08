@@ -13,6 +13,7 @@ import {
 } from 'react-aria-components';
 import { CONTROL_BOX, CONTROL_INSIDE, Field } from '../../internal/Field';
 import { useMessage } from '../../config';
+import { CrossGlyph } from '../../internal/CrossGlyph';
 import { cx } from '../../internal/cx';
 import { useDevWarning } from '../../internal/useDevWarning';
 import { mergeRefs } from '../../internal/mergeRefs';
@@ -752,25 +753,12 @@ export const TagsInput = forwardRef<HTMLInputElement, TagsInputProps>(
                           aria-label={removeLabel}
                         >
                           {/*
-                           * Drawn rather than received: doc 02 §11.4 lets the
-                           * library size the icons belonging to its own
-                           * controls. The same cross and mark size as Badge's
-                           * and the clear button's, so the marks inside small
-                           * controls are one size and follow density together.
+                           * The library's own cross, shared rather than
+                           * copied — this file held one of the four copies
+                           * that made the case for extracting it (doc 02
+                           * §11.4).
                            */}
-                          <svg
-                            viewBox="0 0 16 16"
-                            className="bb:h-mark bb:w-mark"
-                            fill="none"
-                            aria-hidden="true"
-                          >
-                            <path
-                              d="M4.5 4.5 11.5 11.5M11.5 4.5 4.5 11.5"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                            />
-                          </svg>
+                          <CrossGlyph />
                         </Button>
                       </span>
                     ) : null}

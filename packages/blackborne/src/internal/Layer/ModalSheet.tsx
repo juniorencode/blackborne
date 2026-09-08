@@ -2,6 +2,7 @@ import { Dialog as AriaDialog, Heading } from 'react-aria-components';
 import { Button } from '../../components/Button';
 import { useMessage } from '../../config';
 import { BODY, FOOTER, HEADER, SHEET, TITLE } from './layerBox';
+import { CrossGlyph } from '../CrossGlyph';
 
 /*
  * INTERNAL. The inside of a modal layer: the element that carries
@@ -79,24 +80,14 @@ export function ModalSheet({
           className="bb:-my-1 bb:-me-2 bb:flex-none"
         >
           {/*
-           * Drawn, not received: doc 02 §11.4 separates the icons the library
-           * draws for its own controls from the ones it receives. The same
-           * cross and stroke as the fields' clear button, so the marks inside
-           * the library's own controls are one shape.
+           * The library's own cross, shared rather than copied — the same
+           * shape and stroke as the fields' clear button, which is the point
+           * of it being shared (doc 02 §11.4).
+           *
+           * Bigger than the mark token the small controls use, because this
+           * one sits alone in a header rather than beside text.
            */}
-          <svg
-            viewBox="0 0 16 16"
-            className="bb:h-4 bb:w-4"
-            fill="none"
-            aria-hidden="true"
-          >
-            <path
-              d="M4.5 4.5 11.5 11.5M11.5 4.5 4.5 11.5"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-          </svg>
+          <CrossGlyph className="bb:h-4 bb:w-4" />
         </Button>
       </header>
 

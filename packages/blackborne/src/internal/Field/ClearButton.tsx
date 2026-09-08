@@ -1,6 +1,7 @@
 import { Button } from 'react-aria-components';
 import { useMessage } from '../../config';
 import { EDGE_BUTTON } from './controlBox';
+import { CrossGlyph } from '../CrossGlyph';
 
 /*
  * INTERNAL. The cross that empties a field.
@@ -68,24 +69,11 @@ export function ClearButton({
       {...(slot === undefined ? {} : { slot })}
     >
       {/*
-       * Drawn rather than received: doc 02 §11.4 lets the library draw and
-       * size the icons belonging to its own controls. The same cross and the
-       * same mark size Badge's remove button uses, so the marks inside small
-       * controls are one size and follow density together.
+       * The library's own cross, shared rather than copied. The default size
+       * is the mark token, the same one Badge's remove button takes, so the
+       * marks inside small controls follow density together (doc 02 §11.4).
        */}
-      <svg
-        viewBox="0 0 16 16"
-        className="bb:h-mark bb:w-mark"
-        fill="none"
-        aria-hidden="true"
-      >
-        <path
-          d="M4.5 4.5 11.5 11.5M11.5 4.5 4.5 11.5"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-      </svg>
+      <CrossGlyph />
     </Button>
   );
 }
