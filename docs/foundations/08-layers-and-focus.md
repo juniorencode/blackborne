@@ -579,6 +579,41 @@ correct.
 dependency. The general form is the same as the one above: an instrument that
 shares a box with its subject is measuring both.
 
+**And the PORTAL CONTAINER must lay nothing out**, which is the same lesson
+one level further out: the container is not an instrument beside the subject,
+it is an instrument the subject is inside.
+
+A layer portalled into an element is a child of it, and the base's overlay
+wrapper is `position: static` — so it takes part in that element's layout. The
+catalog's layer fixture centred its content with
+`display: grid; place-items: center` on the same element it handed to
+`portalContainer`, and an open layer therefore became a grid item. Two
+auto-sized rows in a grid taller than its contents share the free space
+between them, because `place-items` sets `align-items` and not
+`align-content`.
+
+Measured on the tooltip fixture: the trigger sat at y = 441 closed and y = 239
+open. **Opening a tooltip moved its own trigger 202px, under the pointer that
+opened it** — doc 09 §7's "nothing moves under the cursor", broken by the
+fixture for the components that rule is most about.
+
+Two things it cost, and the second is why this is in a foundation:
+
+- **Every baseline of an open anchored layer was generated from the shifted
+  layout**, so fourteen pictures were correct pictures of the wrong thing, and
+  nothing looked wrong.
+- **The base positions a layer against the trigger's box, and the box then
+  moved.** Whether the reposition landed before an assertion was a race, so
+  three unrelated checks failed intermittently under load and passed in
+  isolation — for weeks, blamed on load.
+
+The rule: **the element handed to `portalContainer` holds no layout of its
+own.** Anything that arranges the page goes inside it, where a layer never
+lands. In the fixture that is now a flex column whose stage claims the leftover
+height, so a zero-height item appended after it cannot take any back — and the
+number of wrappers the base leaves behind stops mattering, which it did not
+before.
+
 ## 10. Verification
 
 - [ ] `Escape` closes the innermost layer only, one press at a time

@@ -14,10 +14,10 @@
  */
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { LayerPage as Page } from '../../catalog/layerPage';
 import { ConfirmDialog, type ConfirmTone } from './ConfirmDialog';
 import { Alert } from '../Alert';
 import { Button } from '../Button';
-import { ConfigProvider } from '../../config';
 
 const TONES = [
   'info',
@@ -33,56 +33,6 @@ const TONES = [
  */
 const MISSING: Exclude<ConfirmTone, (typeof TONES)[number]>[] = [];
 void MISSING;
-
-/** A full page carrying one combination of the theme axes, which the portalled
- * layer is mounted into so that it inherits them. See Dialog's stories. */
-function Page({
-  mode = 'light',
-  density = 'normal',
-  locale,
-  dir = 'ltr',
-  isGreyscale = false,
-  children
-}: {
-  mode?: 'light' | 'dark';
-  density?: 'normal' | 'compact';
-  locale?: string;
-  dir?: 'ltr' | 'rtl';
-  isGreyscale?: boolean;
-  children: React.ReactNode;
-}) {
-  const [host, setHost] = useState<HTMLDivElement | null>(null);
-
-  return (
-    <div
-      className="catalog-layer-page"
-      data-bb-mode={mode}
-      data-bb-density={density}
-      dir={dir}
-      ref={setHost}
-      /*
-       * The filter goes on the HOST, which is also the portal container, so the
-       * layer is inside it. Put on an inner wrapper instead — the obvious
-       * place — and the dialog escapes it entirely: it is portalled to this
-       * element, not to the wrapper. Measured, and the story showed full
-       * colour while claiming to be the greyscale check.
-       */
-      {...(isGreyscale ? { style: { filter: 'grayscale(1)' } } : {})}
-    >
-      <p className="catalog-label">
-        The page behind, so the scrim has something to cover.
-      </p>
-      {host === null ? null : (
-        <ConfigProvider
-          portalContainer={host}
-          {...(locale === undefined ? {} : { locale })}
-        >
-          {children}
-        </ConfigProvider>
-      )}
-    </div>
-  );
-}
 
 /** Real questions, in the words doc 09 §5.4 asks for: the button names the
  * action, and the body says what it costs. */
@@ -210,7 +160,10 @@ export const Tones: Story = {
  * text colour so the message does not compete with the question. */
 export const Light: Story = {
   render: () => (
-    <Page mode="light">
+    <Page
+      label="The page behind, so the scrim has something to cover."
+      mode="light"
+    >
       <ConfirmDialog
         isOpen
         onOpenChange={() => {}}
@@ -228,7 +181,10 @@ export const Light: Story = {
  * and this is the first component to draw one on a raised surface. */
 export const Dark: Story = {
   render: () => (
-    <Page mode="dark">
+    <Page
+      label="The page behind, so the scrim has something to cover."
+      mode="dark"
+    >
       <ConfirmDialog
         isOpen
         onOpenChange={() => {}}
@@ -246,7 +202,11 @@ export const Dark: Story = {
  * be tellable apart with the hue gone (doc 06 §3). */
 export const Greyscale: Story = {
   render: () => (
-    <Page mode="light" isGreyscale>
+    <Page
+      label="The page behind, so the scrim has something to cover."
+      mode="light"
+      isGreyscale
+    >
       <ConfirmDialog
         isOpen
         onOpenChange={() => {}}
@@ -365,7 +325,10 @@ export const Failing: Story = {
 /** The same failure at rest, for the picture. */
 export const AfterAFailure: Story = {
   render: () => (
-    <Page mode="light">
+    <Page
+      label="The page behind, so the scrim has something to cover."
+      mode="light"
+    >
       <ConfirmDialog
         isOpen
         onOpenChange={() => {}}
@@ -388,7 +351,10 @@ export const AfterAFailure: Story = {
 /** Compact density. */
 export const Compact: Story = {
   render: () => (
-    <Page density="compact">
+    <Page
+      label="The page behind, so the scrim has something to cover."
+      density="compact"
+    >
       <ConfirmDialog
         isOpen
         onOpenChange={() => {}}
@@ -407,7 +373,11 @@ export const Compact: Story = {
 export const Direction: Story = {
   name: 'RTL',
   render: () => (
-    <Page dir="rtl" locale="ar-EG">
+    <Page
+      label="The page behind, so the scrim has something to cover."
+      dir="rtl"
+      locale="ar-EG"
+    >
       <ConfirmDialog
         isOpen
         onOpenChange={() => {}}
@@ -428,7 +398,10 @@ export const Direction: Story = {
  */
 export const LongWords: Story = {
   render: () => (
-    <Page mode="light">
+    <Page
+      label="The page behind, so the scrim has something to cover."
+      mode="light"
+    >
       <ConfirmDialog
         isOpen
         onOpenChange={() => {}}

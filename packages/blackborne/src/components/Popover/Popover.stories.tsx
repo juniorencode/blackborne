@@ -13,55 +13,13 @@
  * cannot be open at once anyway — each one blocks the page while it is up.
  */
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { useState } from 'react';
+import { CentredLayerPage as Page } from '../../catalog/layerPage';
 import { Popover } from './Popover';
 import { Button } from '../Button';
 import { Checkbox } from '../Checkbox';
 import { TextField } from '../TextField';
 import { useDialog } from '../Dialog';
-import { ConfigProvider } from '../../config';
 import { PLACEMENTS } from '../../internal/Layer';
-
-/** A full page carrying one combination of the theme axes, that a portalled
- * layer is mounted into so it inherits them. See Dialog's stories. */
-function Page({
-  mode = 'light',
-  density = 'normal',
-  locale,
-  dir = 'ltr',
-  children
-}: {
-  mode?: 'light' | 'dark';
-  density?: 'normal' | 'compact';
-  locale?: string;
-  dir?: 'ltr' | 'rtl';
-  children: React.ReactNode;
-}) {
-  // State and not a ref: the element has to exist before it can be a portal
-  // target, and a ref is still null on the first render — which is exactly the
-  // frame a screenshot catches.
-  const [host, setHost] = useState<HTMLDivElement | null>(null);
-
-  return (
-    <div
-      className="catalog-layer-page"
-      data-bb-mode={mode}
-      data-bb-density={density}
-      dir={dir}
-      ref={setHost}
-      style={{ display: 'grid', placeItems: 'center' }}
-    >
-      {host === null ? null : (
-        <ConfigProvider
-          portalContainer={host}
-          {...(locale === undefined ? {} : { locale })}
-        >
-          {children}
-        </ConfigProvider>
-      )}
-    </div>
-  );
-}
 
 /** A consumer's own button that closes the layer it is in (doc 02 §5). */
 function ApplyButton() {

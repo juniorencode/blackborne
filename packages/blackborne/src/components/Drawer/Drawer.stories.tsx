@@ -16,10 +16,10 @@
  */
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { LayerPage as Page } from '../../catalog/layerPage';
 import { Drawer, type DrawerSide, type DrawerSize } from './Drawer';
 import { Dialog, useDialog } from '../Dialog';
 import { Button } from '../Button';
-import { ConfigProvider } from '../../config';
 import { TextField } from '../TextField';
 
 const SIDES = [
@@ -41,49 +41,6 @@ const MISSING_SIDES: Exclude<DrawerSide, (typeof SIDES)[number]>[] = [];
 const MISSING_SIZES: Exclude<DrawerSize, (typeof SIZES)[number]>[] = [];
 void MISSING_SIDES;
 void MISSING_SIZES;
-
-/** A full page carrying one combination of the theme axes, that a portalled
- * layer is mounted into so it inherits them. See Dialog's stories. */
-function Page({
-  mode = 'light',
-  density = 'normal',
-  locale,
-  dir = 'ltr',
-  children
-}: {
-  mode?: 'light' | 'dark';
-  density?: 'normal' | 'compact';
-  locale?: string;
-  dir?: 'ltr' | 'rtl';
-  children: React.ReactNode;
-}) {
-  // State and not a ref: the element has to exist before it can be a portal
-  // target, and a ref is still null on the first render — which is exactly the
-  // frame a screenshot catches.
-  const [host, setHost] = useState<HTMLDivElement | null>(null);
-
-  return (
-    <div
-      className="catalog-layer-page"
-      data-bb-mode={mode}
-      data-bb-density={density}
-      dir={dir}
-      ref={setHost}
-    >
-      <p className="catalog-label">
-        The page behind, so the scrim has something to cover.
-      </p>
-      {host === null ? null : (
-        <ConfigProvider
-          portalContainer={host}
-          {...(locale === undefined ? {} : { locale })}
-        >
-          {children}
-        </ConfigProvider>
-      )}
-    </div>
-  );
-}
 
 /** A consumer's own button that closes the layer it is in (doc 02 §5). */
 function CancelButton() {
@@ -295,7 +252,10 @@ export const Sizes: Story = {
  * other three edges are the window's. */
 export const Light: Story = {
   render: () => (
-    <Page mode="light">
+    <Page
+      label="The page behind, so the scrim has something to cover."
+      mode="light"
+    >
       <OpenDrawer />
     </Page>
   )
@@ -305,7 +265,10 @@ export const Light: Story = {
  * on a dark ground (doc 03 §5 rule 5). */
 export const Dark: Story = {
   render: () => (
-    <Page mode="dark">
+    <Page
+      label="The page behind, so the scrim has something to cover."
+      mode="dark"
+    >
       <OpenDrawer />
     </Page>
   )
@@ -322,7 +285,11 @@ export const Dark: Story = {
 export const Direction: Story = {
   name: 'RTL',
   render: () => (
-    <Page dir="rtl" locale="ar-EG">
+    <Page
+      label="The page behind, so the scrim has something to cover."
+      dir="rtl"
+      locale="ar-EG"
+    >
       <OpenDrawer side="start" title="العميل ٤٨٢١" />
     </Page>
   )
@@ -331,7 +298,10 @@ export const Direction: Story = {
 /** Compact density. Every padding inside follows it. */
 export const Compact: Story = {
   render: () => (
-    <Page density="compact">
+    <Page
+      label="The page behind, so the scrim has something to cover."
+      density="compact"
+    >
       <OpenDrawer />
     </Page>
   )
@@ -340,7 +310,10 @@ export const Compact: Story = {
 /** A bottom sheet: the same component, thick on the block axis. */
 export const BottomSheet: Story = {
   render: () => (
-    <Page mode="light">
+    <Page
+      label="The page behind, so the scrim has something to cover."
+      mode="light"
+    >
       <OpenDrawer side="bottom" size="sm" title="Filter the listing">
         <div style={{ display: 'grid', gap: 'var(--bb-space-4)' }}>
           <TextField label="Reference" placeholder="F001-" />
@@ -355,7 +328,10 @@ export const BottomSheet: Story = {
  * scrolls, and it scrolls from the keyboard the moment it opens. */
 export const Scrolling: Story = {
   render: () => (
-    <Page mode="light">
+    <Page
+      label="The page behind, so the scrim has something to cover."
+      mode="light"
+    >
       <OpenDrawer size="sm" title="Address history">
         <LongBody />
       </OpenDrawer>

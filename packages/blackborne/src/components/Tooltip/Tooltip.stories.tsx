@@ -18,49 +18,10 @@
  * "below, aligned to the start" means than a picture of it would.
  */
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { useState } from 'react';
+import { CentredLayerPage as Page } from '../../catalog/layerPage';
 import { Tooltip } from './Tooltip';
 import { Button } from '../Button';
-import { ConfigProvider } from '../../config';
 import { PLACEMENTS } from '../../internal/Layer';
-
-/** A page carrying one combination of the theme axes, and the portal target so
- * the tooltip inherits them. See Dialog's stories for the reasoning. */
-function Page({
-  mode = 'light',
-  density = 'normal',
-  locale,
-  dir = 'ltr',
-  children
-}: {
-  mode?: 'light' | 'dark';
-  density?: 'normal' | 'compact';
-  locale?: string;
-  dir?: 'ltr' | 'rtl';
-  children: React.ReactNode;
-}) {
-  const [host, setHost] = useState<HTMLDivElement | null>(null);
-
-  return (
-    <div
-      className="catalog-layer-page"
-      data-bb-mode={mode}
-      data-bb-density={density}
-      dir={dir}
-      ref={setHost}
-      style={{ display: 'grid', placeItems: 'center' }}
-    >
-      {host === null ? null : (
-        <ConfigProvider
-          portalContainer={host}
-          {...(locale === undefined ? {} : { locale })}
-        >
-          {children}
-        </ConfigProvider>
-      )}
-    </div>
-  );
-}
 
 /*
  * A save icon, drawn here rather than distributed: doc 02 §11 says icons are

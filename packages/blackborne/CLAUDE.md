@@ -245,6 +245,14 @@ Everything that renders in a portal. Four things were measured while building
   invisible for exactly this reason, and loosening the clip is worse: it lets
   the sticky header's corners out too. `ANCHORED` in `internal/Layer` is the
   wrapper, and it paints nothing.
+- **The element handed to `portalContainer` may hold no layout of its own.** A
+  layer portalled into it is a CHILD of it and the base's overlay wrapper is
+  `position: static`, so it takes part in that element's layout. The catalog's
+  own fixture centred with `place-items: center` on the same element, and an
+  open tooltip therefore became a grid item: measured, the trigger moved from
+  y = 441 to y = 239 when it opened. Fourteen baselines had been generated
+  from the shifted layout and three unrelated checks were intermittently
+  failing because the base positions against a box that then moved. Doc 08 §9.
 - **A computed style is not paint.** The arrow above had the right box, the
   right rotation and `visibility: visible`, and nothing on the screen. Use
   `document.elementFromPoint` on anything drawn: clipped content is not
