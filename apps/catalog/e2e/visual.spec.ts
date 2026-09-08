@@ -101,6 +101,15 @@ const STATES: Array<[string, string]> = [
   ['components-skeleton--variants', 'skeleton-variants'],
   ['components-card--containers', 'card-containers'],
   /*
+   * A section that folds has two states no other component has — open and
+   * closed — and the open one is the picture worth keeping: the divider, the
+   * air inside the panel and the chevron turned over. The animation between
+   * them cannot be photographed at all (`animations: 'disabled'` finishes it
+   * before the shutter), so it is measured in accordion.spec.ts instead.
+   */
+  ['components-accordion--states', 'accordion-states'],
+  ['components-collapsible--states', 'collapsible-states'],
+  /*
    * A component with nothing to look at still earns a baseline, and this is
    * the one that earns it most: the story is two rulers that must stay the
    * same width. If the hiding ever stops working, the picture changes — which
@@ -271,7 +280,12 @@ const TOGETHER: Array<[string, string]> = [
   ['components-checkbox--in-a-form', 'form-light-normal'],
   ['components-checkbox--in-a-form-dark-compact', 'form-dark-compact'],
   ['components-numberfield--aligns-with-others', 'alignment-across-controls'],
-  ['components-textfield--aligns-with-button', 'alignment-field-and-button']
+  ['components-textfield--aligns-with-button', 'alignment-field-and-button'],
+  /* Three surfaces that are three different tokens and look like one grey
+     until they are beside each other: the page, a Card, and the sections
+     inside it. */
+  ['components-accordion--inside-a-card', 'accordion-inside-a-card'],
+  ['components-collapsible--together', 'collapsible-together']
 ];
 
 for (const [id, name] of TOGETHER) {
@@ -309,7 +323,13 @@ const AXES: Array<[string, string]> = [
      paddings of a panel whose WIDTH is its content — so compact changes the
      size of the box itself here, which it does not do to a dialog. */
   ['components-popover--direction', 'axis-popover-rtl'],
-  ['components-popover--compact', 'axis-popover-compact']
+  ['components-popover--compact', 'axis-popover-compact'],
+  /* A section's two: RTL, where the chevron crosses to the other edge and the
+     mark itself does NOT turn round because down is down in Arabic, and
+     density, which trims the header, the panel and the gap between sections
+     at once. */
+  ['components-accordion--direction', 'axis-accordion-rtl'],
+  ['components-accordion--densities', 'axis-accordion-densities']
 ];
 
 for (const [id, name] of AXES) {

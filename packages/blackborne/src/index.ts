@@ -21,6 +21,19 @@ export type {
 } from './config';
 export { defaultDictionary } from './config';
 
+/*
+ * `Collapsible` ships beside `Accordion` because it IS the accordion's
+ * section: a group of them is the accordion pattern, one of them alone is the
+ * disclosure pattern, and the only difference in the markup is the heading
+ * (doc 06 §2.1).
+ */
+export { Accordion, Collapsible } from './components/Accordion';
+export type {
+  AccordionHeadingLevel,
+  AccordionProps,
+  CollapsibleProps
+} from './components/Accordion';
+
 export { Alert } from './components/Alert';
 export type { AlertProps, AlertTone } from './components/Alert';
 

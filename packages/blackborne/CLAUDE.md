@@ -76,6 +76,17 @@ field whose size class lived on its group rendered its value at the browser's
 same nominal size — for as long as the component had existed. So a field's size
 map has two halves: the height goes on the frame, the type goes on the control.
 
+**`border-solid` on its own is a 3px border.** The style utility sets
+`border-style` on all four sides and nothing here sets a width, so the three
+sides without one keep the browser's initial `medium`. Measured on an
+accordion's panel divider: `border-t border-solid` drew 1px on top and **3px**
+on the other three, a box round every open panel and 2px wider than the section
+holding it. The per-side utilities need no help — Tailwind emits
+`border-top-style: var(--tw-border-style)` with that variable registered at
+`solid` — so `border-t` alone carries the width and the style. Pairing
+`border-solid` with the all-sides `border` is harmless, which is why every
+other component does it and nothing had found this.
+
 **A block of text renders as a `div`, not a `p`.** Same cause: with no reset, a
 `<p>` arrives carrying the browser's own block margins, which fight the gap the
 component already decided. Headings are a separate question and the answer is
@@ -106,6 +117,21 @@ cannot know what level it landed at. Emphasis comes from weight and colour.
 - Empty, loading and error are part of the component, not the consumer's
   problem. "No data yet" and "the filter matched nothing" are two different
   states with two different messages.
+- **A group and its member can be one component.** `Accordion` and
+  `Collapsible` are the accordion pattern and the disclosure pattern, and the
+  only difference in the markup is the heading — so a section alone renders
+  none and a section in a group renders one at the level the group was given
+  (doc 06 §2.1). The level travels by context, never exported, which is doc 02
+  §3.1.1's rule for a property that belongs to the SET.
+- **A height animation is the base's, not ours.** `useDisclosure` publishes
+  `--disclosure-panel-height` on the panel, sets it in pixels, switches it to
+  `auto` when the animations finish, and on the way closed waits for
+  `getAnimations()` on THAT element before hiding it. So the whole animation is
+  a CSS transition on `height` — no `interpolate-size`, no grid trick, no
+  observer. Two consequences: the transition has to be on the panel itself or
+  the base sees no animation and hides the content mid-flight, and the panel
+  may carry **no padding**, because a border-box height is floored at padding
+  plus border and a closed panel would rest two dozen pixels tall.
 
 ## Fields
 
@@ -224,6 +250,16 @@ what a field's unreachable clear button does.
 
 And the way to tell: query **by role and name**. `getByRole('button')` passes
 either way; `getByRole('button', { name: 'Delete' })` is what fails.
+
+**And there is a third way, which the base uses and which is worth knowing
+because it looks like a bug the first time you meet it.** A collapsed
+disclosure panel is hidden with `hidden="until-found"`, so its content stays in
+the DOM — a browser's find-in-page opens the section to show a match — and is
+gone from everything else. Measured while writing the accordion's checks: a
+button inside a closed panel is not a disabled button in the accessibility
+tree, it is **absent**, so `getByRole` fails with "element(s) not found" rather
+than reporting something unfocusable. Both halves of doc 06 §4 rule 5 hold at
+once, which is unusual: normally one has to be chosen.
 
 And a note about looking at any of it: the catalog imports the **compiled**
 stylesheet, so a change to a layer's CSS is invisible until
