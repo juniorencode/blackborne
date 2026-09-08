@@ -118,3 +118,50 @@ test('every variant and size renders without crashing', () => {
     }
   }
 });
+
+test('a pending button keeps its accessible name', () => {
+  render(<Button isPending>Delete</Button>);
+
+  /*
+   * The regression this exists for, and it was real. While pending the label
+   * is hidden so the button holds its width, and the first version hid it with
+   * `visibility: hidden` — which takes an element out of the ACCESSIBILITY
+   * TREE as well as out of sight. Measured with an aria snapshot in the
+   * browser, the footer of a confirmation read `button "Cancel"` and then
+   * `button` with nothing at all: somebody who had just pressed Delete was
+   * left focused on a nameless control.
+   *
+   * `opacity: 0` hides it and keeps it named. Querying BY NAME is what tells
+   * the two apart — `getByRole('button')` alone passes either way.
+   */
+  expect(screen.getByRole('button', { name: 'Delete' })).toBeTruthy();
+});
+
+test('and it is announced as unavailable rather than removed', () => {
+  render(<Button isPending>Delete</Button>);
+
+  /*
+   * `aria-disabled` and not `disabled`, which is the base's own choice: the
+   * button stays focusable and announced, so the person who pressed it is
+   * told what is happening instead of losing it from the tree entirely.
+   */
+  const button = screen.getByRole<HTMLButtonElement>('button', {
+    name: 'Delete'
+  });
+  expect(button.getAttribute('aria-disabled')).toBe('true');
+  expect(button.disabled).toBe(false);
+});
+
+test('a pending button does not run its handler', async () => {
+  const onPress = vi.fn();
+  render(
+    <Button isPending onPress={onPress}>
+      Delete
+    </Button>
+  );
+
+  await userEvent.click(screen.getByRole('button', { name: 'Delete' }));
+  // Doc 09 §3's other half: silence makes people click twice, and in a
+  // management application clicking twice usually duplicates a record.
+  expect(onPress).not.toHaveBeenCalled();
+});

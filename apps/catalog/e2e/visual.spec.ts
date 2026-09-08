@@ -206,7 +206,30 @@ const STATES: Array<[string, string]> = [
   ['components-drawer--light', 'drawer-light'],
   ['components-drawer--dark', 'drawer-dark'],
   ['components-drawer--bottom-sheet', 'drawer-bottom'],
-  ['components-drawer--scrolling', 'drawer-scrolling']
+  ['components-drawer--scrolling', 'drawer-scrolling'],
+  /*
+   * The confirmation. `confirm-greyscale` is the one that earns its place and
+   * it is not decoration: doc 06 §3 forbids colour as the only channel, so the
+   * glyph's SILHOUETTE has to carry the tone with the hue gone — and a
+   * screenshot in greyscale is the only way to see whether it does.
+   *
+   * `confirm-after-a-failure` photographs the decision: a rejected promise
+   * leaves the dialog open so the consumer can say what went wrong where it
+   * went wrong.
+   *
+   * And both of them photograph something nobody planned for: the FOCUS RING
+   * is on Cancel. `ConfirmDialog` is the only component that focuses a control
+   * on open — doc 09 §5.5, the destructive answer is not the focused one — so
+   * a change that moved focus to Delete would change these pictures as well as
+   * failing `confirm.spec.ts`. A second, accidental guard on the decision that
+   * matters most here, and worth not breaking by making these stories
+   * unfocused.
+   */
+  ['components-confirmdialog--light', 'confirm-light'],
+  ['components-confirmdialog--dark', 'confirm-dark'],
+  ['components-confirmdialog--greyscale', 'confirm-greyscale'],
+  ['components-confirmdialog--after-a-failure', 'confirm-after-a-failure'],
+  ['components-confirmdialog--long-words', 'confirm-long-words']
 ];
 
 for (const [id, name] of STATES) {
@@ -255,7 +278,8 @@ const AXES: Array<[string, string]> = [
   /* The drawer's own two axes: the direction, where start and end swap sides
      and the border swaps with them, and density on every padding inside. */
   ['components-drawer--direction', 'axis-drawer-rtl'],
-  ['components-drawer--compact', 'axis-drawer-compact']
+  ['components-drawer--compact', 'axis-drawer-compact'],
+  ['components-confirmdialog--direction', 'axis-confirm-rtl']
 ];
 
 for (const [id, name] of AXES) {

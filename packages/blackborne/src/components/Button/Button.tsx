@@ -3,6 +3,7 @@ import {
   Button as AriaButton,
   type ButtonProps as AriaButtonProps
 } from 'react-aria-components';
+import { Spinner, type SpinnerSize } from '../Spinner';
 import { cx } from '../../internal/cx';
 
 export type ButtonVariant =
@@ -121,6 +122,13 @@ const SIZE: Record<ButtonSize, string> = {
   lg: 'bb:h-control-lg bb:text-lg'
 } satisfies Record<ButtonSize, string>;
 
+/** The spinner that fits inside each button size. See the note at the call. */
+const SPINNER: Record<ButtonSize, SpinnerSize> = {
+  sm: 'sm',
+  md: 'sm',
+  lg: 'md'
+} satisfies Record<ButtonSize, SpinnerSize>;
+
 /*
  * Shared by every variant. Notes on the parts that are not obvious:
  *
@@ -139,7 +147,7 @@ const BASE = cx(
   // Without it the browser default is content-box, a declared height of
   // 40px measures 42, and controls of the same nominal size stop lining up.
   'bb:box-border',
-  'bb:inline-flex bb:items-center bb:justify-center bb:gap-2',
+  'bb:inline-flex bb:items-center bb:justify-center',
   'bb:px-(--bb-control-padding-x)',
   'bb:rounded-md bb:border bb:border-solid',
   'bb:font-sans bb:font-strong bb:leading-tight',
@@ -168,12 +176,53 @@ const BASE = cx(
    * almost nothing.
    */
   'bb:data-disabled:text-text-disabled bb:data-disabled:cursor-not-allowed',
-  // Pending had only a cursor change, which is invisible until you hover:
-  // the state was in the API and not on the screen. Doc 09 §3 requires a
-  // visible response to every interaction. A spinner would be better and
-  // needs the Spinner piece, which is not built yet.
-  'bb:data-pending:cursor-progress bb:data-pending:opacity-70'
+  /*
+   * PENDING: a spinner in place of the content, and the button does not
+   * change size.
+   *
+   * This used to be `opacity-70` and a cursor, with a note saying a spinner
+   * would be better and the Spinner piece did not exist yet. It does, and
+   * `ConfirmDialog` is the first thing to hold a button pending on a promise
+   * the library itself owns — so doc 09 §3's "past a second, indicate it is
+   * still going" now has a case, and 30% less opacity is not that.
+   *
+   * The content is HIDDEN rather than removed — it keeps its box — so the
+   * button holds exactly the width it had and nothing beside it moves. That
+   * matters more here than usual: a row of actions would otherwise shuffle
+   * under the cursor of somebody who has just pressed one of them.
+   *
+   * **`opacity-0` and not `invisible`**, and that distinction is the whole of
+   * an accessibility bug this had. `visibility: hidden` takes an element out of
+   * the ACCESSIBILITY TREE as well as out of sight, so the button lost its
+   * name: measured with an aria snapshot, the footer read
+   * `button "Cancel"` and then `button` with nothing at all — a screen reader
+   * user who had just pressed Delete was left on a nameless control. Opacity
+   * hides it visually and keeps it named.
+   *
+   * It is hidden on a WRAPPER, and the first attempt is worth recording too
+   * because it defeated itself twice over. Hiding the content with
+   * `text-transparent` and `*:invisible` on the button needs no wrapper, and
+   * it also hits the spinner: `*:invisible` matches the spinner's own layer,
+   * and the spinner draws in `currentColor`, which `text-transparent` had just
+   * emptied. The screenshot showed six coloured boxes with nothing in them.
+   *
+   * `relative` is on every button so the spinner has something to centre in,
+   * and costs nothing else.
+   */
+  'bb:relative',
+  'bb:data-pending:cursor-progress'
 );
+
+/*
+ * The content, wrapped so that one element can be hidden while the spinner
+ * stays visible.
+ *
+ * It carries the gap rather than BASE, so there is one place that spaces an
+ * icon from its label instead of two that have to agree. With every child
+ * inside this, BASE's own gap would never apply anyway — a wrapper is one flex
+ * item, and the spinner's layer is out of flow.
+ */
+const CONTENT = cx('bb:inline-flex bb:items-center bb:gap-2');
 
 export interface ButtonProps extends Omit<
   AriaButtonProps,
@@ -214,13 +263,40 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
      * type error, because ours is `boolean | undefined` and the base's is
      * `boolean?`. The rest object preserves optionality (doc 02 §2).
      */
+    const isPending = ariaProps.isPending === true;
+
     return (
       <AriaButton
         ref={ref}
         className={cx(BASE, VARIANT[variant], SIZE[size], className)}
         {...ariaProps}
       >
-        {children}
+        <span className={cx(CONTENT, isPending && 'bb:opacity-0')}>
+          {children}
+        </span>
+        {!isPending ? null : (
+          /*
+           * Absolutely centred over the hidden content, so the button keeps
+           * its width. `pointer-events-none` because the base already stops
+           * every interaction while pending, and a stray target here would be
+           * a second mechanism for one thing.
+           */
+          <span className="bb:pointer-events-none bb:absolute bb:inset-0 bb:grid bb:place-items-center">
+            {/*
+             * Decorative, and that is measured rather than assumed: the base
+             * announces the pending state itself, assertively, when the button
+             * has focus — which is the case that matters, since you have just
+             * pressed it. A spinner with a name of its own would be the second
+             * announcement doc 06 §3 warns about.
+             *
+             * Sized against the button, because the Spinner's own scale is
+             * measured against the TYPE scale (doc 03 §4.6d) and a button's
+             * three sizes each carry a different type size. One spinner size
+             * for all three would read small on `lg` and crowd `sm`.
+             */}
+            <Spinner size={SPINNER[size]} isDecorative />
+          </span>
+        )}
       </AriaButton>
     );
   }

@@ -12,6 +12,47 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **`ConfirmDialog`** — a question with two answers, above the page. Doc 09 §5
+  governs almost all of it, and the parts that are not configurable are not
+  oversights.
+
+  **`role="alertdialog"`**, which is why this is a component and not three
+  props on `Dialog`: a screen reader announces it as requiring a response, and
+  the base then points `aria-describedby` at the content on its own, so the
+  consequence is read with the question instead of waiting to be found.
+
+  **Focus lands on Cancel** (doc 09 §5.5). This is the library's first and only
+  `autoFocus`, which doc 08 §4 permits with a written reason — and the reason is
+  checked rather than described: a browser test presses the space bar at a
+  freshly opened confirmation and asserts that nothing was deleted.
+
+  **`confirmLabel` is required and there is no default.** Doc 09 §5.4 wants the
+  button to name the action, and a default would have been shipped as "Confirm"
+  by everyone. "Cancel" comes from the dictionary, because it is the one word
+  nobody customises.
+
+  **Three tones, not four.** `success` is not one: you confirm only when there
+  is no way back, so there is nothing to be pleased about yet. And three tones
+  map to **two** button appearances, because the catalog already ruled that
+  colour on a button says what pressing it costs and only two costs are worth
+  colouring. `warning` confirms in danger too — discarding what somebody typed
+  is destructive even when nothing is deleted.
+
+  **A promise it is given, it waits for.** While in flight the confirming
+  button is pending, cancelling is disabled, and neither `Escape` nor a click
+  outside closes anything. On fulfilment it closes; **on rejection it stays
+  open**, so the consumer can say what went wrong where it went wrong (doc 09
+  §4). That is a default and not a policy: catching your own error makes the
+  promise fulfil, and the dialog closes. The reverse default cannot be
+  recovered from — once the layer has gone there is nowhere to put the message.
+  Doc 09 §5 gains rules 6 and 7 and a §5.1 for that, because the shape returns
+  everywhere a promise is awaited on somebody's behalf.
+
+  There is no close cross and no `isDismissable`: both would be a third and a
+  fourth way to say no, beside a button that says it in words.
+
+- `cancel` in the dictionary.
+
 - **`Drawer`** — a modal panel anchored to an edge of the window: a detail view
   beside a listing, a filter panel, a bottom sheet.
 
@@ -328,6 +369,19 @@ minor versions. Every break is listed here with its migration.
   between them.
 
 ### Changed
+
+- **A spinner on a pending `Button`, and it keeps its size.** `isPending` had a
+  progress cursor and 30% less opacity — a state that was in the API and barely
+  on the screen, with the component's own note saying a spinner would be better
+  and the `Spinner` piece did not exist yet. It does, and `ConfirmDialog` is the
+  first thing to hold a button pending on a promise the library owns, so doc 09
+  §3's "past a second, indicate it is still going" finally has a case.
+
+  The content is hidden rather than removed so nothing beside the button moves.
+  **With `opacity` and not `visibility`**, which is a bug that was found and
+  fixed on the way: `visibility: hidden` removes an element from the
+  accessibility tree, so the pending button lost its name — an aria snapshot
+  read `button "Cancel"` and then `button` with nothing at all.
 
 - **`react-aria` is now a direct dependency**, pinned at exactly `3.52.0`. It
   was already in your tree — `react-aria-components` depends on it at that

@@ -168,6 +168,26 @@ Everything that renders in a portal. Four things were measured while building
   480px panel against the right of a 1280px window reported its far side at
   1520 mid-flight. Wait for the base to drop `data-entering`.
 
+## Hiding something without losing it
+
+`visibility: hidden` and `opacity: 0` both keep an element's box, and they are
+not interchangeable: **`visibility` also removes it from the accessibility
+tree.**
+
+Measured, on a pending `Button`. The label is hidden so the button keeps its
+width, and the first version used `invisible` — an aria snapshot then read
+`button "Cancel"` followed by `button` with no name at all, so somebody who had
+just pressed Delete was left focused on a nameless control. `opacity-0` hides
+it and keeps it named.
+
+The rule: hide with `opacity` when the thing being hidden is the element's
+NAME or its text, and with `visibility` only when it should genuinely leave the
+tree — in which case `inert` and `aria-hidden` say so more clearly, which is
+what a field's unreachable clear button does.
+
+And the way to tell: query **by role and name**. `getByRole('button')` passes
+either way; `getByRole('button', { name: 'Delete' })` is what fails.
+
 And a note about looking at any of it: the catalog imports the **compiled**
 stylesheet, so a change to a layer's CSS is invisible until
 `pnpm build:css` runs, and a long-lived dev server serves whatever it started
