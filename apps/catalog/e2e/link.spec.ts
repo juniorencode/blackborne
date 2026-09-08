@@ -41,6 +41,23 @@ const ROUTER = 'components-link--with-a-router';
  * at all — measured four ways while building `Tooltip`, and copied here rather
  * than shared because a spec is a document.
  */
+/**
+ * Wait for a tab that has just been opened to actually be somewhere.
+ *
+ * `waitForEvent('page')` resolves when the page OBJECT exists, which is before
+ * its first navigation has committed — so reading the url straight after gives
+ * `about:blank`. Measured the hard way: the three new-tab checks passed on
+ * their own and failed inside the full suite, which is a check measuring a
+ * moment instead of a state.
+ */
+const openedAt = async (
+  opened: import('@playwright/test').Page,
+  expected: RegExp
+) => {
+  await opened.waitForURL(expected);
+  return opened.url();
+};
+
 const travelTo = async (page: Page, name: string) => {
   const box = await page.getByRole('link', { name }).boundingBox();
   expect(box).not.toBeNull();
@@ -86,7 +103,9 @@ test('a middle click opens another tab', async ({ page }) => {
     })
   ]);
 
-  expect(opened.url()).toContain('/customers/4821');
+  expect(await openedAt(opened, /\/customers\/4821/)).toContain(
+    '/customers/4821'
+  );
   // And the page it came from stayed where it was, which is the other half of
   // what a middle click means.
   expect(page.url()).not.toContain('/customers/4821');
@@ -102,7 +121,9 @@ test('a ctrl-click opens another tab', async ({ page }) => {
     link.click({ modifiers: ['ControlOrMeta'] })
   ]);
 
-  expect(opened.url()).toContain('/customers/4821');
+  expect(await openedAt(opened, /\/customers\/4821/)).toContain(
+    '/customers/4821'
+  );
   expect(page.url()).not.toContain('/customers/4821');
   await opened.close();
 });
@@ -115,7 +136,7 @@ test('a target of its own opens another tab', async ({ page }) => {
     page.getByRole('link', { name: 'Open in another tab' }).click()
   ]);
 
-  expect(opened.url()).toContain('#a-tab');
+  expect(await openedAt(opened, /#a-tab/)).toContain('#a-tab');
   await opened.close();
 });
 
@@ -165,7 +186,9 @@ test('and a ctrl-click still opens a tab, router or no router', async ({
     link.click({ modifiers: ['ControlOrMeta'] })
   ]);
 
-  expect(opened.url()).toContain('/customers/4821');
+  expect(await openedAt(opened, /\/customers\/4821/)).toContain(
+    '/customers/4821'
+  );
   // The router was not asked, because the person did not ask the application.
   await expect(page.getByText('The router has not been asked')).toBeVisible();
   await opened.close();
