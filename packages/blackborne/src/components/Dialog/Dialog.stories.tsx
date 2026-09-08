@@ -26,10 +26,10 @@
  */
 import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { LayerPage as Page } from '../../catalog/layerPage';
 import { Dialog, type DialogSize } from './Dialog';
 import { useDialog } from './useDialog';
 import { Button } from '../Button';
-import { ConfigProvider } from '../../config';
 import { TextField } from '../TextField';
 import { Alert } from '../Alert';
 
@@ -43,50 +43,6 @@ const SIZES = ['sm', 'md', 'lg'] as const satisfies readonly DialogSize[];
  */
 const MISSING: Exclude<DialogSize, (typeof SIZES)[number]>[] = [];
 void MISSING;
-
-/**
- * A full page carrying one combination of the theme axes, which a portalled
- * layer is mounted into so that it inherits them.
- */
-function Page({
-  mode = 'light',
-  density = 'normal',
-  dir = 'ltr',
-  brand = false,
-  children
-}: {
-  mode?: 'light' | 'dark';
-  density?: 'normal' | 'compact';
-  dir?: 'ltr' | 'rtl';
-  brand?: boolean;
-  children: React.ReactNode;
-}) {
-  /*
-   * State and not a ref, because the element has to exist before it can be a
-   * portal target: on the first render a ref is still null, and the layer would
-   * mount at the document for that frame — which is exactly the frame a
-   * screenshot catches.
-   */
-  const [host, setHost] = useState<HTMLDivElement | null>(null);
-
-  return (
-    <div
-      className="catalog-layer-page"
-      data-bb-mode={mode}
-      data-bb-density={density}
-      dir={dir}
-      ref={setHost}
-      {...(brand ? { 'data-bb-theme': 'catalog-alt' } : {})}
-    >
-      <p className="catalog-label">
-        The page behind, so the scrim has something to cover.
-      </p>
-      {host === null ? null : (
-        <ConfigProvider portalContainer={host}>{children}</ConfigProvider>
-      )}
-    </div>
-  );
-}
 
 /**
  * A consumer's own button that closes the dialog it is in — the need doc 02 §5
@@ -275,7 +231,10 @@ export const Sizes: Story = {
  */
 export const Light: Story = {
   render: () => (
-    <Page mode="light">
+    <Page
+      label="The page behind, so the scrim has something to cover."
+      mode="light"
+    >
       <OpenDialog />
     </Page>
   )
@@ -286,7 +245,10 @@ export const Light: Story = {
  * that genuinely differs between modes rather than being restated for tidiness. */
 export const Dark: Story = {
   render: () => (
-    <Page mode="dark">
+    <Page
+      label="The page behind, so the scrim has something to cover."
+      mode="dark"
+    >
       <OpenDialog />
     </Page>
   )
@@ -295,7 +257,10 @@ export const Dark: Story = {
 /** Compact density. The scrim's inset and every padding inside follow it. */
 export const Compact: Story = {
   render: () => (
-    <Page density="compact">
+    <Page
+      label="The page behind, so the scrim has something to cover."
+      density="compact"
+    >
       <OpenDialog />
     </Page>
   )
@@ -308,7 +273,10 @@ export const Compact: Story = {
 export const Direction: Story = {
   name: 'RTL',
   render: () => (
-    <Page dir="rtl">
+    <Page
+      label="The page behind, so the scrim has something to cover."
+      dir="rtl"
+    >
       <OpenDialog />
     </Page>
   )
@@ -317,7 +285,7 @@ export const Direction: Story = {
 /** An overridden brand, which has to reach the primary action and the ring. */
 export const BrandOverride: Story = {
   render: () => (
-    <Page brand>
+    <Page label="The page behind, so the scrim has something to cover." brand>
       <OpenDialog />
     </Page>
   )
@@ -330,7 +298,10 @@ export const BrandOverride: Story = {
  */
 export const Scrolling: Story = {
   render: () => (
-    <Page mode="light">
+    <Page
+      label="The page behind, so the scrim has something to cover."
+      mode="light"
+    >
       <OpenDialog size="sm" title="Change the tax identifier">
         <LongBody />
       </OpenDialog>
@@ -351,7 +322,10 @@ export const Scrolling: Story = {
 export const WithAForm: Story = {
   name: 'Holding unsaved input',
   render: () => (
-    <Page mode="light">
+    <Page
+      label="The page behind, so the scrim has something to cover."
+      mode="light"
+    >
       <Dialog
         isOpen
         onOpenChange={() => {}}
@@ -387,7 +361,10 @@ export const WithAForm: Story = {
  */
 export const WithoutAFooter: Story = {
   render: () => (
-    <Page mode="dark">
+    <Page
+      label="The page behind, so the scrim has something to cover."
+      mode="dark"
+    >
       <OpenDialog size="sm" footer={false} />
     </Page>
   )
@@ -403,7 +380,10 @@ export const WithoutAFooter: Story = {
  */
 export const LongTitle: Story = {
   render: () => (
-    <Page mode="light">
+    <Page
+      label="The page behind, so the scrim has something to cover."
+      mode="light"
+    >
       <OpenDialog
         size="sm"
         title="Change the tax identifier on invoices already issued"

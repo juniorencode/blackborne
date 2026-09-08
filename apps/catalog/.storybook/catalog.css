@@ -125,10 +125,21 @@ body {
  * One layer per story, therefore, at the size it really is, and the axes get a
  * story each instead of two halves of one picture.
  */
+/*
+ * The page a layer story is shown on, and the element the layer is portalled
+ * into. One fixture for all seven layers; see src/catalog/layerPage.tsx.
+ */
 .catalog-layer-page {
   min-height: 100vh;
   box-sizing: border-box;
   padding: 24px;
   background: var(--bb-surface);
   color: var(--bb-text);
+}
+
+/* An anchored layer's trigger sits in the middle, with room on all twelve
+   sides of it. Was an inline style in three copies of this fixture. */
+.catalog-layer-page[data-centred] {
+  display: grid;
+  place-items: center;
 }

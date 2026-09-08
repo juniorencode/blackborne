@@ -24,49 +24,9 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
 import { Button } from '../Button';
 import { Dialog } from '../Dialog';
-import { ConfigProvider } from '../../config';
+import { LayerPage as Page } from '../../catalog/layerPage';
 import { ToastRegion } from './ToastRegion';
 import { useToasts } from './useToasts';
-
-/** A page carrying one combination of the theme axes, and the portal target so
- * the region inherits them. See Dialog's stories for the reasoning. */
-function Page({
-  mode = 'light',
-  density = 'normal',
-  locale,
-  dir = 'ltr',
-  children
-}: {
-  mode?: 'light' | 'dark';
-  density?: 'normal' | 'compact';
-  locale?: string;
-  dir?: 'ltr' | 'rtl';
-  children: React.ReactNode;
-}) {
-  const [host, setHost] = useState<HTMLDivElement | null>(null);
-
-  return (
-    <div
-      className="catalog-layer-page"
-      data-bb-mode={mode}
-      data-bb-density={density}
-      dir={dir}
-      ref={setHost}
-    >
-      <p className="catalog-label">
-        The page behind, which a notice must not cover the important part of.
-      </p>
-      {host === null ? null : (
-        <ConfigProvider
-          portalContainer={host}
-          {...(locale === undefined ? {} : { locale })}
-        >
-          {children}
-        </ConfigProvider>
-      )}
-    </div>
-  );
-}
 
 const meta = {
   title: 'Components/Toast',
@@ -158,7 +118,10 @@ export const Tones: Story = {
       const toasts = useToasts();
 
       return (
-        <Page mode="light">
+        <Page
+          label="The page behind, which a notice must not cover the important part of."
+          mode="light"
+        >
           <Button
             data-testid="send"
             onPress={() => {
@@ -190,7 +153,10 @@ export const Light: Story = {
     function Demo() {
       const toasts = useToasts();
       return (
-        <Page mode="light">
+        <Page
+          label="The page behind, which a notice must not cover the important part of."
+          mode="light"
+        >
           <Button
             data-testid="send"
             onPress={() => {
@@ -215,7 +181,10 @@ export const Dark: Story = {
     function Demo() {
       const toasts = useToasts();
       return (
-        <Page mode="dark">
+        <Page
+          label="The page behind, which a notice must not cover the important part of."
+          mode="dark"
+        >
           <Button
             data-testid="send"
             onPress={() => {
@@ -240,7 +209,10 @@ export const Compact: Story = {
     function Demo() {
       const toasts = useToasts();
       return (
-        <Page density="compact">
+        <Page
+          label="The page behind, which a notice must not cover the important part of."
+          density="compact"
+        >
           <Button
             data-testid="send"
             onPress={() => {
@@ -272,7 +244,11 @@ export const Direction: Story = {
     function Demo() {
       const toasts = useToasts();
       return (
-        <Page dir="rtl" locale="ar-EG">
+        <Page
+          label="The page behind, which a notice must not cover the important part of."
+          dir="rtl"
+          locale="ar-EG"
+        >
           <Button
             data-testid="send"
             onPress={() => {
@@ -307,7 +283,10 @@ export const AboveADialog: Story = {
       const [isOpen, setOpen] = useState(true);
 
       return (
-        <Page mode="light">
+        <Page
+          label="The page behind, which a notice must not cover the important part of."
+          mode="light"
+        >
           <Button data-testid="open" onPress={() => setOpen(true)}>
             Edit invoice
           </Button>
@@ -354,7 +333,10 @@ export const Overflow: Story = {
       const toasts = useToasts();
 
       return (
-        <Page mode="light">
+        <Page
+          label="The page behind, which a notice must not cover the important part of."
+          mode="light"
+        >
           <Button
             data-testid="send"
             onPress={() => {
@@ -385,7 +367,10 @@ export const LongText: Story = {
     function Demo() {
       const toasts = useToasts();
       return (
-        <Page mode="light">
+        <Page
+          label="The page behind, which a notice must not cover the important part of."
+          mode="light"
+        >
           <Button
             data-testid="send"
             onPress={() => {
