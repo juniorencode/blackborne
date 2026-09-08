@@ -12,6 +12,40 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **`Breadcrumbs` and `Breadcrumb`** — where you are, and the way back.
+
+  ```tsx
+  <Breadcrumbs>
+    <Breadcrumb>
+      <Link href="/customers">Customers</Link>
+    </Breadcrumb>
+    <Breadcrumb>Astilleros del Sur</Breadcrumb>
+  </Breadcrumbs>
+  ```
+
+  **The last step is text and the ones before it are links.** A link goes
+  somewhere, and the page you are on is not somewhere to go — it is marked as
+  the current page instead. A step is composed rather than configured, so it
+  holds whatever it should: a `Link` for a level you can return to, plain text
+  for a grouping with no page of its own.
+
+  **The separator is the library's first directional icon.** The chevron is
+  drawn pointing down and turned a quarter turn along the reading direction —
+  the other quarter in Arabic. That is also why it is not configurable: doc 02
+  §11.4 forbids flipping an icon the library did not draw, so a chevron passed
+  in would point the wrong way in a right-to-left language with nothing to say
+  so.
+
+  No separator prop, no first-step prop, no `onAction` and no `isDisabled`. And
+  no `<nav>` around it: the base labels the list already, and a landmark named
+  the same thing says the word twice in one breath — recorded as pending a
+  decision rather than closed, because it is a question about what a reader
+  hears.
+
+  A trail too long for its container **wraps**. Folding the middle into a "…"
+  that opens a menu waits for `Menu`, because a "…" that opens nothing is lost
+  content (doc 04 §7).
+
 - **`Link`** — text that navigates, and the first use of the escape doc 02 §7
   has always left open: where a different element is genuinely needed, that is
   a named component.

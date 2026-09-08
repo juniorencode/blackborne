@@ -58,6 +58,18 @@ export {
 } from './normalize';
 export type { Normalizer } from './normalize';
 
+/*
+ * `Breadcrumb` ships with `Breadcrumbs` because it is only useful inside one,
+ * the way `Radio` ships with `RadioGroup`. The step is composed rather than
+ * configured: a `Link` for a level you can return to, text for the one you are
+ * on.
+ */
+export { Breadcrumb, Breadcrumbs } from './components/Breadcrumbs';
+export type {
+  BreadcrumbProps,
+  BreadcrumbsProps
+} from './components/Breadcrumbs';
+
 export { Button } from './components/Button';
 export type {
   ButtonProps,

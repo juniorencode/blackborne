@@ -121,6 +121,10 @@ const STATES: Array<[string, string]> = [
    */
   ['components-link--states', 'link-states'],
   ['components-link--wrapping', 'link-wrapping'],
+  /* A trail's states are its LENGTHS: one step, two, and five. One shot holds
+     all three, and the interesting one is the trail of one — where the only
+     separator there is, is the one that is dropped. */
+  ['components-breadcrumbs--lengths', 'breadcrumbs-lengths'],
   /*
    * A component with nothing to look at still earns a baseline, and this is
    * the one that earns it most: the story is two rulers that must stay the
@@ -301,7 +305,10 @@ const TOGETHER: Array<[string, string]> = [
   /* The two nobody must confuse: a link is accent and underlined at rest, a
      link-shaped button is ordinary text until pointed at. Apart, either looks
      fine; the baseline that matters is the one with both in it. */
-  ['components-link--against-a-button', 'link-against-a-button']
+  ['components-link--against-a-button', 'link-against-a-button'],
+  /* Where a trail actually goes: above a heading and the page it describes,
+     quieter than both. */
+  ['components-breadcrumbs--above-page-content', 'breadcrumbs-above-content']
 ];
 
 for (const [id, name] of TOGETHER) {
@@ -352,7 +359,12 @@ const AXES: Array<[string, string]> = [
      directional, so the shot would be a near-duplicate (the story is still
      there, and axe walks it). */
   ['components-link--modes', 'axis-link-modes'],
-  ['components-link--brand-override', 'axis-link-brand']
+  ['components-link--brand-override', 'axis-link-brand'],
+  /* The separator is the first icon the library draws that is DIRECTIONAL, so
+     RTL is the highest-value shot this component has: the chevron turns the
+     other quarter and the order of the whole trail reverses. */
+  ['components-breadcrumbs--direction', 'axis-breadcrumbs-rtl'],
+  ['components-breadcrumbs--together', 'axis-breadcrumbs-together']
 ];
 
 for (const [id, name] of AXES) {
