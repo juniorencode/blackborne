@@ -46,12 +46,53 @@ export async function gotoStory(page: Page, id: string): Promise<void> {
    * A resolved token is the cheapest proof the stylesheet landed, and it fails
    * loudly rather than silently if the styles never arrive at all.
    */
-  await page.waitForFunction(
-    () =>
-      getComputedStyle(document.documentElement)
-        .getPropertyValue('--bb-surface')
-        .trim() !== ''
-  );
+  try {
+    await page.waitForFunction(
+      () =>
+        getComputedStyle(document.documentElement)
+          .getPropertyValue('--bb-surface')
+          .trim() !== ''
+    );
+  } catch (cause) {
+    /*
+     * WHEN THIS WAIT RUNS OUT, SAY WHAT WAS THERE.
+     *
+     * Observed twice, both times inside a full run and never in isolation:
+     * this wait consumed the whole 30s test budget and the test was reported
+     * as a failure of the assertion it never reached — once on
+     * `Popover / Placements`, once on `Tooltip / Placements`, and both stories
+     * passed on an isolated re-run seconds later. The single worker had spent
+     * the previous ten minutes on `accessibility.spec.ts`, so a Storybook dev
+     * server compiling a heavy story on demand is the obvious suspect.
+     *
+     * The timeout is deliberately NOT raised. A stylesheet that takes half a
+     * minute to arrive is worth failing over, and raising the number would
+     * turn the next occurrence into a slower version of the same mystery. What
+     * is added is evidence: whether the story mounted, whether a stylesheet
+     * element exists at all, and what the token actually read. The contrast
+     * guard in `accessibility.spec.ts` was given the same treatment for the
+     * same reason — an eliminated hypothesis is worth more than a guess, and
+     * neither is worth anything without a measurement.
+     */
+    const seen = await page.evaluate(() => ({
+      url: location.href,
+      mounted: document.querySelector('#storybook-root')?.children.length ?? -1,
+      sheets: document.styleSheets.length,
+      links: [...document.querySelectorAll('link[rel=stylesheet]')].map(
+        el => (el as HTMLLinkElement).href.split('/').pop() ?? '?'
+      ),
+      styleTags: document.querySelectorAll('style').length,
+      surface: getComputedStyle(document.documentElement).getPropertyValue(
+        '--bb-surface'
+      ),
+      bodyBackground: getComputedStyle(document.body).backgroundColor
+    }));
+    throw new Error(
+      `the library stylesheet never took effect for "${id}": ` +
+        JSON.stringify(seen),
+      { cause }
+    );
+  }
 
   await page.evaluate(() => document.fonts.ready);
 
