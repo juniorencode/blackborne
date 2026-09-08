@@ -21,6 +21,14 @@ Badge/
 public surface is `src/index.ts`, and a component is not public until it is
 listed there deliberately (doc 02 §10).
 
+**A group and its member share one folder**, named for the group, as
+`RadioGroup` holds `Radio` and `Accordion` holds `Collapsible`. Two exports
+from one file is right when the two are one decision; the folder is named for
+the group because that is where the shared state lives. Where the member is
+also usable alone it gets its own stories file — `Collapsible.stories.tsx`
+beside `Accordion.stories.tsx` — because the catalog is browsed by component
+and a consumer looking for one should find a page for it.
+
 **`Badge.css` is the exception, not the pattern.** Styling is Tailwind
 utilities in the component file. A layer-3 CSS file exists only where utilities
 cannot express what is needed — the case that produced the rule was a
