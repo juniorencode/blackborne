@@ -99,6 +99,8 @@ export type {
 
 export { Popover } from './components/Popover';
 export type { PopoverProps } from './components/Popover';
+export { Preview } from './components/Preview';
+export type { PreviewProps } from './components/Preview';
 
 export { Radio, RadioGroup } from './components/RadioGroup';
 export type {

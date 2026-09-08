@@ -122,6 +122,29 @@ The rule for anything new: a layer never closes a layer it did not open.
   Written down before `Preview` exists, so it is a prediction rather than a
   post-mortem.
 
+  **Measured on 2026-09-08, and the prediction held.** With the shared sheet
+  nested inside a `PreviewTrigger`'s popover, the panel loses `role="dialog"`
+  to the sheet — the same swap `Popover` makes — and the sheet's `useDialog`
+  then switches containment on in the enclosing `Overlay`, in a layer the base
+  had deliberately excluded from it. A hover card with no close button that
+  holds the keyboard is point 10 of
+  [doc 06](./06-accessibility.md) §4 exactly.
+
+  Two more things came out of the same measurement, and they shape the
+  component rather than just forbidding a structure:
+
+  - **A preview's panel is an UNNAMED dialog by default.** The base gives it
+    `role="dialog"` even though it sets `isNonModal` — `shouldBeDialog` is true
+    for a `PreviewTrigger` by name — and names it with nothing. Measured:
+    `aria-labelledby` absent, `aria-label` absent, accessible name `null`. So a
+    preview has to name its own panel, which is why its title is required and
+    not decoration.
+  - **The keyboard route in is the base's, and it is the difference from a
+    tooltip.** `Tab` on the trigger moves focus to the first tabbable thing in
+    the panel, `Escape` on the trigger closes it, and tabbing past the last one
+    leaves — which is what containment would have broken. A tooltip has none of
+    this and cannot: it is not focusable and it closes when the trigger blurs.
+
   And wrong as a rule, second, which is why the criterion changed rather than
   just the example. Measured on the same component: a popover renders a
   full-window underlay, locks the page scroll, and hides everything outside
@@ -468,6 +491,29 @@ CI, so a claim about text metrics has two answers there. Either it moves to the
 containerised project, or it is restated without the font in the middle: a
 ceiling from the token, and a floor that scales with the font on both sides —
 "wider than the control that opened it" survives any face.
+
+**A drawn shape can be measured correctly and never reach the screen.**
+`Popover`'s arrow shipped invisible. Its box was where it belonged, its
+`visibility` computed to `visible`, its rotation matrix was right, and the
+check that asserted that rotation passed — a computed style says what a browser
+intends, not what it painted. The panel's `overflow` erased it, because an
+arrow is positioned outside the panel and the panel clips.
+
+Two instruments would each have caught it and neither was pointed at it. The
+screenshot that exists to show the arrow was generated with
+`--update-snapshots` in the same session the component was written, so it
+recorded the absence as the reference — **a baseline accepts whatever is there,
+including a defect, and it does it silently.** And the geometry check tested
+the transform because the transform was the interesting part of the CSS.
+
+What tells the difference is hit-testing: clipped content is not hit-tested, so
+`document.elementFromPoint` at the middle of a clipped arrow resolves to
+whatever is behind the panel, and at a painted one resolves to its own `path`.
+Measured in both states, and now asserted in all three layers that draw one.
+
+The general form, for the next drawn thing: **assert that a point inside it
+resolves to it.** A box, a computed style and a committed picture can all agree
+while nothing is on the screen.
 
 ## 10. Verification
 
