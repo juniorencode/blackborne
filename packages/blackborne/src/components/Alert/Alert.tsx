@@ -1,5 +1,5 @@
 import { forwardRef } from 'react';
-import { ToneGlyph, type Tone } from '../../internal/ToneGlyph';
+import { TONE_SURFACE, ToneGlyph, type Tone } from '../../internal/ToneGlyph';
 import { cx } from '../../internal/cx';
 
 /*
@@ -16,27 +16,13 @@ export type AlertTone = Tone;
  * halves are never taken from different families (doc 03 §4.0).
  *
  * The glyph used to live here too, and moved to internal/ToneGlyph when a
- * second component needed three of the four. What is left is the only thing
- * that is an Alert's own: which surface it paints.
- */
-type ToneSurface = string;
-
-/*
- * Which surface each tone paints. The GLYPH that goes with it is shared —
- * internal/ToneGlyph, which carries the reasoning for why the library draws
- * one at all: doc 06 §3 forbids colour as the only channel, and these four
- * soft backgrounds are four near-identical greys once the hue is gone.
+ * second component needed three of the four. The SURFACE map followed it when
+ * `Toast` needed the same four — a notice says the same kinds of thing an
+ * alert says, in a different place, and two copies of a background paired with
+ * its foreground is two chances to take them from different families.
  *
- * Only the surface is an Alert's own, and the pairing rule is why it is one
- * entry rather than two: a background and the text colour that goes on it are
- * taken together, never from different families (doc 03 §4.0).
+ * So what is left here is the box: the radius, the padding and the layout.
  */
-const TONE: Record<AlertTone, ToneSurface> = {
-  info: 'bb:bg-info-subtle bb:text-info-subtle-on',
-  success: 'bb:bg-success-subtle bb:text-success-subtle-on',
-  warning: 'bb:bg-warning-subtle bb:text-warning-subtle-on',
-  danger: 'bb:bg-danger-subtle bb:text-danger-subtle-on'
-} satisfies Record<AlertTone, ToneSurface>;
 
 /*
  * Shared by every tone. Notes on the parts that are not obvious:
@@ -129,7 +115,7 @@ export const Alert = forwardRef<HTMLDivElement, AlertProps>(function Alert(
   { tone = 'info', title, children, className, style },
   ref
 ) {
-  const surface = TONE[tone];
+  const surface = TONE_SURFACE[tone];
 
   return (
     <div
