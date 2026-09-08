@@ -452,6 +452,23 @@ checks, so the two instruments that would have caught each other's blind spot
 arrived together. A new layer gets its screenshots before its geometry is
 believed.
 
+**And an assertion may not depend on how wide a string renders**, which is the
+mistake made while fixing the one above. The floor was added, and so was its
+opposite: that the panel REACHES its ceiling. That reads like the other half of
+the same guard and is a measurement of a font — a content-sized panel touches
+its maximum only when the story's longest unbroken line is wider than it, and
+how wide a line is depends on which face `--bb-font-sans` resolved to. It
+passed at exactly 480px on a Windows host and failed on CI's Linux container at
+473.125: same code, same viewport, same resolved token.
+
+This is the whole reason the visual project runs in a container
+([doc 10](./10-quality-and-verification.md)) and it applies to assertions as
+well as to screenshots. `checks` runs on the developer's host and on Linux in
+CI, so a claim about text metrics has two answers there. Either it moves to the
+containerised project, or it is restated without the font in the middle: a
+ceiling from the token, and a floor that scales with the font on both sides —
+"wider than the control that opened it" survives any face.
+
 ## 10. Verification
 
 - [ ] `Escape` closes the innermost layer only, one press at a time

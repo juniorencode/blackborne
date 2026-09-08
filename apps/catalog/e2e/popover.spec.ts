@@ -404,8 +404,28 @@ test.describe('the panel', () => {
 
     expect(ceiling.resolved).toBeGreaterThan(0);
     expect(parseFloat(ceiling.maxWidth)).toBeCloseTo(ceiling.resolved, 0);
-    // And it really got there in this story, rather than stopping short.
-    expect(width).toBeCloseTo(ceiling.resolved, 0);
+    expect(width).toBeLessThanOrEqual(ceiling.resolved + 1);
+
+    /*
+     * WHAT IS NOT ASSERTED HERE, and why. A first version also required the
+     * panel to REACH the ceiling — "it really got there rather than stopping
+     * short" — which looked like the teeth this check needed and was actually
+     * a measurement of a font.
+     *
+     * The panel is the only one in the library sized BY its content, so it
+     * touches its ceiling only when the story's longest unbroken line is wider
+     * than 480px, and how wide a line is depends on which face
+     * `--bb-font-sans` resolved to. Passed at exactly 480 on a Windows host
+     * and failed on CI's Linux container at 473.125, same code, same viewport,
+     * same resolved token.
+     *
+     * That is the whole reason the `visual` project runs in Docker: text
+     * metrics are the platform's. `checks` does not — it runs on the host
+     * locally and on Linux in CI — so **an assertion in this project may not
+     * depend on how wide a string renders.** Either it belongs to the
+     * containerised project, or it is stated without the font in the middle,
+     * which is what the ceiling and the floor below do.
+     */
 
     /*
      * AND A FLOOR, which is the half this check was missing.
