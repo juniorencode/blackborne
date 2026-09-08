@@ -97,6 +97,9 @@ export type {
   NumberFieldSize
 } from './components/NumberField';
 
+export { Popover } from './components/Popover';
+export type { PopoverProps } from './components/Popover';
+
 export { Radio, RadioGroup } from './components/RadioGroup';
 export type {
   RadioGroupProps,

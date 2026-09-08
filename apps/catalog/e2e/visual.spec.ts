@@ -229,7 +229,31 @@ const STATES: Array<[string, string]> = [
   ['components-confirmdialog--dark', 'confirm-dark'],
   ['components-confirmdialog--greyscale', 'confirm-greyscale'],
   ['components-confirmdialog--after-a-failure', 'confirm-after-a-failure'],
-  ['components-confirmdialog--long-words', 'confirm-long-words']
+  ['components-confirmdialog--long-words', 'confirm-long-words'],
+  /*
+   * The popover, and unlike a tooltip it CAN be photographed at rest —
+   * `defaultOpen` is a real prop rather than one invented for this suite.
+   *
+   * `popover-long-text` is the one that earns its place, and it earns it
+   * because of what these pictures did not catch. The panel is the only one in
+   * the library sized BY its content, and with inline-size containment on it
+   * every popover rendered 2px wide: a picture would have shown that
+   * instantly, and there was no picture. The width is now asserted in
+   * `popover.spec.ts` as well, with a floor rather than only a ceiling — a
+   * baseline and an assertion, because this failure was invisible to the
+   * assertions that existed and there was nothing else looking.
+   *
+   * `popover-arrow` photographs the shared arrow on its second caller, where
+   * the shape has to keep agreeing with a border that is now a different
+   * radius from a tooltip's.
+   */
+  ['components-popover--light', 'popover-light'],
+  ['components-popover--dark', 'popover-dark'],
+  ['components-popover--arrow', 'popover-arrow'],
+  ['components-popover--scrolling', 'popover-scrolling'],
+  ['components-popover--no-footer', 'popover-no-footer'],
+  ['components-popover--long-text', 'popover-long-text'],
+  ['components-popover--not-dismissable', 'popover-not-dismissable']
 ];
 
 for (const [id, name] of STATES) {
@@ -279,7 +303,13 @@ const AXES: Array<[string, string]> = [
      and the border swaps with them, and density on every padding inside. */
   ['components-drawer--direction', 'axis-drawer-rtl'],
   ['components-drawer--compact', 'axis-drawer-compact'],
-  ['components-confirmdialog--direction', 'axis-confirm-rtl']
+  ['components-confirmdialog--direction', 'axis-confirm-rtl'],
+  /* The popover's two: RTL, where the panel aligns to the other edge of its
+     trigger and the close button crosses the header, and density on the
+     paddings of a panel whose WIDTH is its content — so compact changes the
+     size of the box itself here, which it does not do to a dialog. */
+  ['components-popover--direction', 'axis-popover-rtl'],
+  ['components-popover--compact', 'axis-popover-compact']
 ];
 
 for (const [id, name] of AXES) {

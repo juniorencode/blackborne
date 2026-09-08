@@ -191,7 +191,7 @@ test.describe('the arrow', () => {
     await expect(tooltip).toHaveAttribute('data-placement', 'bottom');
 
     const rotation = await tooltip
-      .locator('.bb-tooltip-arrow svg')
+      .locator('.bb-layer-arrow svg')
       .evaluate(node => getComputedStyle(node).transform);
 
     /*
@@ -209,7 +209,7 @@ test.describe('the arrow', () => {
 
     await expect(tooltip).toHaveAttribute('data-placement', 'top');
     const rotation = await tooltip
-      .locator('.bb-tooltip-arrow svg')
+      .locator('.bb-layer-arrow svg')
       .evaluate(node => getComputedStyle(node).transform);
 
     // No rotation: the drawn shape already points down.

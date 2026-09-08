@@ -1,9 +1,6 @@
+import { Tooltip as AriaTooltip, TooltipTrigger } from 'react-aria-components';
 import {
-  OverlayArrow,
-  Tooltip as AriaTooltip,
-  TooltipTrigger
-} from 'react-aria-components';
-import {
+  LayerArrow,
   HOVER_CLOSE_DELAY,
   HOVER_OPEN_DELAY,
   LAYER_OFFSET,
@@ -183,31 +180,7 @@ export function Tooltip({
          */
         offset={LAYER_OFFSET}
       >
-        <OverlayArrow className="bb-tooltip-arrow">
-          {/*
-           * Drawn, not received: doc 02 §11.4 separates the icons the library
-           * draws for its own controls from the ones it receives.
-           *
-           * The open top edge is deliberate. A closed triangle stroked all
-           * round would draw a line across the bubble's own border where the
-           * two meet; leaving that edge out lets the border run straight
-           * through and the arrow reads as part of the same shape.
-           *
-           * It points DOWN at rest — the `top` case, where the tooltip is above
-           * its trigger — and Tooltip.css rotates it from the base's reflected
-           * placement rather than from the prop, because a tooltip that did not
-           * fit gets flipped and an arrow following the prop would then point
-           * away from what it describes.
-           */}
-          <svg width="10" height="5" viewBox="0 0 10 5" aria-hidden="true">
-            <path
-              d="M0 0 L5 5 L10 0"
-              fill="var(--bb-surface-raised)"
-              stroke="var(--bb-border)"
-              strokeWidth="1"
-            />
-          </svg>
-        </OverlayArrow>
+        <LayerArrow />
         {content}
       </AriaTooltip>
     </TooltipTrigger>

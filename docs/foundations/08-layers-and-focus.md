@@ -29,6 +29,7 @@ are not the same thing.
 | A toast appears above a modal layer and is keyboard reachable while it is open | **Verified** in the browser                            |
 | Page scroll is locked while a modal layer is open                              | **Verified** in the browser, at one level of nesting   |
 | Scroll locking survives _nested_ modal layers                                  | **Verified** with `Dialog` and with `Drawer` — §6      |
+| A popover blocks the page in three ways, and contains focus                    | **Verified** in the browser — §4                       |
 
 Everything in that table now has an automated check behind it, in
 `apps/catalog/e2e/layer.spec.ts`, rather than a memory of a spike. Two rows
@@ -74,18 +75,61 @@ The rule for anything new: a layer never closes a layer it did not open.
 - **On open**, focus moves into the layer. The base puts it on the layer
   container itself rather than the first control, and the first `Tab` then
   reaches the first control. This is correct and is left alone.
-- **While open**, focus is contained **in a modal layer only**. Tabbing in a
-  loop stays inside a dialog or a drawer, and that is intentional and required.
-  In a popover, a menu or a tooltip, tabbing leaves — trapping focus there is a
-  bug ([doc 06](./06-accessibility.md) §4, point 10).
+- **While open**, focus is contained in a layer that **blocks the page**.
+  Tabbing in a loop stays inside a dialog, a drawer or a popover. In a tooltip
+  or a preview it does not, because those do not block anything — and trapping
+  focus in one of them would be the bug
+  ([doc 06](./06-accessibility.md) §4, point 10).
 
-  **So containment is not configurable.** It follows from what the layer is,
-  not from a prop, and the base already draws the line in the same place:
-  measured in 1.21.0, its `Overlay` sets `restoreFocus: true` unconditionally
-  while containment is opt-in — `Modal` asks for it and `Popover` does not. A
-  `shouldTrapFocus` prop would let a consumer produce the case point 10 calls a
-  bug, and there is no version of "trap the focus in this popover" that is not
-  better served by a dialog.
+  **So containment is not configurable.** It follows from what the layer does,
+  not from a prop. A `shouldTrapFocus` prop would let a consumer produce the
+  case point 10 calls a bug, and there is no version of "trap the focus in this
+  layer that blocks nothing" that is not better served by a dialog.
+
+  ### The criterion above was corrected on 2026-09-08
+
+  It used to read "**in a modal layer only**", with popovers and menus listed
+  alongside tooltips as layers focus tabs out of, and it justified that with
+  the base drawing the same line — "`Modal` asks for containment and `Popover`
+  does not". **That was wrong twice, and it is worth keeping both halves
+  visible because the second is the interesting one.**
+
+  Wrong about the base, first. Measured in `react-aria-components` 1.21.0 and
+  `react-aria` 3.52.0, with `Popover` built:
+
+  ```js
+  // Popover: containment is asked for when it renders as a dialog itself…
+  shouldContainFocus: isDialog && props.trigger !== 'PreviewTrigger';
+  // …and `isDialog` is turned OFF by a dialog already nested inside:
+  setDialog(shouldBeDialog && !ref.current.querySelector('[role=dialog]'));
+
+  // Overlay: but containment is an OR, and the second half is state that a
+  // descendant switches on.
+  contain: (props.shouldContainFocus || contain) && !isExiting;
+  ```
+
+  `useDialog` calls `useOverlayFocusContain()`, which calls `setContain(true)`
+  on the enclosing `Overlay`. So **the shared `ModalSheet` is what contains the
+  focus** in a Blackborne popover: the nested `role="dialog"` switches the
+  popover's own request off, and the same nested dialog switches containment
+  back on from the inside. Verified in a browser — `Tab` and `Shift+Tab`, eight
+  presses each, never leaving the panel.
+
+  That has a consequence for the layer being built next. The base excludes
+  `PreviewTrigger` from containment by name, deliberately, and that exclusion
+  is **defeated** by rendering `ModalSheet` inside a preview. A preview must
+  therefore not use the shared sheet, or must not carry `role="dialog"`.
+  Written down before `Preview` exists, so it is a prediction rather than a
+  post-mortem.
+
+  And wrong as a rule, second, which is why the criterion changed rather than
+  just the example. Measured on the same component: a popover renders a
+  full-window underlay, locks the page scroll, and hides everything outside
+  itself from the accessibility tree — all three keyed on nothing but
+  `!isNonModal`, and none of them affected by `isDismissable`. A popover is a
+  modal layer without a visible scrim. Focus that could tab out of it would
+  land on a control that is `aria-hidden` and covered by an underlay that will
+  not let it be clicked, which is worse than containment rather than better.
 
 - **On close**, focus returns to the element that opened the layer.
 - **Nothing is autofocused** beyond the layer container itself. Focusing a
@@ -110,7 +154,7 @@ A layer holding no input — a menu, a popover showing detail, a select — is
 dismissable, and should be. Being forced to aim at a close button to dismiss a
 menu is the opposite failure.
 
-### 5.1 The case this rule does not cover — open
+### 5.1 The case this rule did not cover — decided
 
 The two halves above assume that "holds unsaved input" and "is modal" arrive
 together, and there is one common shape where they do not: **a popover holding
@@ -131,10 +175,63 @@ Three ways out, none of them chosen yet:
 3. **The consumer says so**, which is a prop, and §5 exists precisely because
    this was decided rather than left as one.
 
-**Written down as openly open.** It is decided when `Popover` is built, and by
-then there should be a real screen to decide it against. Until then no
-component may assume an answer, and a `Popover` that grows an input in it is
-the trigger to come back here.
+**Decided on 2026-09-08, when `Popover` was built: option 3.** A popover is
+dismissable by clicking outside **by default**, and a consumer may turn that
+off with `isDismissable={false}`.
+
+This section said there should be a real screen to decide it against by then,
+and there was not one, so it was decided on principle. The three options above
+are kept as they were written, because the reasoning that was available at the
+time is the thing this document is for.
+
+**Why the default is to dismiss.** A modal layer has a scrim, so clicking
+outside it is clicking a dead area and a stray click there is genuinely an
+accident. A popover does not block the page: clicking outside one is clicking
+**deliberately at something else**. The person meant to reach the thing they
+clicked, and a layer that stayed open while they used the page behind it would
+be a panel hovering over content they are already editing.
+
+**And why it is a prop rather than a rule.** A fourth option was considered and
+not taken: that modality and dismissal are one decision — a layer that cannot
+afford to lose work blocks the page, and a layer that does not block the page
+closes when you use the page — which would have dissolved this section by
+making `Popover` always dismissable and sending anything precious to a `Dialog`
+or a `Drawer`. It was rejected because it turns a two-field filter into a modal
+interaction, which is exactly the weight a popover exists to avoid.
+
+**The cost, which is what §5 exists to make visible.** ~~The prop makes one odd
+state reachable: a popover open and not dismissable, over a page that is still
+fully interactive, so somebody can edit the thing behind it while it hovers.~~
+
+**Corrected on 2026-09-08, the same day, by measuring the thing the paragraph
+above assumed.** That state is not reachable, because the page behind an open
+popover is not interactive. Measured in a browser, with `Popover` built: the
+base renders an underlay at `position: fixed; inset: 0` over the whole window,
+locks the page scroll, and hides everything outside the popover from the
+accessibility tree — all three keyed on nothing but `!isNonModal`, and none of
+them touched by `isDismissable`. §4 carries the numbers.
+
+So the real cost of the prop is narrower, and it is the ordinary cost of a
+modal layer rather than a new one: `isDismissable={false}` leaves `Escape` and
+the close button as the only ways out, over a page that is already blocked —
+which is exactly the shape of a `Dialog`. What the prop buys is that the panel
+stays anchored and lightweight instead of becoming one.
+
+**The reasoning behind the default is affected too, and it survives.** "A
+popover does not block the page: clicking outside one is clicking deliberately
+at something else" is half wrong — it does block the page — but the conclusion
+holds for a better reason than the one it was argued from, and this one was
+also measured: the underlay **swallows** the click. Clicking a button behind an
+open popover dismisses the panel and does **not** press the button. So a stray
+click costs a filter nobody had applied, and a deliberate click costs one
+extra press rather than firing an action nobody aimed at.
+
+A component still cannot inspect its own children to tell whether the content
+is worth protecting, which is why this is a decision the consumer takes.
+
+`Escape` and the close button work whatever this is set to. Nothing in this
+library lets a layer swallow `Escape` except a component holding a promise it
+was given ([doc 09](./09-behavior.md) §5.1).
 
 ## 6. Scroll locking, and the case that was not verified
 
@@ -339,6 +436,38 @@ browser tab order. It is a fine instrument for "does `Escape` close the right
 thing" and a useless one for "where does `Tab` go". Focus and layer behavior
 needs a real browser, which means [doc 10](./10-quality-and-verification.md)
 needs one sooner than its layer table implies.
+
+**A ceiling is not a measurement of a size.** `Popover` shipped its panel two
+pixels wide — its two borders — and the two browser checks written to guard the
+panel's width both passed, because both asserted only a maximum and 2px is
+under any maximum. The cause was inline-size containment on an element sized by
+its contents ([doc 04](./04-responsive.md) §4.3); the reason it survived
+review is the shape of the assertion. A layer's box wants both ends asserted,
+and the cheap floor is the trigger's own width: a panel narrower than the
+control that opened it is broken whatever the cause.
+
+It also had no baseline. A picture would have shown it in one glance, and there
+was no picture — the popover stories were written in the same session as the
+checks, so the two instruments that would have caught each other's blind spot
+arrived together. A new layer gets its screenshots before its geometry is
+believed.
+
+**And an assertion may not depend on how wide a string renders**, which is the
+mistake made while fixing the one above. The floor was added, and so was its
+opposite: that the panel REACHES its ceiling. That reads like the other half of
+the same guard and is a measurement of a font — a content-sized panel touches
+its maximum only when the story's longest unbroken line is wider than it, and
+how wide a line is depends on which face `--bb-font-sans` resolved to. It
+passed at exactly 480px on a Windows host and failed on CI's Linux container at
+473.125: same code, same viewport, same resolved token.
+
+This is the whole reason the visual project runs in a container
+([doc 10](./10-quality-and-verification.md)) and it applies to assertions as
+well as to screenshots. `checks` runs on the developer's host and on Linux in
+CI, so a claim about text metrics has two answers there. Either it moves to the
+containerised project, or it is restated without the font in the middle: a
+ceiling from the token, and a floor that scales with the font on both sides —
+"wider than the control that opened it" survives any face.
 
 ## 10. Verification
 

@@ -167,6 +167,19 @@ Everything that renders in a portal. Four things were measured while building
   slides, so between appearing and coming to rest it is partly off its edge: a
   480px panel against the right of a 1280px window reported its far side at
   1520 mid-flight. Wait for the base to drop `data-entering`.
+- **A layer declares a query container only if it declares a width.**
+  `container-type: inline-size` computes an element's inline size as though it
+  had no contents, so a panel sized BY its contents collapses to its borders.
+  The shared panel used to carry it, which was fine for the two layers with
+  declared widths and made every popover **2px wide** — an anchored popover is
+  absolutely positioned with `width: auto`. `Dialog` and `Drawer` declare it
+  themselves now, next to their sizes. Doc 04 §4.3, and it is decision 0010's
+  consequence 1 arriving.
+- **The shared `ModalSheet` is what contains a layer's focus**, not the layer.
+  It renders `role="dialog"`, and `useDialog` switches containment on in the
+  enclosing `Overlay` from the inside — so a popover contains focus even though
+  the base's own request for it is off. The layer that must NOT contain focus
+  cannot use the sheet as it is. Doc 08 §4.
 
 ## Hiding something without losing it
 

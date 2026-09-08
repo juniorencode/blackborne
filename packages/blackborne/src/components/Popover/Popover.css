@@ -1,0 +1,36 @@
+/*
+ * Layer 3: a component exception, derived from layer 2 (doc 03 §1).
+ *
+ * Only the entry lives here — the arrow's rotation is shared, in
+ * internal/Layer/arrow.css, and the ceiling comes from the base, which
+ * measures the room available and writes a `max-height` into the popover's
+ * own style. That is the one thing a popover does not have to be told.
+ */
+
+/*
+ * The entry, and it communicates where the panel came from: it grows a little
+ * out of the edge nearest its trigger, which is what doc 09 §2 allows an
+ * animation to say.
+ *
+ * `--trigger-anchor-point` is published by the base — the trigger's position in
+ * the popover's own coordinate system — so the growth starts at the control
+ * that opened it rather than at the panel's centre. Without it a panel opened
+ * from a button at the end of a toolbar appears to come from the middle of
+ * itself.
+ *
+ * There is NO EXIT, which is doc 09 §2.1: the base keeps a layer mounted while
+ * it animates away, and a mounted layer goes on consuming `Escape`. Measured on
+ * `Dialog`, where an exit animation swallowed the key that closes the layer
+ * underneath.
+ */
+.bb-popover[data-entering] {
+  animation: bb-popover-in var(--bb-duration-fast) var(--bb-ease);
+  transform-origin: var(--trigger-anchor-point, center);
+}
+
+@keyframes bb-popover-in {
+  from {
+    opacity: 0;
+    scale: 0.97;
+  }
+}
