@@ -29,3 +29,25 @@ export const HOVER_OPEN_DELAY = 600;
 
 /** The pause before it goes again. Deliberately much shorter. Doc 09 §3.1. */
 export const HOVER_CLOSE_DELAY = 150;
+
+/*
+ * And how long a NOTICE stays, which is the other timing decision the library
+ * owns rather than exposing (doc 09 §4.1).
+ *
+ * The reasoning is there rather than here, and the short version is that the
+ * exception is the important part: a `danger` notice has no timeout at all,
+ * because a message about something going wrong that removes itself leaves
+ * somebody with a broken state and no explanation.
+ *
+ * These are milliseconds passed to the base's queue, so they are JavaScript
+ * for the same reason the delays above are. The countdown a person SEES is
+ * driven from the same numbers through a custom property, because a bar
+ * animating for six seconds beside a timer running for five is worse than no
+ * bar at all.
+ */
+
+/** An ordinary notice: what happened. Doc 09 §4.1. */
+export const TOAST_TIMEOUT = 6000;
+
+/** One carrying an action, which somebody has to notice and decide about. */
+export const TOAST_ACTION_TIMEOUT = 10000;

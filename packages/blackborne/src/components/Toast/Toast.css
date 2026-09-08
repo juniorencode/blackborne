@@ -1,0 +1,110 @@
+/*
+ * Layer 3: a component exception, derived from layer 2 (doc 03 §1).
+ *
+ * Two things live here because no utility expresses either: the countdown,
+ * which needs a duration that arrives at runtime, and the entry, which needs
+ * keyframes.
+ */
+
+/*
+ * THE COUNTDOWN.
+ *
+ * Doc 09 §4.1 makes this a requirement rather than decoration: a notice that
+ * leaves on a timer has to show the time it has left, because a countdown
+ * somebody can see is a countdown they can beat.
+ *
+ * It shrinks from the full width of the notice to nothing over exactly the
+ * timeout the queue was given. The duration is a custom property because it is
+ * per notice — 6s ordinarily, 10s when there is an action to take — and the
+ * number comes from the same constant the timer does. A bar running for six
+ * seconds beside a timer that fires at ten is worse than no bar at all.
+ *
+ * `--bb-toast-timeout` has no fallback on purpose. A missing value makes the
+ * animation invalid and the bar simply sits at full width, which is visibly
+ * wrong; a fallback of some plausible duration would be a bar counting down to
+ * a moment nothing happens at.
+ *
+ * `linear`, and this is the one place in the library where an ease would be a
+ * lie: the thing being animated IS elapsed time.
+ */
+.bb-toast-countdown {
+  inline-size: 100%;
+  transform-origin: left center;
+  animation: bb-toast-countdown var(--bb-toast-timeout) linear forwards;
+}
+
+/*
+ * RTL: the bar empties from the side the text starts on, so the origin flips
+ * with the direction. `transform-origin` takes no logical keyword — doc 05 §4
+ * records that there is no logical `translate` either — so this is the
+ * measured exception where a physical value is correct and reading `dir` is
+ * the only way to know which.
+ */
+[dir='rtl'] .bb-toast-countdown {
+  transform-origin: right center;
+}
+
+@keyframes bb-toast-countdown {
+  to {
+    transform: scaleX(0);
+  }
+}
+
+/*
+ * AND IT PAUSES, which is the other half of doc 09 §4.1 and the half that
+ * makes WCAG 2.2.1 satisfiable without an instruction.
+ *
+ * The base pauses every timer in the region while the pointer is inside it or
+ * focus is within it, and it reflects both as state attributes on the region.
+ * So the bar reads the same two signals the timer does, and the two cannot
+ * disagree: there is no second source of truth about whether time is passing.
+ */
+.bb-toast-region[data-hovered] .bb-toast-countdown,
+.bb-toast-region[data-focused] .bb-toast-countdown {
+  animation-play-state: paused;
+}
+
+/*
+ * THE ENTRY.
+ *
+ * Doc 09 §2 allows an animation that communicates something, and this one says
+ * where the notice came from: it slides in from the edge it is pinned to and
+ * fades up. A notice that simply appeared would be indistinguishable from one
+ * that had been there all along, which matters for the fourth one arriving out
+ * of the backlog as a third leaves.
+ *
+ * `translate` and not `margin`: the stack is a flex column, and animating a
+ * margin would push its neighbours around while it arrived.
+ *
+ * There is NO EXIT, which is doc 09 §2.1: the base keeps a layer mounted while
+ * it animates away, and a mounted layer goes on consuming `Escape`. Measured
+ * on `Dialog`, where an exit animation swallowed the key that closes the layer
+ * underneath — and a notice is the one layer that can be on screen while a
+ * dialog is open (doc 08 §1), so it is exactly the case that trap was found in.
+ */
+.bb-toast[data-entering] {
+  animation: bb-toast-in var(--bb-duration-fast) var(--bb-ease);
+}
+
+@keyframes bb-toast-in {
+  from {
+    opacity: 0;
+    /*
+     * The inline end, which is where the region is pinned. Written as a
+     * logical property so it comes from the right side in Arabic with no
+     * second keyframe.
+     */
+    translate: 0.5rem 0;
+  }
+}
+
+[dir='rtl'] .bb-toast[data-entering] {
+  animation-name: bb-toast-in-rtl;
+}
+
+@keyframes bb-toast-in-rtl {
+  from {
+    opacity: 0;
+    translate: -0.5rem 0;
+  }
+}

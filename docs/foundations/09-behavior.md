@@ -164,6 +164,44 @@ whose content is the point.
 - Messages say **what happened and what to do**. No codes, no apologies, no
   jokes.
 
+### 4.1 How long a notice stays, and when it does not leave
+
+A notice that removes itself is a timing decision, and like the hover delays in
+§3.1 it is **one decision for the library and not a prop**. Unlike them it has
+an exception, and the exception is the important half.
+
+| The notice                    | How long       |
+| ----------------------------- | -------------- |
+| Ordinary — what happened      | **6 seconds**  |
+| Carrying an action, like undo | **10 seconds** |
+| `danger`                      | **it stays**   |
+
+**Six seconds** is long enough to notice something appear, look at it and read
+a line, and short enough that a sequence of saves does not build a wall. It is
+not adjustable per notice for the reason §3.1 gives: per-instance timings are
+what make two screens in the same application feel like two applications.
+
+**Ten for a notice with an action**, because the action is the point. Undo is
+the preferred half of §5's pair, and a window that closes before somebody has
+decided to use it hands them the discouraged half by accident. Four extra
+seconds is the difference between noticing and acting.
+
+**A `danger` notice does not leave on its own, ever.** Something has gone
+wrong, the person may not have been looking, and a message that removes itself
+leaves them with a broken state and no explanation — which is the one outcome
+§4 exists to prevent. It goes when it is dismissed, and not before.
+
+**What makes a timed dismissal honest**, and this is a requirement rather than
+decoration: the remaining time is **visible**, and it **pauses**. A countdown
+somebody can see is a countdown they can beat; hovering or focusing the region
+stops every timer in it, which the headless base does on its own. Together
+those are the standard mitigation for WCAG 2.2.1 — content that disappears on a
+timer needs a way to keep it, and "put the pointer on it" is a way that needs no
+instructions.
+
+The numbers live beside the hover delays, in one module, for the same reason
+they do.
+
 ## 5. Destructive actions
 
 1. **Confirm or undo, never both.**

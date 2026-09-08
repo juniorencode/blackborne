@@ -427,6 +427,58 @@ const ON_HOVER: Array<[string, string, string, string?]> = [
   ]
 ];
 
+/*
+ * And some layers cannot be photographed until something HAPPENS.
+ *
+ * A notice exists because an action had an outcome, and there is no prop to
+ * conjure one: the queue belongs to the consumer, so the only way to get a
+ * notice on screen is to add one. So the shot is taken after a press, and the
+ * press is part of what the picture is of.
+ *
+ * WHAT THESE PICTURES CANNOT SHOW, stated here because a reader will look for
+ * it: the countdown. `animations: 'disabled'` finishes every animation before
+ * capturing, which is what makes these baselines reproducible at a zero pixel
+ * threshold — and the countdown's finished state is a bar of no width. So the
+ * bar is absent from every one of these, and its behaviour is measured instead,
+ * in `toast.spec.ts`: that it shrinks, that it stops while the pointer is on
+ * the stack, that a ten-second notice has more left than a six-second one, and
+ * that a `danger` notice has no bar to begin with.
+ *
+ * That is the right division rather than a shortfall. A photograph of a bar
+ * part-way along would be a photograph of one moment, and the assertion that
+ * two bars differ after the same wait says the thing that actually matters.
+ */
+const AFTER_PRESS: Array<[string, string, string]> = [
+  ['components-toast--light', 'toast-light', 'send'],
+  ['components-toast--dark', 'toast-dark', 'send'],
+  ['components-toast--tones', 'toast-tones', 'send'],
+  ['components-toast--long-text', 'toast-long-text', 'send'],
+  ['components-toast--overflow', 'toast-overflow', 'send'],
+  /*
+   * The one that earns its place twice over: a notice above an open dialog is
+   * the arrangement doc 08 §1 verified for the layer base, and the one that
+   * made no exit animation non-negotiable (doc 09 §2.1).
+   */
+  ['components-toast--above-a-dialog', 'toast-above-a-dialog', 'send'],
+  /* The toast's own two axes: RTL, where the stack pins to the other side and
+     the glyph and cross swap with it, and density on the paddings. */
+  ['components-toast--direction', 'axis-toast-rtl', 'send'],
+  ['components-toast--compact', 'axis-toast-compact', 'send']
+];
+
+for (const [id, name, testId] of AFTER_PRESS) {
+  test(`after press: ${name}`, async ({ page }) => {
+    await gotoStory(page, id);
+    await page.getByTestId(testId).click();
+
+    const notice = page.locator('.bb-toast').first();
+    await expect(notice).toBeVisible();
+    await expect(notice).not.toHaveAttribute('data-entering', /.*/);
+
+    await expect(page.locator('body')).toHaveScreenshot(`${name}.png`);
+  });
+}
+
 for (const [id, name, testId, layerSelector] of ON_HOVER) {
   test(`on hover: ${name}`, async ({ page }) => {
     await captureAfterHover(page, id, name, testId, layerSelector);

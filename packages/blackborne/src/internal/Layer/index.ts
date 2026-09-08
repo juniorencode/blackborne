@@ -23,6 +23,11 @@ export {
 
 export { LAYER_OFFSET, PLACEMENTS } from './placement';
 export type { Placement } from './placement';
-export { HOVER_CLOSE_DELAY, HOVER_OPEN_DELAY } from './timing';
+export {
+  HOVER_CLOSE_DELAY,
+  HOVER_OPEN_DELAY,
+  TOAST_ACTION_TIMEOUT,
+  TOAST_TIMEOUT
+} from './timing';
 export { LayerArrow } from './LayerArrow';
 export type { LayerArrowProps } from './LayerArrow';
