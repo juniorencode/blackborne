@@ -43,14 +43,51 @@ test.beforeEach(async ({ page }) => {
   await gotoStory(page, STORY);
 });
 
+/**
+ * Everything the answer depends on, for when the answer is wrong.
+ *
+ * `mark-selected` failed once inside a full run and passed nine times out of
+ * nine in isolation, so there is no reproduction to work from — and a check
+ * that fails without evidence is a check that gets rerun until it passes,
+ * which is how a real intermittent bug becomes folklore. `story.ts` was given
+ * the same treatment when its wait started timing out: an eliminated
+ * hypothesis is worth more than a guess, and neither is worth anything without
+ * a measurement.
+ *
+ * The state attributes are the input to the rule under test, and the
+ * stylesheet count says whether the sheet that carries the rule had arrived.
+ */
+const evidence = async (page: import('@playwright/test').Page, id: string) =>
+  page.getByTestId(id).evaluate(row => {
+    const control = row.querySelector('[data-rac]');
+    return {
+      attributes: Object.fromEntries(
+        [...(control?.attributes ?? [])]
+          .filter(attribute => attribute.name.startsWith('data-'))
+          .map(attribute => [attribute.name, attribute.value])
+      ),
+      sheets: document.styleSheets.length,
+      layerThree: [...document.styleSheets].some(sheet => {
+        try {
+          return [...sheet.cssRules].some(rule =>
+            rule.cssText.includes('bb-checkbox-dash')
+          );
+        } catch {
+          return false;
+        }
+      })
+    };
+  });
+
 for (const { id, check, dash } of CASES) {
   test(`${id}: tick ${check ? 'shown' : 'hidden'}, dash ${dash ? 'shown' : 'hidden'}`, async ({
     page
   }) => {
     const marks = await displays(page, id);
+    const context = JSON.stringify(await evidence(page, id));
 
-    expect(marks.tick).toBe(check ? 'block' : 'none');
-    expect(marks.dash).toBe(dash ? 'block' : 'none');
+    expect(marks.tick, context).toBe(check ? 'block' : 'none');
+    expect(marks.dash, context).toBe(dash ? 'block' : 'none');
   });
 }
 
