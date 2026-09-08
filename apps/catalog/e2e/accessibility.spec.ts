@@ -170,9 +170,42 @@ test.describe('automated accessibility', () => {
           )?.innerText.trim().length !== 0
       );
 
+      /*
+       * When this guard fires, it says what axe DID return.
+       *
+       * It has fired twice on stories that pass in isolation — once on
+       * `EmptyState / Narrow Container`, once on `Alert / All Axes`, roughly
+       * one story-check in seven hundred, a different story each time. Two
+       * hypotheses are eliminated: it is not the stylesheet arriving late (the
+       * wait for a resolved token predates it) and it is not the first paint
+       * (`gotoStory` now waits for a rendered frame, and it recurred with that
+       * in place).
+       *
+       * So the next occurrence needs to carry evidence rather than a bare
+       * "did not run". How many rules axe ran at all separates "axe was cut
+       * short" from "this rule was skipped", and those have different fixes.
+       */
+      const ran = {
+        rules: new Set(
+          [...results.passes, ...results.violations, ...results.incomplete].map(
+            r => r.id
+          )
+        ).size,
+        incomplete: results.incomplete.map(r => r.id).join(', ') || 'none',
+        inapplicable: results.inapplicable.some(r => r.id === 'color-contrast')
+      };
+
       expect(
         contrastChecked || !hasText,
-        'the colour-contrast rule did not run; the suite is reporting less than it claims'
+        [
+          'the colour-contrast rule did not run; the suite is reporting less than it claims.',
+          `axe ran ${ran.rules} rules in total.`,
+          `incomplete: ${ran.incomplete}.`,
+          `color-contrast reported inapplicable: ${ran.inapplicable}.`,
+          'A low rule count means axe was cut short, which is a load problem.',
+          'A high count with contrast inapplicable means the page genuinely had',
+          'nothing to measure, which is a story problem.'
+        ].join(' ')
       ).toBe(true);
 
       expect(failures, failures.join('\n\n')).toEqual([]);

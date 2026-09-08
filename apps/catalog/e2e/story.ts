@@ -67,18 +67,27 @@ export async function gotoStory(page: Page, id: string): Promise<void> {
    * Two ticks and not one: the first is scheduled before the pending layout,
    * the second runs after it.
    *
-   * **This is a precondition made stricter, not a diagnosed fix, and the
-   * difference is worth being honest about.** `Components/EmptyState / Narrow
-   * Container` failed the contrast rule once, in one of two full runs of the
-   * same code on the same machine — roughly one story-check in six hundred —
-   * and passed seven times out of seven in isolation. The cause was not found.
-   * What is known is that this suite has produced exactly this shape of
-   * failure before, from exactly this cause: the notes above describe axe
-   * reporting a contrast violation against a half-applied stylesheet, on a
-   * different story each run. `retries` is deliberately zero here, so a check
-   * that can report either answer for the same input is a defect rather than
-   * weather — and if it recurs with this in place, the next person knows that
-   * the paint was not it.
+   * **This is a precondition made stricter, not a diagnosed fix**, and it did
+   * not fix the thing it was hoped to.
+   *
+   * `Components/EmptyState / Narrow Container` failed axe's contrast guard once
+   * in one of two full runs of identical code, and passed seven of seven in
+   * isolation. This wait was added, with a note saying that if it recurred the
+   * next person would know the paint was not the cause. **It recurred** — on
+   * `Components/Alert / All Axes`, one full run later — so the paint was not
+   * the cause, and neither was the stylesheet arriving late, which the waits
+   * above already covered.
+   *
+   * The wait stays because it is correct on its own terms: axe measures
+   * rendered geometry and colour, and a screenshot photographs a frame, so
+   * both want the frame rather than the promises. What it is not is a
+   * solution.
+   *
+   * Roughly one story-check in seven hundred, a different story each time.
+   * `retries` is deliberately zero here, so this is a defect rather than
+   * weather — and the guard in `accessibility.spec.ts` now prints what axe
+   * returned when it fires, because the next occurrence has to carry evidence
+   * instead of another eliminated hypothesis.
    */
   await page.evaluate(
     () =>
