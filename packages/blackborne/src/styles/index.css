@@ -30,6 +30,7 @@
 @import '../components/Skeleton/Skeleton.css';
 @import '../components/Spinner/Spinner.css';
 @import '../components/Switch/Switch.css';
+@import '../components/Tooltip/Tooltip.css';
 @import '../components/TextArea/TextArea.css';
 
 @source '../**/*.{ts,tsx}';
