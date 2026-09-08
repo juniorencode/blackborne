@@ -140,6 +140,39 @@ A consumer can declare containers of their own, anywhere, and the library's
 components will query them correctly. What the library does not do is require
 it.
 
+**And there is a limit on who MAY declare one, which is mechanical rather than
+stylistic:**
+
+> A component declares a container only if it declares a width.
+
+`container-type: inline-size` applies inline-axis size containment, which means
+the element's inline size is computed as though it had no contents. An element
+whose width is declared — a Card filling its parent, a dialog at
+`--container-medium`, a drawer at `w-full` plus a maximum — does not care. An
+element **sized by its contents** collapses to its borders.
+
+This is not a new discovery. It is
+[decision 0010](../decisions/0010-the-card-declares-the-container.md)'s
+consequence 1, "the Card does not shrink-wrap", which also predicted how it
+would be met: "this produces no error — it looks wrong, which is the harder
+kind to trace". It was met on 2026-09-08, on the shared layer panel, and the
+prediction was accurate to the word: an anchored popover is absolutely
+positioned with `width: auto`, so its width is shrink-to-fit, and with
+containment on that element every popover in the catalog rendered **2px wide**
+and 343px tall — one character per line — with nothing in any console.
+
+Two things follow, and both are the reason this is written in a foundation
+rather than in a component.
+
+- **There is no third state to reach for.** `width: max-content` does not
+  rescue a contained element, because containment is what makes `max-content`
+  zero. The choice is binary: sized by content, or a query container.
+- **A ceiling is not a measurement of a width.** Two browser checks written to
+  guard the panel's width passed throughout — "no wider than the medium
+  container" is satisfied by 2px. Both now assert a floor as well
+  ([doc 10](./10-quality-and-verification.md) on checks that are green while
+  checking nothing).
+
 ## 5. The one legitimate viewport exception
 
 There is one, and it deserves to be written down because it is not arbitrary:

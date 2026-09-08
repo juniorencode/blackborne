@@ -49,9 +49,24 @@ const DIALOG_SCRIM = cx(
  * window edge, so every edge of it is a free edge. That is exactly what a
  * drawer is not, and it is the whole of the difference between the two.
  */
+/*
+ * `container-type: inline-size` is declared HERE and not in the shared panel,
+ * because it is only safe on a layer whose width is declared — which a dialog's
+ * is, from the size map above. The law and the measurement behind it are in
+ * `internal/Layer/layerBox.ts`; the short version is that size containment
+ * makes an element's inline size resolve as if it had no contents, so a panel
+ * sized BY its contents collapses to its borders.
+ *
+ * What it gives is decision 0010's point: a form inside a dialog resolves its
+ * own container queries against the width the dialog was sized to, with no
+ * configuration. What it does NOT give was corrected in that decision — it
+ * makes this no kind of containing block, so a consumer's `position: fixed`
+ * child still positions against the window.
+ */
 const DIALOG_PANEL = cx(
   'bb-dialog-panel',
   PANEL,
+  'bb:[container-type:inline-size]',
   'bb:w-full bb:border bb:rounded-lg'
 );
 

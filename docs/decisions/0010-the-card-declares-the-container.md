@@ -106,6 +106,44 @@ and read several times, wrong in the direction that makes something look easy.
 The decision itself does not change. What changes is that its list of costs is
 one shorter than it said.
 
+## Note · 2026-09-08 — consequence 1 was met
+
+**Consequence 1 happened, in the library itself rather than in a consumer's
+screen, and exactly the way it was written.** It is recorded here because a
+cost that was predicted and then paid is worth more to the next reader than a
+cost that was only listed.
+
+The shared layer panel carried `container-type: inline-size`, put there with
+this decision cited as the reason — a layer is a region with a width of its
+own, which is the thing a container is. It was correct for the two layers that
+existed: a dialog's width comes from the size map and a drawer's from `w-full`
+plus a maximum. `Popover` is the first panel in the library whose width comes
+from its **contents**: it is absolutely positioned with `width: auto`, so it is
+shrink-to-fit, and shrink-to-fit is what containment removes.
+
+Measured in Chromium: every popover story rendered a panel **2px wide** — the
+two borders — and 343px tall, wrapping its title one character per line. No
+error, no warning, in the direction consequence 1 predicted: "this produces no
+error — it looks wrong, which is the harder kind to trace."
+
+Two notes on why it took a browser to find, which is the part that generalises:
+
+- Nothing in the unit suite could see it. jsdom implements neither containment
+  nor layout, so a panel of no width and a panel of the right width are the
+  same DOM.
+- The browser checks that existed were the wrong shape. Both of the ones
+  guarding the panel's width asserted only a ceiling — "no wider than
+  `--container-medium`" — which 2px satisfies. A one-sided assertion about a
+  size is half a check.
+
+**The decision does not change**, and neither does its cost list. What is added
+is a rule about who may take this decision, written where the next component
+will read it before copying the class:
+[doc 04](../foundations/04-responsive.md) §4.3 — a component declares a
+container only if it declares a width. The shared panel no longer declares one;
+`Dialog` and `Drawer` declare it themselves, next to the widths that make it
+safe.
+
 ## Revisit when
 
 A consumer reports the shrink-wrap consequence as a real problem in a real

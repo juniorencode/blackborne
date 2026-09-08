@@ -130,7 +130,17 @@ const AXIS: Record<DrawerSide, 'inline' | 'block'> = {
  */
 const DRAWER_SCRIM = cx('bb-drawer-scrim', SCRIM);
 
-const DRAWER_PANEL = cx('bb-drawer-panel', PANEL);
+/*
+ * `container-type: inline-size` is declared here rather than in the shared
+ * panel, for the reason `layerBox.ts` sets out: it is only safe on a layer
+ * whose width is declared, and a drawer's is — which is exactly why the size
+ * maps above are `w-full` plus a maximum rather than a maximum alone.
+ */
+const DRAWER_PANEL = cx(
+  'bb-drawer-panel',
+  PANEL,
+  'bb:[container-type:inline-size]'
+);
 
 /*
  * The same two omissions as `Dialog`, for the same reasons: `Escape` means one

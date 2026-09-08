@@ -70,20 +70,45 @@ export const SCRIM = cx(
  * clips, so a sticky header cannot paint over a rounded corner and the
  * scrollbar stays inside the radius.
  *
- * `container-type: inline-size`, following the Card
- * (decision 0010). A layer is a region with a width of its own, which is the
- * thing a container is, so anything placed inside can ask how wide it is with
- * no configuration. Note what that decision does NOT give, since it was
- * corrected there: it makes this no kind of containing block, so a consumer's
- * `position: fixed` child still positions against the window.
- *
  * `box-border` because the package ships no reset — with a border and padding
  * on one element, content-box makes a declared width measure wider than it was
  * asked for.
  *
- * Not here: the border WIDTH, the radius and the size. A dialog is bordered
- * and rounded on all four sides; a drawer is flush against three window edges
- * and only one of its edges is free.
+ * **`container-type` IS NOT HERE, and that is a measured law rather than a
+ * preference.** It reads well — a layer is a region with a width of its own,
+ * which is the thing a container is (decision 0010) — and it is only available
+ * to a layer whose width is DECLARED:
+ *
+ * `container-type: inline-size` applies inline-axis size containment, which
+ * means the element's inline size is computed as though it had no contents. A
+ * panel whose width is declared (a dialog, a drawer) does not care. A panel
+ * that is SIZED BY its contents — an anchored popover, which is absolutely
+ * positioned with `width: auto` and therefore shrink-to-fit — collapses to its
+ * borders. Measured, in a real browser, with this class on this element: every
+ * popover story rendered a panel **2px wide** and 343px tall, one character
+ * per line, while two of the checks written to guard its width passed. "No
+ * wider than the medium container" is satisfied by 2px.
+ *
+ * The knowledge was one component away and did not travel: `Drawer` records
+ * that this panel's "intrinsic inline size is zero", which is why its sizes
+ * are `w-full` plus a maximum rather than a maximum alone. Same cause, one
+ * wave earlier, and nothing generalised it. So it is written here, where the
+ * next layer will read it:
+ *
+ *   **A layer declares a container only if it declares a width.**
+ *
+ * The two that do add the class themselves. There is no third state to build:
+ * a content-sized panel cannot be a container even with `width: max-content`,
+ * because containment is what makes `max-content` zero.
+ *
+ * What that costs a popover is bounded, and measured too: a contained
+ * descendant contributes no width, but the sheet's header always contributes
+ * the title, so a popover holding nothing but a `Card` is as wide as its name
+ * rather than 2px.
+ *
+ * Not here either: the border WIDTH, the radius and the size. A dialog is
+ * bordered and rounded on all four sides; a drawer is flush against three
+ * window edges and only one of its edges is free.
  */
 export const PANEL = cx(
   'bb:box-border',
@@ -91,8 +116,7 @@ export const PANEL = cx(
   'bb:bg-surface-raised bb:text-surface-raised-on',
   'bb:border-border bb:shadow-lg',
   'bb:overflow-hidden',
-  'bb:font-sans bb:text-md bb:leading-normal',
-  'bb:[container-type:inline-size]'
+  'bb:font-sans bb:text-md bb:leading-normal'
 );
 
 /**
