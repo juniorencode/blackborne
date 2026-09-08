@@ -605,6 +605,28 @@ minor versions. Every break is listed here with its migration.
 
 ### Fixed
 
+- **The catalog's contrast guard fired on a story it should have excused**, and
+  finding out why turned up a hole in the automated accessibility layer.
+
+  axe does not check the contrast of Arabic text. Its `color-contrast` rule
+  skips anything it takes for an icon-font ligature, and it decides that by
+  comparing the rendered width of a string against the sum of its characters
+  measured one at a time — 15% or more means icon. Arabic is cursive, so its
+  letters join and every string crosses that threshold: measured at 30px
+  `system-ui`, 241.9px against an expected 314.5, a difference of 0.231. The
+  same sentence in Latin gives 0.
+
+  So the guard's exemption widens from "no text" to "no text axe will measure",
+  and it asks **axe's own classifier** rather than reimplementing the
+  heuristic. Verified with the rule disabled on purpose: a Latin story still
+  fails, and the failure now names how many text nodes axe would measure.
+
+  Doc 06 gains a §5.1 for the consequence, which is not about one story: no
+  Arabic text in this catalog has ever had its contrast checked. What makes it
+  survivable is that contrast is a property of the colour pair rather than the
+  script, and every pair also appears in Latin text. What it forbids is
+  translating a story, or padding one with Latin, to make the guard pass.
+
 - **`Popover`'s arrow was invisible**, and its screenshot recorded the absence
   as correct.
 

@@ -185,6 +185,50 @@ Components that require a screen reader test, not just keyboard: dialog, menu,
 combobox with search, date picker, table with selection and sorting, and
 alerts.
 
+### 5.1 What the automated layer does not cover in Arabic
+
+**The contrast check does not run on Arabic text.** Not as a bug in this
+repository and not as a setting anybody chose — it is how axe decides what
+text is:
+
+> `color-contrast` skips anything it takes for an icon-font ligature, and it
+> decides that by rendering the text to a canvas and comparing the width of the
+> whole string against the sum of its characters measured one at a time. A
+> difference of 15% or more, in pixels and in width, means icon.
+
+Arabic is a cursive script. Its letters join, so a string is far narrower than
+its characters measured in isolation, and it crosses that threshold every time.
+Measured at 30px `system-ui`, in the browser the catalog runs in:
+
+| Text                 | Sum of characters | The string | Difference |
+| -------------------- | ----------------- | ---------- | ---------- |
+| `أستيريوس ديل سور`   | 314.5px           | 241.9px    | **0.231**  |
+| `كالاو`              | 75.1px            | 55.1px     | **0.267**  |
+| `Astilleros del Sur` | 220.9px           | 220.9px    | 0          |
+
+So **no Arabic text in this catalog has ever had its contrast checked**, and
+the same applies to any other connected script the library is used with —
+Persian, Urdu, and the Indic scripts to varying degrees.
+
+**Why that is survivable**, and it is worth being precise rather than
+reassuring: contrast is a property of the colour PAIR, not of the script. Every
+pair the library ships is `--bb-x-on-y` against `--bb-x`, and every pair also
+appears in Latin text somewhere in the catalog, where it IS measured. A ratio
+that drifted below 4.5:1 would be caught there.
+
+**What it forbids** is the shortcut it invites: an RTL story contributes no
+contrast coverage, so translating a story — or adding Latin text beside the
+Arabic to satisfy the check — makes the guard pass without measuring anything
+it was not already measuring. The catalog's contrast guard therefore excuses a
+story whose only text axe declines, **by asking axe's own classifier**, and
+says so when it fires. If axe ever stops declining Arabic, the coverage arrives
+with no change on this side.
+
+This was found by the guard firing on `Components/Preview / RTL`, the first
+story in the catalog whose only visible text was Arabic. Every earlier RTL
+story happened to keep a Latin word — a button label, a number — and that word
+is what the contrast rule had been measuring all along.
+
 ## 6. Definition of done
 
 - [ ] The whole component is reachable and operable **by keyboard alone**, in a

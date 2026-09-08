@@ -146,29 +146,141 @@ test.describe('automated accessibility', () => {
       ].some(result => result.id === 'color-contrast');
 
       /*
-       * One narrow exemption: a story with no text at all. A skeleton is
-       * placeholder shapes and nothing else, so the contrast rule has nothing
-       * to measure and reports neither a pass nor a violation — which is not
-       * the rule going missing, it is the rule having no work.
+       * ONE NARROW EXEMPTION: a story with no text AXE WILL MEASURE.
        *
-       * Checked rather than listed by name, so it applies to the next text-free
-       * component too and cannot quietly cover a story that HAS text and lost
-       * the rule anyway.
+       * The obvious version of this — no text at all — is what a skeleton
+       * needs: placeholder shapes and nothing else, so the rule has no work
+       * rather than going missing. It was the whole exemption until a story
+       * turned up with text that axe declines to measure, which is a different
+       * thing and had to be measured to be believed.
        *
-       * A second exemption was added here and then removed, and the reason is
-       * worth keeping: several modal layers open at once make each other
+       * **axe does not check the contrast of Arabic text**, and the reason is
+       * mechanical. Its `color-contrast` rule ignores anything it takes for an
+       * icon-font ligature, and it decides that by rendering the text to a
+       * canvas and comparing the width of the whole string against the sum of
+       * its characters measured one at a time:
+       *
+       *     sizeDifference = 1 - actualWidth / expectedWidth   // >= 0.15: icon
+       *
+       * Arabic is a cursive script: its letters join, so a string is far
+       * narrower than its characters measured in isolation. Measured at 30px
+       * `system-ui`, the trigger of the story that found this is 241.9px wide
+       * against an expected 314.5 — a difference of **0.231**, and another
+       * Arabic string in the same story gives 0.267. The same sentence in Latin
+       * gives exactly **0**. So every Arabic string in this catalog is
+       * classified as an icon and skipped, and `Components/Preview / RTL` was
+       * simply the first story whose ONLY visible text was Arabic.
+       *
+       * The consequence is written down in doc 06 §5, because it is a hole in
+       * this layer of verification rather than a quirk of one story: **no
+       * Arabic text in this catalog has ever had its contrast checked.** What
+       * makes that survivable is that contrast is a property of the colour
+       * PAIR and not of the script, and every pair also appears in Latin text
+       * somewhere. What it forbids is translating a story to make a contrast
+       * finding go away.
+       *
+       * So the exemption asks AXE'S OWN classifier rather than reimplementing
+       * that heuristic — `axe.commons.text.isIconLigature`, reached the
+       * documented way through `axe.setup()` and the virtual tree. If axe ever
+       * stops declining Arabic, this exemption stops applying by itself and the
+       * coverage arrives with no change here.
+       *
+       * A different exemption was added once and then removed, and the reason
+       * is worth keeping: several modal layers open at once make each other
        * `inert`, and axe skips inert subtrees, so a story showing two dialogs
-       * side by side has no measurable text and would need excusing. The
-       * exemption was the wrong fix — the STORY was wrong. A layer is now
-       * photographed one at a time, so nothing needs excusing and this guard
-       * stays strict.
+       * side by side had no measurable text and would have needed excusing.
+       * That was the wrong fix — the STORY was wrong. A layer is now shown one
+       * at a time, so nothing needs excusing there and this guard stays strict.
        */
-      const hasText = await page.evaluate(
-        () =>
-          (
-            document.querySelector('#storybook-root') as HTMLElement | null
-          )?.innerText.trim().length !== 0
-      );
+      const text = await page.evaluate(() => {
+        const axe = (
+          window as unknown as {
+            axe?: {
+              setup?: (node?: Node) => unknown;
+              teardown?: () => void;
+              utils: { getNodeFromTree: (node: Node) => unknown };
+              commons: {
+                text: { isIconLigature: (v: unknown) => boolean };
+                dom: { isVisibleOnScreen: (v: unknown) => boolean };
+              };
+            };
+          }
+        ).axe;
+
+        const root = document.querySelector('#storybook-root');
+        const declined: string[] = [];
+        if (root === null) return { total: 0, measurable: 0, declined };
+
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        const nodes: Text[] = [];
+        for (let n = walker.nextNode(); n !== null; n = walker.nextNode()) {
+          if ((n.nodeValue ?? '').trim() !== '') nodes.push(n as Text);
+        }
+        if (nodes.length === 0 || axe === undefined) {
+          return { total: nodes.length, measurable: nodes.length, declined };
+        }
+
+        /*
+         * `axe.setup` builds the virtual tree that `axe.commons` needs; the run
+         * that produced `results` has already torn its own down.
+         */
+        axe.setup?.(document);
+        let total = 0;
+        let measurable = 0;
+        for (const node of nodes) {
+          let isIcon: boolean;
+          try {
+            /*
+             * HIDDEN TEXT IS NOT COUNTED AT ALL, and that has to be said out
+             * loud because the obvious walk over text nodes gets it wrong.
+             *
+             * The exemption this feeds used to be `innerText.trim() === ''`,
+             * and `innerText` respects visibility — so a story whose only text
+             * sat inside a `VisuallyHidden` was exempt for the right reason.
+             * A raw tree walk sees that text, would have counted it as
+             * measurable, and would have started failing a story axe never
+             * looked at. Measured on the way in: no story in the catalog is in
+             * that state today, which is exactly when a trap is cheap to close.
+             *
+             * `isVisibleOnScreen` is the same helper the contrast rule itself
+             * uses, so the two agree by construction rather than by intent.
+             */
+            const virtual = axe.utils.getNodeFromTree(node);
+            if (virtual === undefined || virtual === null) {
+              total++;
+              measurable++;
+              continue;
+            }
+            const parent = axe.utils.getNodeFromTree(
+              node.parentElement as Node
+            );
+            if (
+              parent !== undefined &&
+              parent !== null &&
+              !axe.commons.dom.isVisibleOnScreen(parent)
+            ) {
+              continue;
+            }
+            isIcon = axe.commons.text.isIconLigature(virtual);
+          } catch {
+            /*
+             * A classifier that cannot be reached counts as measurable, so the
+             * guard errs towards firing rather than towards excusing.
+             */
+            total++;
+            measurable++;
+            continue;
+          }
+          total++;
+          if (isIcon) declined.push((node.nodeValue ?? '').trim().slice(0, 24));
+          else measurable++;
+        }
+        axe.teardown?.();
+
+        return { total, measurable, declined };
+      });
+
+      const hasMeasurableText = text.measurable > 0;
 
       /*
        * When this guard fires, it says what axe DID return.
@@ -196,15 +308,19 @@ test.describe('automated accessibility', () => {
       };
 
       expect(
-        contrastChecked || !hasText,
+        contrastChecked || !hasMeasurableText,
         [
           'the colour-contrast rule did not run; the suite is reporting less than it claims.',
           `axe ran ${ran.rules} rules in total.`,
           `incomplete: ${ran.incomplete}.`,
           `color-contrast reported inapplicable: ${ran.inapplicable}.`,
-          'A low rule count means axe was cut short, which is a load problem.',
-          'A high count with contrast inapplicable means the page genuinely had',
-          'nothing to measure, which is a story problem.'
+          `text nodes: ${text.total}, of which axe will measure ${text.measurable}.`,
+          text.declined.length === 0
+            ? 'axe declined none of them as icon ligatures.'
+            : `axe declined these as icon ligatures: ${text.declined.join(' | ')}.`,
+          'Compare the rule count against a healthy story of the same component:',
+          'one rule fewer means this rule alone was skipped, and more missing than',
+          'that means axe was cut short, which is a load problem.'
         ].join(' ')
       ).toBe(true);
 
