@@ -10,7 +10,16 @@ export type { ModalSheetProps } from './ModalSheet';
  * non-goal 4 arriving a prop at a time, and the third case being different is
  * exactly the argument for not generalising it.
  */
-export { BODY, FOOTER, HEADER, PANEL, SCRIM, SHEET, TITLE } from './layerBox';
+export {
+  ANCHORED,
+  BODY,
+  FOOTER,
+  HEADER,
+  PANEL,
+  SCRIM,
+  SHEET,
+  TITLE
+} from './layerBox';
 
 export { LAYER_OFFSET, PLACEMENTS } from './placement';
 export type { Placement } from './placement';

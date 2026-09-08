@@ -180,6 +180,20 @@ Everything that renders in a portal. Four things were measured while building
   enclosing `Overlay` from the inside — so a popover contains focus even though
   the base's own request for it is off. The layer that must NOT contain focus
   cannot use the sheet as it is. Doc 08 §4.
+  Measured again on `Preview`, in a browser: with the sheet nested, `Tab` past
+  the last thing in the card kept focus inside it. That is the check to run
+  before reaching for the sheet in a layer that closes itself.
+- **An ANCHORED layer wraps the panel; it is not the panel.** The base
+  positions the element it is given and an `OverlayArrow` is positioned against
+  that element and OUTSIDE it, while the panel clips its children — so the
+  arrow and the painted panel cannot be the same box. `Popover`'s arrow shipped
+  invisible for exactly this reason, and loosening the clip is worse: it lets
+  the sticky header's corners out too. `ANCHORED` in `internal/Layer` is the
+  wrapper, and it paints nothing.
+- **A computed style is not paint.** The arrow above had the right box, the
+  right rotation and `visibility: visible`, and nothing on the screen. Use
+  `document.elementFromPoint` on anything drawn: clipped content is not
+  hit-tested. Doc 08 §9.
 
 ## Hiding something without losing it
 

@@ -5,6 +5,7 @@ import {
   type PopoverProps as AriaPopoverProps
 } from 'react-aria-components';
 import {
+  ANCHORED,
   LAYER_OFFSET,
   LayerArrow,
   ModalSheet,
@@ -44,12 +45,32 @@ import { cx } from '../../internal/cx';
  * So content inside a popover cannot ask how wide the popover is. That is the
  * right way round: the content is what decided the width.
  */
-const POPOVER_PANEL = cx(
+const POPOVER_WRAPPER = cx(
   'bb-popover',
-  PANEL,
+  ANCHORED,
   'bb:z-(--bb-layer-popover)',
-  'bb:max-w-medium bb:border bb:rounded-lg'
+  'bb:max-w-medium'
 );
+
+/*
+ * The panel itself, inside the wrapper.
+ *
+ * TWO ELEMENTS, and the reason is the arrow. The base positions the outer one
+ * and an `OverlayArrow` is positioned against it and OUTSIDE it, while this
+ * element clips its children — a sticky header's square background would
+ * otherwise paint over the rounded corners. So the arrow and the painted panel
+ * cannot be the same box.
+ *
+ * `hasArrow` shipped before that was understood, with the arrow invisible: its
+ * box in the right place, its `visibility` `visible`, and nothing painted
+ * there. `internal/Layer/layerBox.ts` has both measurements, including the
+ * looser clip that was tried and let the corners out with the arrow.
+ *
+ * `min-h-0` so the ceiling the base writes on the wrapper actually bounds this.
+ * A percentage cannot — `max-height: 100%` against an element with only a
+ * maximum computes to `none`, measured on `Dialog`.
+ */
+const POPOVER_PANEL = cx(PANEL, 'bb:min-h-0', 'bb:border bb:rounded-lg');
 
 export interface PopoverProps extends Pick<
   AriaPopoverProps,
@@ -200,7 +221,7 @@ export const Popover = forwardRef<HTMLElement, PopoverProps>(function Popover(
       {trigger}
       <AriaPopover
         ref={ref}
-        className={cx(POPOVER_PANEL, className)}
+        className={POPOVER_WRAPPER}
         placement={placement}
         offset={LAYER_OFFSET}
         /*
@@ -214,21 +235,27 @@ export const Popover = forwardRef<HTMLElement, PopoverProps>(function Popover(
           : { shouldCloseOnInteractOutside: () => false })}
         {...(style === undefined ? {} : { style })}
       >
+        {/* Outside the panel, because the panel clips. */}
         {hasArrow ? <LayerArrow /> : null}
-        {/*
-         * The same sheet a dialog and a drawer use: a pinned header with the
-         * title and a close button, the content, a pinned footer. Its third
-         * caller, which is when doc 01's own instinct says an abstraction has
-         * earned its place — and this one was extracted at the second, with a
-         * reason written down at the time.
-         *
-         * Nesting a `role="dialog"` in here also stops the base adding its own:
-         * measured, it looks for one and skips its role when it finds it, so
-         * there is exactly one dialog rather than two.
-         */}
-        <ModalSheet title={title} {...(footer === undefined ? {} : { footer })}>
-          {children}
-        </ModalSheet>
+        <div className={cx(POPOVER_PANEL, className)}>
+          {/*
+           * The same sheet a dialog and a drawer use: a pinned header with the
+           * title and a close button, the content, a pinned footer. Its third
+           * caller, which is when doc 01's own instinct says an abstraction has
+           * earned its place — and this one was extracted at the second, with a
+           * reason written down at the time.
+           *
+           * Nesting a `role="dialog"` in here also stops the base adding its own:
+           * measured, it looks for one and skips its role when it finds it, so
+           * there is exactly one dialog rather than two.
+           */}
+          <ModalSheet
+            title={title}
+            {...(footer === undefined ? {} : { footer })}
+          >
+            {children}
+          </ModalSheet>
+        </div>
       </AriaPopover>
     </DialogTrigger>
   );
