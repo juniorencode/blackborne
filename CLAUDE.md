@@ -33,14 +33,15 @@ this file is out of date. Fix this file.
 assuming anything exists.
 
 At the time of writing: all ten foundations are written, the pipeline is
-complete, and **twenty-five components exist** — the ten simple fields and
+complete, and **twenty-six components exist** — the ten simple fields and
 controls, `Button`, the flat pieces around them (`Alert`, `Badge`, `Card`,
-`EmptyState`, `Separator`, `Skeleton`, `Spinner`, `VisuallyHidden`), and five
-layers: `Dialog`, `Drawer`, `ConfirmDialog`, `Tooltip` and `Popover`.
+`EmptyState`, `Separator`, `Skeleton`, `Spinner`, `VisuallyHidden`), and six
+layers: `Dialog`, `Drawer`, `ConfirmDialog`, `Tooltip`, `Popover` and
+`Preview`.
 
 **The layer batch is what is being built now.** The base landed with `Dialog`,
-then `Drawer`, `ConfirmDialog`, `Tooltip` and `Popover`. What is left is
-`Preview` and `Toast` — in that order, with `Toast` last. `Menu` is
+then `Drawer`, `ConfirmDialog`, `Tooltip`, `Popover` and `Preview`. What is
+left is **`Toast`**, which is last in the batch by decision. `Menu` is
 deliberately not in this batch, and `SplitButton` waits with `Menu`.
 
 The shared parts of a layer live in `src/internal/Layer/`, and a new one takes
@@ -49,11 +50,12 @@ if it has a header and a title, the twelve placements and the arrow if it is
 anchored to a control. Two things it decides for itself are where the panel
 lands and which of its edges is free.
 
-**Two of those shared parts carry a decision, not just markup**, and both were
-measured on `Popover`: the panel declares a query container only where the
-width is declared too, and the sheet is what contains a layer's focus. The
-package guide has both, and doc 08 §4 has the second in full — it matters for
-`Preview`, which must not contain focus and cannot use the sheet unchanged.
+**Three of those shared parts carry a decision, not just markup**, and all
+three were measured: the panel declares a query container only where the width
+is declared too; the sheet is what contains a layer's focus, so a layer that
+must not contain it cannot use the sheet; and an anchored layer WRAPS the panel
+rather than being it, because the panel clips and an arrow lives outside it.
+The package guide has all three and doc 08 §4 has the second in full.
 
 So the rules are settled and you should follow them rather than invent. Two
 things to keep in mind anyway:

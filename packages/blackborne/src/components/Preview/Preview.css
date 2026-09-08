@@ -1,0 +1,42 @@
+/*
+ * Layer 3: a component exception, derived from layer 2 (doc 03 §1).
+ *
+ * Only the entry lives here. The arrow's rotation is shared, in
+ * internal/Layer/arrow.css, and the height ceiling comes from the base, which
+ * measures the room between the trigger and the edge of the window.
+ */
+
+/*
+ * The entry, and it says where the card came from: it grows a little out of
+ * the edge nearest its trigger, which is what doc 09 §2 allows an animation to
+ * communicate.
+ *
+ * `--trigger-anchor-point` is published by the base — the trigger's position in
+ * the panel's own coordinate system — so a card opened from a word at the end
+ * of a line appears to come from that word rather than from the middle of
+ * itself.
+ *
+ * **THE WARMUP SKIPS THIS, AND THE BASE ARRANGES IT**, which is the reason
+ * this animation is affordable at all. Once any hover layer has opened, moving
+ * to a neighbour opens the next one immediately (doc 09 §3.1), and a card that
+ * animated in on every name in a table of thirty would be motion sickness by
+ * the tenth. The base passes `shouldSkipAnimation` while swapping between
+ * previews inside the warmup window and withholds `data-entering`, so the
+ * animation plays on the deliberate first approach and not on the sweep.
+ *
+ * There is NO EXIT, which is doc 09 §2.1: the base keeps a layer mounted while
+ * it animates away, and a mounted layer goes on consuming `Escape`. Measured on
+ * `Dialog`, where an exit animation swallowed the key that closes the layer
+ * underneath.
+ */
+.bb-preview[data-entering] {
+  animation: bb-preview-in var(--bb-duration-fast) var(--bb-ease);
+  transform-origin: var(--trigger-anchor-point, center);
+}
+
+@keyframes bb-preview-in {
+  from {
+    opacity: 0;
+    scale: 0.97;
+  }
+}

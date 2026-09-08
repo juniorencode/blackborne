@@ -365,6 +365,44 @@ test.describe('the arrow', () => {
     // shape rotated half a turn. `matrix(-1, 0, 0, -1, 0, 0)` is 180deg.
     expect(rotation).toBe('matrix(-1, 0, 0, -1, 0, 0)');
   });
+
+  test('and it is actually PAINTED, not merely positioned', async ({
+    page
+  }) => {
+    /*
+     * THE CHECK THAT WAS MISSING, and it is missing from nowhere else in this
+     * repository by accident.
+     *
+     * `Popover`'s arrow shipped invisible. Its box was in the right place, its
+     * `visibility` was `visible`, its rotation was correct, and the rotation
+     * check above passed — because a transform is a computed style and says
+     * nothing about whether anything reached the screen. The panel clipped it:
+     * an arrow is positioned OUTSIDE the panel by design, and the panel's
+     * `overflow` erased it. The screenshot that should have shown it had been
+     * accepted as a reference with no arrow in it.
+     *
+     * `document.elementFromPoint` is what tells the difference. Clipped content
+     * is not hit-tested, so a point in the middle of a clipped arrow resolves
+     * to whatever is behind the panel; a painted one resolves to the arrow's
+     * own path. Measured in both states before this was written.
+     */
+    await gotoStory(page, PLACEMENTS);
+    const layer = await openOn(page, 'trigger-bottom');
+
+    const hit = await layer.evaluate(node => {
+      const arrow = node.querySelector('.bb-layer-arrow');
+      if (!arrow) return 'no arrow element at all';
+      const box = arrow.getBoundingClientRect();
+      const at = document.elementFromPoint(
+        box.x + box.width / 2,
+        box.y + box.height / 2
+      );
+      return at === null ? 'nothing' : at.tagName.toLowerCase();
+    });
+
+    // The drawn triangle is a `path` inside the arrow's `svg`.
+    expect(hit).toBe('path');
+  });
 });
 
 /* ------------------------------------------------------------------ *

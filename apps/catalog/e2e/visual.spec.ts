@@ -340,7 +340,17 @@ const captureAfterHover = async (
   page: import('@playwright/test').Page,
   id: string,
   name: string,
-  testId: string
+  testId: string,
+  /*
+   * WHICH LAYER TO WAIT FOR, and it is a parameter because there are now two
+   * kinds of hover layer with nothing in common to wait on. A tooltip is
+   * `role="tooltip"`; a preview's panel is `role="dialog"`, which every modal
+   * layer in the catalog also is, so waiting for the role would resolve
+   * against the wrong thing. Its class is what identifies it.
+   *
+   * A default keeps the tooltip rows reading as they did.
+   */
+  layerSelector = '[role=tooltip]'
 ) => {
   await gotoStory(page, id);
 
@@ -351,7 +361,7 @@ const captureAfterHover = async (
     steps: 8
   });
 
-  const layer = page.getByRole('tooltip');
+  const layer = page.locator(layerSelector);
   await expect(layer).toBeVisible({ timeout: 3000 });
   await expect(layer).not.toHaveAttribute('data-entering', /.*/);
 
@@ -363,16 +373,62 @@ const captureAfterHover = async (
  * turning with the direction, and a long value wrapping at the maximum width
  * rather than spanning the window.
  */
-const ON_HOVER: Array<[string, string, string]> = [
+const ON_HOVER: Array<[string, string, string, string?]> = [
   ['components-tooltip--light', 'tooltip-light', 'trigger'],
   ['components-tooltip--dark', 'tooltip-dark', 'trigger'],
   ['components-tooltip--direction', 'tooltip-rtl', 'trigger'],
   ['components-tooltip--long-text', 'tooltip-long-text', 'trigger'],
-  ['components-tooltip--nodes', 'tooltip-nodes', 'trigger']
+  ['components-tooltip--nodes', 'tooltip-nodes', 'trigger'],
+  /*
+   * The preview, the second hover layer and the first one with a picture worth
+   * arguing about: `preview-interactive` is the shot that shows what separates
+   * this component from a tooltip, because the thing in the card is something
+   * you can press.
+   *
+   * `preview-long-text` is here for the reason `Popover` taught: the panel is
+   * content-sized, and the failure mode of a content-sized panel is a picture
+   * nobody took. Its width is asserted in `preview.spec.ts` as well, with a
+   * floor.
+   */
+  ['components-preview--light', 'preview-light', 'trigger', '.bb-preview'],
+  ['components-preview--dark', 'preview-dark', 'trigger', '.bb-preview'],
+  [
+    'components-preview--interactive',
+    'preview-interactive',
+    'trigger',
+    '.bb-preview'
+  ],
+  [
+    'components-preview--text-only',
+    'preview-text-only',
+    'trigger',
+    '.bb-preview'
+  ],
+  [
+    'components-preview--long-text',
+    'preview-long-text',
+    'trigger',
+    '.bb-preview'
+  ],
+  /* The preview's own two axes: RTL, where the card aligns to the other edge of
+     its trigger and the arrow turns with it, and density on its paddings —
+     which moves the size of the box itself, because the width is the content's. */
+  [
+    'components-preview--direction',
+    'axis-preview-rtl',
+    'trigger',
+    '.bb-preview'
+  ],
+  [
+    'components-preview--compact',
+    'axis-preview-compact',
+    'trigger',
+    '.bb-preview'
+  ]
 ];
 
-for (const [id, name, testId] of ON_HOVER) {
+for (const [id, name, testId, layerSelector] of ON_HOVER) {
   test(`on hover: ${name}`, async ({ page }) => {
-    await captureAfterHover(page, id, name, testId);
+    await captureAfterHover(page, id, name, testId, layerSelector);
   });
 }

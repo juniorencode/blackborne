@@ -70,6 +70,16 @@ export const SCRIM = cx(
  * clips, so a sticky header cannot paint over a rounded corner and the
  * scrollbar stays inside the radius.
  *
+ * **THE CLIP IS TIGHT, AND THAT IS WHY AN ANCHORED LAYER WRAPS THIS ELEMENT
+ * RATHER THAN BEING IT.** An arrow is positioned outside the panel — that is
+ * the whole job of an arrow — so anything clipped by this element cannot draw
+ * one. Loosening the clip was tried and measured: `overflow: clip` with an 8px
+ * clip margin does let the arrow paint, and it also lets the sticky header's
+ * square background out past the rounded corners. 51 pixels changed on
+ * `dialog-light`, in four clusters, one at each corner of the panel. The clip
+ * has to stay exactly where it is, so the arrow goes outside instead — see
+ * `ANCHORED` below.
+ *
  * `box-border` because the package ships no reset — with a border and padding
  * on one element, content-box makes a declared width measure wider than it was
  * asked for.
@@ -118,6 +128,48 @@ export const PANEL = cx(
   'bb:overflow-hidden',
   'bb:font-sans bb:text-md bb:leading-normal'
 );
+
+/**
+ * The wrapper an ANCHORED layer puts around the panel: a popover, a preview,
+ * and any later layer positioned against a control.
+ *
+ * `Dialog` and `Drawer` do not use it. They are placed in the scrim, they have
+ * no arrow, and their panel is the outermost element they render.
+ *
+ * ## Why the outermost element of an anchored layer is not the panel
+ *
+ * The base positions the element it is given, publishes `data-placement` and
+ * `data-entering` on it, and writes a `max-height` into its style from the room
+ * between the trigger and the edge of the window. An `OverlayArrow` is
+ * positioned against that same element — and OUTSIDE it, which is the whole job
+ * of an arrow.
+ *
+ * The panel clips its children, and it has to: a sticky header's square
+ * background would otherwise paint over the rounded corners. So the arrow and
+ * the panel cannot be the same box. Measured, with the arrow inside the panel:
+ * the arrow's box was in the right place, its `visibility` was `visible`, and
+ * `document.elementFromPoint` at its centre returned the page behind the panel.
+ * `Popover` shipped that way, and the screenshot that should have shown its
+ * arrow was accepted as a reference with no arrow in it.
+ *
+ * Loosening the clip was measured too and is worse: `overflow: clip` with a
+ * clip margin lets the arrow out and lets the header's corners out with it — 51
+ * pixels on `dialog-light`, one cluster at each corner.
+ *
+ * So the arrow is a SIBLING of the panel inside this wrapper. Nothing here
+ * paints: no background, no border, no radius, no shadow. Those belong to the
+ * panel, in one place, still.
+ *
+ * `flex flex-col` plus `min-h-0` on the panel, and not a percentage — the
+ * ceiling the base writes lands on this element, and `max-height: 100%` on a
+ * child of an element with only a maximum computes to `none`. That is the trap
+ * `PANEL` records, arriving one level higher up.
+ *
+ * The width is deliberately absent: an anchored layer is content-sized, and its
+ * maximum is the component's own decision — narrow for a preview, medium for a
+ * popover.
+ */
+export const ANCHORED = cx('bb:box-border bb:flex bb:flex-col');
 
 /**
  * The sheet: the element that carries `role="dialog"`, and the one that

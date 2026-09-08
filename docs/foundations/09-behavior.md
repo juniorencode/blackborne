@@ -133,6 +133,26 @@ so once **any** hover layer has opened, moving to a neighbour opens
 once per control. That is behaviour to keep, and it is the reason the closing
 number matters more than the opening one.
 
+**And the closing number is not what lets the pointer reach the panel**, which
+is what it looks like it is for. Measured in the base while building `Preview`:
+a hover layer whose content can be reached is kept open by a **safe-area
+polygon** covering the trigger, the panel, and the region between them — so the
+pointer can travel diagonally from a word in a sentence to a card below and to
+the side of it, and the layer stays open however long that takes. The base's
+own comment says it works "even when closeDelay is 0".
+
+So the 150 ms closes a layer nobody is travelling towards. It is for the case
+§3.1 opens with — moving between two adjacent controls, where the first panel
+must not hang over the second — and not for the journey into the panel. Those
+are two different jobs that a single number appears to be doing, and reading
+them as one is how a close delay ends up tuned to the size of a gap.
+
+**A tooltip has no such polygon and does not need one.** Nothing in it can be
+reached, so there is no journey: WCAG 1.4.13 requires that a pointer moving
+into it does not dismiss it, which the base honours, and that is as far as it
+goes ([doc 06](./06-accessibility.md) §4). The polygon exists for the layer
+whose content is the point.
+
 ## 4. Communicating the outcome
 
 - **What goes well and was expected, in silence.** Confirming every routine

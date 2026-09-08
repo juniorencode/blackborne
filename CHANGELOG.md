@@ -12,6 +12,46 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **`Preview`** — a card about the thing under the pointer: a customer's terms
+  behind their name, a user's role behind their avatar, an invoice's status
+  behind its number.
+
+  **It is the layer whose content can be REACHED**, which is the whole reason it
+  exists beside `Tooltip`. The pointer travels into it over a safe-area polygon
+  the base keeps over the trigger, the card and the space between them — so a
+  diagonal journey at any speed does not close it. `Tab` on the trigger moves
+  focus into the card, tabbing past the last thing in it leaves, and `Escape`
+  closes it. A tooltip has none of that and cannot: it is not focusable and it
+  closes when its trigger blurs.
+
+  It opens on hover, on keyboard focus, and on **long press** on a touch
+  device, where the base contributes the one user-facing string this component
+  needs — "Long press to open preview" — in the reader's own language.
+
+  **`title` is required, and that was measured rather than assumed.** The base
+  gives a preview's panel `role="dialog"` even though the panel is non-modal,
+  and names it with nothing at all: accessible name `null`. So the title names
+  it. It is deliberately **not a heading** — doc 06 §2 leaves the level to the
+  project, and the machinery that would supply one is a nested dialog this
+  component may not render.
+
+  It renders no dialog of its own for a reason doc 08 §4 predicted before the
+  component existed and a browser then confirmed: the shared `ModalSheet` would
+  switch focus containment on from the inside, trapping the keyboard in a card
+  that has no close button. With the sheet nested, `Tab` past the last thing in
+  the card kept focus inside it.
+
+  **The page behind is left alone** — no underlay, no scroll lock, still in the
+  accessibility tree. The exact opposite of `Popover`, measured the same way,
+  and the reason those are two components rather than one prop.
+
+  No delay props, no arrow prop, no `className`: the delays are the library's
+  (doc 09 §3.1), the arrow is always there as on `Tooltip`, and the base
+  positions the card at a width that is its content's up to
+  `--container-narrow`.
+
+- `ANCHORED`, internally: the wrapper an anchored layer puts around the panel.
+
 - **`Popover`** — a panel anchored to the control that opened it: a filter
   form, a set of details, a short list.
 
@@ -564,6 +604,48 @@ minor versions. Every break is listed here with its migration.
   `packages/blackborne`, the visual catalog in `apps/catalog`.
 
 ### Fixed
+
+- **The catalog's contrast guard fired on a story it should have excused**, and
+  finding out why turned up a hole in the automated accessibility layer.
+
+  axe does not check the contrast of Arabic text. Its `color-contrast` rule
+  skips anything it takes for an icon-font ligature, and it decides that by
+  comparing the rendered width of a string against the sum of its characters
+  measured one at a time — 15% or more means icon. Arabic is cursive, so its
+  letters join and every string crosses that threshold: measured at 30px
+  `system-ui`, 241.9px against an expected 314.5, a difference of 0.231. The
+  same sentence in Latin gives 0.
+
+  So the guard's exemption widens from "no text" to "no text axe will measure",
+  and it asks **axe's own classifier** rather than reimplementing the
+  heuristic. Verified with the rule disabled on purpose: a Latin story still
+  fails, and the failure now names how many text nodes axe would measure.
+
+  Doc 06 gains a §5.1 for the consequence, which is not about one story: no
+  Arabic text in this catalog has ever had its contrast checked. What makes it
+  survivable is that contrast is a property of the colour pair rather than the
+  script, and every pair also appears in Latin text. What it forbids is
+  translating a story, or padding one with Latin, to make the guard pass.
+
+- **`Popover`'s arrow was invisible**, and its screenshot recorded the absence
+  as correct.
+
+  An `OverlayArrow` is positioned against the element the base positions and
+  OUTSIDE it, and the panel clips its children — a sticky header's square
+  background would otherwise paint over the rounded corners. So the arrow was
+  erased: box in the right place, `visibility: visible`, correct rotation
+  matrix, and nothing on the screen.
+
+  Fixed by structure rather than by loosening the clip, which was tried and is
+  worse — `overflow: clip` with a clip margin lets the arrow out and lets the
+  header's corners out with it, 51 pixels on `dialog-light`, one cluster at
+  each corner. An anchored layer now WRAPS the panel: the wrapper is what the
+  base positions, the arrow is its child, and the panel inside it still clips
+  exactly as before. `Dialog` and `Drawer` are untouched.
+
+  **One committed baseline changes**, `popover-arrow`, because it recorded the
+  defect. Every other one is byte-identical. Doc 08 §9 gains the general form:
+  a computed style is not paint, and a baseline accepts whatever is there.
 
 - **A layer panel no longer declares a query container**, which had made every
   `Popover` render **2px wide** — its two borders — with nothing in any
