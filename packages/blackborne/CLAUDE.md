@@ -123,6 +123,18 @@ cannot know what level it landed at. Emphasis comes from weight and colour.
   none of that is reachable from a `<button>` however it is dressed. Doc 02
   §7.1, and the two must keep looking different: accent and underlined at rest
   is a link, ordinary text until pointed at is a button.
+- **The library's first directional icon is a breadcrumb separator**, and it
+  is where doc 02 §11.4 bites: the chevron is drawn pointing down and turned a
+  quarter turn along the reading direction — anti-clockwise in a left-to-right
+  language, clockwise in a right-to-left one, through the `rtl:` variant and
+  never a physical `left`. It is also why a consumer cannot pass their own: the
+  library may not flip an icon it did not draw, so a chevron arriving from
+  outside would point the wrong way in Arabic, silently.
+- **A separator belongs to the step that FOLLOWS it**, dropped on the first by
+  a rule keyed on `:first-child`. Chosen over counting in JavaScript because
+  CSS re-evaluates on its own when a consumer renders the first step
+  conditionally — which is the failure the accordion's joined-list layout was
+  rejected for.
 - **A focus ring on a run of text is an outline, not a border.** A border
   widens an inline box and moves the words after it every time focus lands.
   Doc 06 §3.1 has the rule and the table; the browser check measures the text
