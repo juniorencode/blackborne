@@ -11,3 +11,7 @@ export type { ModalSheetProps } from './ModalSheet';
  * exactly the argument for not generalising it.
  */
 export { BODY, FOOTER, HEADER, PANEL, SCRIM, SHEET, TITLE } from './layerBox';
+
+export { LAYER_OFFSET, PLACEMENTS } from './placement';
+export type { Placement } from './placement';
+export { HOVER_CLOSE_DELAY, HOVER_OPEN_DELAY } from './timing';

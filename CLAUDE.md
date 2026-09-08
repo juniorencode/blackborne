@@ -33,13 +33,13 @@ this file is out of date. Fix this file.
 assuming anything exists.
 
 At the time of writing: all ten foundations are written, the pipeline is
-complete, and **twenty-three components exist** — the ten simple fields and
+complete, and **twenty-four components exist** — the ten simple fields and
 controls, `Button`, the flat pieces around them (`Alert`, `Badge`, `Card`,
 `EmptyState`, `Separator`, `Skeleton`, `Spinner`, `VisuallyHidden`), and three
-layers: `Dialog`, `Drawer` and `ConfirmDialog`.
+layers: `Dialog`, `Drawer`, `ConfirmDialog` and `Tooltip`.
 
 **The layer batch is what is being built now.** The base landed with `Dialog`,
-then `Drawer`, then `ConfirmDialog`. What is left is `Tooltip`, `Popover`,
+then `Drawer`, `ConfirmDialog` and `Tooltip`. What is left is `Popover`,
 `Preview` and `Toast` — in that order, with `Toast` last. `Menu` is
 deliberately not in this batch, and `SplitButton` waits with `Menu`.
 

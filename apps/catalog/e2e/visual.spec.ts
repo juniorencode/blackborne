@@ -287,3 +287,62 @@ for (const [id, name] of AXES) {
     await capture(page, id, name);
   });
 }
+
+/*
+ * Some layers cannot be photographed at rest.
+ *
+ * A tooltip has no `isOpen` prop — its whole behaviour is hover and focus, and
+ * a prop to pin one open would exist for this suite and for nobody else (P5).
+ * So the shot is taken after an interaction, and the interaction is part of
+ * what the picture is of.
+ *
+ * THE MOUSE HAS TO TRAVEL. `locator.hover()` teleports the pointer and the
+ * base's `useHover` does not register that at all — measured four ways in
+ * `tooltip.spec.ts`, where a single `hover()` opened nothing while a neutral
+ * move followed by a stepped move onto the target opened it every time.
+ *
+ * And the layer has to have STOPPED. It scales in, so a frame captured while
+ * `data-entering` is set is a frame mid-animation. `animations: 'disabled'`
+ * freezes at the end state, which handles it — but waiting for the attribute
+ * to go is what makes the shot deterministic rather than dependent on that.
+ */
+const captureAfterHover = async (
+  page: import('@playwright/test').Page,
+  id: string,
+  name: string,
+  testId: string
+) => {
+  await gotoStory(page, id);
+
+  const box = await page.getByTestId(testId).boundingBox();
+  expect(box, `no trigger with testid ${testId}`).not.toBeNull();
+  await page.mouse.move(4, 4);
+  await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2, {
+    steps: 8
+  });
+
+  const layer = page.getByRole('tooltip');
+  await expect(layer).toBeVisible({ timeout: 3000 });
+  await expect(layer).not.toHaveAttribute('data-entering', /.*/);
+
+  await expect(page.locator('body')).toHaveScreenshot(`${name}.png`);
+};
+
+/*
+ * The hover layers. One per mode plus the two that carry a rule: the arrow
+ * turning with the direction, and a long value wrapping at the maximum width
+ * rather than spanning the window.
+ */
+const ON_HOVER: Array<[string, string, string]> = [
+  ['components-tooltip--light', 'tooltip-light', 'trigger'],
+  ['components-tooltip--dark', 'tooltip-dark', 'trigger'],
+  ['components-tooltip--direction', 'tooltip-rtl', 'trigger'],
+  ['components-tooltip--long-text', 'tooltip-long-text', 'trigger'],
+  ['components-tooltip--nodes', 'tooltip-nodes', 'trigger']
+];
+
+for (const [id, name, testId] of ON_HOVER) {
+  test(`on hover: ${name}`, async ({ page }) => {
+    await captureAfterHover(page, id, name, testId);
+  });
+}

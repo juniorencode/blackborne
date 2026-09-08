@@ -1,0 +1,73 @@
+/*
+ * Layer 3: a component exception, derived from layer 2 (doc 03 §1).
+ *
+ * Two things live here because no utility expresses them: the arrow's rotation,
+ * which has to read the base's reflected placement, and the keyframes.
+ */
+
+/*
+ * THE ARROW, AND WHY IT READS PHYSICAL NAMES.
+ *
+ * The base reflects where it actually put the tooltip as `data-placement`, and
+ * that attribute carries only the AXIS — `top`, `bottom`, `left`, `right`. Doc
+ * 02 §3.3 records both halves of this: the attribute is coarser than the prop,
+ * so CSS can orient an arrow and cannot tell `bottom start` from `bottom end`;
+ * and reading those physical names in a stylesheet is fine and unavoidable,
+ * where putting `left` in a prop, a token or a class is not.
+ *
+ * It has to be the REFLECTED value rather than the prop, because the base
+ * flips a tooltip that would not fit. A tooltip asked for `top` against the top
+ * of the window is rendered below, and an arrow following the prop would then
+ * point away from the trigger — which is worse than no arrow, since the whole
+ * job of the arrow is to say which of five icon buttons this belongs to.
+ *
+ * The drawn shape points DOWN at rest, which is the `top` case: the tooltip is
+ * above its trigger, so the arrow hangs off its lower edge.
+ */
+.bb-tooltip-arrow svg {
+  display: block;
+}
+
+.bb-tooltip[data-placement='bottom'] .bb-tooltip-arrow svg {
+  transform: rotate(180deg);
+}
+
+.bb-tooltip[data-placement='left'] .bb-tooltip-arrow svg {
+  transform: rotate(-90deg);
+}
+
+.bb-tooltip[data-placement='right'] .bb-tooltip-arrow svg {
+  transform: rotate(90deg);
+}
+
+/*
+ * The entry. Doc 09 §2 allows an animation that communicates something, and
+ * this one says where the tooltip came from — it grows a little out of the edge
+ * nearest its trigger.
+ *
+ * Small and quick, because a tooltip appears dozens of times while somebody
+ * reads a toolbar: doc 09 §1's fiftieth-repetition test applies to almost
+ * nothing more directly than this.
+ *
+ * There is NO EXIT, which is doc 09 §2.1: the base keeps a layer mounted while
+ * it animates away, and a mounted layer goes on consuming `Escape`. Measured on
+ * `Dialog`, where an exit animation swallowed the key that closes the layer
+ * underneath.
+ */
+.bb-tooltip[data-entering] {
+  animation: bb-tooltip-in var(--bb-duration-fast) var(--bb-ease);
+}
+
+@keyframes bb-tooltip-in {
+  from {
+    opacity: 0;
+    /*
+     * Four pixels, on the axis the tooltip sits on. Not direction-aware and it
+     * does not need to be: the movement is toward the trigger, which is the
+     * same physical direction the base already placed it from, and
+     * `data-placement` is the physical axis. A logical version of this would
+     * be describing a movement that has no logical meaning.
+     */
+    scale: 0.96;
+  }
+}

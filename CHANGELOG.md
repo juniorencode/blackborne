@@ -12,6 +12,36 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **`Tooltip`** — a short description of a control, on hover and on focus.
+
+  **It is a description, not a name**, and that is the thing most worth knowing
+  about it. The base wires it through `aria-describedby`, so it does not name
+  the control it points at: an icon-only button still needs its own
+  `aria-label`, or it is announced as "button" with a description attached to
+  nothing. Asserted twice in the tests, because it is invisible in a screenshot
+  and in a hover.
+
+  **`placement` takes the twelve logical values** and is the first reader of
+  the shared `Placement` type ([doc 02](docs/foundations/02-api-conventions.md)
+  §3.3). The base offers twenty-four names; the other twelve are the same
+  positions spelled physically, and wrong in Arabic.
+
+  The trigger is `children` and the words are `content`, which composes the two
+  parts here rather than asking a consumer to — `Field`'s precedent, and it
+  makes a tooltip with no trigger, two tooltips on one trigger, and the two in
+  the wrong order all impossible. **The trigger must be focusable**, and that
+  is not papered over: measured, a bare `<span>` receives none of the base's
+  handling, and wrapping one in something focusable would be a decision about
+  somebody's keyboard taken quietly.
+
+  No `offset`, no `containerPadding`, no `shouldFlip`, no delay props and no
+  `className` — the first component in the library with nothing for `className`
+  to do, since the base positions it and its size is its content up to a
+  maximum. The delays are fixed at ~600ms and ~150ms for the whole library
+  (doc 09 §3.1).
+
+- `Placement`, exported: it is a prop type, so it is public (doc 02 §10).
+
 - **`ConfirmDialog`** — a question with two answers, above the page. Doc 09 §5
   governs almost all of it, and the parts that are not configurable are not
   oversights.

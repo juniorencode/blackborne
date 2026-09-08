@@ -134,5 +134,10 @@ export type { TextAreaProps } from './components/TextArea';
 export { TextField } from './components/TextField';
 export type { TextFieldProps, TextFieldSize } from './components/TextField';
 
+export type { Placement } from './internal/Layer';
+
+export { Tooltip } from './components/Tooltip';
+export type { TooltipProps } from './components/Tooltip';
+
 export { VisuallyHidden } from './components/VisuallyHidden';
 export type { VisuallyHiddenProps } from './components/VisuallyHidden';
