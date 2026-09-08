@@ -27,6 +27,7 @@
 @import '../components/Checkbox/Checkbox.css';
 @import '../components/Dialog/Dialog.css';
 @import '../components/Drawer/Drawer.css';
+@import '../components/Popover/Popover.css';
 @import '../components/RadioGroup/RadioGroup.css';
 @import '../components/Skeleton/Skeleton.css';
 @import '../components/Spinner/Spinner.css';

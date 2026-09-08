@@ -33,19 +33,27 @@ this file is out of date. Fix this file.
 assuming anything exists.
 
 At the time of writing: all ten foundations are written, the pipeline is
-complete, and **twenty-four components exist** — the ten simple fields and
+complete, and **twenty-five components exist** — the ten simple fields and
 controls, `Button`, the flat pieces around them (`Alert`, `Badge`, `Card`,
-`EmptyState`, `Separator`, `Skeleton`, `Spinner`, `VisuallyHidden`), and three
-layers: `Dialog`, `Drawer`, `ConfirmDialog` and `Tooltip`.
+`EmptyState`, `Separator`, `Skeleton`, `Spinner`, `VisuallyHidden`), and five
+layers: `Dialog`, `Drawer`, `ConfirmDialog`, `Tooltip` and `Popover`.
 
 **The layer batch is what is being built now.** The base landed with `Dialog`,
-then `Drawer`, `ConfirmDialog` and `Tooltip`. What is left is `Popover`,
+then `Drawer`, `ConfirmDialog`, `Tooltip` and `Popover`. What is left is
 `Preview` and `Toast` — in that order, with `Toast` last. `Menu` is
 deliberately not in this batch, and `SplitButton` waits with `Menu`.
 
-The shared parts of a modal layer live in `src/internal/Layer/`. A new one
-takes the scrim and the panel from there and decides two things of its own:
-where the panel lands and which of its edges is free.
+The shared parts of a layer live in `src/internal/Layer/`, and a new one takes
+what applies to it: the scrim only if it dims the page, the panel and the sheet
+if it has a header and a title, the twelve placements and the arrow if it is
+anchored to a control. Two things it decides for itself are where the panel
+lands and which of its edges is free.
+
+**Two of those shared parts carry a decision, not just markup**, and both were
+measured on `Popover`: the panel declares a query container only where the
+width is declared too, and the sheet is what contains a layer's focus. The
+package guide has both, and doc 08 §4 has the second in full — it matters for
+`Preview`, which must not contain focus and cannot use the sheet unchanged.
 
 So the rules are settled and you should follow them rather than invent. Two
 things to keep in mind anyway:

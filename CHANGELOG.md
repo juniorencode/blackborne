@@ -12,6 +12,39 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **`Popover`** — a panel anchored to the control that opened it: a filter
+  form, a set of details, a short list.
+
+  **It is a modal layer with no visible scrim**, which is the thing most worth
+  knowing about it and was not what this library expected. Measured on the
+  base: while a popover is open the page behind it is covered by a full-window
+  underlay, cannot be scrolled, and is hidden from the accessibility tree — and
+  focus is contained in the panel. Doc 08 §4 said the opposite of that last
+  part and is corrected there, with the two mechanisms that produce it.
+
+  Practically: a click outside dismisses the panel and does **not** press the
+  button under it. That is measured, and it is what makes the default safe.
+
+  **`isDismissable` defaults to `true`**, which is the decision doc 08 §5.1
+  held open until this component existed. Turn it off for a panel holding
+  something that must not be lost. `Escape` and the close button work either
+  way — nothing in this library lets a layer swallow `Escape`.
+
+  **`title` is required**, because the panel is a `dialog`: one with no
+  accessible name is announced as "dialog", which says that something happened
+  and not what. `footer` is where a filter panel's Apply button goes, pinned
+  while the content scrolls, and `useDialog` closes the layer from it.
+
+  `placement` takes the twelve logical values and defaults to `bottom start`.
+  `hasArrow` defaults to **`false`** — the opposite of `Tooltip`, where a small
+  bubble among five icon buttons has to say which one it belongs to. No `size`
+  and no width: the panel is as wide as its content up to `--container-medium`,
+  and its height is the room the base measured between the trigger and the edge
+  of the window.
+
+- `Placement`, `PLACEMENTS` and the shared arrow are now used by two components
+  rather than one. No API change.
+
 - **`Tooltip`** — a short description of a control, on hover and on focus.
 
   **It is a description, not a name**, and that is the thing most worth knowing
@@ -531,6 +564,19 @@ minor versions. Every break is listed here with its migration.
   `packages/blackborne`, the visual catalog in `apps/catalog`.
 
 ### Fixed
+
+- **A layer panel no longer declares a query container**, which had made every
+  `Popover` render **2px wide** — its two borders — with nothing in any
+  console.
+
+  `container-type: inline-size` computes an element's inline size as though it
+  had no contents. That is harmless on a panel whose width is declared, and
+  fatal on one sized BY its contents, which an anchored popover is. `Dialog`
+  and `Drawer` declare the container themselves now, beside the widths that
+  make it safe, so **container queries inside a dialog or a drawer are
+  unchanged**. Inside a popover they never worked and now cannot be asked for:
+  the content is what decided the width. Doc 04 §4.3 has the rule and decision
+  0010 the cost it was predicted from, five weeks before it was paid.
 
 - **The container scale was not injectable, though doc 04 said it was.** It was
   declared inside `@theme inline`, which substitutes the value into each utility
