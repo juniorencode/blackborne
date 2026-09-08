@@ -41,8 +41,33 @@ and `Toast`.
 
 **The layer batch is finished.** It landed in that order, with `Toast` last by
 decision (doc 08 §7.1). `Menu` was deliberately not in it, and `SplitButton`
-waits with `Menu` — so those two are the natural next batch, and doc 02 §3.3's
-twelve placements plus `internal/Layer` are already sized for them.
+waits with `Menu`.
+
+**What comes next is decided, and it is not those two on their own.** The next
+batch is composition, and it is split in two halves with `Menu` and `Select` in
+the middle — the plan and the reason are in
+[the catalog](./docs/catalog-and-build-order.md) §3.1, which is what to read
+before starting. Briefly: `Accordion`, `Collapsible`, `Link`, `Breadcrumbs`,
+`Pagination` and `CursorPagination` first, because nothing blocks them; then
+`Menu` and `Select`, which three deferred features wait on; then `Tabs` in
+full.
+
+**Three things in it are settled and not open for reinvention:** a stepper is
+two components and only one of them is ours (decision 0015), the two pagers do
+not merge (decision 0014), and a link is a component, with navigation arriving
+through the configuration the way the portal container does (decision 0016).
+
+**And N3 has never run.** Every adaptive thing built so far is CSS or the one
+viewport exception. Doc 04 §6.1 writes the contract of the single
+structural-change hook before the hook exists, with the prediction it will be
+measured against. `Tabs`, `Pagination` and `Steps` all want it, and it lands
+with its first caller rather than alone: a hook nobody calls cannot be
+verified.
+
+One thing to do early rather than later: **the chevron gets drawn once**, in
+`src/internal`, the first time something needs it. Six components in and around
+this batch want the same shape, and the cross reached four copies with
+different geometry before anybody noticed.
 
 `Toast` is the one component that ships as **two pieces**: `useToasts()` makes
 the queue, which the CONSUMER owns and keeps, and `ToastRegion` renders it. The
