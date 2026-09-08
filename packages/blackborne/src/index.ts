@@ -66,6 +66,12 @@ export type { CheckboxGroupProps } from './components/CheckboxGroup';
  * §5 promises by name: render props are not part of this API, and the `close`
  * a consumer needs for their own footer button has to arrive some other way.
  */
+export { ConfirmDialog } from './components/ConfirmDialog';
+export type {
+  ConfirmDialogProps,
+  ConfirmTone
+} from './components/ConfirmDialog';
+
 export { Dialog, useDialog } from './components/Dialog';
 export type { DialogProps, DialogSize, DialogState } from './components/Dialog';
 

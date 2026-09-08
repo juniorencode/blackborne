@@ -75,7 +75,23 @@ export const en = {
    * title when focus enters, so the word would be the second time in one
    * breath (doc 06 §3).
    */
-  close: 'Close'
+  close: 'Close',
+  /**
+   * The way out of a confirmation.
+   *
+   * The asymmetry with the confirm button is deliberate and it is the whole
+   * decision: **"Cancel" is here and the confirming word is a required prop.**
+   *
+   * Doc 09 §5.4 says the button names the ACTION — "Delete", "Discard" — never
+   * "OK". A default for that would be shipped as "Confirm" by everyone, and the
+   * rule would be dead the first day. There is no default, so a consumer has to
+   * say what pressing it does.
+   *
+   * "Cancel" needs no such pressure. It is the one word in a confirmation that
+   * nobody customises, it names the action perfectly already, and asking for it
+   * would be asking every consumer to type the same string.
+   */
+  cancel: 'Cancel'
 } as const;
 
 export type DictionaryKey = keyof typeof en;

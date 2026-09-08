@@ -154,6 +154,37 @@ number matters more than the opening one.
 4. The button names **the action** — "Delete", "Discard" — never "OK".
 5. In a confirmation dialog, the destructive action is **not** the option
    focused by default.
+6. **While the action is in flight, nothing closes.** Not `Escape`, not a click
+   outside, not the cancelling button. You cannot dismiss something that is
+   already happening, and half-closing it leaves the work running with nothing
+   listening (§7).
+7. **A failure leaves the confirmation open.** The error happened there, so it
+   is shown there (§4) — closing instead leaves somebody looking at a listing
+   with no idea whether the thing went through.
+
+### 5.1 The asynchronous half, and why the default is to stay
+
+Rules 6 and 7 are about a destructive action that takes time, which in a
+management application is most of them. They are written here rather than in a
+component because the same shape returns everywhere a promise is awaited on
+somebody's behalf.
+
+**Rule 7 is a default and not a policy**, and that is what makes it safe. A
+consumer who would rather the layer closed regardless catches their own error —
+catching makes the promise fulfil, and it closes. So the library's choice is
+the one that cannot lose information, and the other one is one line away.
+
+The reverse default cannot be recovered from: once the layer has gone there is
+nowhere left to put the message, and the component would have to invent a
+second channel to say what happened. That asymmetry is the whole argument.
+
+**The exception rule 6 carves out of §8.** §8 says `Escape` means the same
+thing across the whole library and that one exception costs the other
+twenty-nine their credibility. Rule 6 looks like that exception and is not: it
+applies only while a component is holding a promise **it was given**, so it
+knows exactly when the key is unsafe and for exactly how long. A component that
+merely contains a form knows none of that, which is why `Dialog` does not have
+this and `ConfirmDialog` does.
 
 ## 6. Empty, loading and error
 

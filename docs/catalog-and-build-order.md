@@ -127,13 +127,13 @@ validates both.
 
 ### Level 5 · Composition
 
-| Component       | Notes                                                                                                                                                                                        | Status  |
-| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| `Tabs`          | Structural change expected in a narrow container ([doc 04](./foundations/04-responsive.md))                                                                                                  | Pending |
-| `Breadcrumbs`   |                                                                                                                                                                                              | Pending |
-| `Pagination`    |                                                                                                                                                                                              | Pending |
-| `ConfirmDialog` | Confirm **or** undo, never both ([doc 09](./foundations/09-behavior.md)). `role="alertdialog"`, tones `info`, `warning` and `danger`, focus on Cancel, and a rejected promise leaves it open | Pending |
-| Table pieces    | Header, row, cell, sorting, selection **plus their hooks** (P6). Not a closed table                                                                                                          | Pending |
+| Component       | Notes                                                                                                                                                                                                                                                                                                                | Status   |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `Tabs`          | Structural change expected in a narrow container ([doc 04](./foundations/04-responsive.md))                                                                                                                                                                                                                          | Pending  |
+| `Breadcrumbs`   |                                                                                                                                                                                                                                                                                                                      | Pending  |
+| `Pagination`    |                                                                                                                                                                                                                                                                                                                      | Pending  |
+| `ConfirmDialog` | Confirm **or** undo, never both ([doc 09](./foundations/09-behavior.md)). `role="alertdialog"`, tones `info`, `warning` and `danger`, focus on Cancel, and a rejected promise leaves it open. Built ahead of level 5: it needs the layer base and nothing else, and it is the half of doc 09 §5 the batch can finish | **Done** |
+| Table pieces    | Header, row, cell, sorting, selection **plus their hooks** (P6). Not a closed table                                                                                                                                                                                                                                  | Pending  |
 
 **Forecast total: 41 pieces.**
 
