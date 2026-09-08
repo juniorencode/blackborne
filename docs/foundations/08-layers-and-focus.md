@@ -388,6 +388,57 @@ has landed. If the prefix goes away in the meantime the migration costs nothing,
 and if the component turns out badly it blocks nothing, because nothing else
 waits on it.
 
+### 7.2 What was measured when it was built
+
+The four behaviours §7.1 named as documented guarantees — the ones this library
+inherits the risk of if the base changes them on stabilising — were measured on
+2026-09-08 rather than trusted. Three hold as described. One was described
+wrongly here, and the correction is the interesting one.
+
+**The timers pause on hover and on focus.** In the base's own source, one line:
+`if (isHovered.current || isFocused.current) state.pauseAll(); else
+state.resumeAll();`. It applies to every notice in the region at once, and the
+region reflects both states as attributes — which is what lets the visible
+countdown read the same two signals the timer does, so the two cannot disagree
+about whether time is passing.
+
+**The announcement is assertive, with no polite mode.** The base gives one
+element inside each notice `role="alert"` and `aria-atomic`, and the notice
+itself `role="alertdialog"` with `aria-modal="false"` and `tabIndex: 0`. So the
+content interrupts, and the notice is focusable — which is what `Tab` from the
+landmark walks.
+
+**Landmark navigation is the route in.** `useToastRegion` calls `useLandmark`
+and gives the region `role="region"` with a label from the base's own
+dictionary, counted: "Notifications (2)". That label is left to the base
+deliberately, and the close button's is not — the word "Close" is already in
+this library's dictionary and a dialog's cross uses it, so a consumer who
+reworded it there must not find a notice still saying something else. Plural
+formatting the base already does correctly is not worth reimplementing to own a
+string nothing else shares.
+
+**The overflow: a backlog, and the mechanism is not the one this section
+assumed.** §7 was written expecting the FIRST notices to hold their places
+while later ones queue. Measured, it is the other way round: the visible set is
+the **newest three**, newest at the top, and an older one leaves the SCREEN when
+a newer arrives. A test written from the assumption failed, which is the only
+reason it was measured at all.
+
+The conclusion survives, and for a better reason than the one it was argued
+from: **a waiting notice does not spend its time while it is hidden.** The base
+starts a notice's timer when it becomes visible, not when it is added. Measured
+with a fake clock — a burst of five shows `[5th, 4th, 3rd]`, and at six seconds
+those expire and `[2nd, 1st]` appear with a full six seconds each. So nothing is
+dropped and, more to the point, nothing expires unseen. An eviction would have
+been a message somebody was sent and never saw; so would a backlog whose
+entries aged out of view.
+
+**And one thing §7 did not anticipate at all.** The queue is the consumer's, so
+`ToastRegion` can be handed an object that is not one — a test double, or a
+value that survived a hot reload the hook did not. It renders nothing in that
+case rather than throwing from inside the base, which is the difference between
+a blank corner and a stack trace naming an `UNSTABLE_` export.
+
 ## 8. Portals
 
 Layers render in a portal. Two consequences:
@@ -514,6 +565,19 @@ Measured in both states, and now asserted in all three layers that draw one.
 The general form, for the next drawn thing: **assert that a point inside it
 resolves to it.** A box, a computed style and a committed picture can all agree
 while nothing is on the screen.
+
+**And a probe put inside the thing being measured becomes part of it.** The
+trick these files use to resolve a token — append a div with
+`width: var(--bb-container-narrow)` and read its box — depends on where it
+lands. A layer panel is a flex COLUMN, where width is the cross size and an
+explicit one is honoured; a notice is a flex ROW, where width is the main size
+and `flex-shrink` squeezed the probe from 384px to 254px. The check then failed
+against a ceiling it had measured wrong, on a component whose width was
+correct.
+
+`position: fixed` on the probe takes it out of flow and removes the
+dependency. The general form is the same as the one above: an instrument that
+shares a box with its subject is measuring both.
 
 ## 10. Verification
 

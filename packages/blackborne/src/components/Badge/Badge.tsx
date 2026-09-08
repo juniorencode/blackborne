@@ -1,6 +1,7 @@
 import { forwardRef, useId } from 'react';
 import { Button } from 'react-aria-components';
 import { useMessage } from '../../config';
+import { CrossGlyph } from '../../internal/CrossGlyph';
 import { cx } from '../../internal/cx';
 
 export type BadgeVariant = 'solid' | 'soft';
@@ -273,24 +274,13 @@ export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(function Badge(
           onPress={onRemove}
         >
           {/*
-           * Drawn here rather than received: doc 02 §11.4 lets the library
-           * size and flip the icons it draws itself, and this one is part of
-           * the control. It takes the mark size a checkbox uses, so the marks
-           * inside small controls are one size and follow density together.
+           * The library's own cross, shared rather than copied: the marks
+           * inside its controls have to be one shape, and this was four
+           * copies before a fifth caller forced the extraction. The default
+           * size is the mark token a checkbox uses, so the marks inside small
+           * controls follow density together (doc 02 §11.4).
            */}
-          <svg
-            viewBox="0 0 16 16"
-            className="bb:h-mark bb:w-mark"
-            fill="none"
-            aria-hidden="true"
-          >
-            <path
-              d="M4.5 4.5 11.5 11.5M11.5 4.5 4.5 11.5"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-          </svg>
+          <CrossGlyph />
         </Button>
       )}
     </span>

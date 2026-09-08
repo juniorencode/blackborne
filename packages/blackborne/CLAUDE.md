@@ -194,6 +194,16 @@ Everything that renders in a portal. Four things were measured while building
   right rotation and `visibility: visible`, and nothing on the screen. Use
   `document.elementFromPoint` on anything drawn: clipped content is not
   hit-tested. Doc 08 §9.
+- **A notice is the one layer whose state the CONSUMER holds.** `useToasts()`
+  makes the queue; the library keeps none, because P3 allows it none. The base's
+  queue class is deliberately kept out of a consumer's types — a rename inside
+  our files costs them nothing, a change to a class in their own signatures
+  costs them a migration, and the base still marks its toast components
+  `UNSTABLE_`. Doc 08 §7.1.
+- **A toast is an `Alert` that floats**, on the same four tone surfaces from
+  `internal/ToneGlyph`. Built on the neutral raised surface first, and the first
+  three-tone screenshot settled it: a failure looked exactly like a success
+  apart from a 16px glyph.
 
 ## Hiding something without losing it
 

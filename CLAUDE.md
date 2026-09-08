@@ -33,16 +33,22 @@ this file is out of date. Fix this file.
 assuming anything exists.
 
 At the time of writing: all ten foundations are written, the pipeline is
-complete, and **twenty-six components exist** — the ten simple fields and
+complete, and **twenty-seven components exist** — the ten simple fields and
 controls, `Button`, the flat pieces around them (`Alert`, `Badge`, `Card`,
-`EmptyState`, `Separator`, `Skeleton`, `Spinner`, `VisuallyHidden`), and six
-layers: `Dialog`, `Drawer`, `ConfirmDialog`, `Tooltip`, `Popover` and
-`Preview`.
+`EmptyState`, `Separator`, `Skeleton`, `Spinner`, `VisuallyHidden`), and seven
+layers: `Dialog`, `Drawer`, `ConfirmDialog`, `Tooltip`, `Popover`, `Preview`
+and `Toast`.
 
-**The layer batch is what is being built now.** The base landed with `Dialog`,
-then `Drawer`, `ConfirmDialog`, `Tooltip`, `Popover` and `Preview`. What is
-left is **`Toast`**, which is last in the batch by decision. `Menu` is
-deliberately not in this batch, and `SplitButton` waits with `Menu`.
+**The layer batch is finished.** It landed in that order, with `Toast` last by
+decision (doc 08 §7.1). `Menu` was deliberately not in it, and `SplitButton`
+waits with `Menu` — so those two are the natural next batch, and doc 02 §3.3's
+twelve placements plus `internal/Layer` are already sized for them.
+
+`Toast` is the one component that ships as **two pieces**: `useToasts()` makes
+the queue, which the CONSUMER owns and keeps, and `ToastRegion` renders it. The
+library holds no queue of its own, because P3 says it holds no global state —
+and that is the shape to copy for anything else that looks like it needs a
+singleton.
 
 The shared parts of a layer live in `src/internal/Layer/`, and a new one takes
 what applies to it: the scrim only if it dims the page, the panel and the sheet

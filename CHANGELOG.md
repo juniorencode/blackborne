@@ -12,6 +12,51 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **`Toast`** — a notice about something that happened, in the corner of the
+  window. It ships as **two pieces**, and that is the design rather than a
+  detail:
+
+  ```tsx
+  const toasts = useToasts(); // the queue, which YOU own
+  <ToastRegion queue={toasts} />; // one region, near the root
+  toasts.add({ tone: 'success', title: 'Invoice sent' });
+  ```
+
+  **The library holds no queue.** P3 forbids it any global state, and a
+  notification queue is exactly what a library of this kind usually keeps at
+  module level because the base's examples do. `useToasts()` makes one and hands
+  it over; the base's own queue class never appears in a consumer's types, which
+  is what doc 08 §7.1 required before this component could be built at all.
+
+  **`danger` does not go away on its own, ever.** The other two timings are six
+  seconds, and ten when there is an action to take — one decision for the
+  library, from the notice itself, never a prop (doc 09 §4.1). And the bar along
+  the bottom edge is the time left: it is a requirement rather than decoration,
+  because a countdown somebody can see is a countdown they can beat, and putting
+  the pointer on the stack stops every timer in it.
+
+  **An `action` is the point of this component existing now.** Doc 09 §5 prefers
+  undo over confirmation wherever it is possible, and a `ConfirmDialog` with no
+  `Toast` beside it shipped the discouraged half of that pair with nowhere for
+  the preferred half to live. Taking the action closes the notice first: one
+  that has been acted on is describing something no longer true.
+
+  **A notice looks like an `Alert` that floats**, on the same four tone
+  surfaces. It was built on the neutral raised surface first and the first
+  three-tone screenshot settled it — a failure looked exactly like a success
+  apart from a 16px glyph.
+
+  Three at a time, newest first, and nothing is dropped: measured, a waiting
+  notice does not spend its clock while it is hidden, so it arrives with its
+  full time rather than aging out unseen. Doc 08 §7.2 records that, and the
+  fact that §7 had described the mechanism backwards.
+
+  No corner, no polite mode, no timeout, no `maxVisibleToasts`, and no way to
+  read the queue.
+
+- `useToasts`, `ToastRegion`, and the types `ToastMessage`, `ToastQueue` and
+  `ToastTone`.
+
 - **`Preview`** — a card about the thing under the pointer: a customer's terms
   behind their name, a user's role behind their avatar, an invoice's status
   behind its number.
@@ -472,6 +517,13 @@ minor versions. Every break is listed here with its migration.
   between them.
 
 ### Changed
+
+- **One cross, drawn once, and one tone-surface map.** A badge's remove button,
+  a tag's, a field's clear button and a layer's close cross each held their own
+  copy of the same SVG; `Alert`'s four tone surfaces were about to acquire a
+  second copy in `Toast`. Both are now shared from `src/internal`. No public
+  API changes and no visual baseline moved — verified in the container both
+  times, before the component that forced each extraction existed.
 
 - **A spinner on a pending `Button`, and it keeps its size.** `isPending` had a
   progress cursor and 30% less opacity — a state that was in the API and barely
