@@ -1,0 +1,36 @@
+/*
+ * Layer 3, shared: the arrow's rotation, for every layer that has one.
+ *
+ * WHY THIS READS PHYSICAL NAMES.
+ *
+ * The base reflects where it actually put the layer as `data-placement`, and
+ * that attribute carries only the AXIS — `top`, `bottom`, `left`, `right`. Doc
+ * 02 §3.3 records both halves: the attribute is coarser than the prop, so CSS
+ * can orient an arrow and cannot tell `bottom start` from `bottom end`; and
+ * reading those physical names in a stylesheet is fine and unavoidable, where
+ * putting `left` in a prop, a token or a class is not.
+ *
+ * It has to be the reflected value rather than the prop, because the base
+ * flips a layer that would not fit. One asked for `top` against the top of the
+ * window is rendered below, and an arrow following the prop would then point
+ * away from the trigger.
+ *
+ * The rules key on `[data-placement]` on ANY ancestor rather than on a
+ * component's own class, so a new layer with an arrow needs no CSS of its own —
+ * it renders `LayerArrow` and the rotation follows.
+ */
+.bb-layer-arrow svg {
+  display: block;
+}
+
+[data-placement='bottom'] .bb-layer-arrow svg {
+  transform: rotate(180deg);
+}
+
+[data-placement='left'] .bb-layer-arrow svg {
+  transform: rotate(-90deg);
+}
+
+[data-placement='right'] .bb-layer-arrow svg {
+  transform: rotate(90deg);
+}

@@ -6,39 +6,11 @@
  */
 
 /*
- * THE ARROW, AND WHY IT READS PHYSICAL NAMES.
- *
- * The base reflects where it actually put the tooltip as `data-placement`, and
- * that attribute carries only the AXIS — `top`, `bottom`, `left`, `right`. Doc
- * 02 §3.3 records both halves of this: the attribute is coarser than the prop,
- * so CSS can orient an arrow and cannot tell `bottom start` from `bottom end`;
- * and reading those physical names in a stylesheet is fine and unavoidable,
- * where putting `left` in a prop, a token or a class is not.
- *
- * It has to be the REFLECTED value rather than the prop, because the base
- * flips a tooltip that would not fit. A tooltip asked for `top` against the top
- * of the window is rendered below, and an arrow following the prop would then
- * point away from the trigger — which is worse than no arrow, since the whole
- * job of the arrow is to say which of five icon buttons this belongs to.
- *
- * The drawn shape points DOWN at rest, which is the `top` case: the tooltip is
- * above its trigger, so the arrow hangs off its lower edge.
+ * The arrow lives in internal/Layer: the same shape, colours and rotation as
+ * every other layer that has one, keyed on the base reflected placement. It is
+ * shared rather than copied because its geometry has to agree with the panel
+ * border, and two copies of that agreement drift.
  */
-.bb-tooltip-arrow svg {
-  display: block;
-}
-
-.bb-tooltip[data-placement='bottom'] .bb-tooltip-arrow svg {
-  transform: rotate(180deg);
-}
-
-.bb-tooltip[data-placement='left'] .bb-tooltip-arrow svg {
-  transform: rotate(-90deg);
-}
-
-.bb-tooltip[data-placement='right'] .bb-tooltip-arrow svg {
-  transform: rotate(90deg);
-}
 
 /*
  * The entry. Doc 09 §2 allows an animation that communicates something, and
