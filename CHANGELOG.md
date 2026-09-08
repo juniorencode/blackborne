@@ -12,6 +12,53 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **`Accordion` and `Collapsible`** — sections that fold. Two exports and one
+  component, because they are two ARIA patterns with the same markup: a group
+  of them is the accordion pattern, one of them alone is the disclosure
+  pattern, and the only difference is the heading.
+
+  ```tsx
+  <Collapsible title="Filters">…</Collapsible>
+
+  <Accordion headingLevel={3}>
+    <Collapsible id="billing" title="Billing details">…</Collapsible>
+    <Collapsible id="tax" title="Tax codes">…</Collapsible>
+  </Accordion>
+  ```
+
+  **`headingLevel` is required on the group**, and that is the interesting
+  prop. The accordion pattern needs each header to be a heading, nothing
+  supplies the level, and a wrong one is invisible — nothing warns, nothing
+  looks wrong, and the only symptom is an outline that reads wrongly to
+  somebody moving through the page by its headings. Being told costs one
+  number. A lone `Collapsible` renders no heading and takes no level, because
+  its pattern asks for none. Doc 06 §2.1, which this component is the reason
+  for.
+
+  **A closed panel stays in the page.** The base hides it with
+  `hidden="until-found"`, so a browser's find-in-page opens the section to show
+  a match — and it is out of the tab order and absent from the accessibility
+  tree while closed. Both halves at once, which is unusual. The cost is that a
+  closed section still renders, so mount anything expensive yourself from
+  `onExpandedChange`.
+
+  **The height animates**, and the mechanism is the base's: it publishes the
+  panel's height as a variable and waits for the animations on that element
+  before hiding it, so the whole thing is one CSS transition. Removed entirely
+  under `prefers-reduced-motion`, which is now checked in a browser for the
+  first time in this repository.
+
+  One at a time by default, `allowsMultipleExpanded` for the other way,
+  controlled or not, and the title is a node so a count or an icon is composed
+  rather than passed. No `role="region"` on the panel, no actions slot in the
+  header, and no `count` or `icon` props.
+
+- One chevron, in `src/internal`, drawn before it has more than one caller —
+  the opposite of how the cross arrived, which was extracted after four copies
+  and a fifth about to ship with a different stroke. It points down and only
+  down: rotation is the caller's, because only the caller knows whether the
+  direction is directional.
+
 - **`Toast`** — a notice about something that happened, in the corner of the
   window. It ships as **two pieces**, and that is the design rather than a
   detail:
@@ -517,6 +564,13 @@ minor versions. Every break is listed here with its migration.
   between them.
 
 ### Changed
+
+- **A forced state in the catalog can name the node it belongs to.** The helper
+  marked the outermost React Aria element, which for a section is the
+  disclosure and not its header — so hover, press and focus went somewhere with
+  no such states, and three "states" photographed identically to the default.
+  That is the exact failure the helper exists to prevent, arriving one level
+  further in.
 
 - **One cross, drawn once, and one tone-surface map.** A badge's remove button,
   a tag's, a field's clear button and a layer's close cross each held their own
