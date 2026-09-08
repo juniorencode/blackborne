@@ -104,6 +104,14 @@ export type {
   PasswordFieldSize
 } from './components/PasswordField';
 
+/*
+ * `Link` navigates and `Button` acts, which is the whole of choosing between
+ * this and `Button variant="link"` (doc 02 §7.1). Client-side navigation
+ * arrives on the provider above, not on the component (decision 0016).
+ */
+export { Link } from './components/Link';
+export type { LinkProps } from './components/Link';
+
 export { NumberField } from './components/NumberField';
 export type {
   NumberFieldProps,

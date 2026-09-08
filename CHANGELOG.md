@@ -12,6 +12,55 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **`Link`** — text that navigates, and the first use of the escape doc 02 §7
+  has always left open: where a different element is genuinely needed, that is
+  a named component.
+
+  ```tsx
+  <Link href="/customers/4821">Astilleros del Sur</Link>
+  ```
+
+  > **`Link` navigates. `Button` acts** — including `Button variant="link"`.
+
+  The test is whether there is an address. `Breadcrumbs` is what made the old
+  answer insufficient, and not for a reason about appearance: a breadcrumb
+  trail is the thing people open in another tab, and a `<button>` cannot be
+  middle-clicked, offers no "copy link address", ignores ctrl-click, and does
+  not appear in the list of links a screen reader builds. All four are now
+  checked in a browser, twice with a second tab.
+
+  **The two must not look alike, so a check keeps them apart.** A link is
+  accent-coloured and underlined at rest; `Button variant="link"` is ordinary
+  text until you point at it, on purpose, "so it does not compete with a real
+  link". A browser test measures both in one story and asserts their colours
+  differ and only one is underlined.
+
+  **`href` is required** and there is no `isDisabled`. Read in the installed
+  source: with an anchor the base adds `aria-disabled` and nothing else — the
+  address stays, the element stays in the tab order, and the browser still
+  follows it — so the prop would promise something the component cannot
+  deliver.
+
+- **`navigate` on `ConfigProvider`** — how a link navigates, for every link
+  beneath it.
+
+  ```tsx
+  <ConfigProvider navigate={href => router.push(href)}>
+  ```
+
+  It is here rather than on the component because a consumer **cannot** supply
+  it themselves: the base's router provider is an export of the library's own
+  dependency, not theirs. Without it every link is a full page load, which in a
+  single-page application is the worst kind of wrong default because it looks
+  like it works. The portal container is on this provider for the same reason
+  (decisions 0013 and 0016).
+
+  Nothing to write for modifiers: the base checks `target`, `download` and
+  ctrl, meta, alt and shift before handing a press over, so a ctrl-click still
+  opens a new tab and a middle-click never reaches JavaScript. The function is
+  held by a ref, so an inline arrow does not rebuild the base's router context
+  on every render.
+
 - **`Accordion` and `Collapsible`** — sections that fold. Two exports and one
   component, because they are two ARIA patterns with the same markup: a group
   of them is the accordion pattern, one of them alone is the disclosure

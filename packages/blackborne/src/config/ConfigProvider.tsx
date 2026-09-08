@@ -1,5 +1,12 @@
-import { createContext, useCallback, useContext, useMemo } from 'react';
-import { I18nProvider } from 'react-aria-components';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef
+} from 'react';
+import { I18nProvider, RouterProvider } from 'react-aria-components';
 /*
  * From `react-aria`, not from `react-aria-components`, which does not
  * re-export it. That is the whole reason `react-aria` is a direct dependency,
@@ -79,6 +86,38 @@ export interface ConfigProviderProps extends Partial<Config> {
    * two apart would make an inner region unable to opt out of an outer one.
    */
   portalContainer?: HTMLElement | null | undefined;
+  /**
+   * How a link navigates. Your router's function, called with the `href`.
+   *
+   * Deliberately **not** part of `Config` and not readable through
+   * `useConfig()`, for the same reason as `portalContainer`: nothing in the
+   * library asks how navigation happens — the base's own provider delivers it
+   * to every link beneath (decision 0016).
+   *
+   * Leave it out and a link does what an anchor has always done: it loads the
+   * page. That is correct with no provider and wrong in a single-page
+   * application, where it is a restart — and it is the worst kind of wrong,
+   * because it looks like it works. Pass it once here and every `Link` below
+   * goes through your router.
+   *
+   * **What it is NOT asked to handle.** The base checks first, so this is
+   * called only for a press it would be right to intercept: a same-origin
+   * `href`, no `target`, no `download`, and none of ctrl, meta, alt or shift
+   * held. A ctrl-click still opens a new tab, and a middle-click never reaches
+   * JavaScript at all. So a `navigate` that simply pushes onto a history stack
+   * is complete — there is no modifier handling to write, and writing some
+   * would break what already works.
+   *
+   * **Keep it, or do not — it is held by a ref either way.** The base memoises
+   * its router context on the function's identity, so an inline arrow would
+   * make a new context on every render of your application and re-render every
+   * link under it. A stable wrapper is passed down instead, calling whichever
+   * function was given last.
+   *
+   * The library adds no router, requires none, and knows no URL: an address
+   * arrives by prop and the effect arrives as a function (P2, non-goal 1).
+   */
+  navigate?: ((href: string) => void) | undefined;
   children?: React.ReactNode;
 }
 
@@ -91,17 +130,19 @@ export interface ConfigProviderProps extends Partial<Config> {
  * writes to no storage. Your application decides and passes the resolved
  * values in.
  *
- * `portalContainer` is here for the same reason as the rest: where a layer
- * mounts is a fact about the host application that only the host application
- * knows (doc 08 §8, decision 0013). It is set once here rather than on each of
- * six components, where five correct calls and one omission is a layer that
- * escapes.
+ * `portalContainer` and `navigate` are here for the same reason as the rest:
+ * where a layer mounts and how a link navigates are facts about the host
+ * application that only the host application knows (doc 08 §8, decisions 0013
+ * and 0016). Each is set once here rather than on each of the components that
+ * needs it, where five correct calls and one omission is a layer that escapes
+ * or a link that reloads the application.
  *
  * Nestable: a region can run in a different locale by wrapping it again.
  */
 export function ConfigProvider({
   children,
   portalContainer,
+  navigate,
   ...overrides
 }: ConfigProviderProps): React.ReactNode {
   const parent = useContext(ConfigContext);
@@ -147,6 +188,35 @@ export function ConfigProvider({
   );
 
   /*
+   * The navigate function, behind a ref, for the same reason `getContainer` is
+   * memoised: the base's `RouterProvider` builds its context with
+   * `useMemo(..., [navigate])`, so a fresh closure every render is a new
+   * router context and every link beneath it re-renders. Read in the installed
+   * source, not assumed.
+   *
+   * A ref rather than a memo because the identity is the CONSUMER's to control
+   * and they should not have to: an inline arrow is what anybody writes first,
+   * and it would be a performance trap with no symptom worth noticing until an
+   * application is large. The wrapper is stable for the life of the provider
+   * and calls whichever function was given last, so a consumer who does
+   * memoise loses nothing either.
+   */
+  const latest = useRef(navigate);
+  /*
+   * Updated in an effect and not during render, which the project's own lint
+   * rule enforces — a ref written while rendering is a value React cannot see
+   * changing. Safe here because the gap it leaves is unreachable: the wrapper
+   * is only ever called from a press, and a press cannot arrive between a
+   * render and the effect that follows it.
+   */
+  useEffect(() => {
+    latest.current = navigate;
+  }, [navigate]);
+  const stableNavigate = useCallback((href: string) => {
+    latest.current?.(href);
+  }, []);
+
+  /*
    * I18nProvider is what makes the base format dates and numbers correctly and
    * flip direction for an RTL language. Reimplementing that is non-goal 6.
    */
@@ -154,16 +224,28 @@ export function ConfigProvider({
     <I18nProvider locale={value.locale}>{children}</I18nProvider>
   );
 
+  const portalled =
+    portalContainer === undefined ? (
+      localised
+    ) : (
+      <UNSAFE_PortalProvider
+        getContainer={portalContainer === null ? null : getContainer}
+      >
+        {localised}
+      </UNSAFE_PortalProvider>
+    );
+
   return (
     <ConfigContext.Provider value={value}>
-      {portalContainer === undefined ? (
-        localised
+      {navigate === undefined ? (
+        portalled
       ) : (
-        <UNSAFE_PortalProvider
-          getContainer={portalContainer === null ? null : getContainer}
-        >
-          {localised}
-        </UNSAFE_PortalProvider>
+        /*
+         * Only when asked. With no provider the base's own default router is
+         * the native one — an anchor behaving like an anchor — which is what
+         * keeps the entry gate's "works with no provider around it" true.
+         */
+        <RouterProvider navigate={stableNavigate}>{portalled}</RouterProvider>
       )}
     </ConfigContext.Provider>
   );

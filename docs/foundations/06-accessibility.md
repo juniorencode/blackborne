@@ -143,9 +143,10 @@ This is where things fail in practice, because these are things the base cannot
 decide for you.
 
 **Visible focus.** The focus indicator is never removed without being replaced.
-One single ring style for the whole library (doc 03), visible on any surface,
-the accent surface included. It is the rule broken most often and the one that
-shuts out the most people.
+One ring for the whole library (doc 03), visible on any surface, the accent
+surface included. It is the rule broken most often and the one that shuts out
+the most people. It has **two mechanisms**, and which one applies is not a
+choice — see §3.1.
 
 **A label on every control.** Visible or accessible, but always present.
 Placeholder text inside the field **is not a label**: it disappears when you
@@ -161,6 +162,42 @@ the interface in greyscale.
 
 **Minimum hit area**, respected at every density, compact included (doc 04).
 Compacting until this breaks is not an option.
+
+### 3.1 One ring, two mechanisms
+
+**Date:** 2026-09-08. This section read "one single ring style for the whole
+library" until a component arrived that could not use it, and the sentence is
+now more precise rather than weaker: the ring is one design — the ring colour
+from `--bb-focus-ring`, in the brand unless the control carries a colour of its
+own — with two ways of painting it.
+
+| The element                     | How it rings                                               |
+| ------------------------------- | ---------------------------------------------------------- |
+| A box: a control, a card, a row | A **border** in the ring colour, plus a halo mixed from it |
+| A run of text: a link           | An **outline**, 2px, offset 2px                            |
+
+**The reason is mechanical, not aesthetic.** A border on an inline element
+widens its inline box, so the words after it move sideways when focus lands —
+twice per press of `Tab`, in a paragraph. An outline paints outside the box and
+takes no part in layout at all, and on a link that wraps it follows each
+fragment rather than boxing their union, which is exactly why a browser's own
+focus ring works that way.
+
+Two consequences worth stating, because both are easy to get backwards:
+
+- **A box does not use the outline.** The border reads as part of the control,
+  which is what makes the ring look like it belongs to the thing rather than
+  drawn around it — and every control in this library already has a border to
+  recolour.
+- **Neither mechanism may be replaced by "nothing plus something else".** The
+  one existing exception is `Button variant="link"`, which switches the ring
+  off and replaces it with an underline appearing on focus. That is permitted
+  because something visible still changes, and it is the reason this rule says
+  never REMOVED rather than never changed.
+
+Verified in a browser both ways, because neither can be seen in jsdom: that
+the ring is painted, and — on the inline one — that the text after the link
+does not move by so much as a tenth of a pixel.
 
 **DOM order matching visual order.** If the layout reorders elements, keyboard
 traversal becomes incoherent. This especially affects the structural changes in

@@ -67,9 +67,11 @@ hands the press to whatever the consumer already uses.
 - `ConfigProvider` gains one optional prop and installs the base's provider
   inside itself. Its tests gain the case where the prop is absent — the
   default, and the one that has to keep working.
-- The link's appearance is **shared** with the button variant rather than
+- ~~The link's appearance is **shared** with the button variant rather than
   copied, extracted the way the cross and the tone surfaces were, with the same
-  property attached: no visual baseline may move.
+  property attached: no visual baseline may move.~~
+  **Withdrawn on 2026-09-08 — there is nothing to share.** See the correction
+  below.
 - `href` is required. A link without an address is a button, and typing it as
   optional would invite the base's `role="link"` span — a link that goes
   nowhere, announced as one.
@@ -80,6 +82,35 @@ hands the press to whatever the consumer already uses.
 - The library now has two things that look like links. Doc 02 §7.1 carries the
   one-line rule for choosing, because "which one is this" is a question a
   consumer will have exactly once and should not have to ask twice.
+
+## Correction · 2026-09-08
+
+**The consequence about a shared appearance was wrong, and it is struck through
+rather than deleted so that what was believed stays visible.** It was reasoned
+from the fact that the two look similar, without laying the two class lists
+side by side.
+
+Measured, they overlap in exactly two places — `underline-offset-4` and the two
+colour tokens — because they are deliberately opposite:
+
+|                         | At rest                     | Pointed at           | Focused                      |
+| ----------------------- | --------------------------- | -------------------- | ---------------------------- |
+| `Button variant="link"` | ordinary text, no underline | accent, underlined   | accent, underlined (no ring) |
+| `Link`                  | accent, underlined          | deeper, thicker rule | a ring                       |
+
+And the reason is already written in `Button`'s own file: its link variant takes
+the ordinary text colour "deliberately NOT the accent, so it does not compete
+with a real link, which is what accent-coloured text means everywhere else". A
+shared module would have to be parameterised into two opposite defaults, which
+is a module whose whole content is an `if`.
+
+So there is no extraction, and the property that came with it — no visual
+baseline may move — was satisfied for free: nothing existing was touched.
+
+What replaced it is a **check** rather than a shared file. A browser test
+measures the two in the same story and asserts that their colours differ and
+that only one of them is underlined at rest, so a change that made them agree
+fails somewhere instead of quietly making the library ambiguous.
 
 ## Revisit when
 

@@ -110,6 +110,18 @@ const STATES: Array<[string, string]> = [
   ['components-accordion--states', 'accordion-states'],
   ['components-collapsible--states', 'collapsible-states'],
   /*
+   * A link is the one component whose REST state is the interesting picture:
+   * accent-coloured and underlined before anything is pointed at it, which is
+   * doc 06 §3 (colour is never the only channel) and the thing that tells it
+   * apart from a button dressed as one.
+   *
+   * And `wrapping` is the outline crossing a line break, which is the case it
+   * was chosen over a border for. No component that is always a box can show
+   * it.
+   */
+  ['components-link--states', 'link-states'],
+  ['components-link--wrapping', 'link-wrapping'],
+  /*
    * A component with nothing to look at still earns a baseline, and this is
    * the one that earns it most: the story is two rulers that must stay the
    * same width. If the hiding ever stops working, the picture changes — which
@@ -285,7 +297,11 @@ const TOGETHER: Array<[string, string]> = [
      until they are beside each other: the page, a Card, and the sections
      inside it. */
   ['components-accordion--inside-a-card', 'accordion-inside-a-card'],
-  ['components-collapsible--together', 'collapsible-together']
+  ['components-collapsible--together', 'collapsible-together'],
+  /* The two nobody must confuse: a link is accent and underlined at rest, a
+     link-shaped button is ordinary text until pointed at. Apart, either looks
+     fine; the baseline that matters is the one with both in it. */
+  ['components-link--against-a-button', 'link-against-a-button']
 ];
 
 for (const [id, name] of TOGETHER) {
@@ -329,7 +345,14 @@ const AXES: Array<[string, string]> = [
      density, which trims the header, the panel and the gap between sections
      at once. */
   ['components-accordion--direction', 'axis-accordion-rtl'],
-  ['components-accordion--densities', 'axis-accordion-densities']
+  ['components-accordion--densities', 'axis-accordion-densities'],
+  /* A link's colour is defined per mode rather than derived — step 9 in light,
+     step 11 in dark — and it is accent text, so it follows an overridden
+     brand. RTL is deliberately not captured: nothing in the component is
+     directional, so the shot would be a near-duplicate (the story is still
+     there, and axe walks it). */
+  ['components-link--modes', 'axis-link-modes'],
+  ['components-link--brand-override', 'axis-link-brand']
 ];
 
 for (const [id, name] of AXES) {
