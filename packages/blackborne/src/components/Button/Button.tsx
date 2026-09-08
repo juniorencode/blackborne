@@ -186,12 +186,20 @@ const BASE = cx(
    * the library itself owns — so doc 09 §3's "past a second, indicate it is
    * still going" now has a case, and 30% less opacity is not that.
    *
-   * The content is HIDDEN rather than removed — `visibility: hidden` keeps its
-   * box — so the button holds exactly the width it had and nothing beside it
-   * moves. That matters more here than usual: a row of actions would otherwise
-   * shuffle under the cursor of somebody who has just pressed one of them.
+   * The content is HIDDEN rather than removed — it keeps its box — so the
+   * button holds exactly the width it had and nothing beside it moves. That
+   * matters more here than usual: a row of actions would otherwise shuffle
+   * under the cursor of somebody who has just pressed one of them.
    *
-   * It is hidden on a WRAPPER, and the first attempt is worth recording
+   * **`opacity-0` and not `invisible`**, and that distinction is the whole of
+   * an accessibility bug this had. `visibility: hidden` takes an element out of
+   * the ACCESSIBILITY TREE as well as out of sight, so the button lost its
+   * name: measured with an aria snapshot, the footer read
+   * `button "Cancel"` and then `button` with nothing at all — a screen reader
+   * user who had just pressed Delete was left on a nameless control. Opacity
+   * hides it visually and keeps it named.
+   *
+   * It is hidden on a WRAPPER, and the first attempt is worth recording too
    * because it defeated itself twice over. Hiding the content with
    * `text-transparent` and `*:invisible` on the button needs no wrapper, and
    * it also hits the spinner: `*:invisible` matches the spinner's own layer,
@@ -263,7 +271,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         className={cx(BASE, VARIANT[variant], SIZE[size], className)}
         {...ariaProps}
       >
-        <span className={cx(CONTENT, isPending && 'bb:invisible')}>
+        <span className={cx(CONTENT, isPending && 'bb:opacity-0')}>
           {children}
         </span>
         {!isPending ? null : (
