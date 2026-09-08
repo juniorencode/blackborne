@@ -82,5 +82,11 @@ docker run --rm \
     # --frozen-lockfile, so the container installs exactly what is committed.
     pnpm install --frozen-lockfile --store-dir /tmp/pnpm-store
     pnpm --filter blackborne build
-    pnpm --filter catalog exec playwright test --project=visual $*
+    # The quoted expansion, and not a bare one: this string is built by the
+    # HOST shell, so an unquoted expansion hands the container bare words. A
+    # filter such as -g accordion,collapsible written with a vertical bar then
+    # arrives as a PIPE, and the run dies with EPIPE from a Playwright process
+    # writing into nothing. @Q quotes each word on the way in, and expands to
+    # nothing at all when there are no arguments.
+    pnpm --filter catalog exec playwright test --project=visual ${*@Q}
   "
