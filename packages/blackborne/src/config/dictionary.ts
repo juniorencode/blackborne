@@ -91,7 +91,39 @@ export const en = {
    * nobody customises, it names the action perfectly already, and asking for it
    * would be asking every consumer to type the same string.
    */
-  cancel: 'Cancel'
+  cancel: 'Cancel',
+  /**
+   * The name of a pagination, on the navigation itself.
+   *
+   * Ours rather than the base's, because there is no base component here: no
+   * headless library in the dependency list covers pagination, so the library
+   * implements the pattern and owns its strings (non-goal 6's last resort,
+   * with the justification in `pageWindow.ts`).
+   *
+   * Shared by `Pagination` and `CursorPagination`. They are two components
+   * because they take different data (decision 0014), and they are the same
+   * thing to somebody listening.
+   */
+  pagination: 'Pagination',
+  /**
+   * The two ends. Both carry a chevron and no text, so this is the whole name.
+   */
+  previousPage: 'Previous page',
+  nextPage: 'Next page',
+  /**
+   * A page button, whose visible content is a number.
+   *
+   * `{page}` is substituted with the number, formatted for the locale — the
+   * only key in this dictionary with a placeholder in it. Doc 05 §2.2 rule 5
+   * permits simple value substitution and forbids building a sentence from
+   * fragments, which is exactly the line this sits on: one whole sentence,
+   * one value, and a translation free to put the number wherever its own
+   * grammar wants it.
+   *
+   * A translation that drops the placeholder loses the number, so the
+   * placeholder is part of the contract rather than a convenience.
+   */
+  page: 'Page {page}'
 } as const;
 
 export type DictionaryKey = keyof typeof en;

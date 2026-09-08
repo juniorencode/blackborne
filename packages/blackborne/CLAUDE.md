@@ -123,6 +123,19 @@ cannot know what level it landed at. Emphasis comes from weight and colour.
   none of that is reachable from a `<button>` however it is dressed. Doc 02
   §7.1, and the two must keep looking different: accent and underlined at rest
   is a link, ordinary text until pointed at is a button.
+- **A structural change asks CSS which step applies and reads the answer.**
+  `internal/useContainerStep` is doc 04 §6's one hook, and it resolves no
+  token: the caller declares a query container and carries four classes that
+  set `--bb-step` per step, generated from the scale by the same variants a
+  component would use at N2, and the hook reads the resolved value on resize.
+  One set of thresholds, no unit conversion, no reading the document — and
+  where there is no observer or no layout, the answer stays at the narrowest
+  step, which is what a first paint renders anyway. Doc 04 §6.2.
+- **`@container` goes with a declared width.** Doc 04 §4.3's law: inline-size
+  containment computes a width as though the element had no contents, so a
+  component sized BY its contents collapses. A `<nav>` in normal flow does not
+  care; the same nav in a flex row is shrink-to-fit, which is how every
+  popover in the catalog came to be 2px wide. `Pagination` pairs the two.
 - **The library's first directional icon is a breadcrumb separator**, and it
   is where doc 02 §11.4 bites: the chevron is drawn pointing down and turned a
   quarter turn along the reading direction — anti-clockwise in a left-to-right

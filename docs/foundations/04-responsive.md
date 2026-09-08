@@ -256,18 +256,68 @@ already measuring.
 
 Recorded before the hook exists, so that it counts:
 
-- **Predicted:** resolving `--bb-container-narrow` from the observed element
+- ~~**Predicted:** resolving `--bb-container-narrow` from the observed element
   will work, and will make the JavaScript thresholds follow a consumer's
   redefinition. The result is the mirror image of §4.0's asymmetry — there the
-  widths follow the token and the breakpoints cannot; here both would.
-- **Not predicted, and to be measured:** what it costs, and what happens when
-  the token resolves to an empty string because the stylesheet has not arrived
-  yet. If either goes badly the fallback is §4's literal, with the reason
-  written here.
+  widths follow the token and the breakpoints cannot; here both would.~~
+- ~~**Not predicted, and to be measured:** what it costs, and what happens
+  when the token resolves to an empty string because the stylesheet has not
+  arrived yet. If either goes badly the fallback is §4's literal, with the
+  reason written here.~~
 
 The prediction is kept whichever way it turns out. Doc 08 §6.1 is the
 precedent, and the reason is the same: a prediction recorded after the
 measurement is worth nothing.
+
+**Withdrawn on 2026-09-08. The hook does not resolve the token at all.** See
+§6.2.
+
+### 6.2 What the hook turned out to be
+
+**Date:** 2026-09-08, with `Pagination`, the first component in the library
+whose structure depends on its width.
+
+§6.1 assumed the hook would measure a width in JavaScript and compare it
+against a threshold, and asked only whether the threshold could be injectable.
+Both halves of that were wrong, because the question has a better answer:
+**CSS can say which step applies, and JavaScript can read the answer.**
+
+The caller declares a query container and gives the element it observes four
+classes, generated from the scale by the same variants a component would use
+at N2:
+
+```
+bb:[--bb-step:base]            bb:@narrow:[--bb-step:narrow]
+bb:@medium:[--bb-step:medium]  bb:@wide:[--bb-step:wide]
+```
+
+The hook reads the resolved value of `--bb-step` and re-reads it when a
+`ResizeObserver` says the element changed size. Three things follow, and all
+three are better than the plan:
+
+- **There is one set of thresholds, and it is the CSS one.** The alternative
+  had two — a CSS copy and a JavaScript copy — which is doc 01 §7's two ways
+  to do one thing, in the one place where they must agree exactly or a
+  component's layout and its structure disagree at one width.
+- **No unit conversion, and no reading the document.** A token resolves to
+  `24rem`, and turning that into pixels needs the root font size. P3 keeps
+  this library out of the document, and this removes the reason to go there.
+- **Failure stays harmless.** Where there is no container query support, or no
+  `ResizeObserver`, or no layout at all — a server, and jsdom — the value is
+  never reassigned and the answer is `base` forever. That is §4.1 arriving on
+  its own rather than being remembered.
+
+So §4.0's asymmetry does not reverse: **it disappears**, because there is only
+one mechanism left to be asymmetric about. A consumer redefining
+`--bb-container-narrow` still moves every width measured against it and still
+leaves every threshold where it was — in the queries, and now in the
+structural decisions those queries drive.
+
+**And the floor is checkable in jsdom**, which is the part worth having. The
+answer there is `base`, which is exactly what a real browser's first paint
+renders — so "start narrow, widen once measured" is asserted in unit tests
+that cost milliseconds, and only what happens after that first frame needs a
+browser.
 
 ## 7. Overflow is solved by whoever causes it
 
@@ -331,7 +381,7 @@ which is why one row below is a correction and not a forecast:
 | Tabs              | To a select when they do not fit                                | Forecast, and it is next |
 | Dialog            | To full-screen in a narrow window                               | **Done, and not N3**     |
 | Toolbar / actions | Collapse into a menu                                            | Forecast                 |
-| Pagination        | Fewer page slots as the width falls, previous/next as the floor | **Corrected**            |
+| Pagination        | Fewer page slots as the width falls, previous/next as the floor | **Done** · §6.2          |
 | Breadcrumbs       | The middle collapses into a menu                                | Forecast                 |
 | Steps             | To the indicators alone, scrolling                              | Forecast                 |
 
@@ -346,6 +396,14 @@ previous/next", which is one point on the axis rather than the axis: the number
 of page slots comes from the available width, and previous/next is where that
 count bottoms out. Both halves of the original row survive — the floor is still
 the floor — and neither is a literal number in a component (rule 2).
+
+**And it is the row that got built.** Three structures rather than four: no
+numbers below the narrow step, five at it, seven from medium up. `wide` is
+deliberately not a fourth behaviour — seven numbers and two ends fit
+comfortably from medium onward, and a nine-number row would be a step nobody
+asked for on a scale §4 keeps deliberately short. The check that matters is
+three of the same component at three widths inside one 1280px window, which is
+P4's own question asked of the thing that decides.
 
 Everything else is solved at N0, N1 or N2 barring proof to the contrary. Four
 components examined in the batch that produced the rows above need nothing at
