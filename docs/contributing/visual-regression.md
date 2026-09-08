@@ -62,6 +62,40 @@ When a check fails, the report is in `apps/catalog/playwright-report/`, or as
 an artifact on the failed CI run. It shows the old image, the new one, and the
 difference highlighted.
 
+### An update run can rewrite a baseline nobody asked it about
+
+Measured on 2026-09-08, while adding six baselines for a new component. The
+comparison run before it reported **94 passed, 6 missing** — the six new ones —
+so nothing existing had moved. The update run then rewrote a seventh:
+`tooltip-rtl`, from 9888 bytes to 7469.
+
+Looking at the two images said why. The committed one has the tooltip open
+beside its trigger; the rewritten one has no tooltip at all and the button 200px
+lower. The capture waits for the layer to be visible before it shoots, so the
+tooltip was there — and then was not, on that one run.
+
+Two things follow:
+
+- **`git status` after an update run is part of looking at the diff.** A file
+  you did not expect to change is the signal, and the byte size is enough to
+  spot it.
+- It is the same trap `gotoStory` was written for, one step along:
+  `toHaveScreenshot` retries until it matches, so a comparison run quietly
+  retries a bad frame away — and an update run has nothing to match against,
+  so the bad frame becomes the reference. The mounting half of that is guarded;
+  the hover half is not, and this note is what stands in for the guard until
+  something better exists.
+
+**Filtering an update run** is how the seventh file stayed out of the commit:
+
+```sh
+bash apps/catalog/docker-visual.sh --update-snapshots -g "accordion|collapsible"
+```
+
+The arguments reach Playwright inside the container. They used to reach it
+unquoted, which meant a filter containing a vertical bar arrived as a pipe and
+the run died with `EPIPE` from a process writing into nothing.
+
 ## What is captured, and what is not
 
 Nineteen captures, not all sixty stories. Sixty would be slow and most would be
