@@ -97,6 +97,46 @@ And one sentence worth being clear about: the library **cannot** guarantee that
 an application is accessible. It can guarantee that its pieces do not prevent
 it.
 
+### 2.1 When the library renders a heading anyway
+
+The third column puts heading hierarchy with the project, which is right: only
+the page knows what level anything is at. It leaves a question that a component
+eventually asks anyway — what happens when the pattern **requires** a heading.
+
+Three cases, and which one applies is not a matter of taste:
+
+**1. The base supplies the level. Take it, and choose nothing.** A dialog's
+title is the base's `Heading` filling the title slot, and the base's own
+context supplies level 2. Measured while `ModalSheet` was written: a
+hand-written `<h2>` in the same place leaves the layer with no accessible name
+at all, because the id `aria-labelledby` points at comes from the slot. So the
+element is the base's and the level comes with it.
+
+**2. The pattern requires no heading. Render none, and have no prop.** A
+`Preview`'s title names the panel through `aria-labelledby` and is not a
+heading; a guessed `<h2>` would put an entry in the page outline for something
+that exists while a pointer rests on a word.
+
+**3. The pattern requires one and nothing supplies it. It arrives from the
+project, and it is required.** An accordion is this case: the accordion pattern
+asks that each header be a heading, the base's disclosure supplies no level,
+and the base's own `Heading` defaults to 3 — a default that is right often
+enough to hide the times it is wrong.
+
+**Required rather than defaulted, and that is the whole point of writing this
+down.** A wrong heading level is invisible. Nothing warns, nothing looks wrong,
+and the only symptom is an outline that reads wrongly to somebody moving
+through a page by its headings — the same class of defect as a token that
+resolved to nothing, found only by the person it fails. Being told costs one
+number. Guessing costs a reader who cannot see the page.
+
+**And it belongs to the group, not to each item.** One level for the whole
+accordion is part of what makes it a group; a level per item would type as
+legal a group whose headers sit at three different depths.
+
+A lone collapsible section renders no heading and takes no level: the
+disclosure pattern asks for none, so case 2 applies.
+
 ## 3. What the library guarantees on top
 
 This is where things fail in practice, because these are things the base cannot

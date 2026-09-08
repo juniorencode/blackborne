@@ -56,17 +56,18 @@ claiming it.
 
 The library is being rewritten from scratch. Phases, in order:
 
-| Phase | What                                                                  | State    |
-| ----- | --------------------------------------------------------------------- | -------- |
-| F1    | Close the past: tag, prune branches, empty the repo, deprecate on npm | Done     |
-| F2    | Skeleton: workspace, root files, CI, templates                        | Done     |
-| F3    | Documentation for AI agents                                           | Done     |
-| F4    | Foundations, written in English                                       | Done     |
-| F5    | One day with React Aria — decided documents 02 and 08                 | Done     |
-| F6    | Full pipeline with the first component (`Button`)                     | Done     |
-| F7    | The fields, and the browser checks that verify them                   | Done     |
-| F8    | The rest of level 0 and level 1: the pieces with no dependencies      | Two left |
-| F9    | The layer base, and everything that depends on a portal               | Now      |
+| Phase | What                                                                               | State    |
+| ----- | ---------------------------------------------------------------------------------- | -------- |
+| F1    | Close the past: tag, prune branches, empty the repo, deprecate on npm              | Done     |
+| F2    | Skeleton: workspace, root files, CI, templates                                     | Done     |
+| F3    | Documentation for AI agents                                                        | Done     |
+| F4    | Foundations, written in English                                                    | Done     |
+| F5    | One day with React Aria — decided documents 02 and 08                              | Done     |
+| F6    | Full pipeline with the first component (`Button`)                                  | Done     |
+| F7    | The fields, and the browser checks that verify them                                | Done     |
+| F8    | The rest of level 0 and level 1: the pieces with no dependencies                   | Two left |
+| F9    | The layer base, and everything that depends on a portal                            | Two left |
+| F10   | Composition: the pieces that arrange other pieces, and the first structural change | Now      |
 
 Which components exist and in what order is not a phase question: it lives in
 [catalog-and-build-order.md](./catalog-and-build-order.md), which is the list
@@ -79,6 +80,17 @@ anything. F9 went ahead of them because the layer base is a bottleneck that more
 than twenty components wait on, which is criterion 1 of the catalog's own
 ordering. Recorded here rather than marked Done, because a phase table that
 rounds up is a phase table nobody believes.
+
+**F9 is left open for the same reason**, and by the same criterion. The layer
+base and seven layers landed; `Menu` and `SplitButton` are still portals and
+still pending. They are not abandoned — they sit in the middle of F10 by
+dependency, because three of its features wait on `Menu` and `Select`
+(catalog §3.1).
+
+**What F10 proves** is the one level of doc 04 that has never run: N3, a
+structural change in JavaScript. Everything up to here has been N0, N1, N2 or
+the one viewport exception. The contract for it is written in doc 04 §6.1
+before the hook exists, with the prediction it will be measured against.
 
 Nothing from the `0.1.1` codebase is carried over. It stays available under the
 `v0.1.1` git tag.

@@ -208,6 +208,67 @@ Rules for these cases:
    selected and the table becomes cards, they stay selected. This is tested
    explicitly: it is what breaks most often.
 
+### 6.1 The contract of that hook, written before it exists
+
+**Date:** 2026-09-08. The hook does not exist. `Tabs`, `Pagination` and `Steps`
+all want it, and it is written down first because a shared hook designed while
+its first caller is being written becomes that caller's hook with a shared
+name.
+
+**It measures the element, not the window.** P4, and the only mechanism that
+does that is observing the component's own root. That is JavaScript watching
+the DOM, which [decision 0006](../decisions/0006-no-container-query-polyfill.md)
+declined to ship — and the difference is scope, not principle: one observer
+inside one component that asked for it, against a global observer standing
+behind every query on the page whether it is needed or not.
+
+**Its vocabulary is the CSS one.** It answers with the same step names the
+container variants use, so a component that is N2 in one place and N3 in
+another does not end up with two ways of saying "narrow". This is §4's scale
+and doc 02 §3.1's rule about one vocabulary, applied to the JavaScript half.
+
+**Before the first measurement the answer is the narrowest step.** An observer
+reports after layout, so the first render has nothing to measure — and rule 3
+forbids painting one structure and swapping it. §4.1 already establishes that
+the narrow layout is the one that is safe at any width, so the two rules
+combine into something mechanical rather than a judgement call: paint narrow,
+widen when measured. A component that paints its wide structure first and
+corrects itself is precisely the jump rule 3 names.
+
+**State lives above the structure, not inside it.** Rule 4 is not met by
+remembering to lift state; it is met by the structure holding none. Concretely,
+for the first caller: a tab list cannot own the selected tab, because the tab
+list is the thing that disappears. So a component that changes structure is
+internally controlled, with doc 02 §8's uncontrolled shortcut over the top.
+
+**And it is internal.** [Decision 0012](../decisions/0012-growing-is-a-prop-not-a-public-hook.md)
+is the precedent: P6 asks that logic be testable without rendering, not that
+every hook be exported. A public one would let a consumer decide our
+components' structure from outside, and non-goal 10 leaves no hole of that
+shape.
+
+#### The prediction about injectability
+
+§4.0 measured that a query threshold cannot honour a redefined token, because a
+container query's condition may not contain `var()`. **The JavaScript half has
+no such limit**, since a hook can resolve the token from the very element it is
+already measuring.
+
+Recorded before the hook exists, so that it counts:
+
+- **Predicted:** resolving `--bb-container-narrow` from the observed element
+  will work, and will make the JavaScript thresholds follow a consumer's
+  redefinition. The result is the mirror image of §4.0's asymmetry — there the
+  widths follow the token and the breakpoints cannot; here both would.
+- **Not predicted, and to be measured:** what it costs, and what happens when
+  the token resolves to an empty string because the stylesheet has not arrived
+  yet. If either goes badly the fallback is §4's literal, with the reason
+  written here.
+
+The prediction is kept whichever way it turns out. Doc 08 §6.1 is the
+precedent, and the reason is the same: a prediction recorded after the
+measurement is worth nothing.
+
 ## 7. Overflow is solved by whoever causes it
 
 - The component that produces wide content (table, code block, diagram)
@@ -261,15 +322,32 @@ decorative.
 
 ## 11. Open list
 
-Which components need N3 (a structural change). Completed as they are built;
-today it is a forecast, not a commitment:
+Which components need N3 (a structural change). Completed as they are built,
+which is why one row below is a correction and not a forecast:
 
-| Component         | Expected change                                                                  |
-| ----------------- | -------------------------------------------------------------------------------- |
-| Data table        | Rows to cards in a narrow container                                              |
-| Tabs              | To a select when they do not fit                                                 |
-| Dialog            | To full-screen or a bottom sheet in a narrow window (the exception in section 5) |
-| Toolbar / actions | Collapse into a menu                                                             |
-| Pagination        | Reduce to previous/next                                                          |
+| Component         | Expected change                                                 | State                    |
+| ----------------- | --------------------------------------------------------------- | ------------------------ |
+| Data table        | Rows to cards in a narrow container                             | Forecast                 |
+| Tabs              | To a select when they do not fit                                | Forecast, and it is next |
+| Dialog            | To full-screen in a narrow window                               | **Done, and not N3**     |
+| Toolbar / actions | Collapse into a menu                                            | Forecast                 |
+| Pagination        | Fewer page slots as the width falls, previous/next as the floor | **Corrected**            |
+| Breadcrumbs       | The middle collapses into a menu                                | Forecast                 |
+| Steps             | To the indicators alone, scrolling                              | Forecast                 |
 
-Everything else is solved at N0, N1 or N2 barring proof to the contrary.
+**Dialog turned out not to need JavaScript.** It is a media query and the §5
+exception: same threshold, same outcome, no different tree to mount. Worth
+leaving in the table with that written on it, because the row is what the
+prediction looked like before the component existed and §2's warning is exactly
+about reaching for N3 out of habit.
+
+**Pagination's row is corrected rather than kept.** It read "reduce to
+previous/next", which is one point on the axis rather than the axis: the number
+of page slots comes from the available width, and previous/next is where that
+count bottoms out. Both halves of the original row survive — the floor is still
+the floor — and neither is a literal number in a component (rule 2).
+
+Everything else is solved at N0, N1 or N2 barring proof to the contrary. Four
+components examined in the batch that produced the rows above need nothing at
+all: `Accordion`, `Collapsible`, `Link` and `CursorPagination` are all N0.
+Recorded because the interesting half of this list is what is not on it.
