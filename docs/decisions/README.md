@@ -24,3 +24,4 @@ the folder is that you can see what was believed when.
 | [0011](./0011-the-stepper-is-opt-in.md)                               | The stepper is opt-in                               | The arrows already step the value; the buttons only cost trailing space  |
 | [0012](./0012-growing-is-a-prop-not-a-public-hook.md)                 | Growing is a prop, not a public hook                | P6 asks for logic testable without rendering, and a measurement is not   |
 | [0013](./0013-the-portal-container-arrives-with-the-configuration.md) | The portal container arrives with the configuration | One provider, because the toast region reads nothing else                |
+| [0014](./0014-cursor-pagination-is-its-own-component.md)              | Cursor pagination is its own component, not a mode  | Two pagers that share no prop; one of them cannot know a total           |
