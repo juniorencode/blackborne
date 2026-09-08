@@ -12,6 +12,45 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **`Pagination` and `CursorPagination`** — two pagers, and the first
+  component in the library whose STRUCTURE depends on its width.
+
+  ```tsx
+  <Pagination page={page} pages={12} onPageChange={setPage} />
+
+  <CursorPagination
+    hasPrevious={cursor.before !== null}
+    hasNext={cursor.after !== null}
+    onPrevious={loadPrevious}
+    onNext={loadNext}
+  />
+  ```
+
+  **Two components, not a mode** (decision 0014): offset pagination is given a
+  total and computes everything from it, and cursor pagination is given two
+  booleans and cannot know a total, ever — the number does not exist on its
+  side of the network.
+
+  **The row changes shape with its container**, which is level N3 of doc 04 and
+  the level that had never run: no numbers below the narrow step, five at it,
+  seven from medium up. Three of the same component at three widths inside one
+  1280px window is the check, because that is P4's own question. The first
+  paint is always the narrowest of the three.
+
+  The page you are on is **text, not a control** — the decision `Breadcrumbs`
+  made about its last step — so `Tab` walks only the pages you can reach. Page
+  numbers are formatted for the locale, which in `ar-EG` means Arabic-Indic
+  digits, and the figures are tabular so the row does not change width as
+  somebody pages through it.
+
+  `pageWindow` is exported with them: the whole of the offset pager's logic as
+  a pure function (P6), tested over every page of every size from one to
+  thirty.
+
+  Four new dictionary keys — `pagination`, `previousPage`, `nextPage` and
+  `page`. The last is the first key in the library with a placeholder in it,
+  which doc 05 §2.2 rule 5 permits as simple value substitution.
+
 - **`Breadcrumbs` and `Breadcrumb`** — where you are, and the way back.
 
   ```tsx

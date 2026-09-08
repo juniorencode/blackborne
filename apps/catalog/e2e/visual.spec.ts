@@ -126,6 +126,16 @@ const STATES: Array<[string, string]> = [
      separator there is, is the one that is dropped. */
   ['components-breadcrumbs--lengths', 'breadcrumbs-lengths'],
   /*
+   * `pagination-steps` is the first picture of doc 04's level N3 in this
+   * repository: the same component at three widths, with three different sets
+   * of controls. It is also the baseline that would catch the structural
+   * decision silently reverting to one shape, which no assertion about a
+   * single width would.
+   */
+  ['components-pagination--steps', 'pagination-steps'],
+  ['components-pagination--positions', 'pagination-positions'],
+  ['components-cursorpagination--states', 'cursor-pagination-states'],
+  /*
    * A component with nothing to look at still earns a baseline, and this is
    * the one that earns it most: the story is two rulers that must stay the
    * same width. If the hiding ever stops working, the picture changes — which
@@ -306,6 +316,12 @@ const TOGETHER: Array<[string, string]> = [
      link-shaped button is ordinary text until pointed at. Apart, either looks
      fine; the baseline that matters is the one with both in it. */
   ['components-link--against-a-button', 'link-against-a-button'],
+  /* The two pagers side by side. Apart they look like one component with a
+     feature missing; together the difference is the point (decision 0014). */
+  [
+    'components-cursorpagination--against-the-other-one',
+    'pagers-against-each-other'
+  ],
   /* Where a trail actually goes: above a heading and the page it describes,
      quieter than both. */
   ['components-breadcrumbs--above-page-content', 'breadcrumbs-above-content']
@@ -364,7 +380,11 @@ const AXES: Array<[string, string]> = [
      RTL is the highest-value shot this component has: the chevron turns the
      other quarter and the order of the whole trail reverses. */
   ['components-breadcrumbs--direction', 'axis-breadcrumbs-rtl'],
-  ['components-breadcrumbs--together', 'axis-breadcrumbs-together']
+  ['components-breadcrumbs--together', 'axis-breadcrumbs-together'],
+  /* A pager's own axes: RTL, where the chevrons turn round AND the digits
+     become Arabic-Indic, and the three theme scopes on one page. */
+  ['components-pagination--direction', 'axis-pagination-rtl'],
+  ['components-pagination--together', 'axis-pagination-together']
 ];
 
 for (const [id, name] of AXES) {
