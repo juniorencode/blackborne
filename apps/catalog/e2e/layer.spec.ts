@@ -358,6 +358,77 @@ test.describe('the portal', () => {
 
     expect(parent).toBe('body');
   });
+
+  /*
+   * AND THE CONTAINER MUST LAY NOTHING OUT.
+   *
+   * A check on the fixture rather than on the library, which is unusual and is
+   * the point: every baseline of an open layer is taken through this element,
+   * so a bug in it is a bug in twenty pictures and in the checks that measure
+   * against a trigger's position.
+   *
+   * There was one. The host is the portal container, so an open layer is a
+   * CHILD of it — and three of the seven copies of this fixture centred their
+   * content with `display: grid; place-items: center`, which made that child a
+   * grid item. The base's overlay wrapper is `position: static`, so it takes
+   * part in layout: two auto rows in a grid taller than its contents share the
+   * free space, and opening a tooltip gave the trigger half the page instead
+   * of all of it.
+   *
+   * Measured before the fix: y = 441 closed, y = 239 open. The trigger moved
+   * 202px under the pointer that opened it — doc 09 §7's "nothing moves under
+   * the cursor", broken by the catalog in the fixture for the components that
+   * rule is most about. It also made three unrelated checks flaky, because the
+   * base positions a layer against a box that then moved.
+   */
+  test('and a layer arriving in it moves nothing', async ({ page }) => {
+    await gotoStory(page, 'components-tooltip--direction');
+
+    const trigger = page.getByTestId('trigger');
+    const before = await trigger.boundingBox();
+    expect(before).not.toBeNull();
+
+    // The pointer has to travel; `hover()` teleports and the base's useHover
+    // does not register that at all (tooltip.spec.ts measured it four ways).
+    await page.mouse.move(4, 4);
+    await page.mouse.move(
+      before!.x + before!.width / 2,
+      before!.y + before!.height / 2,
+      { steps: 8 }
+    );
+    const tooltip = page.locator('[role=tooltip]');
+    await expect(tooltip).toBeVisible({ timeout: 3000 });
+    await expect(tooltip).not.toHaveAttribute('data-entering', /.*/);
+
+    const after = await trigger.boundingBox();
+    expect(after).not.toBeNull();
+    expect(after!.y).toBeCloseTo(before!.y, 1);
+    expect(after!.x).toBeCloseTo(before!.x, 1);
+
+    /*
+     * And the shape that makes it true, so a failure says WHY rather than
+     * only that something moved: the host is a column whose stage claims the
+     * leftover height, and the layer is an item of zero height after it.
+     */
+    const shape = await page.evaluate(() => {
+      const host = document.querySelector('.catalog-layer-page');
+      const stage = document.querySelector('.catalog-layer-stage');
+      if (host === null || stage === null) return null;
+      const last = host.lastElementChild;
+      return {
+        host: getComputedStyle(host).flexDirection,
+        stageIsNotTheHost: stage !== host,
+        layerHeight:
+          last === null || last === stage
+            ? -1
+            : Math.round(last.getBoundingClientRect().height)
+      };
+    });
+
+    expect(shape?.host).toBe('column');
+    expect(shape?.stageIsNotTheHost).toBe(true);
+    expect(shape?.layerHeight).toBe(0);
+  });
 });
 
 test.describe('stacking', () => {

@@ -127,7 +127,13 @@ body {
  */
 /*
  * The page a layer story is shown on, and the element the layer is portalled
- * into. One fixture for all seven layers; see src/catalog/layerPage.tsx.
+ * INTO — which is why it lays nothing out itself.
+ *
+ * A flex column: the label and the stage are its items, and a layer arriving
+ * in it is a third item of zero height, since everything a layer paints is
+ * absolutely or fixed positioned. Three copies of this fixture used to centre
+ * their content here, which made an open layer a grid item and moved the
+ * trigger 202px. The reasoning is in `src/catalog/layerPage.tsx`.
  */
 .catalog-layer-page {
   min-height: 100vh;
@@ -135,11 +141,20 @@ body {
   padding: 24px;
   background: var(--bb-surface);
   color: var(--bb-text);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Where the story's own content goes. Claims the leftover height, so a
+   zero-height item appended after it cannot take any of it back. */
+.catalog-layer-stage {
+  flex: 1;
+  min-width: 0;
 }
 
 /* An anchored layer's trigger sits in the middle, with room on all twelve
-   sides of it. Was an inline style in three copies of this fixture. */
-.catalog-layer-page[data-centred] {
+   sides of it. */
+.catalog-layer-stage[data-centred] {
   display: grid;
   place-items: center;
 }

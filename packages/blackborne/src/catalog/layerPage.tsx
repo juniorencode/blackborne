@@ -7,21 +7,49 @@ import { ConfigProvider } from '../config';
  *
  * ## Why it is shared
  *
- * It was copied seven times — one per layer — and every copy was
- * near-identical: the same scope attributes, the same `useState` for the host,
- * the same `ConfigProvider`, the same one-render delay before the children
- * appear. What differed was small and mechanical: three centred their content
- * and four did not, four carried a line of prose above it and three did not,
- * and one each wanted a greyscale filter and the alternate brand.
+ * It was copied seven times, and what forced the extraction is that one of the
+ * copies had a bug — which means three of them did. It went unnoticed for six
+ * components because nothing looked wrong (see below), and a defect that has
+ * to be fixed in seven files is a defect that will be fixed in five.
  *
- * This commit is the extraction ALONE, and it is deliberately faithful: the
- * centring stays where the copies had it, on the host. Nothing about the
- * rendered page changes, which is what makes the property attached to this
- * commit checkable — **no visual baseline may move.** Seven files at once is
- * exactly where a refactor needs that property stated and verified rather than
- * assumed.
+ * The extraction landed on its own, faithful, with the property that no
+ * baseline moved. This is the commit that changes behaviour.
  *
- * There is a bug in what is being copied. It is not fixed here.
+ * ## The bug, measured
+ *
+ * The host is also the portal container, so an open layer is a CHILD of this
+ * element. In the three copies that centred their content with
+ * `display: grid; place-items: center`, that child became a **grid item**: the
+ * base's overlay wrapper is `position: static`, so it takes part in layout.
+ *
+ * Two auto-sized rows in a grid taller than its contents share the free space
+ * between them — `place-items` sets `align-items`, not `align-content` — so
+ * opening a tooltip gave the trigger half the page instead of all of it, and
+ * the trigger moved. Measured on `Tooltip / RTL`:
+ *
+ *   trigger before opening the tooltip : y = 441
+ *   trigger after                      : y = 239   ← 202px, under the pointer
+ *
+ * Nothing looked wrong because the shifted layout is what every baseline of an
+ * open anchored layer was generated from. What DID go wrong was intermittent
+ * and looked like something else: the base positions a layer against the
+ * trigger's box, the box then moves, and whether the reposition lands before
+ * an assertion is a race. Three separate checks failed that way under load and
+ * passed in isolation.
+ *
+ * It is also doc 09 §7 — "nothing moves under the cursor" — broken by the
+ * catalog itself, in the fixture for the components that rule is most about.
+ *
+ * ## The fix
+ *
+ * The host stops being the element that lays anything out. It is a flex
+ * column; the label and the stage are its items; and a layer portalled into it
+ * arrives as a third item whose height is zero, because everything a layer
+ * paints is absolutely or fixed positioned. The stage claims the leftover
+ * height with `flex: 1`, so the zero-height item cannot take any of it back.
+ *
+ * The centring that three of the copies wanted now happens INSIDE the stage,
+ * where a portalled layer never lands.
  */
 
 interface LayerPageProps {
@@ -36,13 +64,13 @@ interface LayerPageProps {
    * Greyscale, for the "colour is not the only channel" check (doc 06 §3).
    *
    * The filter goes on the HOST, which is also the portal container, so the
-   * layer is inside it. Put on an inner wrapper instead — the obvious place —
-   * and the dialog escapes it entirely: it is portalled to this element, not
-   * to the wrapper. Measured, and the story showed full colour while claiming
-   * to be the greyscale check.
+   * layer is inside it. Put on the stage instead — the obvious place — and the
+   * dialog escapes it entirely: it is portalled to this element, not to the
+   * stage. Measured, and the story showed full colour while claiming to be the
+   * greyscale check.
    */
   isGreyscale?: boolean;
-  /** A line of prose above the content. The scrim needs something to cover. */
+  /** A line of prose above the stage. The scrim needs something to cover. */
   label?: string;
   children: React.ReactNode;
 }
@@ -67,24 +95,29 @@ function Page({
       data-bb-density={density}
       dir={dir}
       ref={setHost}
-      {...(centred ? { 'data-centred': 'true' } : {})}
       {...(brand ? { 'data-bb-theme': 'catalog-alt' } : {})}
       {...(isGreyscale ? { style: { filter: 'grayscale(1)' } } : {})}
     >
       {label === undefined ? null : <p className="catalog-label">{label}</p>}
-      {/*
-       * Nothing renders until the host exists, because the provider needs the
-       * element and a ref callback runs after the first paint. One render's
-       * delay, and it is the reason this is `useState` rather than `useRef`.
-       */}
-      {host === null ? null : (
-        <ConfigProvider
-          portalContainer={host}
-          {...(locale === undefined ? {} : { locale })}
-        >
-          {children}
-        </ConfigProvider>
-      )}
+      <div
+        className="catalog-layer-stage"
+        {...(centred ? { 'data-centred': 'true' } : {})}
+      >
+        {/*
+         * Nothing renders until the host exists, because the provider needs
+         * the element and a ref callback runs after the first paint. One
+         * render's delay, and it is the reason this is `useState` rather than
+         * `useRef`.
+         */}
+        {host === null ? null : (
+          <ConfigProvider
+            portalContainer={host}
+            {...(locale === undefined ? {} : { locale })}
+          >
+            {children}
+          </ConfigProvider>
+        )}
+      </div>
     </div>
   );
 }

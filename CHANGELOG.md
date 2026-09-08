@@ -648,6 +648,13 @@ minor versions. Every break is listed here with its migration.
 
 ### Changed
 
+- **The catalog's layer fixture lays nothing out, and there is one of it.** It
+  had been copied seven times, and three of the copies centred their content
+  on the same element they handed to `portalContainer` — so an open layer
+  became a grid item and moved its own trigger 202px. No public API changed;
+  fourteen baselines did, because they had been taken through the shifted
+  layout. Doc 08 §9 carries the rule.
+
 - **A forced state in the catalog can name the node it belongs to.** The helper
   marked the outermost React Aria element, which for a section is the
   disclosure and not its header — so hover, press and focus went somewhere with
