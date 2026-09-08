@@ -35,9 +35,23 @@ export type ForcedState = 'data-hovered' | 'data-pressed' | 'data-focused';
  */
 export function Force({
   state,
+  target,
   children
 }: {
   state: ForcedState;
+  /**
+   * A selector for the node to mark, when it is not the outermost React Aria
+   * one.
+   *
+   * Added by the first component with TWO of them nested: a `Collapsible` is a
+   * disclosure whose header is a button, and hover, press and focus all belong
+   * to the button. The outermost `[data-rac]` is the section, which has no
+   * such states — so marking it put three attributes in the DOM that matched
+   * no selector, and the three "states" photographed identically to the
+   * default. That is the exact failure this helper was written for, arriving
+   * from one level further in.
+   */
+  target?: string;
   children: React.ReactNode;
 }): React.ReactElement {
   const ref = useRef<HTMLSpanElement>(null);
@@ -57,12 +71,13 @@ export function Force({
      * tree order, so the outermost one is the one we want.
      */
     const element =
+      (target === undefined ? null : ref.current?.querySelector(target)) ??
       ref.current?.querySelector('[data-rac]') ??
       ref.current?.firstElementChild;
     if (!element) return;
     element.setAttribute(state, 'true');
     return () => element.removeAttribute(state);
-  }, [state]);
+  }, [state, target]);
 
   return (
     <span ref={ref} style={{ display: 'contents' }}>
