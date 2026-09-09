@@ -270,6 +270,19 @@ Everything that renders in a portal. Four things were measured while building
   right rotation and `visibility: visible`, and nothing on the screen. Use
   `document.elementFromPoint` on anything drawn: clipped content is not
   hit-tested. Doc 08 §9.
+- **A menu's panel is a dialog containing a menu, and that is the base's
+  decision.** Measured: `Popover` gives itself `role="dialog"` unless it is
+  told `isNonModal`, so a menu is announced inside a dialog with the same name
+  — and the lever that removes the role removes the underlay and the scroll
+  lock with it, which would let an outside click both close the menu and press
+  what is under it. Left alone, asserted in `menu.spec.ts`, and on doc 06 §5's
+  screen-reader list.
+- **Danger-coloured TEXT is `--bb-danger-text`, never `--bb-danger`.** The
+  solid step is for a fill whose pair carries the text. Reaching for it as text
+  passes in light mode by coincidence — there the solid and the text step are
+  the same — and fails in dark, where the solid drops two steps. axe caught it
+  on a destructive menu command, which is the third pairing that check has
+  found; the token's own comment predicted it in as many words.
 - **A notice is the one layer whose state the CONSUMER holds.** `useToasts()`
   makes the queue; the library keeps none, because P3 allows it none. The base's
   queue class is deliberately kept out of a consumer's types — a rename inside

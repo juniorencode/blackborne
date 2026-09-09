@@ -262,6 +262,23 @@ Components that require a screen reader test, not just keyboard: dialog, menu,
 combobox with search, date picker, table with selection and sorting, and
 alerts.
 
+**And the questions that pass has to answer**, collected as they were found,
+because "run a screen reader over it" is not a task anybody can act on and
+these are:
+
+| Component     | The question                                                                                                                                                                                                                                   |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Toast`       | Whether an assertive announcement actually interrupts, which is the whole reason `role="alert"` is on the content                                                                                                                              |
+| `Breadcrumbs` | Whether the trail wants a landmark. The base labels the list and adding a `<nav>` named the same thing says the word twice in one breath                                                                                                       |
+| `Menu`        | **Measured:** the base wraps a menu in a popover that takes `role="dialog"`, labelled by the same trigger — so the tree is a dialog containing a menu, with one name on both. Whether that reads as noise or as nothing is what a person hears |
+| `Pagination`  | Both pagers are labelled lists rather than landmarks, because two identical landmarks are indistinguishable (axe's `landmark-unique`). Whether the list label is enough                                                                        |
+| `Accordion`   | Whether the headings read as an outline at the level the consumer gave                                                                                                                                                                         |
+
+Each of these is a question a measurement cannot settle, and every one of them
+was reached by taking a decision that could be defended in writing. That is the
+point of the list: it is what the third layer is FOR, rather than a ritual to
+perform on everything.
+
 ### 5.1 What the automated layer does not cover in Arabic
 
 **The contrast check does not run on Arabic text.** Not as a bug in this

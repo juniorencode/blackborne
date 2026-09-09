@@ -12,6 +12,38 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **`Menu`, `MenuItem` and `MenuSeparator`** — a short list of commands,
+  opened by a control. The middle of the composition batch, and what three
+  deferred features were waiting for.
+
+  ```tsx
+  <Menu trigger={<Button>Actions</Button>}>
+    <MenuItem onAction={send}>Send</MenuItem>
+    <MenuItem onAction={duplicate}>Duplicate</MenuItem>
+    <MenuSeparator />
+    <MenuItem tone="danger" onAction={remove}>
+      Delete
+    </MenuItem>
+  </Menu>
+  ```
+
+  **No `label` prop**, and that is measured rather than assumed: the base points
+  the menu's name at the trigger, so a menu opened by a button called "Actions"
+  is the Actions menu. A label prop would be a second name for one thing.
+
+  Everything a menu is for is the base's and none of it is written here — the
+  arrow keys, the typeahead, the single highlight that follows a pointer as
+  well as a key, `Escape` closing without running anything, and focus returning
+  to the trigger. All of it is checked in a browser, because jsdom implements no
+  real tab order.
+
+  `tone="danger"` for a destructive command, which is red **and** says what it
+  does — colour is never the only channel (doc 06 §3).
+
+  No sections, no submenus, no selection and no arrow. And `href` on a command
+  is one wave away rather than hypothetical: a collapsed breadcrumb trail is a
+  menu of addresses.
+
 - **`Pagination` and `CursorPagination`** — two pagers, and the first
   component in the library whose STRUCTURE depends on its width.
 
