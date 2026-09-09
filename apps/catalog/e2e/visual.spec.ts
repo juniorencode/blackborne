@@ -133,6 +133,15 @@ const STATES: Array<[string, string]> = [
    * single width would.
    */
   ['components-pagination--steps', 'pagination-steps'],
+  /*
+   * A menu is photographed OPEN through its own `defaultOpen`, which is what
+   * makes these deterministic: a tooltip and a preview both needed a helper
+   * that travels the pointer and waits, because they have no other way to be
+   * open. A menu does.
+   */
+  ['components-menu--open', 'menu-open'],
+  ['components-menu--long-list', 'menu-long-list'],
+  ['components-menu--long-label', 'menu-long-label'],
   ['components-pagination--positions', 'pagination-positions'],
   ['components-cursorpagination--states', 'cursor-pagination-states'],
   /*
@@ -322,6 +331,9 @@ const TOGETHER: Array<[string, string]> = [
     'components-cursorpagination--against-the-other-one',
     'pagers-against-each-other'
   ],
+  /* Where a menu actually goes: behind a mark at the end of a row, with the
+     name on the button and nowhere else. */
+  ['components-menu--in-a-row', 'menu-in-a-row'],
   /* Where a trail actually goes: above a heading and the page it describes,
      quieter than both. */
   ['components-breadcrumbs--above-page-content', 'breadcrumbs-above-content']
@@ -384,7 +396,12 @@ const AXES: Array<[string, string]> = [
   /* A pager's own axes: RTL, where the chevrons turn round AND the digits
      become Arabic-Indic, and the three theme scopes on one page. */
   ['components-pagination--direction', 'axis-pagination-rtl'],
-  ['components-pagination--together', 'axis-pagination-together']
+  ['components-pagination--together', 'axis-pagination-together'],
+  /* A menu's three: the dark surface, the density that reaches a portalled
+     layer, and RTL where it aligns to the other edge of its trigger. */
+  ['components-menu--dark', 'axis-menu-dark'],
+  ['components-menu--compact', 'axis-menu-compact'],
+  ['components-menu--direction', 'axis-menu-rtl']
 ];
 
 for (const [id, name] of AXES) {

@@ -124,6 +124,20 @@ export type {
 export { Link } from './components/Link';
 export type { LinkProps } from './components/Link';
 
+/*
+ * A menu is three exports because a command and a divider are elements the
+ * consumer writes, and the base's collection reads them: our `MenuItem` and
+ * `MenuSeparator` wrap the base's own so the menu's structure is what the base
+ * sees.
+ */
+export { Menu, MenuItem, MenuSeparator } from './components/Menu';
+export type {
+  MenuItemProps,
+  MenuItemTone,
+  MenuProps,
+  MenuSeparatorProps
+} from './components/Menu';
+
 export { NumberField } from './components/NumberField';
 export type {
   NumberFieldProps,
