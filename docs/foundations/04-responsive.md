@@ -382,7 +382,7 @@ which is why one row below is a correction and not a forecast:
 | Dialog            | To full-screen in a narrow window                               | **Done, and not N3** |
 | Toolbar / actions | Collapse into a menu                                            | Forecast             |
 | Pagination        | Fewer page slots as the width falls, previous/next as the floor | **Done** · §6.2      |
-| Breadcrumbs       | The middle collapses into a menu                                | Forecast             |
+| Breadcrumbs       | The middle collapses into a menu                                | **Done** · §11.2     |
 | Steps             | To the indicators alone, scrolling                              | Forecast             |
 
 **Dialog turned out not to need JavaScript.** It is a media query and the §5
@@ -430,6 +430,38 @@ Rule 4 held, and by construction rather than by care — the selected tab is kep
 above the choice of structure, so the structure cannot lose it. It is asserted
 anyway, because the rule says this is what breaks most often: the check resizes
 the window across the boundary and back.
+
+### 11.2 What the collapsed trail turned out to need
+
+**The forecast was right, which is worth recording because two other rows were
+not.** "The middle collapses into a menu" is what got built, at the same
+boundary `Tabs` uses — folded below `medium`, whole from it up — and taking the
+same boundary rather than choosing a second one is the point: both components
+are a line of labels whose length nobody can predict, and one scale with one
+boundary is what stops two of them disagreeing about "narrow" at the width
+where it matters.
+
+What the row did not say is the two rules that stop a collapse making things
+worse, and both live in a pure function rather than in a render:
+
+- **The "…" never hides one step.** Folding a single step replaces something
+  you can read with something you have to open. `Pagination` reached this rule
+  from the other direction — a gap never hides one page — so it is now one rule
+  applied twice rather than two that happen to agree.
+- **The two ends are never folded.** The first is the way home and the last is
+  where you are, which are the two reasons a trail is on the screen at all.
+
+**And it wraps as well**, which makes this the third component to need both
+levels at once: below the boundary the middle folds, and a trail with no middle
+to fold — two long steps — still has to go somewhere at 320px. A component at
+N3 does not stop needing N1, and by now that is a pattern rather than an
+observation.
+
+The state question is different here, and was worth checking for a reason that
+is not obvious. A trail holds no selection, so what has to survive the change
+is the MARKING of the current step — and that is not free: the base marks the
+last step of its own collection, and folding changes what the collection
+contains. Measured across the boundary and back.
 
 **And it is the row that got built.** Three structures rather than four: no
 numbers below the narrow step, five at it, seven from medium up. `wide` is

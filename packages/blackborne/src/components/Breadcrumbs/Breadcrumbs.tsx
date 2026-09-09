@@ -1,22 +1,43 @@
-import { forwardRef } from 'react';
+import { forwardRef, useRef } from 'react';
 import {
   Breadcrumb as AriaBreadcrumb,
   Breadcrumbs as AriaBreadcrumbs
 } from 'react-aria-components';
+import { Button } from '../Button';
+import { Link } from '../Link';
+import { Menu, MenuItem } from '../Menu';
+import { useMessage } from '../../config';
 import { ChevronGlyph } from '../../internal/ChevronGlyph';
 import { cx } from '../../internal/cx';
+import { useDevWarning } from '../../internal/useDevWarning';
+import {
+  CONTAINER_STEPS,
+  useContainerStep
+} from '../../internal/useContainerStep';
+import { readCrumbs, trailShape } from './readCrumbs';
+
+/*
+ * The container the query asks about, and it is new: the trail used to BE the
+ * list.
+ *
+ * `w-full` beside `@container` is doc 04 §4.3's law — inline-size containment
+ * computes a width as though the element had no contents, so anything sized by
+ * its contents collapses to its borders, and a trail is sized by its contents
+ * everywhere. `Pagination` and `Tabs` pair the two for the same reason.
+ */
+const ROOT = cx('bb-breadcrumbs-root', 'bb:@container bb:box-border bb:w-full');
 
 /*
  * The trail. An ordered list, and the base's own element rather than ours.
  *
  * NO `<nav>` AROUND IT, and that is a decision rather than an oversight.
  *
- * The accordion pattern's own guidance wraps a breadcrumb trail in a landmark,
- * and the base does not: `useBreadcrumbs` returns a labelled list — the label
- * comes from the base's own localised strings, so it is already in the
- * reader's language — and no role at all. Doc 06 §2 settles what to do about
- * that in one sentence: a component may add the layout and may NOT add the
- * ARIA, and the base leaving an attribute out is usually a decision.
+ * The breadcrumb pattern's own guidance wraps a trail in a landmark, and the
+ * base does not: `useBreadcrumbs` returns a labelled list — the label comes
+ * from the base's own localised strings, so it is already in the reader's
+ * language — and no role at all. Doc 06 §2 settles what to do about that in
+ * one sentence: a component may add the layout and may NOT add the ARIA, and
+ * the base leaving an attribute out is usually a decision.
  *
  * Adding the landmark would also cost something measurable: the list is
  * already named, so a `<nav>` named the same thing says the word twice in one
@@ -27,13 +48,19 @@ import { cx } from '../../internal/cx';
  * worth the repetition is a question about what a reader hears, and that is
  * the one thing nothing here can measure.
  *
- * `flex-wrap` rather than truncation: a trail too long for its container drops
- * to a second line, which is legible at any width and needs no query. The
- * proper answer for a narrow container — the middle collapsing into a menu —
- * waits for `Menu`, and doc 04 §11 carries the row.
+ * `flex-wrap` is the floor UNDERNEATH the collapse rather than an alternative
+ * to it: a query counts pixels and cannot know whether these particular words
+ * fit, so a trail of two long steps in a wide container still needs somewhere
+ * to go. It wraps. Doc 04 §11.2, and `Tabs` needed exactly the same pair.
+ *
+ * It also carries the four step classes, because the step has to be read from
+ * an element INSIDE the container — a container query asks an ancestor — and
+ * the list exists in both structures. `Tabs` needed a box of its own for that;
+ * a trail does not, because the list is what stays.
  */
 const TRAIL = cx(
   'bb-breadcrumbs',
+  CONTAINER_STEPS,
   'bb:box-border bb:m-0 bb:flex bb:list-none bb:flex-wrap bb:items-center',
   'bb:gap-x-(--bb-space-2) bb:p-0',
   'bb:font-sans bb:text-sm bb:leading-normal bb:text-text-muted'
@@ -42,8 +69,8 @@ const TRAIL = cx(
 /*
  * One step. The separator belongs to the item that FOLLOWS it, which is what
  * lets CSS drop it on the first one — and a rule keyed on `:first-child`
- * re-evaluates on its own when a consumer renders the first step
- * conditionally.
+ * re-evaluates on its own when the structure changes underneath it, which is
+ * now something that happens.
  */
 const STEP = cx(
   'bb-breadcrumb',
@@ -75,6 +102,35 @@ const SEPARATOR = cx(
 /** The step you are on. Not a link, and the weight is what says so. */
 const CURRENT = cx('bb:min-w-0 bb:font-strong bb:text-text');
 
+/** A step with no address and no page: a grouping level, as plain as it reads. */
+const PLAIN = cx('bb:min-w-0');
+
+/*
+ * The "…" that holds the middle.
+ *
+ * A ghost button, so the trail does not grow a box in the middle of itself,
+ * and the ellipsis is the visible content while the NAME comes from the
+ * dictionary — the same division a required field's asterisk has, and hard
+ * rule 3: an accessibility label is text a person reads even though it is not
+ * seen.
+ */
+const MORE = cx('bb-breadcrumbs-more', 'bb:px-(--bb-space-1)');
+
+/*
+ * Which widths keep the whole trail.
+ *
+ * A select below `medium` and a row of tabs above it is the boundary `Tabs`
+ * chose, and a trail takes the same one for a reason that is not symmetry:
+ * both are a line of labels whose length nobody can predict, and one scale
+ * with one boundary is what stops two components disagreeing about what
+ * "narrow" means at the width where it matters.
+ *
+ * Above it, nothing folds — a trail that hid its middle in a container with
+ * room for it would be hiding something for no reason. Below it, the middle
+ * folds, unless folding would hide a single step (see `trailShape`).
+ */
+const COLLAPSED = { base: true, narrow: true, medium: false, wide: false };
+
 export interface BreadcrumbsProps {
   /** The steps, as `Breadcrumb` elements, outermost first. */
   children: React.ReactNode;
@@ -91,22 +147,30 @@ export interface BreadcrumbsProps {
  *
  * ```tsx
  * <Breadcrumbs>
- *   <Breadcrumb>
- *     <Link href="/customers">Customers</Link>
- *   </Breadcrumb>
- *   <Breadcrumb>Astilleros del Sur</Breadcrumb>
+ *   <Breadcrumb href="/customers">Customers</Breadcrumb>
+ *   <Breadcrumb href="/customers/4821">Astilleros del Sur</Breadcrumb>
+ *   <Breadcrumb>Invoices</Breadcrumb>
  * </Breadcrumbs>
  * ```
  *
  * **The last step is text, and the ones before it are links.** That is the
  * whole shape of it: a link goes somewhere and the page you are on is not
- * somewhere to go. The last step is marked as the current page for you.
+ * somewhere to go. The last step is marked as the current page for you, and a
+ * step with no `href` is a grouping level that has no page of its own.
  *
- * A step is composed rather than configured, so what it holds is whatever it
- * should be: a `Link` for a level you can return to, plain text for one you
- * cannot — a grouping that has no page of its own — and, if an application
- * genuinely navigates by function rather than by address,
- * `Button variant="link"`. The component does not need to know which.
+ * ## In a narrow container the middle folds into a menu
+ *
+ * Below the medium step the trail keeps the two steps that matter — the way
+ * home and where you are — and everything between them moves into a "…" that
+ * opens a menu of ADDRESSES. Doc 04 §11.2, and the third caller of §6's one
+ * hook.
+ *
+ * Two rules come with it, and both exist to stop the collapse making things
+ * worse. **The "…" never hides one step**, because a menu of one is a worse
+ * control than the thing in it — the same rule `Pagination` reached from the
+ * other direction, where a gap never hides one page. And a folded step with no
+ * address appears in the menu dimmed rather than as somewhere to go, which is
+ * what it already was in the row.
  *
  * ## What it deliberately does not have
  *
@@ -117,79 +181,111 @@ export interface BreadcrumbsProps {
  *
  * **No first-step prop.** It is the first child.
  *
- * **No collapse yet.** A trail too long for its container wraps to a second
- * line. Folding the middle into a "…" that opens a menu needs `Menu`, and a
- * "…" that opens nothing is doc 04 §7's lost content.
+ * **No `onAction`.** A step goes somewhere and where it goes is an address.
  */
-export const Breadcrumbs = forwardRef<HTMLOListElement, BreadcrumbsProps>(
+export const Breadcrumbs = forwardRef<HTMLDivElement, BreadcrumbsProps>(
   function Breadcrumbs({ children, className, style }, ref) {
-    return (
-      <AriaBreadcrumbs
-        ref={ref}
-        className={cx(TRAIL, className)}
-        {...(style === undefined ? {} : { style })}
-      >
-        {children}
-      </AriaBreadcrumbs>
+    const list = useRef<HTMLOListElement>(null);
+    const step = useContainerStep(list);
+    const { crumbs, strays } = readCrumbs(children);
+    const moreSteps = useMessage('moreSteps');
+
+    useDevWarning(
+      strays > 0,
+      'Breadcrumbs: some children are not Breadcrumb elements and were ' +
+        'dropped. A Breadcrumb is read rather than rendered, so a component ' +
+        'of your own that returns one is not one.'
     );
-  }
-);
 
-export interface BreadcrumbProps {
-  /**
-   * The step: a `Link`, or text for the one you are on.
-   *
-   * A `Link` in the last position works and is not what to write: the base
-   * marks that link as the current page and disables it, so it becomes a link
-   * to where you already are.
-   */
-  children: React.ReactNode;
-  /** Applied to the step itself, for placement. Nothing reaches inside. */
-  className?: string;
-  style?: React.CSSProperties;
-}
+    const { shown, folded } = trailShape(crumbs, COLLAPSED[step]);
 
-/**
- * One step of a trail. Only useful inside `Breadcrumbs`.
- *
- * It draws the separator before its content, and marks itself when it is the
- * last one.
- */
-export const Breadcrumb = forwardRef<HTMLLIElement, BreadcrumbProps>(
-  function Breadcrumb({ children, className, style }, ref) {
+    /* No steps is no trail, the way zero pages renders no pager. */
+    if (shown.length === 0) return null;
+
     return (
-      <AriaBreadcrumb
+      <div
         ref={ref}
-        className={cx(STEP, className)}
+        className={cx(ROOT, className)}
         {...(style === undefined ? {} : { style })}
       >
-        {/*
-         * The base's render prop, used INSIDE the component. Doc 02 §5 keeps
-         * render props out of the public API; it does not forbid reading the
-         * base's own state where the base offers it.
-         *
-         * `aria-current` is here because of what the base does with it rather
-         * than in spite of it: measured in the installed source, the base
-         * publishes `aria-current: 'page'` for the last step through the LINK
-         * context — so a step whose content is a link is marked, and a step
-         * whose content is text receives nothing at all. Filling that in is
-         * completing the base's own intent for the case its mechanism does not
-         * reach, which is the narrow kind of divergence doc 06 §2 allows, with
-         * the reason written where it happens.
-         */}
-        {({ isCurrent }) => (
-          <>
-            <ChevronGlyph className={SEPARATOR} />
-            {isCurrent ? (
-              <span aria-current="page" className={CURRENT}>
-                {children}
-              </span>
+        <AriaBreadcrumbs ref={list} className={TRAIL}>
+          {shown.map(crumb =>
+            crumb === null ? (
+              /*
+               * The "…" is a STEP of the list rather than something beside it,
+               * so the separator rule applies to it like any other and the
+               * trail stays a well-formed list of steps. It is also the only
+               * way it could work: a menu is a collection, and an element the
+               * base's list builder does not recognise is not in the list at
+               * all — measured on a menu's own separator.
+               */
+              <AriaBreadcrumb key="folded" className={STEP}>
+                <ChevronGlyph className={SEPARATOR} />
+                <Menu
+                  trigger={
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      aria-label={moreSteps}
+                      className={MORE}
+                    >
+                      …
+                    </Button>
+                  }
+                >
+                  {folded.map(hidden =>
+                    hidden.href === undefined ? (
+                      <MenuItem key={hidden.id} id={hidden.id} isDisabled>
+                        {hidden.children}
+                      </MenuItem>
+                    ) : (
+                      <MenuItem
+                        key={hidden.id}
+                        id={hidden.id}
+                        href={hidden.href}
+                      >
+                        {hidden.children}
+                      </MenuItem>
+                    )
+                  )}
+                </Menu>
+              </AriaBreadcrumb>
             ) : (
-              children
-            )}
-          </>
-        )}
-      </AriaBreadcrumb>
+              <AriaBreadcrumb key={crumb.id} className={STEP}>
+                {/*
+                 * The base's render prop, used INSIDE the component. Doc 02 §5
+                 * keeps render props out of the public API; it does not forbid
+                 * reading the base's own state where the base offers it.
+                 *
+                 * `aria-current` is here because of what the base does with it
+                 * rather than in spite of it: measured in the installed
+                 * source, the base publishes `aria-current: 'page'` for the
+                 * last step through the LINK context — so a step whose content
+                 * is a link is marked, and a step whose content is text
+                 * receives nothing at all. Filling that in completes the
+                 * base's own intent for the case its mechanism does not reach,
+                 * which is the narrow divergence doc 06 §2 allows, with the
+                 * reason written where it happens.
+                 */}
+                {({ isCurrent }) => (
+                  <>
+                    <ChevronGlyph className={SEPARATOR} />
+                    {isCurrent ? (
+                      <span aria-current="page" className={CURRENT}>
+                        {crumb.children}
+                      </span>
+                    ) : crumb.href === undefined ? (
+                      <span className={PLAIN}>{crumb.children}</span>
+                    ) : (
+                      <Link href={crumb.href}>{crumb.children}</Link>
+                    )}
+                  </>
+                )}
+              </AriaBreadcrumb>
+            )
+          )}
+        </AriaBreadcrumbs>
+      </div>
     );
   }
 );

@@ -180,6 +180,20 @@ cannot know what level it landed at. Emphasis comes from weight and colour.
   about it says tab. The shareable form is a value (`const tabs = <>…</>`) or an
   array from `.map()`. It caught the component's own stories first, so `Tabs`
   counts what it could not use and says so in one development warning.
+  **`Breadcrumbs` is the second case** (decision 0019): a step declares a label
+  and an address, because the same step has to be a link in the row or a row in
+  the menu the trail folds into. The walk both of them use is
+  `internal/readDeclarations`, extracted at two callers rather than four, and
+  its own file says why that rule does not apply to a walk with one correct
+  behaviour.
+- **A row of a collection that is an ANCHOR needs `no-underline`.** The package
+  ships no reset, so an `<a href>` arrives carrying the browser's own
+  decoration. It went unnoticed until a menu row grew an `href` — every row
+  before that was a div, which never had a decoration to remove — and the
+  symptom is a row with the right colour, the right box and a blue underline
+  nobody drew. The same class of trap as a control not inheriting `font-size`,
+  and the same lesson: with no preflight, an element the library has not styled
+  before arrives with the browser's own opinion of it.
 - **An observed element must outlive every structure it chooses between.** The
   step comes from `useContainerStep`, and the element it observes cannot be the
   control that changes: that control unmounts, the observer is left watching a

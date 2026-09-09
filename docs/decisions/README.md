@@ -29,3 +29,4 @@ the folder is that you can see what was believed when.
 | [0016](./0016-a-link-is-a-component.md)                               | A link is a component, and navigation arrives with the configuration     | `Link` navigates, `Button` acts; the router the consumer cannot reach        |
 | [0017](./0017-a-field-says-what-the-base-does-not-announce.md)        | A field says what the base does not announce                             | A select's trigger carries no `aria-required`, so the word goes in the label |
 | [0018](./0018-a-tab-declares-its-own-panel.md)                        | A tab declares its own panel, and the narrow structure is not a tab list | One declaration cannot drift from itself; a select claims no tab roles       |
+| [0019](./0019-a-breadcrumb-declares-its-address.md)                   | A breadcrumb declares its address                                        | The same step has to be a link in the row and a row in the menu              |

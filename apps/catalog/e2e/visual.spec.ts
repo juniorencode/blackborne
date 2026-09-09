@@ -124,7 +124,14 @@ const STATES: Array<[string, string]> = [
   /* A trail's states are its LENGTHS: one step, two, and five. One shot holds
      all three, and the interesting one is the trail of one — where the only
      separator there is, is the one that is dropped. */
+  /*
+   * The trail's own four. `structures` is the one to look at: one trail, three
+   * widths, and two of them have folded their middle into a "…".
+   */
+  ['components-breadcrumbs--structures', 'breadcrumbs-structures'],
   ['components-breadcrumbs--lengths', 'breadcrumbs-lengths'],
+  ['components-breadcrumbs--wrapping', 'breadcrumbs-wrapping'],
+  ['components-breadcrumbs--a-step-with-no-page', 'breadcrumbs-no-page'],
   /*
    * `pagination-steps` is the first picture of doc 04's level N3 in this
    * repository: the same component at three widths, with three different sets

@@ -46,10 +46,10 @@ decision (doc 08 §7.1). `Menu` was deliberately not in it.
 **The composition batch is past its middle.** It is split in two halves with
 `Menu` and `Select` in between — the plan and the reason are in
 [the catalog](./docs/catalog-and-build-order.md) §3.1, which is what to read
-before starting. The first half, both middle components and `Tabs`
-have landed; what is left is the two features that were waiting on `Menu` and
-`Select` — a collapsed breadcrumb trail and a page-size selector — plus
-`SplitButton`, which was waiting on `Menu`.
+before starting. The first half, both middle components, `Tabs` and
+the collapsed breadcrumb trail have landed. What is left is one feature — a
+page-size selector, and the catalog asks first whether it belongs here at all —
+plus `SplitButton`, which was waiting on `Menu` and is what remains of F9.
 
 **Three things in it are settled and not open for reinvention:** a stepper is
 two components and only one of them is ours (decision 0015), the two pagers do
@@ -61,11 +61,12 @@ the contract of the single structural-change hook before the hook existed, and
 what landed with `Pagination` resolves no token: CSS publishes which step
 applies through the same container variants a component would use at N2, and
 `internal/useContainerStep` reads the resolved value on resize. §6.2 has the
-measurement; §6.1 keeps its withdrawn text struck through. `Tabs` is the second
-caller and doc 04 §11.1 records what it needed on top: a wrapping row for the
-widths a query cannot judge, and an observed element that outlives both
-structures. `Steps` is next, and it calls the same hook rather than inventing a
-second answer.
+measurement; §6.1 keeps its withdrawn text struck through. `Tabs` is the second caller
+and the collapsed breadcrumb trail the third, and doc 04 §11.1 and §11.2 record
+what they needed on top of the hook: a wrapping row for the widths a query
+cannot judge, an observed element that outlives both structures, and — twice
+now — a rule that a control must never hide a single thing. `Steps` is next,
+and it calls the same hook rather than inventing a second answer.
 
 **The shared glyphs are drawn once**, in `src/internal` — the cross, the tone
 marks, the chevron and the tick — and the tick is the one that is shared as a
