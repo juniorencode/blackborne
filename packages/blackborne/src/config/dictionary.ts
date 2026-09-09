@@ -141,7 +141,18 @@ export const en = {
    * A word rather than a symbol, because a symbol is not translatable and
    * "asterisk" is not what anybody means.
    */
-  required: 'required'
+  required: 'required',
+  /**
+   * The name of the "…" that holds the middle of a collapsed breadcrumb trail.
+   *
+   * The visible content is the ellipsis, which says nothing to a reader — the
+   * same shape as a required field's asterisk — so this is the whole name, and
+   * it names what pressing it gives you rather than what it looks like.
+   *
+   * Not "Show more", which is the phrase that says nothing: more of what, and
+   * a trail has exactly one kind of thing in it.
+   */
+  moreSteps: 'More steps'
 } as const;
 
 export type DictionaryKey = keyof typeof en;

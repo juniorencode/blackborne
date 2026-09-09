@@ -60,9 +60,10 @@ export type { Normalizer } from './normalize';
 
 /*
  * `Breadcrumb` ships with `Breadcrumbs` because it is only useful inside one,
- * the way `Radio` ships with `RadioGroup`. The step is composed rather than
- * configured: a `Link` for a level you can return to, text for the one you are
- * on.
+ * the way `Radio` ships with `RadioGroup`. It DECLARES a step rather than
+ * rendering one — a label and an address — because a narrow container folds
+ * the middle of a trail into a menu, so the same step has to be able to be a
+ * link in the row or a row in the menu (decision 0019).
  */
 export { Breadcrumb, Breadcrumbs } from './components/Breadcrumbs';
 export type {

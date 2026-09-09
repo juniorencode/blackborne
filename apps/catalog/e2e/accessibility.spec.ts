@@ -310,13 +310,22 @@ test.describe('automated accessibility', () => {
       /*
        * When this guard fires, it says what axe DID return.
        *
-       * It has fired twice on stories that pass in isolation — once on
-       * `EmptyState / Narrow Container`, once on `Alert / All Axes`, roughly
-       * one story-check in seven hundred, a different story each time. Two
-       * hypotheses are eliminated: it is not the stylesheet arriving late (the
-       * wait for a resolved token predates it) and it is not the first paint
-       * (`gotoStory` now waits for a rendered frame, and it recurred with that
-       * in place).
+       * It has fired three times on stories that pass in isolation —
+       * `EmptyState / Narrow Container`, `Alert / All Axes`, and on
+       * 2026-09-09 `Toast / Light`, in a wave that touched none of them.
+       * Roughly one story-check in seven hundred, a different story each time,
+       * and it has never recurred on a re-run. Two hypotheses are eliminated:
+       * it is not the stylesheet arriving late (the wait for a resolved token
+       * predates it) and it is not the first paint (`gotoStory` now waits for a
+       * rendered frame, and it recurred with that in place).
+       *
+       * AND A THIRD OCCURRENCE TAUGHT SOMETHING ABOUT THE INSTRUMENT RATHER
+       * THAN THE FAULT: the evidence below reached nobody, because the run
+       * used Playwright's `line` reporter and its progress output overwrites
+       * itself with carriage returns, so the failure body was gone from the
+       * log by the time anybody read it. A full-suite run that might catch
+       * this needs `--reporter=list`. A guard that carries evidence into a
+       * reporter that discards it is a guard that carries none.
        *
        * So the next occurrence needs to carry evidence rather than a bare
        * "did not run". How many rules axe ran at all separates "axe was cut

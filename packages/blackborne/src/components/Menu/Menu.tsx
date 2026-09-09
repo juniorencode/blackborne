@@ -84,6 +84,16 @@ const ITEM_BASE = cx(
   'bb:gap-x-(--bb-space-3) bb:px-(--bb-space-3) bb:py-(--bb-space-2)',
   'bb:rounded-md bb:cursor-pointer bb:select-none',
   'bb:outline-hidden',
+  /*
+   * `no-underline`, for the rows that are anchors.
+   *
+   * The package ships no reset, so an `<a href>` arrives carrying the
+   * browser's own underline — and a row that navigates renders one. Every
+   * other row is a div and never had a decoration to remove, which is why this
+   * looks unnecessary and is not: it is the same class of trap as a control
+   * not inheriting `font-size`. The colour is already the tone's.
+   */
+  'bb:no-underline',
   'bb:transition-[background-color,color]',
   'bb:duration-(--bb-duration-fast) bb:ease-standard',
   'bb:data-disabled:cursor-not-allowed bb:data-disabled:text-text-disabled'
@@ -243,14 +253,9 @@ export const Menu = forwardRef<HTMLDivElement, MenuProps>(function Menu(
   );
 });
 
-export interface MenuItemProps extends Pick<
-  AriaMenuItemProps,
-  'isDisabled' | 'id'
-> {
+interface MenuItemBase extends Pick<AriaMenuItemProps, 'isDisabled' | 'id'> {
   /** What it says. A command names the action: "Send", "Duplicate", "Delete". */
   children: React.ReactNode;
-  /** What it does. */
-  onAction: () => void;
   /**
    * `danger` for a command that destroys something.
    *
@@ -265,7 +270,62 @@ export interface MenuItemProps extends Pick<
   className?: string;
 }
 
-/** One command in a `Menu`. Only useful inside one. */
+/*
+ * A ROW EITHER DOES SOMETHING OR GOES SOMEWHERE, and the types say so rather
+ * than trusting anybody to remember.
+ *
+ * Doc 02 §7.1's rule — `Link` navigates, `Button` acts — arriving inside a
+ * menu, where it is easier to get wrong: a row that navigates by calling a
+ * function is a button wearing a link's clothes, and nothing a browser does
+ * with an address survives it. No middle-click, no ctrl-click, no "copy link
+ * address", and none of it fails loudly.
+ *
+ * A union rather than two optional props, so a row with both is a type error
+ * at the place it is written instead of a decision made at runtime by whichever
+ * branch happens to be first.
+ */
+export interface MenuCommandProps extends MenuItemBase {
+  /** What it does. */
+  onAction: () => void;
+  href?: never;
+}
+
+export interface MenuLinkProps extends MenuItemBase {
+  /**
+   * Where it goes. A row with an address renders an anchor, and everything a
+   * browser does with one comes free — including the client-side navigation
+   * `ConfigProvider` supplies (decision 0016).
+   *
+   * The case that earned it is a collapsed breadcrumb trail, which the catalog
+   * had been recording as pending one: the middle of a trail is a menu of
+   * ADDRESSES rather than commands.
+   */
+  href: string;
+  onAction?: never;
+}
+
+export interface MenuTextProps extends MenuItemBase {
+  /**
+   * A row that names something and cannot be pressed, which has to say so.
+   *
+   * `isDisabled` is required rather than optional here, so the illegal state —
+   * a row with nothing to do and no sign of it — cannot be written. The case
+   * that earned it is a collapsed breadcrumb trail: a grouping level with no
+   * page of its own is text in the full trail, and folding it into the menu
+   * cannot turn it into somewhere to go. It appears, dimmed, for the same
+   * reason it is not a link in the row.
+   *
+   * Doc 06 §4 rule 7 forbids disabling without explaining, and it is about a
+   * control that would otherwise act. Nothing here ever would.
+   */
+  isDisabled: true;
+  onAction?: never;
+  href?: never;
+}
+
+export type MenuItemProps = MenuCommandProps | MenuLinkProps | MenuTextProps;
+
+/** One row of a `Menu`: a command, or an address. Only useful inside one. */
 export const MenuItem = forwardRef<HTMLDivElement, MenuItemProps>(
   function MenuItem(
     { children, tone = 'neutral', className, ...itemProps },

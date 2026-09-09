@@ -1,27 +1,43 @@
 /*
  * What holds without a browser: the elements, the marking of the current step,
- * and the fact that the separator says nothing to a reader.
+ * the fact that the separator says nothing to a reader — and, since the trail
+ * learned to fold, the whole of the collapsed structure.
  *
- * Not here: which separators are VISIBLE. The first step's is dropped by a CSS
- * rule keyed on `:first-child`, and jsdom applies no stylesheet — so every
- * separator exists in the DOM here and the count is measured in
- * `apps/catalog/e2e/breadcrumbs.spec.ts`, along with which way each one points.
+ * THE COLLAPSED STRUCTURE IS WHAT JSDOM SEES, and that is worth saying at the
+ * top. `useContainerStep` reads a value a container query publishes, and jsdom
+ * implements neither container queries nor `ResizeObserver`, so the step is
+ * `base` and stays there — the floor, which doc 04 §6.2 explains is exactly
+ * what a real browser's first paint renders. A trail with a middle to fold
+ * therefore folds it here, and the full trail at a wider step is measured in
+ * `apps/catalog/e2e/breadcrumbs.spec.ts`.
+ *
+ * Not here either: which separators are VISIBLE. The first step's is dropped
+ * by a CSS rule keyed on `:first-child`, and jsdom applies no stylesheet.
  */
 import { createRef } from 'react';
 import { render, screen } from '@testing-library/react';
-import { expect, test } from 'vitest';
-import { Link } from '../Link';
-import { Breadcrumb, Breadcrumbs } from './Breadcrumbs';
+import userEvent from '@testing-library/user-event';
+import { expect, test, vi } from 'vitest';
+import { Breadcrumb } from './Breadcrumb';
+import { Breadcrumbs } from './Breadcrumbs';
 
+/** Three steps: nothing to fold, so this is the trail at any width. */
 const Trail = () => (
   <Breadcrumbs>
-    <Breadcrumb>
-      <Link href="/customers">Customers</Link>
-    </Breadcrumb>
-    <Breadcrumb>
-      <Link href="/customers/4821">Astilleros del Sur</Link>
-    </Breadcrumb>
+    <Breadcrumb href="/customers">Customers</Breadcrumb>
+    <Breadcrumb href="/customers/4821">Astilleros del Sur</Breadcrumb>
     <Breadcrumb>Invoices</Breadcrumb>
+  </Breadcrumbs>
+);
+
+/** Five steps: three in the middle, so the narrow structure folds them. */
+const LongTrail = () => (
+  <Breadcrumbs>
+    <Breadcrumb href="/customers">Customers</Breadcrumb>
+    <Breadcrumb href="/customers/4821">Astilleros del Sur</Breadcrumb>
+    <Breadcrumb href="/customers/4821/invoices">Invoices</Breadcrumb>
+    <Breadcrumb>Drafts</Breadcrumb>
+    <Breadcrumb>INV-4821</Breadcrumb>
   </Breadcrumbs>
 );
 
@@ -74,9 +90,7 @@ test('the steps before it are links, with their addresses', () => {
 test('a step with no address is text, and is not the current page', () => {
   render(
     <Breadcrumbs>
-      <Breadcrumb>
-        <Link href="/customers">Customers</Link>
-      </Breadcrumb>
+      <Breadcrumb href="/customers">Customers</Breadcrumb>
       <Breadcrumb>Archived</Breadcrumb>
       <Breadcrumb>Astilleros del Sur</Breadcrumb>
     </Breadcrumbs>
@@ -108,28 +122,26 @@ test('the separator says nothing to a reader', () => {
   );
 });
 
-test('className and the ref reach the outermost element of each', () => {
-  const trail = createRef<HTMLOListElement>();
-  const step = createRef<HTMLLIElement>();
+test('className and the ref reach the outermost element', () => {
+  const trail = createRef<HTMLDivElement>();
 
   const { container } = render(
     <Breadcrumbs ref={trail} className="placed-by-the-consumer">
-      <Breadcrumb ref={step} className="one-step">
-        Only
-      </Breadcrumb>
+      <Breadcrumb>Only</Breadcrumb>
     </Breadcrumbs>
   );
 
   /*
-   * `querySelector('ol')` and not `firstElementChild`: a collection component
-   * renders a `<template>` beside its list — the base's collection builder
-   * keeps the described content in it — so the first element in the container
-   * is not the component's root.
+   * The root is the container the query asks about, not the list: a trail is
+   * sized by its contents, and inline-size containment computes a width as
+   * though it had none (doc 04 §4.3). So the ref is a div holding the `<ol>`,
+   * which is a breaking change and is in the changelog as one.
    */
-  expect(trail.current).toBe(container.querySelector('ol'));
+  expect(trail.current?.tagName).toBe('DIV');
   expect(trail.current?.className).toContain('placed-by-the-consumer');
-  expect(step.current?.tagName).toBe('LI');
-  expect(step.current?.className).toContain('one-step');
+  expect(trail.current?.querySelector('ol')).toBe(
+    container.querySelector('ol')
+  );
 });
 
 test('a trail of one is the page you are on', () => {
@@ -143,4 +155,113 @@ test('a trail of one is the page you are on', () => {
     'page'
   );
   expect(screen.queryAllByRole('link')).toHaveLength(0);
+});
+
+test('no steps renders nothing', () => {
+  const { container } = render(<Breadcrumbs>{null}</Breadcrumbs>);
+
+  expect(container.textContent).toBe('');
+});
+
+/* ------------------------------------------------------------------ *
+ * The collapsed structure, which is the one jsdom sees.
+ * ------------------------------------------------------------------ */
+
+test('a narrow container keeps the way home, a "…", and where you are', () => {
+  const { container } = render(<LongTrail />);
+
+  expect(container.querySelectorAll('ol > li')).toHaveLength(3);
+  expect(screen.getByRole('link', { name: 'Customers' })).toBeDefined();
+  expect(screen.getByText('INV-4821').getAttribute('aria-current')).toBe(
+    'page'
+  );
+
+  // The three in between are not in the row.
+  expect(screen.queryByText('Astilleros del Sur')).toBeNull();
+  expect(screen.queryByText('Drafts')).toBeNull();
+});
+
+/*
+ * The name is the whole point of the control: the ellipsis is visible and says
+ * nothing, so what a reader gets is the dictionary's word — hard rule 3, and
+ * the same division a required field's asterisk has.
+ */
+test('the "…" is named from the dictionary', () => {
+  render(<LongTrail />);
+
+  const more = screen.getByRole('button', { name: 'More steps' });
+  expect(more.textContent).toBe('…');
+});
+
+test('and it holds the middle, as addresses', async () => {
+  const user = userEvent.setup();
+  render(<LongTrail />);
+
+  await user.click(screen.getByRole('button', { name: 'More steps' }));
+
+  const rows = screen.getAllByRole('menuitem');
+  expect(rows.map(row => row.textContent)).toEqual([
+    'Astilleros del Sur',
+    'Invoices',
+    'Drafts'
+  ]);
+
+  /*
+   * LINKS, not commands, and that is the reason `MenuItem` grew an `href`:
+   * a row that navigated by calling a function would be a button wearing a
+   * link's clothes, and nothing a browser does with an address would survive
+   * it — no middle-click, no "copy link address", and none of it failing
+   * loudly. Doc 02 §7.1, inside a menu.
+   */
+  expect(rows[0]?.getAttribute('href')).toBe('/customers/4821');
+  expect(rows[1]?.getAttribute('href')).toBe('/customers/4821/invoices');
+});
+
+test('a folded step with no address is present and cannot be pressed', async () => {
+  const user = userEvent.setup();
+  render(<LongTrail />);
+
+  await user.click(screen.getByRole('button', { name: 'More steps' }));
+
+  /*
+   * "Drafts" is a grouping with no page of its own. It was text in the row and
+   * folding it cannot turn it into somewhere to go, so it appears dimmed —
+   * which is what `MenuItem`'s third shape exists to make unrepresentable any
+   * other way.
+   */
+  const drafts = screen.getByRole('menuitem', { name: 'Drafts' });
+  expect(drafts.getAttribute('aria-disabled')).toBe('true');
+  expect(drafts.getAttribute('href')).toBeNull();
+});
+
+test('the "…" never hides a single step', () => {
+  render(<Trail />);
+
+  // Three steps, one in the middle: folding it would replace something you can
+  // read with something you have to open.
+  expect(screen.queryByRole('button', { name: 'More steps' })).toBeNull();
+  expect(screen.getByText('Astilleros del Sur')).toBeDefined();
+});
+
+test('a child that is not a Breadcrumb is reported in development', () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+  render(
+    <Breadcrumbs>
+      <Breadcrumb href="/customers">Customers</Breadcrumb>
+      <li>Not a step.</li>
+    </Breadcrumbs>
+  );
+
+  expect(warn).toHaveBeenCalledTimes(1);
+  expect(warn.mock.calls[0]?.[0]).toContain('Breadcrumb');
+  expect(screen.queryByText('Not a step.')).toBeNull();
+
+  warn.mockRestore();
+});
+
+test('it needs no provider', () => {
+  render(<LongTrail />);
+
+  expect(screen.getByRole('button', { name: 'More steps' })).toBeDefined();
 });

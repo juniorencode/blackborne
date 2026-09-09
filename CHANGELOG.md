@@ -12,6 +12,45 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **A breadcrumb trail folds its middle into a menu when the container is
+  narrow**, which is the third caller of doc 04 §6's hook and the last of the
+  three features that were waiting for `Menu` and `Select`.
+
+  Below the medium step the trail keeps the two steps that matter — the way
+  home and where you are — and everything between them moves into a "…" that
+  opens a **menu of addresses**. Above it, nothing folds; and a trail with no
+  middle to fold still wraps, because a query counts pixels and cannot know
+  whether your words fit.
+
+  Two rules stop the collapse making things worse, and both are in a pure
+  function rather than in a render:
+
+  - **The "…" never hides one step.** Folding a single step replaces something
+    you can read with something you have to open. `Pagination` reached the same
+    rule from the other direction, where a gap never hides one page.
+  - **The two ends are never folded**, whatever the width.
+
+  A folded step with no address arrives in the menu dimmed rather than as
+  somewhere to go, which is what it already was in the row.
+
+- **`href` on a `MenuItem`** — a row that goes somewhere rather than doing
+  something, and the case that earned it is the trail above.
+
+  ```tsx
+  <MenuItem href="/customers/4821">Astilleros del Sur</MenuItem>
+  ```
+
+  Typed as a union: a row takes `onAction` or `href`, never both, so the wrong
+  shape is a type error where it is written instead of a decision taken at
+  runtime by whichever branch happens to run first. Doc 02 §7.1's rule — `Link`
+  navigates, `Button` acts — does not stop applying inside a menu, and a row
+  that navigated by calling a function could not be middle-clicked, ctrl-clicked
+  or copied, with none of that failing loudly.
+
+  A third shape comes with it, for the folded step that has no page: a row that
+  names a level and cannot be pressed, whose `isDisabled` is **required**, so a
+  row with nothing to do and no sign of it cannot be written.
+
 - **`Tabs` and `Tab`** — one thing at a time, out of several, and the component
   [doc 04](./docs/foundations/04-responsive.md) §6 was written for.
 
@@ -805,6 +844,40 @@ minor versions. Every break is listed here with its migration.
   between them.
 
 ### Changed
+
+- **Breaking — a `Breadcrumb` declares its address instead of holding a `Link`**
+  ([decision 0019](docs/decisions/0019-a-breadcrumb-declares-its-address.md)).
+
+  ```diff
+  - <Breadcrumb>
+  -   <Link href="/customers">Customers</Link>
+  - </Breadcrumb>
+  + <Breadcrumb href="/customers">Customers</Breadcrumb>
+  ```
+
+  A step with no `href` is still text — a grouping with no page of its own, and
+  the last step, which is marked as the current page for you. What a consumer
+  stops doing is importing `Link` to write a trail.
+
+  The reason is the collapse: the same step has to be able to appear as a link
+  in the row or as a row in the menu, and a `Link` handed in as children can
+  only be the first of those. Reading the address out of somebody else's element
+  was tried on paper and rejected — it works until they wrap their link in a
+  component of their own, and then it finds nothing, silently, in the structure
+  a narrow window produces.
+
+  **And the root element changed with it.** A trail is sized by its contents,
+  and inline-size containment computes a width as though an element had none
+  (doc 04 §4.3) — so the query container is a new wrapper, and a `ref` now
+  lands on a `div` holding the `<ol>` rather than on the `<ol>`. `className`
+  and `style` still reach the outermost element, as everywhere else.
+
+- **A menu row that is an anchor is no longer underlined.** The package ships
+  no reset, so an `<a href>` arrives carrying the browser's own decoration —
+  and until this wave no row in a menu was ever an anchor. The same class of
+  trap as a form control not inheriting `font-size`, and invisible to every
+  check that existed: the row had the right colour, the right box and a blue
+  underline nobody had drawn.
 
 - **A forced state in the catalog waits for its element, and no longer settles
   for another one.** Two faults in one helper, both found by the first
