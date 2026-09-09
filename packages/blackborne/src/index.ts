@@ -78,6 +78,17 @@ export type {
   ButtonVariant
 } from './components/Button';
 
+/*
+ * A month of days, and the content of the picker that will open one. Its value
+ * crosses as an ISO string rather than as the base's calendar object
+ * (decision 0020),
+ * and today is marked from the zone the provider supplies rather than from the
+ * browser's
+ * (decision 0023).
+ */
+export { Calendar } from './components/Calendar';
+export type { CalendarProps } from './components/Calendar';
+
 export { Card } from './components/Card';
 export type { CardProps } from './components/Card';
 

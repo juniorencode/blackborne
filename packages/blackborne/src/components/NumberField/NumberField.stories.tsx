@@ -304,7 +304,7 @@ export const Narrow: Story = {
 
 /**
  * The stepper, on and off — and off is the default
- * ([decision 0011](../../../../docs/decisions/0011-the-stepper-is-opt-in.md)).
+ * ([decision 0011](../../../../../docs/decisions/0011-the-stepper-is-opt-in.md)).
  *
  * This story exists because "the buttons are gone" reads as a regression until
  * you see it was chosen. Nothing is lost with them hidden: the arrow keys still

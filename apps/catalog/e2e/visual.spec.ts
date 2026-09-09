@@ -198,6 +198,19 @@ const STATES: Array<[string, string]> = [
    * saying more is on its way. The other four things an empty list can say are
    * one line of muted text each, and the browser checks read them by text.
    */
+  /*
+   * A calendar earns three, and each holds something no assertion does.
+   * `states` is where the four appearances of a day sit together — chosen,
+   * read-only, struck through because it is unavailable, and dimmed because it
+   * is outside the range — and telling those last two apart is doc 07 §6's
+   * rule arriving on a grid. `together` is the density claim: the same month at
+   * both densities, where the cells shrink and the targets do not. And `rtl` is
+   * the grid reading from the right with the arrows swapped, which is half of
+   * what RTL support means.
+   */
+  ['components-calendar--states', 'calendar-states'],
+  ['components-calendar--together', 'calendar-together'],
+  ['components-calendar--direction', 'calendar-rtl'],
   ['components-combobox--loading-more', 'combobox-loading-more'],
   ['components-combobox--several-states', 'combobox-several-states'],
   ['components-combobox--several-in-a-narrow-panel', 'combobox-several-narrow'],

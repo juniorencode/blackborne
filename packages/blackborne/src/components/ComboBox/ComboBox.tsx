@@ -311,7 +311,7 @@ interface ComboBoxSharedProps extends Omit<
    * doctrine rather than about types.
    *
    * It is the base's hook for driving form validation, and this library's
-   * answer to validation is [decision 0005](../../../../docs/decisions/0005-validation-stays-in-the-project.md):
+   * answer to validation is [decision 0005](../../../../../docs/decisions/0005-validation-stays-in-the-project.md):
    * the project decides a value is wrong and passes `isInvalid` with a message,
    * and the library presents it. A callback whose argument is
    * `ComboBoxValidationValue` would also put a base interface in a public
@@ -417,7 +417,7 @@ export interface ComboBoxSeveralProps extends ComboBoxSharedProps {
  * runtime: `selectedKeys` on a field that holds one does not compile.
  *
  * The precedent is `MenuItem`, which holds three shapes the same way. What is
- * NOT the precedent is [decision 0014](../../../../docs/decisions/0014-cursor-pagination-is-its-own-component.md),
+ * NOT the precedent is [decision 0014](../../../../../docs/decisions/0014-cursor-pagination-is-its-own-component.md),
  * which split the two paginations into two components — those share no prop
  * and disagree about what a page even is, where these two share every prop but
  * one and agree about everything except how many answers are allowed.

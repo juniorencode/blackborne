@@ -33,7 +33,7 @@ export interface CursorPaginationProps {
    * **Received, never deduced.** P2: the component does not know where the
    * rows came from, and a cursor pager cannot work it out — that is the whole
    * difference from `Pagination`, which is given a total and computes
-   * everything from it ([decision 0014](../../../../docs/decisions/0014-cursor-pagination-is-its-own-component.md)).
+   * everything from it ([decision 0014](../../../../../docs/decisions/0014-cursor-pagination-is-its-own-component.md)).
    */
   hasPrevious: boolean;
   /** Whether there is anything after it. Received for the same reason. */
@@ -76,7 +76,7 @@ export interface CursorPaginationProps {
  *
  * ## Why this is not a mode on `Pagination`
  *
- * [Decision 0014](../../../../docs/decisions/0014-cursor-pagination-is-its-own-component.md),
+ * [Decision 0014](../../../../../docs/decisions/0014-cursor-pagination-is-its-own-component.md),
  * and the short version is that the two share no prop. Offset pagination is
  * given a total and a current page, and everything else follows — the window,
  * the first and the last, where the gap goes. This is given two booleans.

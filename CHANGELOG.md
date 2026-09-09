@@ -12,6 +12,52 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **`Calendar`** — a month of days, with the two views above it.
+
+  ```tsx
+  <Calendar label="Appointment" value={day} onChange={setDay} />
+  ```
+
+  The content of the date picker that will open one, and a component in its own
+  right: a scheduling screen shows a month inline.
+
+  **Three views, chained.** The heading is a button: from the days it opens the
+  months, and from the months the years, twelve at a time. Choosing a month
+  comes back to its days and choosing a year to its months — so reaching March
+  1994 is three presses rather than three hundred and eighty arrow keys. The
+  year view's heading is a range formatted by the platform rather than two
+  numbers and a dash (doc 05 §2.2 rule 5).
+
+  **The limits hold in all three**, and one of them is ours: measured, the
+  base's year picker clamps to the calendar's range and its month picker hands
+  over every month regardless, so which months can be pressed is arithmetic in
+  `limits.ts` — and a month is judged by its SPAN, not by the day the base
+  hands over, or a maximum of the fifth of December would rule December out
+  with five days left in it.
+
+  **Today comes from the configured zone, or is not marked at all**
+  ([decision 0023](docs/decisions/0023-today-comes-from-the-configured-zone.md)).
+  The base marks a `data-today` of its own, computed from the browser's zone
+  unless the value carries one, and this component deliberately does not style
+  it: the browser's zone belongs to the machine of whoever is looking rather
+  than to the data (doc 05 §3.1). With no zone configured nothing is marked and
+  development says why.
+
+  **A day's four appearances are four different things**: chosen is the accent
+  pair, today is a ring that takes no layout, unavailable is struck through —
+  "this day exists and you cannot have it" — and disabled is dimmed, "this day
+  is not in the range you are choosing from".
+
+  **There is no read-only calendar.** The base has one and it photographed
+  identically to an ordinary one, which is the argument already accepted for a
+  read-only `Select` arriving on a grid: two states nobody can tell apart are
+  worse than one. A calendar that must not be changed is disabled.
+
+  Its cells are sized from the minimum hit area rather than from a chosen
+  number, so compact density makes a smaller calendar rather than a cramped
+  one — and `isDateUnavailable` receives `2026-09-09`, which is decision 0020's
+  cost paid where it was written down.
+
 - **`useAsyncOptions`** — options that arrive from somewhere, paged and
   debounced, for a `ComboBox`.
 
@@ -1057,6 +1103,27 @@ minor versions. Every break is listed here with its migration.
   between them.
 
 ### Changed
+
+- **`@internationalized/date` is now a declared dependency**, pinned to
+  `3.12.4` — the version `react-aria-components` resolves — and moving with the
+  other two.
+
+  It was already in the tree as the base's own dependency, so a consumer's
+  install does not grow. What changes is that the version is ours to control
+  rather than inherited, which is the arrangement `react-aria` already has
+  ([decision 0013](docs/decisions/0013-the-portal-container-arrives-with-the-configuration.md)).
+
+  The reason is decision 0020: dates cross this library's boundary as ISO
+  strings, so something has to parse them into the objects the base's calendar
+  understands, and `react-aria-components` re-exports none of that.
+
+  **One of the project's own lint rules was corrected rather than worked
+  around.** It forbade importing `@internationalized/*` on the grounds that
+  reaching past the base's public entry point turns a minor upgrade into a
+  breaking one — which was true while the package was transitive and is not
+  true of a declared dependency. The rule's reasoning now says so, and
+  `@react-aria/*`, `@react-stately/*` and the other `@internationalized/*`
+  packages are still restricted.
 
 - **Two rules were written before the components that need them**, which is the
   order this project keeps: a foundation changes first, never afterwards to

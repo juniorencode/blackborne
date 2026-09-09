@@ -33,14 +33,14 @@ this file is out of date. Fix this file.
 assuming anything exists.
 
 At the time of writing: all ten foundations are written, the pipeline is
-complete, and **thirty-seven components exist** — the ten simple fields and
+complete, and **thirty-eight components exist** — the ten simple fields and
 controls, `Button`, the flat pieces around them (`Alert`, `Badge`, `Card`,
 `EmptyState`, `Separator`, `Skeleton`, `Spinner`, `VisuallyHidden`), seven
 layers (`Dialog`, `Drawer`, `ConfirmDialog`, `Tooltip`, `Popover`, `Preview`,
 `Toast`), and the composition batch so far: `Accordion`, `Collapsible`, `Link`,
 `Breadcrumbs`, `Pagination`, `CursorPagination`, `Menu`, `Select`, `Tabs` and
 `SplitButton`. `ComboBox` is the thirty-seventh and the first of the batch
-that follows.
+that follows; `Calendar` is the thirty-eighth.
 
 **The layer batch is finished.** It landed in that order, with `Toast` last by
 decision (doc 08 §7.1). `Menu` was deliberately not in it.
@@ -55,13 +55,16 @@ than a leftover — the question the catalog said to ask once `Select` existed
 was asked, and how many rows to fetch belongs to the listing rather than to the
 thing that moves between pages.
 
-**The batch after composition is half done**, in six waves, and the shape of
-it is in [the catalog](./docs/catalog-and-build-order.md) §3.2 — read that
-before starting one. Three have landed: `ComboBox`, the same component holding
-**several** values as a discriminated union rather than a flag, and
-`useAsyncOptions` — a **hook**, because paging and waiting are logic and P6's
-corollary forbids an assembly with a capability its pieces lack. What remains
-is `Calendar` and `RangeCalendar`, `DateField` and `DatePicker`, and
+**The batch after composition is past its middle**, and it is SEVEN waves
+rather than six — the shape is in
+[the catalog](./docs/catalog-and-build-order.md) §3.2, which records the split
+and why. Read that before starting one.
+
+Four have landed: `ComboBox`, the same component holding **several** values as
+a discriminated union rather than a flag, `useAsyncOptions` — a **hook**,
+because paging and waiting are logic and P6's corollary forbids an assembly
+with a capability its pieces lack — and `Calendar`, with its three chained
+views. What remains is `RangeCalendar`, then `DateField` with `DatePicker`, and
 `TimeField` with `DateRangePicker`. It spans three levels, so the order is the
 dependency and not the level number.
 
@@ -86,6 +89,13 @@ read "keep typing" while a request was in flight rather than because nothing
 had been asked. `useAsyncList` loads once on mount whether anything told it to
 or not, so a minimum query length has to be enforced inside the loader. The
 check now asserts the request COUNT, which is a state rather than a moment.
+
+**The fourth found two things by LOOKING at a baseline**, which is the layer
+that catches what assertions cannot: a read-only calendar photographed
+identically to an ordinary one — so there is no read-only calendar, for the
+reason there is no read-only `Select` — and today's ring vanished under the
+chosen day's fill, making a claim in the code true of the markup and false of
+the picture. Generate a baseline and then open it.
 
 **Two things were settled before it started**, in the wave that opened it:
 [doc 07](./docs/foundations/07-forms.md) §2.2 gained a seventh contender for a
@@ -285,6 +295,12 @@ Things that look like improvements and are not:
   focus and keyboard come from React Aria. Table state, drag and drop, rich
   text and phone formatting come from existing libraries. Building one by hand
   is the last resort and needs a written justification.
+- **Do not style the base's `data-today`.** Every calendar cell carries one
+  and it is the obvious hook. The base computes it from the browser's zone
+  unless the value itself carries one, and doc 05 §3.1 is unambiguous about
+  whose zone this library may use: today is marked from the configured zone or
+  not at all
+  ([decision 0023](./docs/decisions/0023-today-comes-from-the-configured-zone.md)).
 - **Do not put a date object in a public signature.** The base speaks
   `CalendarDate` and `ZonedDateTime`, and passing them straight through looks
   like the obvious thing to do. Dates cross as ISO strings — `2026-09-09` — and

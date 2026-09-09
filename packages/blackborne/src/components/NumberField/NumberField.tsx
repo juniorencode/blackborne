@@ -98,7 +98,7 @@ export interface NumberFieldProps extends Omit<
   size?: NumberFieldSize;
   /**
    * Show the `+` and `−` buttons. **Off by default**
-   * ([decision 0011](../../../../docs/decisions/0011-the-stepper-is-opt-in.md)).
+   * ([decision 0011](../../../../../docs/decisions/0011-the-stepper-is-opt-in.md)).
    *
    * Nothing is lost without them: the arrow keys still step by `step`, Page Up
    * and Page Down still make larger jumps, the value is still announced, and
