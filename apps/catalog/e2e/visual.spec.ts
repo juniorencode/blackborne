@@ -157,6 +157,14 @@ const STATES: Array<[string, string]> = [
    * component at three widths, two of them a select. Doc 04's N3, in a
    * picture.
    */
+  /*
+   * The split button's own three, and the seam is what to look at: a
+   * secondary one turns two borders into one line, a primary one has no
+   * visible border and draws its own divider.
+   */
+  ['components-splitbutton--variants', 'split-button-variants'],
+  ['components-splitbutton--sizes', 'split-button-sizes'],
+  ['components-splitbutton--states', 'split-button-states'],
   ['components-tabs--structures', 'tabs-structures'],
   ['components-tabs--states', 'tabs-states'],
   ['components-tabs--wrapping', 'tabs-wrapping'],
@@ -358,6 +366,9 @@ const TOGETHER: Array<[string, string]> = [
   /* Where a menu actually goes: behind a mark at the end of a row, with the
      name on the button and nowhere else. */
   ['components-menu--in-a-row', 'menu-in-a-row'],
+  /* Where a split button actually goes: the primary action of a footer, beside
+     the ordinary way out. Doc 03 §9's alignment check, one control further. */
+  ['components-splitbutton--in-a-footer', 'split-button-in-a-footer'],
   /* The row doc 03 §9 asks for by name: a field, a select and a button of the
      same size, the same height, from the same tokens. */
   ['components-select--aligns-with-others', 'alignment-select-in-a-row'],
@@ -440,6 +451,12 @@ const AXES: Array<[string, string]> = [
   ['components-select--brand-override', 'axis-select-brand'],
   /* And the tabs' three axes plus the brand, which has to reach the one thing
      that marks the open tab: the rule under it. */
+  /* And the split button's four, because the divider is mixed from the pair's
+     own text colour and has to follow every one of them. */
+  ['components-splitbutton--dark', 'axis-split-button-dark'],
+  ['components-splitbutton--compact', 'axis-split-button-compact'],
+  ['components-splitbutton--direction', 'axis-split-button-rtl'],
+  ['components-splitbutton--brand-override', 'axis-split-button-brand'],
   ['components-tabs--dark', 'axis-tabs-dark'],
   ['components-tabs--compact', 'axis-tabs-compact'],
   ['components-tabs--direction', 'axis-tabs-rtl'],

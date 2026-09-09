@@ -244,6 +244,32 @@ knows exactly when the key is unsafe and for exactly how long. A component that
 merely contains a form knows none of that, which is why `Dialog` does not have
 this and `ConfirmDialog` does.
 
+### 5.2 Rule 5 outside a dialog: a menu's first row
+
+**Date:** 2026-09-09, with `SplitButton`.
+
+Rule 5 says the destructive action is not the option focused by default, and it
+was written about a confirmation dialog, where the library controls which
+button takes focus. A menu is the same rule in a place the library does not
+control: **opening a menu with a key focuses its first row** — measured while
+`Menu` was built — so a destructive command sitting first is one press from
+running, and nothing about it looks dangerous on the way.
+
+The consumer writes the rows, so this cannot be enforced by construction. What
+a component can do is say so, and `SplitButton` does: a `danger` row in first
+position is one development warning, naming the reason and the fix (put it
+last, behind a separator).
+
+Two consequences worth having written down rather than rediscovered:
+
+- **A `danger` variant of a split button does not exist.** A destructive action
+  with more destructive actions behind it is this rule squared, and rule 2
+  prefers undo to a control that makes destruction the default gesture.
+- **This is a rule about ORDER, not about colour.** A destructive command still
+  says what it does — "Discard the changes" — and is still red, because doc 06
+  §3 forbids colour as the only channel. Moving it down the list changes
+  neither.
+
 ## 6. Empty, loading and error
 
 All three are part of the component. They are not the consumer's

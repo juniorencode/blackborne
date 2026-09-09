@@ -57,13 +57,22 @@ export async function gotoStory(page: Page, id: string): Promise<void> {
     /*
      * WHEN THIS WAIT RUNS OUT, SAY WHAT WAS THERE.
      *
-     * Observed twice, both times inside a full run and never in isolation:
+     * Observed three times, always inside a full run and never in isolation:
      * this wait consumed the whole 30s test budget and the test was reported
-     * as a failure of the assertion it never reached — once on
-     * `Popover / Placements`, once on `Tooltip / Placements`, and both stories
-     * passed on an isolated re-run seconds later. The single worker had spent
-     * the previous ten minutes on `accessibility.spec.ts`, so a Storybook dev
-     * server compiling a heavy story on demand is the obvious suspect.
+     * as a failure of the assertion it never reached — `Popover / Placements`,
+     * `Tooltip / Placements`, and on 2026-09-09 `RadioGroup / Card Direction`,
+     * all three passing on an isolated re-run seconds later. The single worker
+     * had spent the previous ten minutes on `accessibility.spec.ts` each time,
+     * so a Storybook dev server compiling a heavy story on demand is the
+     * obvious suspect.
+     *
+     * The third occurrence is also why the evidence below is now guarded: it
+     * printed nothing at all. By the time the catch ran, the test had exceeded
+     * its own timeout, Playwright had closed the context, and the diagnostic
+     * `evaluate` failed with "Target page, context or browser has been closed"
+     * — so the message that replaced the mystery was itself replaced by a
+     * different mystery. An instrument that needs a live page to report on a
+     * page that has died reports nothing.
      *
      * The timeout is deliberately NOT raised. A stylesheet that takes half a
      * minute to arrive is worth failing over, and raising the number would
@@ -74,19 +83,31 @@ export async function gotoStory(page: Page, id: string): Promise<void> {
      * same reason — an eliminated hypothesis is worth more than a guess, and
      * neither is worth anything without a measurement.
      */
-    const seen = await page.evaluate(() => ({
-      url: location.href,
-      mounted: document.querySelector('#storybook-root')?.children.length ?? -1,
-      sheets: document.styleSheets.length,
-      links: [...document.querySelectorAll('link[rel=stylesheet]')].map(
-        el => (el as HTMLLinkElement).href.split('/').pop() ?? '?'
-      ),
-      styleTags: document.querySelectorAll('style').length,
-      surface: getComputedStyle(document.documentElement).getPropertyValue(
-        '--bb-surface'
-      ),
-      bodyBackground: getComputedStyle(document.body).backgroundColor
-    }));
+    const seen = await page
+      .evaluate(() => ({
+        url: location.href,
+        mounted:
+          document.querySelector('#storybook-root')?.children.length ?? -1,
+        sheets: document.styleSheets.length,
+        links: [...document.querySelectorAll('link[rel=stylesheet]')].map(
+          el => (el as HTMLLinkElement).href.split('/').pop() ?? '?'
+        ),
+        styleTags: document.querySelectorAll('style').length,
+        surface: getComputedStyle(document.documentElement).getPropertyValue(
+          '--bb-surface'
+        ),
+        bodyBackground: getComputedStyle(document.body).backgroundColor
+      }))
+      .catch(
+        (closed: unknown) =>
+          /*
+           * The page may be gone — a test that has run out of time takes its
+           * context with it — and then this diagnostic cannot run at all. Say
+           * SO, rather than throwing the failure of the diagnostic in place of
+           * the failure it was written to explain.
+           */
+          `unreadable: ${closed instanceof Error ? closed.message : String(closed)}`
+      );
     throw new Error(
       `the library stylesheet never took effect for "${id}": ` +
         JSON.stringify(seen),

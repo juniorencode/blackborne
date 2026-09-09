@@ -281,6 +281,17 @@ test('and the keyboard reaches it, uses it, and comes back', async ({
 
   const more = page.locator('.bb-breadcrumbs-more').first();
   await more.focus();
+
+  /*
+   * FOCUS IS ASSERTED BEFORE THE KEY IS PRESSED, and that is instrumentation
+   * rather than caution. This check timed out once inside a full run and
+   * passed fifteen times out of fifteen on its own, with the failure body lost
+   * to a filtered log — so the next occurrence should say WHICH step went
+   * wrong instead of reporting thirty seconds of nothing. A key pressed at a
+   * control that never took focus goes to the page, and the menu that never
+   * opens looks identical to a menu that failed to open.
+   */
+  await expect(more).toBeFocused();
   await page.keyboard.press('Enter');
 
   await expect(page.getByRole('menu')).toBeVisible();

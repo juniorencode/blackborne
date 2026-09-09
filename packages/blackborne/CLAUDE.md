@@ -186,6 +186,21 @@ cannot know what level it landed at. Emphasis comes from weight and colour.
   `internal/readDeclarations`, extracted at two callers rather than four, and
   its own file says why that rule does not apply to a walk with one correct
   behaviour.
+- **A menu's trigger gets `aria-expanded`, and no `data-open`.** Measured on
+  `SplitButton`, whose arrow turns over while the menu is open: the open state
+  belongs to the POPOVER, which is portalled somewhere else entirely, so a
+  `group-data-open` variant on the trigger matches nothing and the mark simply
+  never turns. `bb:group` on the trigger plus `bb:group-aria-expanded:` on the
+  mark is the pair that works. `Select` is the component that misleads here —
+  its root is a real element that does carry `data-open`, because a select is
+  not a trigger with a portal, it is a field with one.
+- **Two adjacent buttons make a 2px seam unless one is pulled back.** Both
+  carry a border, so a split control needs `-ms-px` on the second half or the
+  line down its middle is twice every other border in the library. And which
+  corners are round is decided by the COMPILED stylesheet, not by the order of
+  classes in the attribute: `rounded-e-none` beats the shorthand `rounded-md`
+  because Tailwind emits it later, which is worth knowing before assuming a
+  `className` passed to `Button` can override anything it likes.
 - **A row of a collection that is an ANCHOR needs `no-underline`.** The package
   ships no reset, so an `<a href>` arrives carrying the browser's own
   decoration. It went unnoticed until a menu row grew an `href` — every row

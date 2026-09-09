@@ -209,6 +209,16 @@ export type { SkeletonProps, SkeletonVariant } from './components/Skeleton';
 export { Spinner } from './components/Spinner';
 export type { SpinnerProps, SpinnerSize } from './components/Spinner';
 
+/*
+ * One action with the near alternatives behind an arrow. Two buttons, so it
+ * exports no item type of its own: the rows are `MenuItem`s.
+ */
+export { SplitButton } from './components/SplitButton';
+export type {
+  SplitButtonProps,
+  SplitButtonVariant
+} from './components/SplitButton';
+
 export { Switch } from './components/Switch';
 export type { SwitchProps } from './components/Switch';
 

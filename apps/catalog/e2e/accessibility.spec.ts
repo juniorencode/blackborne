@@ -319,13 +319,18 @@ test.describe('automated accessibility', () => {
        * predates it) and it is not the first paint (`gotoStory` now waits for a
        * rendered frame, and it recurred with that in place).
        *
-       * AND A THIRD OCCURRENCE TAUGHT SOMETHING ABOUT THE INSTRUMENT RATHER
-       * THAN THE FAULT: the evidence below reached nobody, because the run
-       * used Playwright's `line` reporter and its progress output overwrites
+       * AND TWICE NOW THE EVIDENCE HAS BEEN LOST ON THE WAY OUT, which is
+       * about the instrument rather than the fault. The first time, the run
+       * used Playwright's `line` reporter, whose progress output overwrites
        * itself with carriage returns, so the failure body was gone from the
-       * log by the time anybody read it. A full-suite run that might catch
-       * this needs `--reporter=list`. A guard that carries evidence into a
-       * reporter that discards it is a guard that carries none.
+       * log before anybody read it. The second time the reporter was right
+       * and the SHELL PIPELINE was not: the run was piped through a `grep`
+       * that kept the summary lines and dropped everything else.
+       *
+       * So a run that might catch this needs both halves — `--reporter=list`
+       * AND an unfiltered log to read afterwards. A guard that carries
+       * evidence into something that discards it carries none, and there are
+       * two places to discard it.
        *
        * So the next occurrence needs to carry evidence rather than a bare
        * "did not run". How many rules axe ran at all separates "axe was cut
