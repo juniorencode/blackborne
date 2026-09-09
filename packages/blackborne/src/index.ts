@@ -211,6 +211,14 @@ export type { SpinnerProps, SpinnerSize } from './components/Spinner';
 export { Switch } from './components/Switch';
 export type { SwitchProps } from './components/Switch';
 
+/*
+ * Composition, and the second caller of the structural-change hook: below the
+ * medium step the row of tabs becomes a `Select`. `Tab` is public because a
+ * tab and its panel are one declaration the consumer writes.
+ */
+export { Tab, Tabs } from './components/Tabs';
+export type { TabProps, TabsProps } from './components/Tabs';
+
 export { TagsInput } from './components/TagsInput';
 export type { TagsInputProps, TagsInputSize } from './components/TagsInput';
 

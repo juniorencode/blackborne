@@ -12,6 +12,53 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **`Tabs` and `Tab`** — one thing at a time, out of several, and the component
+  [doc 04](./docs/foundations/04-responsive.md) §6 was written for.
+
+  ```tsx
+  <Tabs label="Invoice" defaultSelectedKey="lines">
+    <Tab id="lines" title="Lines">
+      …
+    </Tab>
+    <Tab id="tax" title="Tax">
+      …
+    </Tab>
+  </Tabs>
+  ```
+
+  **Below the medium step there is no room for a row of labels, so the row
+  becomes a `Select`** — the second caller of the library's one
+  structural-change hook, and the first component whose STRUCTURE depends on
+  its own width rather than its layout. The tab you were on stays the tab you
+  are on across the change, which doc 04 §6 rule 4 asks for by name and calls
+  the thing that breaks most often.
+
+  It is a select, not a tab list in disguise: no tab roles, no tabpanel, and
+  the arrow keys belong to the select. A tabpanel announced where no tablist is
+  reachable would be semantics nobody can act on.
+
+  **A tab and its panel are one declaration.** `<Tab id title>` carries its
+  content as children, and `Tabs` splits them — the titles become the row, the
+  open one's children become the panel. The base's split shape repeats every id
+  and, measured, leaves a panel labelled by an element that no longer exists
+  the moment its list stops being rendered, which is exactly what a structural
+  change does ([decision
+  0018](./docs/decisions/0018-a-tab-declares-its-own-panel.md)).
+
+  A `Tab` is therefore **read rather than rendered**, with the constraint every
+  collection API has: a component of your own that returns a `Tab` is not one.
+  Share them as a value — `const tabs = <>…</>` — or build them with `.map()`.
+  Anything else is counted and reported in one development warning.
+
+  **The row also wraps**, because a container query counts pixels and cannot
+  know whether your words fit: six long titles in a wide container become two
+  rows rather than a row with its end cut off.
+
+  A title can carry a count or an icon beside the word, with `textValue` for
+  the searchable text. No `orientation`, no `size`, no `href` on a tab, no
+  scrolling row, and no way to choose which step becomes a select — the
+  threshold belongs to the scale (doc 04 §4.0).
+
 - **`Select` and `SelectItem`** — choosing one of a short list, and the first
   **composed field**: the field structure with a layer hanging off it, so it
   inherits both halves of the library at once.
@@ -759,6 +806,22 @@ minor versions. Every break is listed here with its migration.
 
 ### Changed
 
+- **A forced state in the catalog waits for its element, and no longer settles
+  for another one.** Two faults in one helper, both found by the first
+  component whose structure arrives after the first paint.
+
+  It ran once, in a layout effect. `Tabs` paints its narrow structure first — a
+  `ResizeObserver` reports after layout, so there is nothing to measure before
+  painting — so the row of tabs did not exist yet and the three states
+  photographed identically to the default. It now waits for the element and
+  stops watching the moment it arrives.
+
+  And a named target had a fallback chain behind it, so a selector matching
+  nothing quietly marked the outermost React Aria element instead. That hid the
+  first fault completely, and it is the exact failure this helper exists to
+  prevent, produced by the helper itself. A given target is now the only
+  candidate.
+
 - **The contrast guard counts only the text axe would actually reach.** It
   walked every visible text node and asked axe whether each was a ligature,
   which was right as far as it went and claimed coverage of a page axe never
@@ -946,6 +1009,14 @@ minor versions. Every break is listed here with its migration.
   `packages/blackborne`, the visual catalog in `apps/catalog`.
 
 ### Fixed
+
+- **The library no longer warns about strings that are not missing.** With no
+  `ConfigProvider` above them, components warned once per string drawn —
+  measured at thirteen warnings from a single mounted field — because the
+  default dictionary was empty and every lookup counted as a gap. Doc 05 §2.2
+  asks that a MISSING KEY warn; a missing provider is not a missing key, it is
+  the configuration that is supposed to work. A dictionary you supply still
+  reports its gaps.
 
 - **The catalog's contrast guard fired on a story it should have excused**, and
   finding out why turned up a hole in the automated accessibility layer.

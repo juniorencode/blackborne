@@ -33,12 +33,12 @@ this file is out of date. Fix this file.
 assuming anything exists.
 
 At the time of writing: all ten foundations are written, the pipeline is
-complete, and **thirty-four components exist** — the ten simple fields and
+complete, and **thirty-five components exist** — the ten simple fields and
 controls, `Button`, the flat pieces around them (`Alert`, `Badge`, `Card`,
 `EmptyState`, `Separator`, `Skeleton`, `Spinner`, `VisuallyHidden`), seven
 layers (`Dialog`, `Drawer`, `ConfirmDialog`, `Tooltip`, `Popover`, `Preview`,
 `Toast`), and the composition batch so far: `Accordion`, `Collapsible`, `Link`,
-`Breadcrumbs`, `Pagination`, `CursorPagination`, `Menu` and `Select`.
+`Breadcrumbs`, `Pagination`, `CursorPagination`, `Menu`, `Select` and `Tabs`.
 
 **The layer batch is finished.** It landed in that order, with `Toast` last by
 decision (doc 08 §7.1). `Menu` was deliberately not in it.
@@ -46,10 +46,10 @@ decision (doc 08 §7.1). `Menu` was deliberately not in it.
 **The composition batch is past its middle.** It is split in two halves with
 `Menu` and `Select` in between — the plan and the reason are in
 [the catalog](./docs/catalog-and-build-order.md) §3.1, which is what to read
-before starting. The first half and both middle components have landed; what is
-left is `Tabs` in full, the two features that were waiting on those two (a
-collapsed breadcrumb trail, a page-size selector), and `SplitButton`, which was
-waiting on `Menu` and is now unblocked.
+before starting. The first half, both middle components and `Tabs`
+have landed; what is left is the two features that were waiting on `Menu` and
+`Select` — a collapsed breadcrumb trail and a page-size selector — plus
+`SplitButton`, which was waiting on `Menu`.
 
 **Three things in it are settled and not open for reinvention:** a stepper is
 two components and only one of them is ours (decision 0015), the two pagers do
@@ -61,8 +61,11 @@ the contract of the single structural-change hook before the hook existed, and
 what landed with `Pagination` resolves no token: CSS publishes which step
 applies through the same container variants a component would use at N2, and
 `internal/useContainerStep` reads the resolved value on resize. §6.2 has the
-measurement; §6.1 keeps its withdrawn text struck through. `Tabs` and `Steps`
-are the next callers, and they call it rather than inventing a second answer.
+measurement; §6.1 keeps its withdrawn text struck through. `Tabs` is the second
+caller and doc 04 §11.1 records what it needed on top: a wrapping row for the
+widths a query cannot judge, and an observed element that outlives both
+structures. `Steps` is next, and it calls the same hook rather than inventing a
+second answer.
 
 **The shared glyphs are drawn once**, in `src/internal` — the cross, the tone
 marks, the chevron and the tick — and the tick is the one that is shared as a

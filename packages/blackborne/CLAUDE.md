@@ -165,6 +165,29 @@ cannot know what level it landed at. Emphasis comes from weight and colour.
   none and a section in a group renders one at the level the group was given
   (doc 06 §2.1). The level travels by context, never exported, which is doc 02
   §3.1.1's rule for a property that belongs to the SET.
+- **A set whose pieces land in different places is DECLARED, and the
+  declaration is read rather than rendered.** The tabs pattern puts every title
+  in one container and every panel outside it, so a `Tab` holding both cannot
+  render itself: `Tabs` reads its children and splits them. The base's own
+  shape — a `Tab` for the label, a `TabPanel` for the body, matched by id —
+  repeats every id twice and, measured, leaves a panel carrying
+  `aria-labelledby="undefined-tab-b"` the moment the list stops being rendered,
+  which is what a structural change does. Decision 0018.
+  Two things come with it. The reader is a **pure function** (`readTabs`), so
+  what a structure contains is testable without either structure existing. And
+  it has a constraint every collection API has: a component of your own that
+  returns a `Tab` is not one — the element in the tree is yours and nothing
+  about it says tab. The shareable form is a value (`const tabs = <>…</>`) or an
+  array from `.map()`. It caught the component's own stories first, so `Tabs`
+  counts what it could not use and says so in one development warning.
+- **An observed element must outlive every structure it chooses between.** The
+  step comes from `useContainerStep`, and the element it observes cannot be the
+  control that changes: that control unmounts, the observer is left watching a
+  detached node, a detached node reports a width of zero, zero picks the narrow
+  structure, and the next control detaches in turn — a component flickering
+  between two structures at one width, forever. `Tabs` observes a header box
+  that holds whichever control applies. Doc 04 §11.1, and the browser check
+  that proves it watches one width for half a second.
 - **A collection item's children must be PLAIN TEXT, or the typeahead dies
   quietly.** The base derives an item's `textValue` from its children, and
   anything that is not a string — a render function, an element — derives

@@ -49,7 +49,26 @@ export interface Config {
  */
 const DEFAULTS: Config = {
   locale: 'en-US',
-  dictionary: {}
+  /*
+   * THE ENGLISH DICTIONARY ITSELF, and not an empty object.
+   *
+   * It was `{}`, which reads as harmless — `useMessage` falls back to English
+   * anyway — and made the library warn about every string it drew whenever
+   * nobody had wrapped a provider round it. Doc 05 §2.2 rule 3 asks that a
+   * MISSING KEY warn; a missing provider is not a missing key, it is the
+   * configuration P3 promises works, so the warning was a false alarm on the
+   * supported setup.
+   *
+   * Measured while writing `Tabs`: one component holding one field printed
+   * thirteen of them on a single mount, and a screen of ten fields would print
+   * a hundred. That is how a warning stops being read, and the next real one
+   * scrolls away with it — the same reasoning `useDevWarning` records for
+   * warning in an effect rather than in render.
+   *
+   * A dictionary a consumer SUPPLIES still reports its gaps, which is the case
+   * the rule was written for and the one the tests pin.
+   */
+  dictionary: en
 };
 
 const ConfigContext = createContext<Config>(DEFAULTS);

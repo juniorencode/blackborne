@@ -375,15 +375,15 @@ decorative.
 Which components need N3 (a structural change). Completed as they are built,
 which is why one row below is a correction and not a forecast:
 
-| Component         | Expected change                                                 | State                    |
-| ----------------- | --------------------------------------------------------------- | ------------------------ |
-| Data table        | Rows to cards in a narrow container                             | Forecast                 |
-| Tabs              | To a select when they do not fit                                | Forecast, and it is next |
-| Dialog            | To full-screen in a narrow window                               | **Done, and not N3**     |
-| Toolbar / actions | Collapse into a menu                                            | Forecast                 |
-| Pagination        | Fewer page slots as the width falls, previous/next as the floor | **Done** · §6.2          |
-| Breadcrumbs       | The middle collapses into a menu                                | Forecast                 |
-| Steps             | To the indicators alone, scrolling                              | Forecast                 |
+| Component         | Expected change                                                 | State                |
+| ----------------- | --------------------------------------------------------------- | -------------------- |
+| Data table        | Rows to cards in a narrow container                             | Forecast             |
+| Tabs              | To a select when they do not fit                                | **Done** · §11.1     |
+| Dialog            | To full-screen in a narrow window                               | **Done, and not N3** |
+| Toolbar / actions | Collapse into a menu                                            | Forecast             |
+| Pagination        | Fewer page slots as the width falls, previous/next as the floor | **Done** · §6.2      |
+| Breadcrumbs       | The middle collapses into a menu                                | Forecast             |
+| Steps             | To the indicators alone, scrolling                              | Forecast             |
 
 **Dialog turned out not to need JavaScript.** It is a media query and the §5
 exception: same threshold, same outcome, no different tree to mount. Worth
@@ -396,6 +396,40 @@ previous/next", which is one point on the axis rather than the axis: the number
 of page slots comes from the available width, and previous/next is where that
 count bottoms out. Both halves of the original row survive — the floor is still
 the floor — and neither is a literal number in a component (rule 2).
+
+### 11.1 What Tabs turned out to need
+
+**Two structures, and the boundary is a step rather than a measurement.** A
+select below `medium`, a row of tabs from it up. The row is what the catalog
+predicted; the boundary is the part that had to be decided, because "when they
+do not fit" is not a question a container query can answer — CSS counts pixels
+and cannot know whether these particular words fit.
+
+So the component answers a narrower question honestly: below the medium step
+there is no room for several labels side by side, whatever they say. The
+alternative was measuring the row's own scroll width in JavaScript, which is a
+second set of thresholds inside a component, and §6 rule 1 forbids exactly
+that.
+
+**Which leaves a gap, and it is filled at N1: the row wraps.** Eight long
+titles in a wide container still overflow, and §7 is blunt about what overflow
+costs — so wrapping is the floor underneath the structural change, needing no
+measurement and holding at any width. A component at N3 does not stop needing
+N1.
+
+**And the element the step is read from has to outlive both structures.** Read
+it from the control that changes and the observer is left watching a detached
+node; a detached node reports a width of zero, which chooses the narrow
+structure, which detaches the next control. A component flickering between two
+structures at one width, forever. `Tabs` observes a header box that holds
+whichever control applies, and the browser check watches one width for half a
+second to prove it settles. This is the trap to hand to the next N3 component:
+it is not obvious, and damping it is not a fix.
+
+Rule 4 held, and by construction rather than by care — the selected tab is kept
+above the choice of structure, so the structure cannot lose it. It is asserted
+anyway, because the rule says this is what breaks most often: the check resizes
+the window across the boundary and back.
 
 **And it is the row that got built.** Three structures rather than four: no
 numbers below the narrow step, five at it, seven from medium up. `wide` is
