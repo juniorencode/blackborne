@@ -417,7 +417,11 @@ const AXES: Array<[string, string]> = [
      portalled layer only because it is mounted inside the page. */
   ['components-select--dark', 'axis-select-dark'],
   ['components-select--compact', 'axis-select-compact'],
-  ['components-select--direction', 'axis-select-rtl']
+  ['components-select--direction', 'axis-select-rtl'],
+  /* And the brand, because the accent is what marks the chosen option: the
+     tick and the ring are the two places an overridden theme has to arrive,
+     and one of them is inside a portalled layer. */
+  ['components-select--brand-override', 'axis-select-brand']
 ];
 
 for (const [id, name] of AXES) {

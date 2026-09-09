@@ -332,6 +332,28 @@ export const Direction: Story = {
 };
 
 /**
+ * An overridden brand, which has to reach the tick and the ring.
+ *
+ * The accent is the one colour a select uses for meaning rather than for
+ * surface — the tick on the chosen option — and it is inside a portalled
+ * layer, so this is the story that says whether a theme declared on the page
+ * reaches it. Not a prediction: the tick and the field's focus ring both come
+ * from `--bb-accent`, and this is what proves the variable arrived.
+ */
+export const BrandOverride: Story = {
+  name: 'Brand override',
+  render: args => (
+    <LayerPage brand label="The page behind.">
+      <div style={{ width: 280 }}>
+        <Select {...args} defaultOpen defaultSelectedKey="USD">
+          <Options />
+        </Select>
+      </div>
+    </LayerPage>
+  )
+};
+
+/**
  * A long option, and a field narrower than it.
  *
  * The list may grow past the field — that is what `min-width` rather than
