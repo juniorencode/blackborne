@@ -293,6 +293,13 @@ Things that look like improvements and are not:
   A JavaScript `Date` is not the alternative either: it is a timestamp, so
   `new Date('2026-09-09')` is the 8th in Lima and the 9th in Tokyo — measured,
   and the exact bug doc 05 §3.1 exists to prevent.
+- **Do not widen a check to make it pass.** A browser check that fails at
+  random is measuring the machine rather than the component, and lowering its
+  bar turns a real failure into a coincidence. The rule and the two measured
+  examples are [doc 10](./docs/foundations/10-quality-and-verification.md) §11:
+  counting animation frames asserts the frame rate, and racing a 160ms
+  transition asserts how loaded the CPU was. Slow the clock, ask the animation,
+  or assert a state — never relax the number.
 - **Do not reference private projects** in code, examples or documentation. The
   library is public and its API is designed for strangers.
 

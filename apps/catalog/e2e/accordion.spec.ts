@@ -11,8 +11,9 @@
  *    `--disclosure-panel-height` on the panel and our CSS transitions it. If a
  *    future version renames that variable the declaration becomes invalid,
  *    `height` falls back to `auto`, and the section simply stops animating with
- *    nothing in the console. Sampling the height mid-flight is the only thing
- *    that would notice.
+ *    nothing in the console. Only the transition itself would notice — caught
+ *    on `transitionrun`, paused, and then read at exact fractions of its own
+ *    duration rather than sampled frame by frame, which is doc 10 §11.
  * 3. REDUCED MOTION REMOVES IT. Doc 09 §2 is emphatic that the preference is
  *    not softened, it is removed, and nothing in this repository had ever
  *    checked that in a browser. This file is the first.
@@ -152,50 +153,177 @@ test('a closed panel is exactly zero tall, and an open one is not', async ({
   expect(await heightOf(open)).toBeGreaterThan(20);
 });
 
+/**
+ * The fractions of the transition the curve is read at.
+ *
+ * Four points rather than two, because two endpoints are what a JUMP also
+ * produces: the claim is that the height passes through the values in between,
+ * and the middle two are the "in between".
+ *
+ * **And none of them is 1**, which is not tidiness — measured: writing
+ * `currentTime = duration` on a paused transition REMOVES it. The list goes
+ * from one animation to none, there is nothing left to play, and the promise
+ * the base is waiting on rejects instead of resolving, so a panel seeked to
+ * its own end never switches back to `auto` and never resizes with its content
+ * again. The end of the curve is read from the panel at rest instead.
+ */
+const CURVE = [0, 0.25, 0.5, 0.75];
+
+/**
+ * How much slower than real time the animation clock runs for this one check.
+ *
+ * A fiftieth, which turns a 160ms transition into eight seconds of wall clock
+ * without changing a single thing about the component: the transition still
+ * declares the duration its token says, and the check asserts that below.
+ */
+const SLOW = 0.02;
+
 test('the panel travels between the two heights instead of jumping', async ({
   page
 }) => {
+  /*
+   * THE CLOCK IS SLOWED, AND THE COMPONENT IS NOT TOUCHED.
+   *
+   * This check has now been wrong twice in the same direction, which is why
+   * the reasoning is here in full — doc 10 §11 is the rule it produced.
+   *
+   * Version one sampled the panel's height on every animation frame and
+   * required more than one frame strictly between the endpoints. That asserts
+   * the MACHINE's frame rate: in CI, on two workers, it saw
+   * [0,0,0,0,12.59,144,144,144] — one intermediate frame for a 160ms
+   * transition — and failed while the panel was animating perfectly.
+   *
+   * Version two caught the transition on `transitionrun` and paused it, which
+   * is the right instrument and still not enough on its own: the event is
+   * delivered on the main thread, so under a full parallel run it can arrive
+   * after the 160ms transition has already finished and been removed.
+   * Measured — it arrives 16.7ms late on an idle machine, and the full suite
+   * failed it with nothing paused at all.
+   *
+   * So the fix is not a wider tolerance and not a longer poll: it is to stop
+   * competing with the transition. `Animation.setPlaybackRate` over the
+   * DevTools protocol slows the document's animation clock, so the same
+   * lateness costs a fiftieth of the animation — measured: `currentTime` at
+   * the event drops from 16.7ms to 0.334ms. Nothing about the component
+   * changes, which is the whole point of doing it here rather than overriding
+   * the duration token: the transition still reports 160ms, and that is
+   * asserted rather than assumed.
+   *
+   * Chromium-only, like the suite. A second browser would need its own way in.
+   */
+  const clock = await page.context().newCDPSession(page);
+  await clock.send('Animation.enable');
+  await clock.send('Animation.setPlaybackRate', { playbackRate: SLOW });
+
   await gotoStory(page, FILTERS);
 
   const panel = page.locator('.bb-collapsible-panel');
   const trigger = page.locator('.bb-collapsible-trigger');
 
   /*
-   * Sampled every frame from inside the page. Reading the box from the test
-   * process instead would put a round trip between each sample, which is long
-   * enough to step over a 160ms transition and see only its endpoints.
+   * `transitionrun` fires when the transition is CREATED, so a listener added
+   * before the click receives it whatever the frame rate does, and pausing the
+   * animation inside the handler freezes it where nothing can finish it. From
+   * there `currentTime` reads the curve at exact fractions of the transition
+   * instead of wherever the frames happened to land.
    */
   await page.evaluate(() => {
     const target = document.querySelector('.bb-collapsible-panel');
-    if (target === null) throw new Error('no panel to sample');
-    const samples: number[] = [];
-    Object.assign(window, { __samples: samples });
-    const tick = () => {
-      samples.push(target.getBoundingClientRect().height);
-      requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
+    if (target === null) throw new Error('no panel to catch');
+
+    target.addEventListener('transitionrun', event => {
+      if ((event as TransitionEvent).propertyName !== 'height') return;
+      for (const animation of target.getAnimations()) animation.pause();
+    });
   });
 
   await trigger.click();
   await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+
+  /*
+   * The one thing this waits for, and the failure the whole check exists to
+   * catch. The height is animated by transitioning the base's own
+   * `--disclosure-panel-height`; if a future version renames that variable the
+   * declaration becomes invalid, `height` falls back to `auto`, and a length
+   * cannot transition to `auto` — so no `height` transition is ever created,
+   * nothing is paused here, and this poll is what says so. Verified by
+   * renaming it: 1 becomes 0.
+   */
+  await expect
+    .poll(() =>
+      panel.evaluate(
+        element =>
+          element
+            .getAnimations()
+            .filter(animation => animation.playState === 'paused').length
+      )
+    )
+    .toBe(1);
+
+  const curve = await panel.evaluate((element, fractions) => {
+    const animation = element.getAnimations()[0];
+    if (animation === undefined) throw new Error('nothing paused');
+    const duration = Number(animation.effect?.getTiming().duration ?? 0);
+
+    return {
+      duration,
+      heights: fractions.map(fraction => {
+        animation.currentTime = duration * fraction;
+        return element.getBoundingClientRect().height;
+      })
+    };
+  }, CURVE);
+
+  /*
+   * THE INSTRUMENT DID NOT DISTURB THE MEASUREMENT, which is the one thing a
+   * slowed clock has to prove about itself: the transition still declares the
+   * duration the token says, and only wall-clock time was stretched. The check
+   * below this one owns the duration; this line owns the technique.
+   */
+  expect(curve.duration).toBe(
+    asMs(await durationToken(page, '--bb-duration-normal'))
+  );
+
+  /*
+   * Released at real speed from where the curve left it, so it runs out on its
+   * own in a fraction of a second. That is the other half of the mechanism
+   * rather than a tidy-up: the base resolves its `getAnimations()` promise,
+   * switches the variable to `auto`, and the panel comes to rest.
+   */
+  await clock.send('Animation.setPlaybackRate', { playbackRate: 1 });
+  await panel.evaluate(element => {
+    for (const animation of element.getAnimations()) animation.play();
+  });
   await atRest(panel, 'open');
 
-  const samples = await page.evaluate(
-    () => (window as unknown as { __samples: number[] }).__samples
-  );
+  const heights = curve.heights;
   const settled = await heightOf(panel);
+  const shown = `${JSON.stringify(heights)} over ${curve.duration}ms, resting at ${settled}`;
 
-  expect(settled).toBeGreaterThan(20);
-  expect(samples.at(0)).toBe(0);
-  expect(samples.at(-1)).toBeCloseTo(settled, 0);
+  /* A real distance to travel, so "in between" means something. */
+  expect(heights.at(0)).toBe(0);
+  expect(settled, shown).toBeGreaterThan(20);
 
-  // The point of the whole test: at least one frame in between.
-  const between = samples.filter(height => height > 0 && height < settled - 1);
-  expect(
-    between.length,
-    `expected frames between 0 and ${settled}, saw ${JSON.stringify(samples)}`
-  ).toBeGreaterThan(1);
+  /*
+   * THE POINT OF THE WHOLE CHECK: every fraction is taller than the one before
+   * it and none of them has arrived yet, so the height passes through the
+   * values between its two ends rather than switching from one to the other. A
+   * jump satisfies the two lines above and fails here on the first step.
+   */
+  for (const [index, height] of heights.entries()) {
+    expect(height, `${CURVE[index]!} of ${shown}`).toBeLessThan(settled);
+    if (index > 0)
+      expect(
+        height,
+        `not monotonic at ${CURVE[index]!} of ${shown}`
+      ).toBeGreaterThan(heights[index - 1]!);
+  }
+
+  // Halfway is genuinely halfway rather than either end, whatever the easing
+  // does to it — named separately because it is the sentence in the title.
+  const middle = heights[2]!;
+  expect(middle, shown).toBeGreaterThan(0);
+  expect(middle, shown).toBeLessThan(settled);
 });
 
 test('the transition is bounded by the duration token', async ({ page }) => {

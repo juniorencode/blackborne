@@ -43,7 +43,7 @@ From there on, breaking a document stops being a matter of memory.
 | **Format and lint**         | Code style and the project's own rules from section 2                                                             | Seconds                 |
 | **Types**                   | That the public surface is properly typed                                                                         | Seconds                 |
 | **Logic**                   | Hooks and pure functions, **rendering nothing** (P6)                                                              | Fast                    |
-| **Behavior**                | The component from the perspective of someone using it                                                            | Medium                  |
+| **Behavior**                | The component from the perspective of someone using it, and never how fast the machine ran it (§11)               | Medium                  |
 | **Re-render**               | That typing in one field does not re-render its neighbours                                                        | Medium                  |
 | **Automated accessibility** | Contrast, missing labels, malformed ARIA. **Running**: axe against every story in the catalog                     | Medium                  |
 | **Visual regression**       | What changed in appearance, and where. **Running**: 19 captures, generated in Docker so the tolerance can be zero | Slow                    |
@@ -158,6 +158,66 @@ How something is retired, decided before it is needed:
 
 Without this policy, when the moment comes you will not dare remove anything,
 and the library will only grow.
+
+## 11. A check must not measure the machine
+
+**Added 2026-09-09**, after a check failed in CI while nothing was broken.
+
+Section 1's whole argument is that an unchecked rule is an unfollowed rule, so
+a check that fails at random is worse than a missing one: it teaches everybody
+to re-run the job, and a suite people re-run until it is green is a suite that
+no longer says anything. `retries: 0` in the Playwright configuration is the
+other half of the same position — a failure must not be shruggable — and it is
+only honest if a failure means the component is wrong.
+
+> A check asserts what the component does. If its result also depends on how
+> fast the machine ran it, it is measuring the machine.
+
+**The measurement that produced this rule.** A browser check proved that a
+collapsible panel TRAVELS between its two heights rather than jumping, by
+sampling the height on every animation frame and requiring more than one frame
+strictly between the endpoints. In CI, on two workers, it saw
+`[0,0,0,0,12.59,144,144,144]`: one intermediate frame for a 160ms transition,
+because the frame rate under load is not something a test controls. The panel
+was animating perfectly.
+
+**And the fix is not a wider tolerance.** Lowering the bar to "at least one
+frame" makes the same check fail less often, which is the shape of change that
+turns a real failure into a coincidence. What the check wanted was a claim
+about the animation, so it should ask the animation:
+
+- `transitionrun` hands over the moment the transition is created. A listener
+  added before the click receives it whatever the frame rate does.
+- `element.getAnimations()` at that moment holds a `CSSTransition` whose
+  `transitionProperty` is the property in question — measured: exactly one,
+  `height`, `duration: 160`.
+- Pausing it and writing `currentTime` reads the curve at exact fractions of
+  the transition rather than wherever the frames happened to land — measured:
+  `0 → 54.58 → 110.88 → 136.97 → 144` at 0, 25, 50, 75 and 100 per cent.
+
+That is a stronger claim than the flaky one it replaces, which is the test of
+whether a de-flaked check has been fixed or merely quietened: five points on the
+curve, in order, against "some frames were seen".
+
+**How to tell the two apart before CI does it for you.** A check depends on the
+machine when its assertion counts something the machine produces — frames,
+elapsed milliseconds, how many times a callback ran, the order two independent
+timers fired. It depends on the component when it asserts a state the component
+is in, a value it published, or an object it created. Both look like ordinary
+assertions on the page; only one of them is still true on a machine with a
+loaded CPU.
+
+Three that are already right, for contrast: the transition's DURATION is
+asserted against the token rather than timed with a clock, the panel is waited
+on through the base's own end-of-animation signal rather than a sleep, and the
+step a container query resolves to is read from CSS rather than compared
+against a measured width (doc 04 §6.2).
+
+**This does not license a slow check to be deleted.** The machine-dependent
+suite in this repository is the visual one, and its answer is the opposite
+direction: generate every reference in the same container so the tolerance can
+stay at zero (§6). Removing the dependence is the fix in both cases; agreeing
+to ignore it is not.
 
 ## 10. Definition of green
 

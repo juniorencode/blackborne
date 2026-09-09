@@ -1344,6 +1344,59 @@ minor versions. Every break is listed here with its migration.
 
 ### Fixed
 
+- **A browser check was measuring the machine rather than the component**, and
+  it failed CI on a pull request whose only fault was being built on a busy
+  runner.
+
+  It proved that a collapsible panel TRAVELS between its two heights instead of
+  jumping, by pushing the height on every animation frame and requiring more
+  than one frame strictly between the endpoints. In CI, on two workers, it saw:
+
+  ```
+  [0,0,0,0,12.59,144,144,144]   one intermediate frame, for a 160ms transition
+  ```
+
+  The panel was animating perfectly. The frame rate under load is not something
+  a test controls, so the number being asserted was the runner's.
+
+  **Two attempts, because the first fix was still a race.** Catching the
+  transition on `transitionrun` and pausing it is the right instrument — the
+  event is delivered whatever the frame rate does — and it is not enough on
+  its own: it arrives on the main thread, measured 16.7ms late on an idle
+  machine, and under a full parallel run it can arrive after a 160ms transition
+  has finished and been removed. The full suite failed it with nothing paused
+  at all.
+
+  **What works is to stop competing with the transition.**
+  `Animation.setPlaybackRate` over the DevTools protocol slows the document's
+  animation clock, so the same lateness costs a fiftieth of the animation — measured: `currentTime` at the event drops from 16.7ms to 0.334ms. Nothing
+  about the component changes, which is why it is done there rather than by
+  overriding the duration token: the transition still reports the 160ms its
+  token declares, and the check asserts that, because an instrument has to
+  prove it did not disturb the measurement.
+
+  The check is also stronger than the one it replaces. It reads the curve at
+  exact fractions of the transition — `0 → 54.58 → 110.88 → 136.97` at 0,
+  25, 50 and 75 per cent — and requires each to be taller than the last and
+  none to have arrived. A jump satisfies the endpoints and fails on the first
+  step. Verified by mutation: renaming the base's `--disclosure-panel-height`
+  leaves `height` at `auto`, no transition is ever created, and the check says
+  so. 12 runs with eight workers and the full 284 behaviour checks, green.
+
+  One thing found on the way, and it is in the check's own comment because it
+  is a trap for anything driving a transition: writing
+  `currentTime = duration` on a paused CSS transition **removes** it. There is
+  then nothing left to play, the promise the base is waiting on rejects rather
+  than resolves, and the panel never switches back to `auto` or resizes with
+  its content again.
+
+  [Doc 10](docs/foundations/10-quality-and-verification.md) gains a §11 for the
+  rule, since this is the second check in the repository to be green or red for
+  a reason that had nothing to do with the component: a check asserts what the
+  component does, and if its result also depends on how fast the machine ran
+  it, it is measuring the machine. Widening the tolerance is not the fix — a
+  check that fails at random teaches everybody to re-run the job.
+
 - **Three of the browser checks could time out while the browser had done
   exactly the right thing.** The new-tab checks on `Link` — middle click,
   ctrl-click, `target` of its own — waited for the opened tab's url with
