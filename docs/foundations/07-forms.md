@@ -82,20 +82,28 @@ test cannot see it.
 
 ### 2.2 The end of a field is contested space
 
-Six different things want to sit at the trailing edge of a control, and until
+**Date:** 2026-09-09. Six things were counted here, and the seventh was sitting
+in plain sight: the chevron of a field that opens a layer. It never competed,
+because a `Select`'s whole trigger is the button that opens the list — so the
+mark inside it costs no hit area and takes nobody's turn. A `ComboBox` is where
+the counting starts, with a text input people type into, a button that shows
+the whole list, and this edge asked for a clear button as well.
+
+Seven different things want to sit at the trailing edge of a control, and until
 they were counted, each was decided by whoever added it:
 
-| What                    | Whose it is         |
-| ----------------------- | ------------------- |
-| A suffix affix (`.com`) | The consumer's      |
-| The clear button        | The field's         |
-| The busy indicator      | The field's         |
-| The stepper (`±`)       | The numeric field's |
-| The reveal toggle       | The password field  |
-| An invalid marker       | The field's         |
+| What                    | Whose it is                      |
+| ----------------------- | -------------------------------- |
+| A suffix affix (`.com`) | The consumer's                   |
+| The clear button        | The field's                      |
+| The busy indicator      | The field's                      |
+| The stepper (`±`)       | The numeric field's              |
+| The reveal toggle       | The password field               |
+| An invalid marker       | The field's                      |
+| The disclosure chevron  | The field's, if it opens a layer |
 
-They cannot all be present, and the resolution is not "make room for all six".
-It is an order of precedence, decided once here:
+They cannot all be present, and the resolution is not "make room for all
+seven". It is an order of precedence, decided once here:
 
 1. **Busy wins outright — but the space stays.** While a field is waiting or
    saving, the clear button and the stepper stop being reachable: hidden from
@@ -144,14 +152,40 @@ It is an order of precedence, decided once here:
 4. **At most one library-owned control at a time.** A field showing a stepper
    does not also show a clear button: the arrows already reach every value
    including the empty one.
+5. **A field that opens a layer keeps the chevron and has no clear button.**
+
+   The chevron wins for the reason
+   [decision 0011](../decisions/0011-the-stepper-is-opt-in.md) gave the numeric
+   stepper: a keyboard opens the list with `ArrowDown`, and a pointer has
+   nothing else. A field that filters its own options and shows no way to see
+   all of them is a field hiding what it holds.
+
+   Clearing, meanwhile, has routes that cost no width at all — an option that
+   returns to no value, declared the way every other option is, and in a field
+   holding several values the remove button each value already carries.
+
+   **What is not available is the usual answer**, which is to swap the chevron
+   for a cross while the pointer is over the control. Something that appears
+   only on hover is not there on a touch screen and is never there for a
+   keyboard — measured on `Tooltip`, where the same fact is why nothing
+   interactive may live inside one. The two cannot take turns, so one of them
+   wins permanently, and it is the one with no alternative route.
+
+   **Left open: emptying a whole set in one gesture.** A field holding several
+   values can be emptied one value at a time and not all at once, and this rule
+   does not answer that. It is not settled by putting the button back either,
+   because the width it wants is the width the values are using. It is measured
+   where it appears rather than decided here.
 
 And one exception to the reservation, for a field whose box **wraps**: it
 reserves the indicator's lane in every state rather than only while busy. 36px
 appearing at the end of a wrapping row can push a value onto a new line, which
 changes the height of the field while somebody waits — a worse shift than the
-one reserving the lane was meant to prevent.
+one reserving the lane was meant to prevent. It was written for the field that
+holds several values typed one at a time, and it covers, unchanged, the combo
+box that holds several the same way.
 
-The rule behind all four: **the trailing edge belongs to at most one thing, and
+The rule behind all five: **the trailing edge belongs to at most one thing, and
 the field decides which.** A field that lets a consumer stack them is a field
 whose hit areas depend on how it was configured, which is not something anyone
 can test.
@@ -349,7 +383,8 @@ form opens. Nothing is autofocused without the person having asked
 - [ ] Normalization is a pure function with its own tests, and the caret does
       not move while typing (§2.1 — checked in a browser)
 - [ ] At most one library-owned control sits at the trailing edge, and busy
-      removes it (§2.2)
+      removes it — a field that opens a layer keeps the chevron and offers no
+      clear button (§2.2)
 - [ ] Number, date and currency formatting respects the locale; the time zone
       is the one received, not the browser's (doc 05)
 - [ ] Complete keyboard traversal, with focus visible in every state

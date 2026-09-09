@@ -267,6 +267,17 @@ is invalid or switched off. Check it on any new composed field: the frame is the
 element a person sees the edge of, and it has to carry the state the field is
 in.
 
+**The trailing edge holds one thing, and a field that opens a layer holds the
+chevron.** Seven things want that edge and doc 07 §2.2 orders them; the rule
+that arrives with the searchable fields is the last one. A `ComboBox`, a
+picker, anything with a list behind it keeps its chevron and offers **no clear
+button** — a keyboard opens the list with `ArrowDown` and a pointer has nothing
+else, while emptying has routes that cost no width: an option that returns to
+no value, and the remove button each value carries in a field holding several.
+Do not reach for the usual trick of swapping the chevron for a cross on hover:
+something that appears only on hover is not there for touch and never there for
+a keyboard.
+
 **And a select's required state is announced by nothing the base gives the
 trigger.** `Field` hides the asterisk from a reader on the grounds that the base
 sets `aria-required` — true of an input, and measured false of a select: the
@@ -289,6 +300,16 @@ no error in the console.
 Dates, numbers, currency, sorting and plurals are formatted through the
 platform's locale APIs. The time zone is **received, never taken from the
 browser** — the browser's zone is the viewer's machine, not the data's context.
+
+**A date crosses the public boundary as an ISO string**, not as one of the
+base's calendar objects — `2026-09-09`, `14:30`,
+`2026-09-09T14:30:00-05:00[America/Lima]` — and is parsed inside with
+`parseDate`, `parseTime` or `parseAbsolute` against the zone the provider gave
+(decision 0020). The same narrowing `Select` does to `Key`, for the same
+reason. A JavaScript `Date` is not the alternative: it is a timestamp, so
+`new Date('2026-09-09')` is the 8th of September in Lima and the 9th in Tokyo,
+which is the bug the rule above exists to prevent arriving through the value
+instead of the formatter.
 
 ## Layers
 

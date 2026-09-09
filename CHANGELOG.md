@@ -882,6 +882,31 @@ minor versions. Every break is listed here with its migration.
 
 ### Changed
 
+- **Two rules were written before the components that need them**, which is the
+  order this project keeps: a foundation changes first, never afterwards to
+  justify code that already exists. Nothing in the package changed.
+
+  **A field that opens a layer keeps its chevron and offers no clear button**
+  ([doc 07](docs/foundations/07-forms.md) §2.2, rule 5). Six things were
+  counted at a field's trailing edge and the seventh had been in plain sight —
+  a `Select`'s chevron never competed, because its whole trigger is the button
+  that opens the list. A combo box is where the counting starts, and it wants
+  that edge for a chevron, a clear button and a busy indicator at once. The
+  chevron wins for the reason the numeric stepper exists at all: a keyboard
+  opens the list with `ArrowDown` and a pointer has nothing else. What is not
+  available is the usual answer, swapping the chevron for a cross on hover —
+  something that appears only on hover is not there for touch and never there
+  for a keyboard.
+
+  **A date crosses the boundary as an ISO string**
+  ([decision 0020](docs/decisions/0020-a-date-crosses-the-boundary-as-a-string.md)),
+  so the date family that follows takes `value="2026-09-09"` rather than the
+  base's `CalendarDate`. The same narrowing `Select` already does to the base's
+  `Key`. A JavaScript `Date` was measured and rejected: it is a timestamp, so
+  `new Date('2026-09-09')` displays as the 8th of September in Lima and the 9th
+  in Tokyo — one value, two days, decided by where the person looking happens
+  to be.
+
 - **The browser checks take a third of the time**, and nothing about what they
   check has changed. Three findings, in order of what they were worth:
 
