@@ -58,6 +58,4 @@ export interface TabProps {
  * the file's own note says why that has to be so. On its own it renders
  * nothing.
  */
-export function Tab(_props: TabProps): React.ReactNode {
-  return null;
-}
+export const Tab: (props: TabProps) => React.ReactNode = () => null;

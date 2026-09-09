@@ -145,6 +145,15 @@ const STATES: Array<[string, string]> = [
    * closed states doc 07 §6 asks for, and the open list where the tick and the
    * matched width are.
    */
+  /*
+   * The tabs' own four, and the first is the one to look at: the same
+   * component at three widths, two of them a select. Doc 04's N3, in a
+   * picture.
+   */
+  ['components-tabs--structures', 'tabs-structures'],
+  ['components-tabs--states', 'tabs-states'],
+  ['components-tabs--wrapping', 'tabs-wrapping'],
+  ['components-tabs--rich-titles', 'tabs-titles-with-a-count'],
   ['components-select--states', 'select-states'],
   ['components-select--open', 'select-open'],
   ['components-select--long-options', 'select-long-options'],
@@ -421,7 +430,13 @@ const AXES: Array<[string, string]> = [
   /* And the brand, because the accent is what marks the chosen option: the
      tick and the ring are the two places an overridden theme has to arrive,
      and one of them is inside a portalled layer. */
-  ['components-select--brand-override', 'axis-select-brand']
+  ['components-select--brand-override', 'axis-select-brand'],
+  /* And the tabs' three axes plus the brand, which has to reach the one thing
+     that marks the open tab: the rule under it. */
+  ['components-tabs--dark', 'axis-tabs-dark'],
+  ['components-tabs--compact', 'axis-tabs-compact'],
+  ['components-tabs--direction', 'axis-tabs-rtl'],
+  ['components-tabs--brand-override', 'axis-tabs-brand']
 ];
 
 for (const [id, name] of AXES) {
