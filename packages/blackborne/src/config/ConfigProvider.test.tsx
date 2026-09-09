@@ -33,6 +33,24 @@ test('a missing key falls back to English rather than an empty string', () => {
   expect(screen.getByTestId('msg').textContent).toBe('Loading');
 });
 
+/*
+ * The supported setup is silent, and that is the half this file was missing.
+ *
+ * The warning below fires on a dictionary that was SUPPLIED and lacks a key.
+ * With no provider at all nothing is missing — the shipped English dictionary
+ * is the active one — and the library used to warn about every string it drew
+ * anyway. Thirteen warnings from one mounted component, measured, on the one
+ * configuration P3 promises works.
+ */
+test('no provider is not a missing key, and says nothing', () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  render(<ShowMessage />);
+
+  expect(screen.getByTestId('msg').textContent).toBe('Loading');
+  expect(warn).not.toHaveBeenCalled();
+  warn.mockRestore();
+});
+
 test('a missing key warns in development', () => {
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
   render(
