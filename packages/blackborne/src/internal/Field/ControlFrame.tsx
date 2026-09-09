@@ -59,6 +59,21 @@ export interface ControlFrameProps {
    */
   isLeadingHidden?: boolean;
   isTrailingHidden?: boolean;
+  /**
+   * Invalid, and disabled, for a field whose container does not say so itself.
+   *
+   * MEASURED IN THE INSTALLED SOURCE, and it is the reason these exist: the
+   * base's `TextField` publishes a group context — so a frame inside one picks
+   * up `isInvalid` and `isDisabled` without being told — and its `Select` does
+   * not. A frame inside a select would therefore look ordinary while the field
+   * was invalid or switched off, which is the class of defect that looks right
+   * and is not.
+   *
+   * Left out where the context supplies them, which is every field built
+   * before `Select`.
+   */
+  isInvalid?: boolean;
+  isDisabled?: boolean;
   /** The control itself. */
   children: React.ReactNode;
   className?: string;
@@ -112,6 +127,8 @@ export function ControlFrame({
   trailing,
   isLeadingHidden = false,
   isTrailingHidden = false,
+  isInvalid,
+  isDisabled,
   children,
   className
 }: ControlFrameProps): React.ReactNode {
@@ -121,7 +138,17 @@ export function ControlFrame({
    * to and the button keeps a full target at the edge.
    */
   return (
-    <Group className={cx(CONTROL_BOX, 'bb:flex bb:items-stretch', className)}>
+    <Group
+      className={cx(CONTROL_BOX, 'bb:flex bb:items-stretch', className)}
+      /*
+       * Conditional spreads rather than named props with `undefined`: the
+       * repository sets `exactOptionalPropertyTypes`, and passing `undefined`
+       * where the base expects `boolean?` is a type error (doc 02 §2). Left
+       * out entirely, the base's own context still decides.
+       */
+      {...(isInvalid === undefined ? {} : { isInvalid })}
+      {...(isDisabled === undefined ? {} : { isDisabled })}
+    >
       {edge(leading, isLeadingHidden)}
       {prefix === undefined ? null : (
         <span

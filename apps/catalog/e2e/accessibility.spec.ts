@@ -191,6 +191,12 @@ test.describe('automated accessibility', () => {
        * side by side had no measurable text and would have needed excusing.
        * That was the wrong fix — the STORY was wrong. A layer is now shown one
        * at a time, so nothing needs excusing there and this guard stays strict.
+       *
+       * What `inert` does cost is narrower and is recorded at the walk below:
+       * ONE open layer is enough to make the page behind it inert, so the walk
+       * counts only the text axe would actually reach. That is not a second
+       * exemption — it is this counter agreeing with axe about what there was
+       * to measure.
        */
       const text = await page.evaluate(() => {
         const axe = (
@@ -201,7 +207,10 @@ test.describe('automated accessibility', () => {
               utils: { getNodeFromTree: (node: Node) => unknown };
               commons: {
                 text: { isIconLigature: (v: unknown) => boolean };
-                dom: { isVisibleOnScreen: (v: unknown) => boolean };
+                dom: {
+                  isVisibleOnScreen: (v: unknown) => boolean;
+                  isVisibleToScreenReaders: (v: unknown) => boolean;
+                };
               };
             };
           }
@@ -231,8 +240,9 @@ test.describe('automated accessibility', () => {
           let isIcon: boolean;
           try {
             /*
-             * HIDDEN TEXT IS NOT COUNTED AT ALL, and that has to be said out
-             * loud because the obvious walk over text nodes gets it wrong.
+             * TEXT AXE WILL NOT LOOK AT IS NOT COUNTED AT ALL, and that has to
+             * be said out loud because the obvious walk over text nodes gets it
+             * wrong in two different ways.
              *
              * The exemption this feeds used to be `innerText.trim() === ''`,
              * and `innerText` respects visibility — so a story whose only text
@@ -242,8 +252,22 @@ test.describe('automated accessibility', () => {
              * looked at. Measured on the way in: no story in the catalog is in
              * that state today, which is exactly when a trap is cheap to close.
              *
-             * `isVisibleOnScreen` is the same helper the contrast rule itself
-             * uses, so the two agree by construction rather than by intent.
+             * The second way is INERT, and it took an open select in Arabic to
+             * find. While a modal layer is open the base marks everything
+             * outside it `inert` — measured: `.catalog-layer-stage` and the
+             * fixture's own `.catalog-label`, so the trigger, its label and the
+             * page behind are all inside an inert subtree — and axe's contrast
+             * rule does not look inside one. The proof is that story: a Latin,
+             * painted, non-ligature `<p>` sat in it and the rule still reported
+             * `inapplicable`. So in EVERY open-layer story the only text axe
+             * measures is the layer's own, and a counter that reads the whole
+             * page claims coverage that does not exist.
+             *
+             * Both predicates are axe's OWN helpers rather than a
+             * reimplementation, and a node has to pass both: painted, and not
+             * excluded from the tree. `isVisibleOnScreen` is what the contrast
+             * rule itself calls, and `isVisibleToScreenReaders` is what returns
+             * false for the inert subtree above.
              */
             const virtual = axe.utils.getNodeFromTree(node);
             if (virtual === undefined || virtual === null) {
@@ -257,7 +281,8 @@ test.describe('automated accessibility', () => {
             if (
               parent !== undefined &&
               parent !== null &&
-              !axe.commons.dom.isVisibleOnScreen(parent)
+              (!axe.commons.dom.isVisibleOnScreen(parent) ||
+                !axe.commons.dom.isVisibleToScreenReaders(parent))
             ) {
               continue;
             }

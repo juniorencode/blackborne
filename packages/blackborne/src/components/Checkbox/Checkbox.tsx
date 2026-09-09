@@ -4,6 +4,7 @@ import {
   type CheckboxProps as AriaCheckboxProps
 } from 'react-aria-components';
 import { FieldMessages, describedBy } from '../../internal/Field';
+import { CHECK_PATH } from '../../internal/CheckGlyph';
 import { cx } from '../../internal/cx';
 
 /*
@@ -172,7 +173,14 @@ export const Checkbox = forwardRef<HTMLLabelElement, CheckboxProps>(
             >
               <path
                 className="bb-checkbox-check"
-                d="M3.5 8.5l3 3 6-7"
+                /*
+                 * The shared geometry, so this tick and the one a chosen
+                 * option draws in a list cannot drift apart. The PATH is
+                 * shared rather than a component, because this one has to be
+                 * a sibling of the dash for the precedence rule below to work
+                 * — see internal/CheckGlyph.
+                 */
+                d={CHECK_PATH}
                 stroke="currentColor"
                 strokeWidth="2"
                 strokeLinecap="round"

@@ -50,6 +50,14 @@ export function Force({
    * no selector, and the three "states" photographed identically to the
    * default. That is the exact failure this helper was written for, arriving
    * from one level further in.
+   *
+   * It arrived a third time on a select, so the shape is worth naming: **for
+   * anything built on `Field`, the target is `.bb-field-box`.** A field's
+   * hover and focus appearance is on the frame that draws the box, never on
+   * the control inside it — and a select's control is a button, which happily
+   * accepts `data-focused` and paints nothing with it. Focus is the one state
+   * that cannot be forced there at all, because the frame reads
+   * `data-focus-within`: focus the control for real instead.
    */
   target?: string;
   children: React.ReactNode;

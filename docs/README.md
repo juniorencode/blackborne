@@ -82,15 +82,18 @@ ordering. Recorded here rather than marked Done, because a phase table that
 rounds up is a phase table nobody believes.
 
 **F9 is left open for the same reason**, and by the same criterion. The layer
-base and seven layers landed; `Menu` and `SplitButton` are still portals and
-still pending. They are not abandoned — they sit in the middle of F10 by
-dependency, because three of its features wait on `Menu` and `Select`
-(catalog §3.1).
+base and seven layers landed, and `Menu` and `Select` landed in the middle of
+F10 rather than here, by dependency: three of its features were waiting on
+exactly those two (catalog §3.1). What is left of F9 is `SplitButton`, which
+was waiting on `Menu` and is now unblocked.
 
-**What F10 proves** is the one level of doc 04 that has never run: N3, a
-structural change in JavaScript. Everything up to here has been N0, N1, N2 or
-the one viewport exception. The contract for it is written in doc 04 §6.1
-before the hook exists, with the prediction it will be measured against.
+**What F10 proves** is the one level of doc 04 that had never run: N3, a
+structural change in JavaScript. Everything before it was N0, N1, N2 or the one
+viewport exception. The contract was written in doc 04 §6.1 before the hook
+existed, with the prediction it would be measured against — and the prediction
+was **wrong**: the hook resolves no token, it reads a step CSS publishes. §6.2
+has the measurement and §6.1 keeps the withdrawn text struck through, because a
+prediction that is quietly deleted afterwards teaches nobody anything.
 
 Nothing from the `0.1.1` codebase is carried over. It stays available under the
 `v0.1.1` git tag.

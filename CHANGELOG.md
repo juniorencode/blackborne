@@ -12,6 +12,46 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **`Select` and `SelectItem`** — choosing one of a short list, and the first
+  **composed field**: the field structure with a layer hanging off it, so it
+  inherits both halves of the library at once.
+
+  ```tsx
+  <Select
+    label="Currency"
+    selectedKey={currency}
+    onSelectionChange={setCurrency}
+    description="Every invoice is issued in this currency."
+  >
+    <SelectItem id="PEN">Peruvian sol</SelectItem>
+    <SelectItem id="USD">US dollar</SelectItem>
+  </Select>
+  ```
+
+  **The list is as wide as the field**, which nothing else anchored in this
+  library is: a list narrower than the field it belongs to reads as a different
+  control. It may grow WIDER — up to the narrow container, where it wraps —
+  because the alternative is truncating every row to the field's width and
+  hiding the ends of the very options somebody opened the list to read.
+
+  The chosen option is marked by **a tick as well as weight**, never by the
+  highlight alone. The moment a list opens the two are the same row; the moment
+  an arrow moves, they are not, and a selection shown only by the highlight
+  would vanish at that point.
+
+  `selectedKey`, `defaultSelectedKey` and `onSelectionChange` are `string`
+  rather than the base's `string | number`, and the callback reports `null` —
+  the same shape as the value, so a controlled pair round-trips.
+
+  **A required select says so out loud**, and it is the one component here that
+  composes a word into its own label. Measured: the base does not put
+  `aria-required` on the button a person operates, so the asterisk `Field` draws
+  would have been the only channel — and an asterisk announces nothing.
+
+  No typing and no filtering (that is `ComboBox`, and it is next), no multiple
+  choice, no sections, and no read-only state — the base's select has none, and
+  a select is either offered or it is not.
+
 - **`Menu`, `MenuItem` and `MenuSeparator`** — a short list of commands,
   opened by a control. The middle of the composition batch, and what three
   deferred features were waiting for.
@@ -718,6 +758,41 @@ minor versions. Every break is listed here with its migration.
   between them.
 
 ### Changed
+
+- **The contrast guard counts only the text axe would actually reach.** It
+  walked every visible text node and asked axe whether each was a ligature,
+  which was right as far as it went and claimed coverage of a page axe never
+  looks at: while a modal layer is open the base marks everything outside it
+  `inert`, and the contrast rule does not enter an inert subtree. Measured on
+  an open select in Arabic — a Latin, painted, non-ligature line sat on the
+  page behind and the rule still reported `inapplicable`.
+
+  Which also kills the fix that suggested itself, and doc 06 §5.1 had already
+  forbidden it in writing: adding a Latin sentence beside the Arabic makes a
+  guard pass without measuring anything. The node now has to be painted **and**
+  in the accessibility tree, both asked of axe's own helpers, and doc 06 §5.2
+  records what is therefore never checked automatically — the scrim, the page
+  behind it, and a trigger's appearance while its layer is open.
+
+  Verified in the direction that matters: with the rule removed on purpose, the
+  two Latin select stories fail and the Arabic one is excused. A guard that can
+  only pass is not a guard.
+
+- **One tick, from one geometry, and a field frame can be told its state.**
+  Two internal extractions with no public API change and no baseline moved,
+  both made before the component that needed them existed.
+
+  The tick is shared as a PATH rather than as a component, which is the part
+  worth writing down: a checkbox's tick is one of two paths in a single svg —
+  the other is the indeterminate dash — and which one shows is a CSS precedence
+  rule that needs them to be siblings. Sharing a component would have meant
+  breaking that or leaving the checkbox out of the share, so the string is the
+  shared thing and there are two renderings of it.
+
+  And `ControlFrame` now accepts `isInvalid` and `isDisabled` explicitly,
+  because the base's `TextField` publishes a group context the frame reads them
+  from and its `Select` does not. Without them the box would look ordinary
+  while the field was invalid — the class of defect that looks right.
 
 - **The catalog's layer fixture lays nothing out, and there is one of it.** It
   had been copied seven times, and three of the copies centred their content
