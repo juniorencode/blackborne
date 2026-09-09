@@ -87,6 +87,9 @@ importers:
 
   packages/blackborne:
     dependencies:
+      '@internationalized/date':
+        specifier: 3.12.4
+        version: 3.12.4
       react-aria:
         specifier: 3.52.0
         version: 3.52.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)

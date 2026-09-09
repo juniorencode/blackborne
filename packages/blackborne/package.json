@@ -73,6 +73,7 @@
     "vitest": "^4.1.11"
   },
   "dependencies": {
+    "@internationalized/date": "3.12.4",
     "react-aria": "3.52.0",
     "react-aria-components": "1.21.0"
   }

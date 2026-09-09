@@ -12,6 +12,52 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **`Calendar`** — a month of days, with the two views above it.
+
+  ```tsx
+  <Calendar label="Appointment" value={day} onChange={setDay} />
+  ```
+
+  The content of the date picker that will open one, and a component in its own
+  right: a scheduling screen shows a month inline.
+
+  **Three views, chained.** The heading is a button: from the days it opens the
+  months, and from the months the years, twelve at a time. Choosing a month
+  comes back to its days and choosing a year to its months — so reaching March
+  1994 is three presses rather than three hundred and eighty arrow keys. The
+  year view's heading is a range formatted by the platform rather than two
+  numbers and a dash (doc 05 §2.2 rule 5).
+
+  **The limits hold in all three**, and one of them is ours: measured, the
+  base's year picker clamps to the calendar's range and its month picker hands
+  over every month regardless, so which months can be pressed is arithmetic in
+  `limits.ts` — and a month is judged by its SPAN, not by the day the base
+  hands over, or a maximum of the fifth of December would rule December out
+  with five days left in it.
+
+  **Today comes from the configured zone, or is not marked at all**
+  ([decision 0023](docs/decisions/0023-today-comes-from-the-configured-zone.md)).
+  The base marks a `data-today` of its own, computed from the browser's zone
+  unless the value carries one, and this component deliberately does not style
+  it: the browser's zone belongs to the machine of whoever is looking rather
+  than to the data (doc 05 §3.1). With no zone configured nothing is marked and
+  development says why.
+
+  **A day's four appearances are four different things**: chosen is the accent
+  pair, today is a ring that takes no layout, unavailable is struck through —
+  "this day exists and you cannot have it" — and disabled is dimmed, "this day
+  is not in the range you are choosing from".
+
+  **There is no read-only calendar.** The base has one and it photographed
+  identically to an ordinary one, which is the argument already accepted for a
+  read-only `Select` arriving on a grid: two states nobody can tell apart are
+  worse than one. A calendar that must not be changed is disabled.
+
+  Its cells are sized from the minimum hit area rather than from a chosen
+  number, so compact density makes a smaller calendar rather than a cramped
+  one — and `isDateUnavailable` receives `2026-09-09`, which is decision 0020's
+  cost paid where it was written down.
+
 - **`useAsyncOptions`** — options that arrive from somewhere, paged and
   debounced, for a `ComboBox`.
 
@@ -1058,6 +1104,27 @@ minor versions. Every break is listed here with its migration.
 
 ### Changed
 
+- **`@internationalized/date` is now a declared dependency**, pinned to
+  `3.12.4` — the version `react-aria-components` resolves — and moving with the
+  other two.
+
+  It was already in the tree as the base's own dependency, so a consumer's
+  install does not grow. What changes is that the version is ours to control
+  rather than inherited, which is the arrangement `react-aria` already has
+  ([decision 0013](docs/decisions/0013-the-portal-container-arrives-with-the-configuration.md)).
+
+  The reason is decision 0020: dates cross this library's boundary as ISO
+  strings, so something has to parse them into the objects the base's calendar
+  understands, and `react-aria-components` re-exports none of that.
+
+  **One of the project's own lint rules was corrected rather than worked
+  around.** It forbade importing `@internationalized/*` on the grounds that
+  reaching past the base's public entry point turns a minor upgrade into a
+  breaking one — which was true while the package was transitive and is not
+  true of a declared dependency. The rule's reasoning now says so, and
+  `@react-aria/*`, `@react-stately/*` and the other `@internationalized/*`
+  packages are still restricted.
+
 - **Two rules were written before the components that need them**, which is the
   order this project keeps: a foundation changes first, never afterwards to
   justify code that already exists. Nothing in the package changed.
@@ -1343,6 +1410,63 @@ minor versions. Every break is listed here with its migration.
   `packages/blackborne`, the visual catalog in `apps/catalog`.
 
 ### Fixed
+
+- **Today's ring was below the contrast floor**, and finding it took three
+  steps that are worth keeping in order, because each one was only reachable
+  from the one before.
+
+  **A baseline failed CI on a clock.** The calendar's RTL reference configures
+  Cairo, and a calendar works out today for itself from the zone it is given
+  (decision 0023) — so the picture marks the 9th at midday UTC and the 10th at
+  22:00. 104 pixels, on a branch that had changed nothing. The harmless face of
+  it.
+
+  **The face that matters does not fail at all.** Photographed from a month
+  that does not contain today, nothing is marked, so the reference would have
+  stopped guarding the ring and gone on passing — three weeks after the ring
+  was added, and it was added because the first baseline showed it vanishing
+  under the chosen day's fill. Three of the calendar's browser checks were
+  dated the same way: measured against the 5th of October they fail on a count,
+  which is to say they were written on the ninth of September and were due to
+  start failing on the tenth. The clock is now fixed for the capture and for
+  that file, at midday UTC from one shared module, so a picture and the check
+  beside it cannot disagree about what day it is
+  ([doc 10](docs/foundations/10-quality-and-verification.md) §6.1).
+
+  **And fixing the clock is not the same as choosing what is in the picture.**
+  All three calendar baselines pinned the ninth as the chosen day, on a day
+  when today WAS the ninth — so every calendar in every reference showed one
+  cell carrying both marks, and the ring has two colours, one per case. Only
+  one of them had ever been photographed. The states baseline now holds a
+  calendar whose chosen day is not today.
+
+  **Which is how the defect became visible.** The ordinary ring was
+  `--bb-border-strong`, measured against the resolved surface:
+
+  |                      | light      | dark   |
+  | -------------------- | ---------- | ------ |
+  | `--bb-border-strong` | **1.86:1** | 3.01:1 |
+  | `--bb-text-muted`    | 5.79:1     | 9.06:1 |
+
+  Doc 03 §5 rule 2 asks 3:1 of a graphical element, and this ring is the only
+  thing marking today — so a hard rule broken in light mode and scraped through
+  in dark, which is exactly the mode asymmetry that rule already warns about. A
+  border token is for a boundary you are not meant to read; this one carries
+  the information.
+
+  So the rule the selected case already followed is now the whole rule: **the
+  ring is drawn in the text colour of whatever it sits on** — `--bb-text-muted`
+  on the surface, the accent pair's own text colour inside a chosen day. Doc 03
+  gains the measurement as a third bullet under that rule.
+
+  **Nothing automated was ever going to catch it.** axe checks the contrast of
+  text and a box shadow is not text, so the calendar now computes the ratio
+  itself, in both modes, against what each ring actually sits on — measured
+  while writing it: comparing the ring inside an accent fill against
+  `--bb-surface` gives 1.03:1 and means nothing. It also asserts that both
+  cases are on screen, so a story that stopped showing one would fail rather
+  than quietly narrow the check. Verified by reverting the token: 1.86:1, named
+  in the failure.
 
 - **A browser check was measuring the machine rather than the component**, and
   it failed CI on a pull request whose only fault was being built on a busy

@@ -348,6 +348,27 @@ read in its source — and it is what "jose" finding "José" rests on. A filter 
 ours passes that same `contains` in rather than writing one, so a consumer who
 declares no keywords gets exactly the behaviour the base would have given them.
 
+**A ring that carries information is not a border.** Today's ring measured
+1.86:1 against the light surface in `--bb-border-strong` and 3.01:1 against the
+dark one — a hard rule broken on one side and scraped on the other (doc 03 §5
+rule 2 asks 3:1 of a graphical element), and it is the only thing marking
+today. The rule that came out of it is the one the selected case already
+followed: **the ring is the text colour of whatever it sits on** —
+`--bb-text-muted` on the surface, the accent pair's own text colour inside a
+chosen day. Two things generalise: a ring is measured against what it SITS on
+rather than against the page, and nothing automated will catch any of it,
+because axe checks the contrast of text and a box shadow is not text.
+
+**Today is the provider's day, and the base's `data-today` is not it.** Every
+calendar cell carries that attribute, computed from the value's zone when the
+value has one and from the BROWSER's otherwise — read in `useCalendarState`.
+Doc 05 §3.1 says the browser's zone belongs to the machine of whoever is
+looking, so a calendar marks today from the configured zone, and with none it
+marks nothing and says so in development (decision 0023). Two zones are in
+play and they answer different questions: which day it is TODAY needs the real
+one, and formatting a month's name needs none at all — a day has no zone, so
+the headings format against UTC.
+
 **A date crosses the public boundary as an ISO string**, not as one of the
 base's calendar objects — `2026-09-09`, `14:30`,
 `2026-09-09T14:30:00-05:00[America/Lima]` — and is parsed inside with
@@ -490,8 +511,8 @@ with. Build, restart, then look (doc 08 §9).
 
 ## Dependencies
 
-Two, both **pinned exactly, with no caret**, and they move together:
-`react-aria-components` and `react-aria`.
+Three, all **pinned exactly, with no caret**, and they move together:
+`react-aria-components`, `react-aria` and `@internationalized/date`.
 
 `react-aria` is there for one thing — `UNSAFE_PortalProvider`, which
 `react-aria-components` does not re-export
@@ -500,6 +521,20 @@ The pin is not a style choice: `react-aria-components` 1.21.0 depends on
 `react-aria` at exactly `3.52.0`, so **a bump of one must move the other in the
 same commit.** Two copies in the tree do not share the portal context, and the
 symptom is a layer mounting in the wrong place with no error anywhere.
+
+`@internationalized/date` arrived with `Calendar`, for the same shape of
+reason. Dates cross this library's boundary as ISO strings
+([decision 0020](../../docs/decisions/0020-a-date-crosses-the-boundary-as-a-string.md)),
+so something has to parse them into the objects the base's calendar
+understands, and `react-aria-components` re-exports none of that. It was
+already in the tree as the base's own dependency, so declaring it adds no
+weight for a consumer — what it adds is a version we control rather than one we
+inherit, which is what the pin is for.
+
+**It is also no longer restricted by the project's own lint rule**, and that
+change is in `eslint.rules.js` with its reason: the rule forbids reaching past
+the base's public entry point, and a declared dependency is not reaching past
+anything. The `@react-aria/*` and `@react-stately/*` packages still are.
 
 And after touching this file's dependencies, `pnpm verify:clean` — a local
 `pnpm install` reuses what is already in `node_modules`, so a half-applied

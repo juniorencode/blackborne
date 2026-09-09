@@ -135,7 +135,26 @@ export const restrictedImports = {
         "No importing another component's internal path (doc 01). Import from its index, or move the shared piece to src/internal."
     },
     {
-      group: ['@react-aria/*', '@react-stately/*', '@internationalized/*'],
+      // `@internationalized/date` is NOT in this group any more, and the
+      // change is deliberate rather than a leak.
+      //
+      // It was a transitive dependency when this rule was written, so
+      // importing it WAS reaching past a public entry point. It is a declared
+      // dependency now, pinned to the version the base resolves and moving
+      // with it — the same arrangement react-aria itself has (decision 0013),
+      // and for the same kind of reason: decision 0020 puts dates across the
+      // public boundary as ISO strings, and something has to parse them.
+      //
+      // The rest of the group stands. `@internationalized/number` and the
+      // `@react-aria/*` and `@react-stately/*` packages are still internals
+      // of the base, and nothing here declares them.
+      group: [
+        '@react-aria/*',
+        '@react-stately/*',
+        '@internationalized/message',
+        '@internationalized/number',
+        '@internationalized/string'
+      ],
       message:
         'Import from react-aria-components, not from its internals. Reaching past the public entry point is how a minor upgrade becomes a breaking one.'
     }

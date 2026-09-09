@@ -15,7 +15,7 @@ export type ContainerStep = 'base' | 'narrow' | 'medium' | 'wide';
  * level of the responsive hierarchy that had never run. Everything adaptive
  * built before this is CSS or the one viewport exception.
  *
- * Not exported. [Decision 0012](../../docs/decisions/0012-growing-is-a-prop-not-a-public-hook.md)
+ * Not exported. [Decision 0012](../../../../docs/decisions/0012-growing-is-a-prop-not-a-public-hook.md)
  * is the precedent: P6 asks that logic be testable without rendering, not that
  * every hook be public. A public one would let a consumer decide our
  * components' structure from outside, and non-goal 10 leaves no hole of that

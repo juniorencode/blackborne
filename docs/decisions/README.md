@@ -33,3 +33,4 @@ the folder is that you can see what was believed when.
 | [0020](./0020-a-date-crosses-the-boundary-as-a-string.md)               | A date crosses the boundary as a string                                  | The base's calendar objects stay inside; `2026-09-09` is the public value    |
 | [0021](./0021-a-combo-box-extends-the-bases-filter.md)                  | A combo box extends the base's filter, so its options are declarations   | A filter that cannot be seen from inside the collection is not a filter      |
 | [0022](./0022-several-values-are-a-union-and-the-chips-are-not-tags.md) | Several values are a union, and the chips are not tags                   | One context per collection: a tag inside a combo box resolves the wrong one  |
+| [0023](./0023-today-comes-from-the-configured-zone.md)                  | Today comes from the configured zone, or is not marked at all            | The base's `data-today` is the browser's answer to the consumer's question   |

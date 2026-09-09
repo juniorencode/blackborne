@@ -30,6 +30,7 @@
  * dates, ids or random values.
  */
 import { expect, test } from '@playwright/test';
+import { pinClock } from './clock';
 import { gotoStory } from './story';
 
 /*
@@ -69,6 +70,16 @@ const capture = async (
   id: string,
   name: string
 ) => {
+  /*
+   * THE CLOCK IS FIXED FIRST, which doc 10 §6.1 is the rule for: a component
+   * that knows what day it is today reads the clock, so a reference taken on
+   * one day does not match the same page on the next. `e2e/clock` carries the
+   * instant, the reasoning and both measurements — and it is shared with the
+   * behaviour checks, so a picture and the check beside it cannot disagree
+   * about what day it is.
+   */
+  await pinClock(page);
+
   // gotoStory, not page.goto: it waits for the story to MOUNT. Without that
   // this line can photograph an empty page, and --update-snapshots has nothing
   // to match against, so the empty page becomes the committed reference. See
@@ -198,6 +209,19 @@ const STATES: Array<[string, string]> = [
    * saying more is on its way. The other four things an empty list can say are
    * one line of muted text each, and the browser checks read them by text.
    */
+  /*
+   * A calendar earns three, and each holds something no assertion does.
+   * `states` is where the four appearances of a day sit together — chosen,
+   * read-only, struck through because it is unavailable, and dimmed because it
+   * is outside the range — and telling those last two apart is doc 07 §6's
+   * rule arriving on a grid. `together` is the density claim: the same month at
+   * both densities, where the cells shrink and the targets do not. And `rtl` is
+   * the grid reading from the right with the arrows swapped, which is half of
+   * what RTL support means.
+   */
+  ['components-calendar--states', 'calendar-states'],
+  ['components-calendar--together', 'calendar-together'],
+  ['components-calendar--direction', 'calendar-rtl'],
   ['components-combobox--loading-more', 'combobox-loading-more'],
   ['components-combobox--several-states', 'combobox-several-states'],
   ['components-combobox--several-in-a-narrow-panel', 'combobox-several-narrow'],

@@ -129,13 +129,23 @@ context, so a filter written there cannot see what was typed
 The filter extends the base's instead, and the prediction is kept beside the
 measurement rather than quietly replaced.
 
-**Three waves of six have landed**: one value, several, and options that arrive
-from somewhere. The third is a **hook** rather than the second component
+**Four waves of seven have landed**: one value, several, options that arrive
+from somewhere, and a calendar. (Seven rather than six: wave 4 was planned as
+both calendars and `Calendar` filled it on its own — the catalog §3.2 records
+the split and why.) The third is a **hook** rather than the second component
 somebody proposed — `useAsyncOptions`, which is P6's corollary applied to a
 request: paging, waiting and the states an empty list can be in are logic, and
-an assembly may not have a capability its pieces lack. What remains is the date
-family, which is where this phase's other half — the locale front — actually
-gets proved. The batch and its six waves are in
+an assembly may not have a capability its pieces lack.
+
+**And the fourth is where the locale front starts being proved**, which is what
+this phase is named for. A calendar's correctness is not a measurement in
+pixels: it is which day is today, and that depends on a zone the library
+refuses to guess ([decision 0023](./decisions/0023-today-comes-from-the-configured-zone.md)).
+The base marks a today of its own from the browser's zone; this one marks the
+provider's or marks nothing. `@internationalized/date` became a declared
+dependency on the way, pinned like the other two, and one of the project's own
+lint rules was corrected rather than worked around — it forbade the import
+because the package was transitive, and it no longer is. The batch and its six waves are in
 [catalog-and-build-order.md](./catalog-and-build-order.md) §3.2, with what was
 deliberately left out of it.
 

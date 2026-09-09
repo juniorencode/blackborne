@@ -14,7 +14,7 @@
  * So the step declares what it is: a label, and an address if there is one.
  * `Breadcrumbs` decides which element that becomes, which is the same shape
  * `Tab` has and for the same reason ([decision
- * 0018](../../../../docs/decisions/0018-a-tab-declares-its-own-panel.md), and
+ * 0018](../../../../../docs/decisions/0018-a-tab-declares-its-own-panel.md), and
  * 0019 for this one).
  *
  * Nothing is lost by it. A step goes somewhere and where it goes is an
