@@ -35,29 +35,68 @@ const ELSEWHERE = 'components-link--elsewhere';
 const ROUTER = 'components-link--with-a-router';
 
 /**
+ * Wait for a tab that has just been opened to actually be somewhere, and ASK
+ * THE TAB rather than ask Playwright.
+ *
+ * `waitForEvent('page')` resolves when the page OBJECT exists, which is before
+ * its first navigation has committed — so reading the url straight after gives
+ * `about:blank`. That was measured first, and the fix for it was
+ * `waitForURL`, which was not enough.
+ *
+ * **`page.url()` can stay at `about:blank` for good.** Measured on 2026-09-09,
+ * after this timed out once in CI and twice in twelve local runs, both with
+ * two workers and never with one:
+ *
+ * ```
+ * page.url()               → about:blank    (readyState complete, nothing pending)
+ * location.href inside it  → http://127.0.0.1:6007/customers/4821
+ * ```
+ *
+ * The tab is exactly where it should be, and Playwright's bookkeeping never
+ * learned it: when the navigation commits before the new target is attached,
+ * no `framenavigated` arrives for it and `waitForURL` has nothing left to
+ * match. So the failure is permanent rather than slow, which is why a longer
+ * timeout would only have made the suite slower and still red.
+ *
+ * `waitForFunction` runs inside the document, is re-evaluated across the
+ * navigation that destroys its execution context, and answers the question
+ * this check is actually about: where did the browser take this tab.
+ */
+const openedAt = async (
+  opened: import('@playwright/test').Page,
+  expected: RegExp
+) => {
+  try {
+    await opened.waitForFunction(
+      pattern => new RegExp(pattern).test(window.location.href),
+      expected.source,
+      { timeout: 10_000 }
+    );
+  } catch (cause) {
+    /*
+     * Say what was there, and say it INSIDE the test's own budget: a
+     * diagnostic that runs after the timeout finds a closed page and reports
+     * nothing, which this repository has now paid for four times.
+     */
+    const inside = await opened
+      .evaluate(() => window.location.href)
+      .catch(() => 'unreachable');
+    throw new Error(
+      `the opened tab never reached ${expected}. page.url() says ` +
+        `${opened.url()}; location.href inside it says ${inside}`,
+      { cause }
+    );
+  }
+  return opened.evaluate(() => window.location.href);
+};
+
+/**
  * Move the pointer onto something, as movement rather than a teleport.
  *
  * `locator.hover()` teleports and the base's `useHover` does not register that
  * at all — measured four ways while building `Tooltip`, and copied here rather
  * than shared because a spec is a document.
  */
-/**
- * Wait for a tab that has just been opened to actually be somewhere.
- *
- * `waitForEvent('page')` resolves when the page OBJECT exists, which is before
- * its first navigation has committed — so reading the url straight after gives
- * `about:blank`. Measured the hard way: the three new-tab checks passed on
- * their own and failed inside the full suite, which is a check measuring a
- * moment instead of a state.
- */
-const openedAt = async (
-  opened: import('@playwright/test').Page,
-  expected: RegExp
-) => {
-  await opened.waitForURL(expected);
-  return opened.url();
-};
-
 const travelTo = async (page: Page, name: string) => {
   const box = await page.getByRole('link', { name }).boundingBox();
   expect(box).not.toBeNull();
@@ -106,9 +145,16 @@ test('a middle click opens another tab', async ({ page }) => {
   expect(await openedAt(opened, /\/customers\/4821/)).toContain(
     '/customers/4821'
   );
-  // And the page it came from stayed where it was, which is the other half of
-  // what a middle click means.
-  expect(page.url()).not.toContain('/customers/4821');
+  /*
+   * And the page it came from stayed where it was, which is the other half of
+   * what a middle click means. Asserted as the story it is still showing
+   * rather than as the address it does not have: `page.url()` is the value
+   * measured to go stale above, and "does not contain" is satisfied by a stale
+   * `about:blank` as happily as by the truth.
+   */
+  expect(await page.evaluate(() => window.location.href)).toContain(
+    'id=components-link--against-a-button'
+  );
   await opened.close();
 });
 
@@ -124,7 +170,9 @@ test('a ctrl-click opens another tab', async ({ page }) => {
   expect(await openedAt(opened, /\/customers\/4821/)).toContain(
     '/customers/4821'
   );
-  expect(page.url()).not.toContain('/customers/4821');
+  expect(await page.evaluate(() => window.location.href)).toContain(
+    'id=components-link--against-a-button'
+  );
   await opened.close();
 });
 

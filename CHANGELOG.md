@@ -1168,6 +1168,29 @@ minor versions. Every break is listed here with its migration.
 
 ### Fixed
 
+- **Three of the browser checks could time out while the browser had done
+  exactly the right thing.** The new-tab checks on `Link` — middle click,
+  ctrl-click, `target` of its own — waited for the opened tab's url with
+  `page.waitForURL`, and that wait can never finish:
+
+  ```
+  page.url()               → about:blank    (readyState complete, nothing pending)
+  location.href inside it  → http://127.0.0.1:6007/customers/4821
+  ```
+
+  When the new tab's navigation commits before Playwright attaches to it, no
+  navigation event arrives for that page and `page.url()` stays at
+  `about:blank` permanently. So the failure was not a slow load: a longer
+  timeout would have made the suite slower and still red. It needed two workers
+  to show up — twelve local runs with one worker never produced it, and CI
+  produced it once in a pull request that changed no code at all.
+
+  The checks now ask the document where it is, with `waitForFunction`, which is
+  also the question they were always about: where did the browser take this
+  tab. Verified by mutation — pointed at an address the link does not have,
+  the check fails and prints both values, which is the diagnostic that was
+  missing while this was being found.
+
 - **The library no longer warns about strings that are not missing.** With no
   `ConfigProvider` above them, components warned once per string drawn —
   measured at thirteen warnings from a single mounted field — because the
