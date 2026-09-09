@@ -19,3 +19,5 @@ export type { CharacterCounterProps } from './CharacterCounter';
 export { ClearButton } from './ClearButton';
 export type { ClearButtonProps } from './ClearButton';
 export { useOwnedValue } from './useOwnedValue';
+export { CHIP, CHIP_REMOVE, ChipRemove } from './ValueChip';
+export type { ChipRemoveProps } from './ValueChip';

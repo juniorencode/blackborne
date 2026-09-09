@@ -177,6 +177,15 @@ seven". It is an order of precedence, decided once here:
    because the width it wants is the width the values are using. It is measured
    where it appears rather than decided here.
 
+   **Date:** 2026-09-09. The first field of that shape now exists, and what it
+   found narrows the question rather than answering it: every value carries its
+   own cross, so what is missing is the one gesture and not the ability. It
+   also found a second rule this section did not have — while such a field's
+   list is OPEN, the base hides everything outside it from a reader, so a cross
+   that stayed in the tab order would be a control somebody could reach and
+   never be told about. It goes out of reach and stays visible, which is rule 1
+   again with the other half of the pair moving.
+
 And one exception to the reservation, for a field whose box **wraps**: it
 reserves the indicator's lane in every state rather than only while busy. 36px
 appearing at the end of a wrapping row can push a value onto a new line, which

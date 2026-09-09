@@ -16,7 +16,12 @@ import { LayerPage } from '../../catalog/layerPage';
 import { Button } from '../Button';
 import { Force } from '../../catalog/forceState';
 import { TextField } from '../TextField';
-import { ComboBox, ComboBoxItem, type ComboBoxSize } from './ComboBox';
+import {
+  ComboBox,
+  ComboBoxItem,
+  type ComboBoxOneProps,
+  type ComboBoxSize
+} from './ComboBox';
 
 const SIZES = ['sm', 'md', 'lg'] as const satisfies readonly ComboBoxSize[];
 
@@ -164,10 +169,29 @@ const meta = {
     size: { control: 'select', options: SIZES },
     onSelectionChange: { control: false }
   }
-} satisfies Meta<typeof ComboBox>;
+  /*
+   * Typed to the ONE-VALUE branch rather than to the component, and it is not
+   * a workaround so much as the union's one real cost: `args` typed as the
+   * whole union cannot be spread and then added to, because
+   * `{...args} defaultSelectedKey="x"` has to satisfy the plural branch as
+   * well and cannot. A consumer writing a wrapper around this component meets
+   * the same wall and takes the same way out — name the branch.
+   *
+   * The stories that hold several values write their props out instead.
+   */
+} satisfies Meta<ComboBoxOneProps>;
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+/*
+ * `StoryObj<ComboBoxOneProps>` rather than `StoryObj<typeof meta>`, which is
+ * the divergence from every other stories file here and has one cause: the
+ * component's props are a UNION, and Storybook derives its args from the
+ * component. `{...args}` then carries "maybe several values" into every story,
+ * and adding `defaultSelectedKey` to it has to satisfy the plural branch as
+ * well — which it cannot. Naming the branch is the same way out a consumer
+ * writing a wrapper takes.
+ */
+type Story = StoryObj<ComboBoxOneProps>;
 
 /**
  * A working combo box.
@@ -532,5 +556,182 @@ export const Together: Story = {
         </ComboBox>
       </Scope>
     </div>
+  )
+};
+
+/* ------------------------------------------------------------------ several
+ *
+ * The same component holding more than one value. These stories write their
+ * props out rather than spreading `args`, because the props are a union and a
+ * spread carries "maybe several" into a story that means one — the reason the
+ * `Story` type above names a branch.
+ */
+
+/**
+ * Several values, each shown as a chip inside the field.
+ *
+ * **Worth doing with the keyboard and worth doing twice.** Choosing one leaves
+ * the list open and empties the box, so the next one is one press away — the
+ * base's behaviour, and the thing that makes picking a rota bearable. Each
+ * chip's cross is a tab stop that says what it removes: "Remove Ana Vega".
+ *
+ * **The box grows and the toggle does not move.** The chips and the draft
+ * input share one wrapping flow INSIDE the frame, so a fourth chip adds a line
+ * to the field rather than pushing the toggle onto one of its own.
+ *
+ * **The chips are not the base's tags**, which is measured rather than chosen:
+ * a `TagGroup` inside a `ComboBox` resolves the combo box's own list state and
+ * either exhausts the heap or throws. What that costs is the arrow-key walk
+ * along the chips; what it does not cost is the announcement, which the base
+ * still supplies through the field's own description.
+ */
+export const Several: Story = {
+  render: () => {
+    function Demo() {
+      const [team, setTeam] = useState<readonly string[]>(['vega']);
+
+      return (
+        <div className="catalog-stack" style={{ maxWidth: 320 }}>
+          <ComboBox
+            label="Doctors"
+            selectionMode="multiple"
+            placeholder="Search by name or speciality"
+            description="Everyone on this rota."
+            selectedKeys={team}
+            onSelectionChange={setTeam}
+          >
+            {doctors}
+          </ComboBox>
+          <p className="catalog-label" style={{ marginBlockEnd: 0 }}>
+            {team.length === 0 ? 'Nobody yet.' : `Chosen: ${team.join(', ')}`}
+          </p>
+        </div>
+      );
+    }
+
+    return <Demo />;
+  }
+};
+
+/**
+ * The states that change when a field holds several values.
+ *
+ * **Read-only and disabled both keep the chips and take the crosses away**,
+ * for the reason doc 07 §6 separates them: a read-only value can be read,
+ * selected and copied, and a value you cannot see is not read-only, it is
+ * gone. What differs between the two rows is the fill and the text, as it is
+ * on every other field.
+ *
+ * **Saving keeps the cross and puts it out of reach** — doc 07 §2.2 rule 1
+ * inside the chip. A cross that disappeared would re-wrap every chip behind it
+ * at the moment somebody is waiting for the save.
+ *
+ * And the last row is the one to look at: **four values, and the field is two
+ * lines tall with its toggle still at the top right of the box.**
+ */
+export const SeveralStates: Story = {
+  name: 'Several · states',
+  render: () => (
+    <div className="catalog-stack" style={{ maxWidth: 320 }}>
+      <ComboBox label="Empty" selectionMode="multiple" placeholder="Search">
+        {doctors}
+      </ComboBox>
+      <ComboBox
+        label="With two"
+        selectionMode="multiple"
+        defaultSelectedKeys={['vega', 'salas']}
+      >
+        {doctors}
+      </ComboBox>
+      <ComboBox
+        label="Invalid"
+        selectionMode="multiple"
+        defaultSelectedKeys={['vega']}
+        isInvalid
+        errorMessage="Choose at least two."
+      >
+        {doctors}
+      </ComboBox>
+      <ComboBox
+        label="Read-only"
+        selectionMode="multiple"
+        defaultSelectedKeys={['vega', 'salas']}
+        isReadOnly
+      >
+        {doctors}
+      </ComboBox>
+      <ComboBox
+        label="Disabled"
+        selectionMode="multiple"
+        defaultSelectedKeys={['vega', 'salas']}
+        isDisabled
+      >
+        {doctors}
+      </ComboBox>
+      <ComboBox
+        label="Saving"
+        selectionMode="multiple"
+        defaultSelectedKeys={['vega', 'salas']}
+        isSaving
+      >
+        {doctors}
+      </ComboBox>
+      <ComboBox
+        label="Four, so the box grows"
+        selectionMode="multiple"
+        defaultSelectedKeys={['ruiz', 'vega', 'salas', 'prado']}
+      >
+        {doctors}
+      </ComboBox>
+    </div>
+  )
+};
+
+/**
+ * Several values in a 320px panel, which is the entry gate's own question.
+ *
+ * The chips wrap inside the box; one long enough to fill a line truncates
+ * rather than forcing the panel wider (P4: 320px is a real width, and a field
+ * that overflows its panel takes the layout with it).
+ */
+export const SeveralInANarrowPanel: Story = {
+  name: 'Several · in a narrow panel',
+  render: () => (
+    <div className="catalog-panel" style={{ width: 320 }}>
+      <p className="catalog-label">A 320px side panel</p>
+      <ComboBox
+        label="Doctors"
+        selectionMode="multiple"
+        defaultSelectedKeys={['ruiz', 'vega', 'salas', 'prado', 'ortiz']}
+      >
+        {doctors}
+      </ComboBox>
+    </div>
+  )
+};
+
+/**
+ * Open, with two already chosen.
+ *
+ * Both are ticked, and the list stays open as they are picked — so the ticks
+ * and the chips are the same value in two places, which is what the tick is
+ * for in a list you did not just open.
+ */
+export const SeveralOpen: Story = {
+  name: 'Several · open',
+  render: () => (
+    <LayerPage label="The page behind.">
+      <Opened>
+        <div style={{ width: 300 }}>
+          <ComboBox
+            label="Doctors"
+            selectionMode="multiple"
+            defaultSelectedKeys={['vega', 'salas']}
+          >
+            {doctors}
+          </ComboBox>
+        </div>
+      </Opened>
+    </LayerPage>
   )
 };
