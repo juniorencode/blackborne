@@ -304,7 +304,26 @@ export interface MenuLinkProps extends MenuItemBase {
   onAction?: never;
 }
 
-export type MenuItemProps = MenuCommandProps | MenuLinkProps;
+export interface MenuTextProps extends MenuItemBase {
+  /**
+   * A row that names something and cannot be pressed, which has to say so.
+   *
+   * `isDisabled` is required rather than optional here, so the illegal state —
+   * a row with nothing to do and no sign of it — cannot be written. The case
+   * that earned it is a collapsed breadcrumb trail: a grouping level with no
+   * page of its own is text in the full trail, and folding it into the menu
+   * cannot turn it into somewhere to go. It appears, dimmed, for the same
+   * reason it is not a link in the row.
+   *
+   * Doc 06 §4 rule 7 forbids disabling without explaining, and it is about a
+   * control that would otherwise act. Nothing here ever would.
+   */
+  isDisabled: true;
+  onAction?: never;
+  href?: never;
+}
+
+export type MenuItemProps = MenuCommandProps | MenuLinkProps | MenuTextProps;
 
 /** One row of a `Menu`: a command, or an address. Only useful inside one. */
 export const MenuItem = forwardRef<HTMLDivElement, MenuItemProps>(
