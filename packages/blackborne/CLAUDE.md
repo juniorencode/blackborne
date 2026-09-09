@@ -348,6 +348,17 @@ read in its source — and it is what "jose" finding "José" rests on. A filter 
 ours passes that same `contains` in rather than writing one, so a consumer who
 declares no keywords gets exactly the behaviour the base would have given them.
 
+**A ring that carries information is not a border.** Today's ring measured
+1.86:1 against the light surface in `--bb-border-strong` and 3.01:1 against the
+dark one — a hard rule broken on one side and scraped on the other (doc 03 §5
+rule 2 asks 3:1 of a graphical element), and it is the only thing marking
+today. The rule that came out of it is the one the selected case already
+followed: **the ring is the text colour of whatever it sits on** —
+`--bb-text-muted` on the surface, the accent pair's own text colour inside a
+chosen day. Two things generalise: a ring is measured against what it SITS on
+rather than against the page, and nothing automated will catch any of it,
+because axe checks the contrast of text and a box shadow is not text.
+
 **Today is the provider's day, and the base's `data-today` is not it.** Every
 calendar cell carries that attribute, computed from the value's zone when the
 value has one and from the BROWSER's otherwise — read in `useCalendarState`.

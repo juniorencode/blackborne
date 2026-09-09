@@ -159,6 +159,19 @@ export const States: Story = {
           <Calendar {...args} defaultValue="2026-09-09" />
         </div>
         <div>
+          {/*
+           * A CHOSEN DAY THAT IS NOT TODAY, and it is here because the
+           * baseline was incomplete without it. Today's ring has two colours
+           * — `--bb-border-strong` on its own, and the accent pair's own text
+           * colour when the day is also chosen, which is the defect the first
+           * calendar baseline turned up — and every other panel on this page
+           * pins the same day the clock is fixed to, so only the second was
+           * ever photographed. Doc 10 §6.1.
+           */}
+          <p className="catalog-label">Today, and a different day chosen</p>
+          <Calendar {...args} defaultValue="2026-09-15" />
+        </div>
+        <div>
           <p className="catalog-label">Weekends unavailable</p>
           <Calendar
             {...args}

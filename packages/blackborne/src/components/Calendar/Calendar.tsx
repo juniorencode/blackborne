@@ -175,16 +175,32 @@ const DAY = cx(
  * make today's cell a pixel larger than the other thirty, and a grid with one
  * column a pixel out is a grid nobody can align.
  *
- * **And the ring changes colour when the day is also selected**, which the
- * first baseline is what found: a grey ring inside an accent fill is a grey
- * ring nobody can see, so the claim above — that a day can be both — was true
- * of the markup and false of the picture. On the accent it is drawn in the
- * pair's own text colour, which is the same technique the split button's
- * divider uses and follows a brand override for free.
+ * ## THE RING IS THE TEXT COLOUR OF WHATEVER IT SITS ON
+ *
+ * One rule with two answers, and both of them arrived from a baseline rather
+ * than from an assertion.
+ *
+ * On the accent it is the pair's own text colour. A grey ring inside an accent
+ * fill is a grey ring nobody can see, so the claim above — that a day can be
+ * both — was true of the markup and false of the picture. Same technique as
+ * the split button's divider, and it follows a brand override for free.
+ *
+ * On the surface it is `--bb-text-muted`, and NOT `--bb-border-strong`, which
+ * is what it was until the picture showed the ordinary ring for the first
+ * time. Measured against the resolved surface in both modes:
+ *
+ *     border-strong    1.86:1 light   3.01:1 dark
+ *     text-muted       5.79:1 light   9.06:1 dark
+ *
+ * Doc 03 §5 rule 2 asks 3:1 of a graphical element, and today's ring is the
+ * only thing marking today — so 1.86 is a hard rule broken in light mode and
+ * scraped through in dark, which is the mode asymmetry that document warns
+ * about in as many words. A border token is for a boundary you are not meant
+ * to read; this ring carries the information.
  */
 const TODAY = cx(
   'bb-calendar-today',
-  'bb:shadow-[inset_0_0_0_1px_var(--bb-border-strong)]',
+  'bb:shadow-[inset_0_0_0_1px_var(--bb-text-muted)]',
   'bb:data-selected:shadow-[inset_0_0_0_1px_var(--bb-accent-on)]',
   'bb:font-strong'
 );

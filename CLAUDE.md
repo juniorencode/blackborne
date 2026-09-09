@@ -90,12 +90,17 @@ had been asked. `useAsyncList` loads once on mount whether anything told it to
 or not, so a minimum query length has to be enforced inside the loader. The
 check now asserts the request COUNT, which is a state rather than a moment.
 
-**The fourth found two things by LOOKING at a baseline**, which is the layer
+**The fourth found three things by LOOKING at a baseline**, which is the layer
 that catches what assertions cannot: a read-only calendar photographed
 identically to an ordinary one — so there is no read-only calendar, for the
-reason there is no read-only `Select` — and today's ring vanished under the
-chosen day's fill, making a claim in the code true of the markup and false of
-the picture. Generate a baseline and then open it.
+reason there is no read-only `Select` — today's ring vanished under the chosen
+day's fill, making a claim in the code true of the markup and false of the
+picture, and then the ring that replaced it turned out to be **below the
+contrast floor** on the light side (1.86:1 where doc 03 §5 rule 2 asks 3:1).
+That third one was only reachable because the reference had been made
+reproducible first: every calendar in every baseline showed today ON the chosen
+day, so the ordinary ring had never been photographed at all. Generate a
+baseline, make it reproducible, and then open it.
 
 **Two things were settled before it started**, in the wave that opened it:
 [doc 07](./docs/foundations/07-forms.md) §2.2 gained a seventh contender for a
@@ -309,6 +314,15 @@ Things that look like improvements and are not:
   A JavaScript `Date` is not the alternative either: it is a timestamp, so
   `new Date('2026-09-09')` is the 8th in Lima and the 9th in Tokyo — measured,
   and the exact bug doc 05 §3.1 exists to prevent.
+- **Do not let a picture or a check depend on the clock.** A component that
+  knows what day it is today reads the clock, and no pinned prop reaches that:
+  the calendar's own baseline failed CI on a time zone, and three of its
+  browser checks were due to start failing the morning after they were
+  written. `e2e/clock` fixes the instant for both, and
+  [doc 10](./docs/foundations/10-quality-and-verification.md) §6.1 has the
+  measurements — including the half that does not fail: photographed from a
+  month with no today in it, a reference stops guarding what it was made for
+  and goes on passing.
 - **Do not widen a check to make it pass.** A browser check that fails at
   random is measuring the machine rather than the component, and lowering its
   bar turns a real failure into a coincidence. The rule and the two measured

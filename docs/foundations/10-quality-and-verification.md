@@ -112,13 +112,73 @@ not noticing. The workflow is in
 So it does not produce constant false positives:
 
 - Animations disabled during capture
-- Dates, identifiers and sample data fixed, never random
+- Dates, identifiers and sample data fixed, never random — **and a date read from the clock is not fixed** (SS6.1)
 - Fonts loaded before capturing
 - An appearance change is **approved** explicitly; never ignored wholesale
 
 Combinations captured: light and dark, LTR and RTL, normal and compact density.
 Not all of them on every component — the full set only on the page that gathers
 them all.
+
+### 6.1 A baseline may not depend on the clock
+
+**Added 2026-09-09**, after a reference that had been generated hours earlier
+failed in CI.
+
+The bullet above has always asked for fixed dates, and it was read as being
+about SAMPLE data: pin the invoice date, pin the identifiers. A component that
+knows what day it is today reads the clock instead, and no amount of pinned
+props fixes that.
+
+**The measurement.** A calendar marks today from the zone the provider gives it
+(§3.1 of doc 05, and decision 0023). Three of its baselines pin the ninth of
+September as the chosen day, and one of them configures `Africa/Cairo`. Asked
+at three instants, with everything else identical:
+
+| Instant                | Day marked in Cairo |
+| ---------------------- | ------------------- |
+| `2026-09-09T12:00:00Z` | the 9th             |
+| `2026-09-09T22:00:00Z` | the 10th            |
+| `2026-11-20T12:00:00Z` | **none**            |
+
+The middle row is what failed CI: 104 pixels, one cell's ring moving one place
+along. It is the harmless face of this.
+
+**The third row is the one that matters.** In a month that does not contain
+today, nothing is marked at all — so the same reference would stop
+photographing the ring entirely, and it would do it without failing. Three
+weeks after the ring was added, the baseline that exists to guard it would be
+guarding an empty space, green forever. That is §11's rule with the sign
+flipped: a check whose RESULT depends on the machine goes red for no reason, and
+a picture whose CONTENT depends on the clock goes green for no reason. The
+second is worse, and this repository has now paid for both in one week.
+
+**So the clock is fixed for the capture**, once, in the harness rather than per
+story: `page.clock.setFixedTime` at midday UTC, which is the instant at which
+every zone from UTC-12 to UTC+11 is on the same calendar day. It fixes
+`Date.now()` and `new Date()` and leaves every timer running, so nothing else
+about the page changes. Per-component would be a trap paid five more times -
+`RangeCalendar`, `DateField`, `DatePicker`, `TimeField` and `DateRangePicker`
+are all coming and all read the clock.
+
+**And it is not only the pictures.** Three of the calendar's browser checks
+needed today to be on the month they were looking at, and one of those needed
+it to be the chosen day exactly — measured against the 5th of October, all
+three fail on a count. They were written on the ninth of September and were due
+to start failing on the tenth, which would have arrived looking exactly like
+the flake §11 has just finished removing. The third of them is the one worth
+knowing about: it asserts that NOTHING is marked when no zone is configured,
+and counts the base's own mark to prove the story is showing a calendar at
+all. A check can be dated without mentioning today, so the clock is fixed for
+the whole file rather than for the checks that look dated.
+
+**And a fixed clock is not a substitute for choosing what is in the picture.**
+The same three baselines all pinned the ninth as the chosen day, on a day when
+today WAS the ninth, so every calendar in every reference showed one cell
+carrying both marks — and the ring has two colours, one for each case. Only one
+of them was ever on film. Fixing the instant makes a baseline reproducible; it
+does not make it complete, and the states baseline now chooses a day that is
+not today so both rings appear at once.
 
 ## 7. Budgets with numbers
 

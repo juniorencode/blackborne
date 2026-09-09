@@ -449,8 +449,8 @@ it shows immediately.
    **in both modes and in every brand theme offered**. If a theme does not
    pass, the derived token is adjusted; the theme is not published.
 
-   Two things measurement taught, and neither was obvious from reading the
-   palette:
+   Three things measurement taught, and none of them was obvious from reading
+   the palette:
 
    - **Step 9 is not a text background.** It is designed for graphical
      elements, which need only 3:1. White on it measures 3.91:1 for red,
@@ -463,6 +463,27 @@ it shows immediately.
      step 9 clears it comfortably. So a filled state button is white-on-deep
      in light mode and dark-on-bright in dark mode — which is also why §6.1
      allows a token to be restated when its role genuinely differs.
+   - **A border token is not a mark.** `--bb-border-strong` measures 1.86:1
+     against the light surface and 3.01:1 against the dark one, which is
+     correct for what it is for: the boundary of a control you are not meant
+     to read, on an element identified by its label and its fill. Reaching for
+     it to CARRY information fails this rule on the light side and scrapes
+     through on the dark, which is the asymmetry the bullet above describes
+     arriving from the other direction. Measured on a calendar, where the ring
+     around today is the only thing marking today — a graphical element under
+     any reading, so 3:1 applies, and the ring is drawn in the text colour of
+     whatever it sits on instead: `--bb-text-muted` on the surface at 5.79:1
+     and 9.06:1, the accent pair's own text colour inside a selected day.
+
+     Two things generalise from it. **A ring is measured against what it sits
+     on**, not against the page: the same ring inside an accent fill compared
+     against `--bb-surface` reads 1.03:1 and means nothing. And **nothing
+     automated was ever going to catch this** — axe checks the contrast of
+     text, and a box shadow is not text, which is why the calendar now carries
+     a browser check that computes the ratio itself in both modes
+     ([doc 10](./10-quality-and-verification.md) §6.1 is the neighbouring
+     lesson: it was a baseline nobody could have read that showed the ring at
+     all).
 
    All of this was found by automated accessibility, not by review, and it had
    been in the catalog since the first component.

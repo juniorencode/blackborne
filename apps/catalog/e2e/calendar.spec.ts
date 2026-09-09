@@ -10,6 +10,8 @@
  * Arabic, which is the half of RTL support that only a real direction shows.
  */
 import { expect, test } from '@playwright/test';
+import type { Page } from '@playwright/test';
+import { pinClock } from './clock';
 import { gotoStory } from './story';
 
 const OVERVIEW = 'components-calendar--overview';
@@ -24,6 +26,25 @@ const NO_ZONE = 'components-calendar--with-no-zone';
 const RTL = 'components-calendar--direction';
 const NARROW = 'components-calendar--in-a-narrow-panel';
 const TOGETHER = 'components-calendar--together';
+
+/*
+ * EVERY CHECK IN THIS FILE IS DATED, so every one of them fixes the clock.
+ *
+ * A calendar works out today for itself, from the zone the provider gives it
+ * (decision 0023), and THREE of the checks below need today to be ON the month
+ * they are looking at — one of those needs it to be the chosen day exactly.
+ * Measured against the 5th of October all three fail on the count, which is to
+ * say they were written on the ninth of September and were due to start
+ * failing on the tenth.
+ *
+ * Not narrowed to the two that need it. This is the file about a component
+ * whose whole subject is what day it is, and a reader should not have to work
+ * out which of its checks are reproducible. `e2e/clock` has the instant and
+ * the reasoning; doc 10 §6.1 has the rule.
+ */
+test.beforeEach(async ({ page }) => {
+  await pinClock(page);
+});
 
 test('a day cell clears the minimum target, at both densities', async ({
   page
@@ -202,6 +223,124 @@ test('a month with nothing in it cannot be pressed', async ({ page }) => {
     'October',
     'November'
   ]);
+});
+
+/*
+ * THE RING'S CONTRAST, which no automated layer covers.
+ *
+ * axe checks the contrast of TEXT. Today's ring is a box shadow, so nothing in
+ * the accessibility suite has ever looked at it — and it is the only thing
+ * marking today, which makes it a graphical element carrying information and
+ * puts doc 03 §5 rule 2's 3:1 on it.
+ *
+ * It was drawn in `--bb-border-strong` until the states baseline showed the
+ * ordinary ring for the first time: 1.86:1 in light mode and 3.01:1 in dark, so
+ * a hard rule broken on one side and scraped through on the other. Both modes
+ * are asserted rather than one, because that asymmetry is doc 03's own warning
+ * and a light-only check would have passed on the dark half.
+ *
+ * ## Against what the ring actually sits on
+ *
+ * Not against the page. A day can be today AND chosen, and then the ring is
+ * inside an accent fill — which is why it changes colour at all. Measured
+ * while writing this: comparing that ring against `--bb-surface` gives 1.03:1
+ * and means nothing, because white on white is not what anybody is looking
+ * at. So the background is the CELL's own where it paints one, and the
+ * resolved surface where it does not.
+ *
+ * Two stories, for the same reason: every calendar in `Together` has today on
+ * the chosen day, so on its own it would never measure the ordinary ring —
+ * the one that was wrong.
+ */
+const RING_FLOOR = 3;
+
+/** WCAG relative luminance, and the ratio between two resolved colours. */
+const contrast = (page: Page, one: string, other: string) =>
+  page.evaluate(
+    ([a, b]) => {
+      const parse = (value: string): number[] => {
+        const found = /rgba?\(([^)]+)\)/.exec(value);
+        if (found === null) throw new Error(`not a colour: ${value}`);
+        return found[1]!.split(',').map(part => Number.parseFloat(part));
+      };
+      const luminance = (colour: string) => {
+        const [r, g, b] = parse(colour);
+        const channel = (v: number) => {
+          const s = v / 255;
+          return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+        };
+        return (
+          0.2126 * channel(r!) + 0.7152 * channel(g!) + 0.0722 * channel(b!)
+        );
+      };
+      const [x, y] = [luminance(a!), luminance(b!)];
+      return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+    },
+    [one, other]
+  );
+
+/** Every marked cell in the story, with the colour it is drawn against. */
+const ringsIn = (page: Page) =>
+  page.locator('.bb-calendar').evaluateAll(scopes =>
+    scopes.map(scope => {
+      const cell = scope.querySelector('.bb-calendar-today');
+      if (cell === null) throw new Error('no day marked as today');
+
+      const shadow = getComputedStyle(cell).boxShadow;
+      const ring = /rgba?\([^)]+\)(?=[^,]*inset)/.exec(shadow);
+      if (ring === null) throw new Error(`no inset ring in: ${shadow}`);
+
+      /*
+       * The cell's own fill when it has one. Otherwise the surface, resolved
+       * by PAINTING it inside the same scope rather than walked up the tree:
+       * a mode is a redefinition of variables on a container (doc 03 §3), so
+       * the answer depends on where it is asked, and nothing between the cell
+       * and the page paints a background of its own.
+       */
+      const own = getComputedStyle(cell).backgroundColor;
+      let behind = own;
+      if (own === 'rgba(0, 0, 0, 0)' || own === 'transparent') {
+        const probe = document.createElement('div');
+        probe.style.backgroundColor = 'var(--bb-surface)';
+        scope.append(probe);
+        behind = getComputedStyle(probe).backgroundColor;
+        probe.remove();
+      }
+
+      return {
+        ring: ring[0],
+        behind,
+        chosen: cell.hasAttribute('data-selected')
+      };
+    })
+  );
+
+test("today's ring clears the floor for a graphical element", async ({
+  page
+}) => {
+  const seen: Array<{ ring: string; behind: string; chosen: boolean }> = [];
+
+  for (const story of [STATES, TOGETHER]) {
+    await gotoStory(page, story);
+    seen.push(...(await ringsIn(page)));
+  }
+
+  /*
+   * Both cases on film, which is the floor under the assertions rather than a
+   * count for its own sake: a story that stopped marking today, or one where
+   * every calendar happened to have today chosen, would leave one of the two
+   * rings unmeasured and this suite would not notice.
+   */
+  expect(seen.filter(one => one.chosen).length).toBeGreaterThan(0);
+  expect(seen.filter(one => !one.chosen).length).toBeGreaterThan(0);
+
+  for (const one of seen) {
+    const ratio = await contrast(page, one.ring, one.behind);
+    expect(
+      ratio,
+      `${one.ring} on ${one.behind} is ${ratio.toFixed(2)}:1`
+    ).toBeGreaterThanOrEqual(RING_FLOOR);
+  }
 });
 
 test('an unavailable day is struck through, and a disabled one is not', async ({

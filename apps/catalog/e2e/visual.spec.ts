@@ -30,6 +30,7 @@
  * dates, ids or random values.
  */
 import { expect, test } from '@playwright/test';
+import { pinClock } from './clock';
 import { gotoStory } from './story';
 
 /*
@@ -69,6 +70,16 @@ const capture = async (
   id: string,
   name: string
 ) => {
+  /*
+   * THE CLOCK IS FIXED FIRST, which doc 10 §6.1 is the rule for: a component
+   * that knows what day it is today reads the clock, so a reference taken on
+   * one day does not match the same page on the next. `e2e/clock` carries the
+   * instant, the reasoning and both measurements — and it is shared with the
+   * behaviour checks, so a picture and the check beside it cannot disagree
+   * about what day it is.
+   */
+  await pinClock(page);
+
   // gotoStory, not page.goto: it waits for the story to MOUNT. Without that
   // this line can photograph an empty page, and --update-snapshots has nothing
   // to match against, so the empty page becomes the committed reference. See
