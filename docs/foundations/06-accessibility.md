@@ -266,13 +266,14 @@ alerts.
 because "run a screen reader over it" is not a task anybody can act on and
 these are:
 
-| Component     | The question                                                                                                                                                                                                                                   |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Toast`       | Whether an assertive announcement actually interrupts, which is the whole reason `role="alert"` is on the content                                                                                                                              |
-| `Breadcrumbs` | Whether the trail wants a landmark. The base labels the list and adding a `<nav>` named the same thing says the word twice in one breath                                                                                                       |
-| `Menu`        | **Measured:** the base wraps a menu in a popover that takes `role="dialog"`, labelled by the same trigger — so the tree is a dialog containing a menu, with one name on both. Whether that reads as noise or as nothing is what a person hears |
-| `Pagination`  | Both pagers are labelled lists rather than landmarks, because two identical landmarks are indistinguishable (axe's `landmark-unique`). Whether the list label is enough                                                                        |
-| `Accordion`   | Whether the headings read as an outline at the level the consumer gave                                                                                                                                                                         |
+| Component     | The question                                                                                                                                                                                                                                                                                                                             |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Toast`       | Whether an assertive announcement actually interrupts, which is the whole reason `role="alert"` is on the content                                                                                                                                                                                                                        |
+| `Breadcrumbs` | Whether the trail wants a landmark. The base labels the list and adding a `<nav>` named the same thing says the word twice in one breath                                                                                                                                                                                                 |
+| `Menu`        | **Measured:** the base wraps a menu in a popover that takes `role="dialog"`, labelled by the same trigger — so the tree is a dialog containing a menu, with one name on both. Whether that reads as noise or as nothing is what a person hears                                                                                           |
+| `Pagination`  | Both pagers are labelled lists rather than landmarks, because two identical landmarks are indistinguishable (axe's `landmark-unique`). Whether the list label is enough                                                                                                                                                                  |
+| `Accordion`   | Whether the headings read as an outline at the level the consumer gave                                                                                                                                                                                                                                                                   |
+| `Select`      | **Measured:** the base does not put `aria-required` on the button a person operates — it puts `required` on the hidden native control it renders for a form — so the component composes the word into the label instead, and the name becomes "Currency required". Whether that reads as the state it is, or as part of the field's name |
 
 Each of these is a question a measurement cannot settle, and every one of them
 was reached by taking a decision that could be defended in writing. That is the
@@ -322,6 +323,32 @@ This was found by the guard firing on `Components/Preview / RTL`, the first
 story in the catalog whose only visible text was Arabic. Every earlier RTL
 story happened to keep a Latin word — a button label, a number — and that word
 is what the contrast rule had been measuring all along.
+
+### 5.2 And it does not cover the page behind an open layer
+
+The second bound on the same layer, found by the same guard firing a second
+time — on `Components/Select / RTL`, and only because the first fix that
+suggested itself was tried and measured.
+
+**While a modal layer is open, axe measures the layer's text and nothing
+else.** The base marks everything outside an open layer `inert`, and axe's
+contrast rule does not look inside an inert subtree. Measured on that story:
+the catalog fixture's own line — Latin, painted, and not a ligature by axe's
+own classifier — sat in an inert subtree, and the rule still reported
+`inapplicable`. So a Latin sentence on the page behind does not rescue the
+check, which is exactly the shortcut §5.1 forbids, arriving as a fix that looks
+principled.
+
+What is therefore never measured automatically: the scrim, the page behind it,
+and the trigger's own appearance while its layer is open. Those are visual
+baselines, which is where they belong — a screenshot sees a dimmed page and a
+contrast rule was never going to say whether the dimming was right.
+
+The consequence for the catalog's guard is that it counts only the text axe
+would actually reach — painted **and** not excluded from the tree, both asked
+of axe's own helpers. A guard that walked the whole page would have claimed
+coverage of an inert page behind, which is the failure mode this whole section
+exists to name: a check reporting more than it did.
 
 ## 6. Definition of done
 
