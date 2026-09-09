@@ -33,13 +33,14 @@ this file is out of date. Fix this file.
 assuming anything exists.
 
 At the time of writing: all ten foundations are written, the pipeline is
-complete, and **thirty-six components exist** — the ten simple fields and
+complete, and **thirty-seven components exist** — the ten simple fields and
 controls, `Button`, the flat pieces around them (`Alert`, `Badge`, `Card`,
 `EmptyState`, `Separator`, `Skeleton`, `Spinner`, `VisuallyHidden`), seven
 layers (`Dialog`, `Drawer`, `ConfirmDialog`, `Tooltip`, `Popover`, `Preview`,
 `Toast`), and the composition batch so far: `Accordion`, `Collapsible`, `Link`,
 `Breadcrumbs`, `Pagination`, `CursorPagination`, `Menu`, `Select`, `Tabs` and
-`SplitButton`.
+`SplitButton`. `ComboBox` is the thirty-seventh and the first of the batch
+that follows.
 
 **The layer batch is finished.** It landed in that order, with `Toast` last by
 decision (doc 08 §7.1). `Menu` was deliberately not in it.
@@ -54,13 +55,23 @@ than a leftover — the question the catalog said to ask once `Select` existed
 was asked, and how many rows to fetch belongs to the listing rather than to the
 thing that moves between pages.
 
-**What is next is a chosen batch, in six waves**, and the shape of it is in
-[the catalog](./docs/catalog-and-build-order.md) §3.2 — read that before
-starting one. `ComboBox` first, because it is the named risk of level 4; then
-the same component holding several values; then `useAsyncOptions`, which is a
-hook and not a component; then `Calendar` and `RangeCalendar`, `DateField` and
+**The batch after composition is under way**, in six waves, and the shape of
+it is in [the catalog](./docs/catalog-and-build-order.md) §3.2 — read that
+before starting one. `ComboBox` has landed, and what follows is the same
+component holding several values, then `useAsyncOptions`, which is a hook and
+not a component, then `Calendar` and `RangeCalendar`, `DateField` and
 `DatePicker`, and `TimeField` with `DateRangePicker`. It spans three levels, so
 the order is the dependency and not the level number.
+
+**And the risk component paid for itself in the first wave.** The catalog
+predicted that per-option keywords would mean `ComboBox` filtered its own rows.
+It cannot: the base builds its collection in a render pass **detached from the
+surrounding context**, so a filter written there sees no query and keeps every
+option — the list showed all three while the component's own render had
+narrowed them to one. The filter extends the base's instead
+([decision 0021](./docs/decisions/0021-a-combo-box-extends-the-bases-filter.md)).
+Anything that needs to know what a collection is being asked for has the same
+problem, and the table suite is made of collections.
 
 **Two things were settled before it started**, in the wave that opened it:
 [doc 07](./docs/foundations/07-forms.md) §2.2 gained a seventh contender for a

@@ -88,6 +88,25 @@ export { CheckboxGroup } from './components/CheckboxGroup';
 export type { CheckboxGroupProps } from './components/CheckboxGroup';
 
 /*
+ * The risk component of the composed fields, and the second component whose
+ * children are DECLARATIONS rather than markup — `ComboBoxItem` renders
+ * nothing, because deciding which options exist right now is the whole
+ * difference between a combo box and a select (decision 0021).
+ *
+ * `matchOptions`, which is that decision's other half, is NOT exported yet:
+ * it is pure and it is the logic, which is the shape `pageWindow` was
+ * published as — but P5 asks which screen needs it today, and the one that
+ * will is the consumer filtering on a server, who arrives with the
+ * asynchronous hook rather than now.
+ */
+export { ComboBox, ComboBoxItem } from './components/ComboBox';
+export type {
+  ComboBoxItemProps,
+  ComboBoxProps,
+  ComboBoxSize
+} from './components/ComboBox';
+
+/*
  * `useDialog` is exported alongside the component, and it is the hook doc 02
  * §5 promises by name: render props are not part of this API, and the `close`
  * a consumer needs for their own footer button has to arrive some other way.

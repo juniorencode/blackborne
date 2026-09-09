@@ -12,6 +12,62 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **`ComboBox`** — typing to find one of a long list, and the first component
+  of the batch after composition.
+
+  ```tsx
+  <ComboBox label="Doctor" onSelectionChange={setDoctor}>
+    <ComboBoxItem id="7" keywords={['cardiology']}>
+      Dr. Ruiz
+    </ComboBoxItem>
+    <ComboBoxItem id="9" keywords={['paediatrics']}>
+      Dr. Vega
+    </ComboBoxItem>
+  </ComboBox>
+  ```
+
+  **`keywords` is what it exists for.** An option can be found by words it does
+  not display — a doctor by a speciality, a customer by a tax number — and they
+  are searched exactly as the visible text is, with the platform's collator, so
+  "jose" finds "José" and "manana" finds "Mañana". They are not shown and not
+  announced: a keyword is a way in, not a second label.
+
+  **An option is a declaration**, like a `Tab` and a `Breadcrumb`:
+  `ComboBoxItem` renders nothing and the field reads it. Which means a
+  component of your own that returns options cannot be seen — share a value,
+  not a component — and the field says so in development rather than rendering
+  less than it was given.
+
+  **The trailing edge holds the toggle and no clear button**
+  ([doc 07](docs/foundations/07-forms.md) §2.2 rule 5). A keyboard opens the
+  list with `ArrowDown` and a pointer has nothing else, while emptying the
+  field has routes that cost no width.
+
+  **An empty list says which kind of empty it is** — still arriving, none to
+  arrive, or a query that found none of them. Doc 09 asks for that distinction
+  by name, and telling somebody "no results" about a list that was never given
+  any options blames their query for somebody else's empty prop.
+
+  All eight of doc 07 §6's states, which is one more than `Select` has: you can
+  type in this one, so read-only means something.
+
+  **Two things were measured that changed the design.**
+  [Decision 0021](docs/decisions/0021-a-combo-box-extends-the-bases-filter.md)
+  has both. The keywords cannot live in the row's `textValue` — they filter
+  correctly and are not announced, but the base writes that text into the input
+  when the option is chosen, so choosing "Dr. Ruiz" left the field reading
+  "Ruiz cardiology dermatology". And the component cannot filter the rows
+  itself, which was the plan: the base builds its collection in a render pass
+  detached from the surrounding context, so a filter written there sees no
+  query and keeps every option. The filter extends the base's instead.
+
+  It also answers the question
+  [decision 0017](docs/decisions/0017-a-field-says-what-the-base-does-not-announce.md)
+  left open: with `validationBehavior="aria"`, which every field here sets, a
+  combo box's input carries `aria-required` — so unlike `Select` it composes no
+  word into its label. Under the base's default validation behaviour it would
+  be the native attribute instead, and the browser's own bubble with it.
+
 - **`SplitButton`** — one action, with the near alternatives behind an arrow.
   The last component that was waiting for `Menu`, and the one that closes the
   layer batch.
