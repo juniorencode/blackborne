@@ -7,6 +7,7 @@ import {
   Input,
   ListBox as AriaListBox,
   ListBoxItem as AriaListBoxItem,
+  ListBoxLoadMoreItem,
   Popover as AriaPopover,
   useFilter,
   type ComboBoxProps as AriaComboBoxProps,
@@ -30,6 +31,7 @@ import { cx } from '../../internal/cx';
 import { readDeclarations } from '../../internal/readDeclarations';
 import { useDevWarning } from '../../internal/useDevWarning';
 import { optionMatcher, type OptionTerms } from './optionMatcher';
+import type { AsyncOptions } from './useAsyncOptions';
 
 export type ComboBoxSize = 'sm' | 'md' | 'lg';
 
@@ -94,6 +96,9 @@ const DRAFT = cx('bb:px-0 bb:self-stretch');
  * `useOwnedValue` seeds its own state from this: a fresh array would reseed
  * nothing but would make every memo downstream of it useless.
  */
+/* Keeps every row, for a list the loader already filtered. */
+const KEEP_EVERYTHING = (): boolean => true;
+
 const NO_KEYS: readonly string[] = Object.freeze([]);
 
 /*
@@ -339,6 +344,21 @@ interface ComboBoxSharedProps extends Omit<
   /** Height and type size. Aligns with a `Button` of the same size. */
   size?: ComboBoxSize;
   /**
+   * Where the options come from, when they come from somewhere.
+   *
+   * Made by `useAsyncOptions`, and handed over whole — the shape `Toast`
+   * established, where a hook makes the queue and the component renders it.
+   * The consumer still renders the options themselves, because an option is a
+   * declaration and only they know what a row should say.
+   *
+   * **A field with a source does not filter what it is given.** The query went
+   * to the loader and these came back, so filtering again here would be
+   * answering the same question twice with less information — and `keywords`
+   * on an option have nothing to do, because searching by something a row does
+   * not show is a `WHERE` clause rather than a prop.
+   */
+  source?: ComboBoxSource;
+  /**
    * Applied to the field's outermost element, for placement in the consumer's
    * layout. Nothing reaches an internal node (doc 02 §6).
    */
@@ -431,6 +451,25 @@ function forwardable<T extends object>(props: T): Omit<T, OwnValueProp> {
     delete (rest as Record<string, unknown>)[name];
   return rest;
 }
+
+/**
+ * What a field reads out of an asynchronous source.
+ *
+ * `items` is deliberately not in it: the consumer renders those, and a field
+ * that also read them would be two things deciding what a row says. Declared
+ * as its own type so the source's element type stays out of the field's props
+ * — a combo box does not care what a doctor is.
+ */
+export type ComboBoxSource = Pick<
+  AsyncOptions<unknown>,
+  | 'isLoading'
+  | 'isLoadingMore'
+  | 'error'
+  | 'isWaitingForQuery'
+  | 'query'
+  | 'onQueryChange'
+  | 'loadMore'
+>;
 
 /** What an option is searched by, and nothing about how it is drawn. */
 const termsOf = (option: ComboBoxItemProps): OptionTerms => ({
@@ -578,10 +617,13 @@ export const ComboBox = forwardRef<HTMLInputElement, ComboBoxProps>(
       isSaving = false,
       size = 'md',
       className,
+      source,
       selectionMode = 'single'
     } = props;
 
     const ids = useId();
+    /* What is in the box, when anything is holding it. */
+    const query = source?.query ?? '';
     const several = selectionMode === 'multiple';
 
     /*
@@ -599,6 +641,8 @@ export const ComboBox = forwardRef<HTMLInputElement, ComboBoxProps>(
     const noResults = useMessage('emptyStateNoResults');
     const noOptions = useMessage('emptyStateNoData');
     const loading = useMessage('loading');
+    const keepTyping = useMessage('keepTyping');
+    const loadFailed = useMessage('loadFailed');
     const removeLabel = useMessage('remove');
 
     /*
@@ -646,11 +690,31 @@ export const ComboBox = forwardRef<HTMLInputElement, ComboBoxProps>(
      * Telling somebody "no results" about a list that was never given any
      * options blames their query for somebody else's empty prop.
      */
-    const emptyMessage = isLoading
-      ? loading
-      : found.length === 0
-        ? noOptions
-        : noResults;
+    const emptyMessage = source
+      ? /*
+         * FIVE ANSWERS ONCE THE OPTIONS COME FROM SOMEWHERE, and the order is
+         * the order the questions are asked in. Nothing has been asked for
+         * yet; the asking failed; the answer is on its way; a query came back
+         * empty; or there was never anything to come back.
+         *
+         * The last two are doc 09's distinction again, and with a source the
+         * difference is whether anything was typed — "no results" for a query
+         * that found none, "nothing here yet" for a catalogue that is empty.
+         */
+        source.isWaitingForQuery
+        ? keepTyping
+        : source.error !== undefined
+          ? loadFailed
+          : source.isLoading
+            ? loading
+            : query.trim() === ''
+              ? noOptions
+              : noResults
+      : isLoading
+        ? loading
+        : found.length === 0
+          ? noOptions
+          : noResults;
 
     const terms = found.map(termsOf);
     /*
@@ -848,6 +912,31 @@ export const ComboBox = forwardRef<HTMLInputElement, ComboBoxProps>(
                   <CheckGlyph className={TICK} />
                 </AriaListBoxItem>
               ))}
+              {source === undefined ? null : (
+                /*
+                 * THE END OF THE LIST, asking for one more page.
+                 *
+                 * The base's own sentinel: it watches for itself coming into
+                 * view and calls `onLoadMore`, which is how a list loads while
+                 * somebody scrolls rather than when they press something.
+                 *
+                 * Two things measured about it. **`loadMore` past the last
+                 * page calls nothing** — the loader returning no cursor is how
+                 * the base learns there is an end — so reaching the bottom of
+                 * a finished list is quiet. And **it needs
+                 * `IntersectionObserver`**, which jsdom does not have: a unit
+                 * test rendering a field with a source has to stub it, and
+                 * whether the scroll actually loads is a question for a
+                 * browser (`e2e/combobox.spec.ts` asks it).
+                 */
+                <ListBoxLoadMoreItem
+                  className={EMPTY}
+                  isLoading={source.isLoadingMore}
+                  onLoadMore={source.loadMore}
+                >
+                  {loading}
+                </ListBoxLoadMoreItem>
+              )}
             </AriaListBox>
           </div>
         </AriaPopover>
@@ -882,10 +971,25 @@ export const ComboBox = forwardRef<HTMLInputElement, ComboBoxProps>(
        * working because none of it moved: the value in the input, the
        * selection, and the reopening that shows every option again.
        */
-      defaultFilter: matcher,
+      /*
+       * Ours extends the base's filter for a local list, and is switched off
+       * entirely for a loaded one: the server already answered the query, and
+       * filtering the answer would hide rows it deliberately returned.
+       */
+      defaultFilter: source ? KEEP_EVERYTHING : matcher,
       /* A list that found nothing says so, rather than closing. */
       allowsEmptyCollection: true,
-      className: cx('bb:group bb:w-full', className)
+      className: cx('bb:group bb:w-full', className),
+      /*
+       * The query lives in the source when there is one, so the field's text
+       * is controlled by it: every keystroke is reported, the hook waits, and
+       * the loader is asked once. Without a source nothing here changes and
+       * the base keeps its own text, which is what makes a local list behave
+       * exactly as it did before any of this existed.
+       */
+      ...(source === undefined
+        ? {}
+        : { inputValue: source.query, onInputChange: source.onQueryChange })
     };
 
     if (props.selectionMode === 'multiple') {

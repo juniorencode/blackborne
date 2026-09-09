@@ -111,7 +111,25 @@ export type {
   ComboBoxOneProps,
   ComboBoxProps,
   ComboBoxSeveralProps,
-  ComboBoxSize
+  ComboBoxSize,
+  ComboBoxSource
+} from './components/ComboBox';
+
+/*
+ * Options that arrive from somewhere, as a HOOK rather than as a second
+ * component — the shape `useToasts` established, and what P6's corollary asks
+ * for: paging, waiting and three states are logic, and an assembly may not
+ * have a capability its pieces lack.
+ *
+ * It brings no network with it (P2): `load` is a function that returns a
+ * promise, and a test hands it an array.
+ */
+export { useAsyncOptions } from './components/ComboBox';
+export type {
+  AsyncOptions,
+  AsyncOptionsConfig,
+  OptionsPage,
+  OptionsRequest
 } from './components/ComboBox';
 
 /*

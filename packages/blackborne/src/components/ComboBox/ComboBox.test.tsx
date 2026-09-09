@@ -9,10 +9,16 @@
  * `apps/catalog/e2e/combobox.spec.ts`.
  */
 import { render, screen } from '@testing-library/react';
+import { useState } from 'react';
 import userEvent from '@testing-library/user-event';
-import { expect, test, vi } from 'vitest';
+import { beforeAll, expect, test, vi } from 'vitest';
 import { ConfigProvider } from '../../config';
-import { ComboBox, ComboBoxItem, type ComboBoxSeveralProps } from './ComboBox';
+import {
+  ComboBox,
+  ComboBoxItem,
+  type ComboBoxSeveralProps,
+  type ComboBoxSource
+} from './ComboBox';
 
 const Doctors = (props: Partial<Parameters<typeof ComboBox>[0]> = {}) => (
   <ComboBox label="Doctor" {...props}>
@@ -757,4 +763,221 @@ test('while the list is open, a chip cross is out of the tab order', async () =>
    * thing that quietly matches nothing.
    */
   expect(cross!.parentElement?.className.includes('bb:invisible')).toBe(false);
+});
+
+/* ------------------------------------------------------------- from a source
+ *
+ * A field whose options arrive from somewhere. The logic is all in
+ * `useAsyncOptions` and tested there; what is asserted here is the FIELD's
+ * half — which of the five things an empty list can say, that the local filter
+ * is switched off, and that the end of the list is asking for more.
+ */
+
+/*
+ * THE STUB, and it is not a shortcut.
+ *
+ * The base's load-more sentinel watches for itself coming into view with an
+ * `IntersectionObserver`, and jsdom has none — measured, the render throws
+ * `IntersectionObserver is not defined`. So a unit test that renders a field
+ * with a source has to provide one, and whether the scroll ACTUALLY loads is a
+ * question for a browser (`apps/catalog/e2e/combobox.spec.ts` asks it).
+ *
+ * Worth knowing outside this file too: a consumer's own tests need the same
+ * stub, which is why the package guide says so.
+ */
+class NoObserver implements IntersectionObserver {
+  readonly root = null;
+  readonly rootMargin = '';
+  readonly thresholds: readonly number[] = [];
+  observe(): void {}
+  unobserve(): void {}
+  disconnect(): void {}
+  takeRecords(): IntersectionObserverEntry[] {
+    return [];
+  }
+}
+
+beforeAll(() => {
+  globalThis.IntersectionObserver =
+    NoObserver as unknown as typeof IntersectionObserver;
+});
+
+/** A source, written out rather than produced by the hook. */
+const source = (over: Partial<ComboBoxSource> = {}): ComboBoxSource => ({
+  isLoading: false,
+  isLoadingMore: false,
+  error: undefined,
+  isWaitingForQuery: false,
+  query: '',
+  onQueryChange: () => {},
+  loadMore: () => {},
+  ...over
+});
+
+const Loaded = (props: { source: ComboBoxSource; names?: string[] }) => (
+  <ComboBox label="Doctor" source={props.source}>
+    {(props.names ?? []).map(name => (
+      <ComboBoxItem key={name} id={name}>
+        {name}
+      </ComboBoxItem>
+    ))}
+  </ComboBox>
+);
+
+/*
+ * And one that HOLDS the query, because a field with a source is controlled by
+ * it: with a constant `query` the input never changes, so nothing opens and
+ * nothing accumulates. Which is worth knowing rather than working around — it
+ * is what a consumer's own state does for real.
+ */
+const Live = ({
+  names,
+  onQuery
+}: {
+  names: string[];
+  onQuery?: (query: string) => void;
+}) => {
+  const [query, setQuery] = useState('');
+
+  return (
+    <ComboBox
+      label="Doctor"
+      source={source({
+        query,
+        onQueryChange: (next: string) => {
+          setQuery(next);
+          onQuery?.(next);
+        }
+      })}
+    >
+      {names.map(name => (
+        <ComboBoxItem key={name} id={name}>
+          {name}
+        </ComboBoxItem>
+      ))}
+    </ComboBox>
+  );
+};
+
+test('a first page on its way says so', async () => {
+  const user = userEvent.setup();
+  render(<Loaded source={source({ isLoading: true })} />);
+
+  await user.click(screen.getByRole('button', { name: /Show suggestions/ }));
+
+  expect(screen.getByRole('option', { name: 'Loading' })).toBeDefined();
+});
+
+test('a query too short to ask with says keep typing', async () => {
+  const user = userEvent.setup();
+  render(<Loaded source={source({ isWaitingForQuery: true, query: 've' })} />);
+
+  await user.click(screen.getByRole('button', { name: /Show suggestions/ }));
+
+  /*
+   * And it carries NO NUMBER, which is deliberate: "type at least 3
+   * characters" would need a placeholder in a sentence, and how far doc 05
+   * §2.2 rule 5's simple substitution stretches is a question the catalog has
+   * open rather than one to settle in passing.
+   */
+  expect(screen.getByRole('option', { name: 'Keep typing' })).toBeDefined();
+});
+
+test('a load that failed says that, and not "no results"', async () => {
+  const user = userEvent.setup();
+  render(
+    <Loaded
+      source={source({ error: new Error('the server said no'), query: 'veg' })}
+    />
+  );
+
+  await user.click(screen.getByRole('button', { name: /Show suggestions/ }));
+
+  // Blaming the query for a server's silence is the wrong answer to the
+  // wrong person.
+  expect(screen.getByRole('option', { name: 'Could not load' })).toBeDefined();
+});
+
+test('a query that came back empty says no results', async () => {
+  const user = userEvent.setup();
+  render(<Loaded source={source({ query: 'zzz' })} />);
+
+  await user.click(screen.getByRole('button', { name: /Show suggestions/ }));
+
+  expect(screen.getByRole('option', { name: 'No results' })).toBeDefined();
+});
+
+test('and an empty catalogue with nothing typed says nothing here yet', async () => {
+  const user = userEvent.setup();
+  render(<Loaded source={source()} />);
+
+  await user.click(screen.getByRole('button', { name: /Show suggestions/ }));
+
+  expect(
+    screen.getByRole('option', { name: 'Nothing here yet' })
+  ).toBeDefined();
+});
+
+/*
+ * THE ONE THAT WOULD BE INVISIBLE OTHERWISE. The loader answered the query;
+ * filtering its answer here would hide rows a server deliberately returned —
+ * a doctor found by a speciality the row does not print, which is exactly what
+ * a `WHERE` clause is for.
+ */
+test('the local filter is off: what the loader returned is what shows', async () => {
+  const user = userEvent.setup();
+  render(<Live names={['Ana Vega', 'Luis Salas']} />);
+
+  await user.type(screen.getByRole('combobox'), 'cardio');
+
+  // Neither row contains "cardio", and both are still there.
+  expect(rows()).toEqual(['Ana Vega', 'Luis Salas']);
+});
+
+test('every keystroke is reported to the source', async () => {
+  const user = userEvent.setup();
+  const onQuery = vi.fn();
+  render(<Live names={['Ana Vega']} onQuery={onQuery} />);
+
+  await user.type(screen.getByRole('combobox'), 'veg');
+
+  expect(onQuery).toHaveBeenCalledTimes(3);
+  expect(onQuery).toHaveBeenLastCalledWith('veg');
+  expect(screen.getByRole<HTMLInputElement>('combobox').value).toBe('veg');
+});
+
+test('the field shows the source query rather than keeping its own', () => {
+  render(<Loaded source={source({ query: 'vega' })} names={['Ana Vega']} />);
+
+  expect(screen.getByRole<HTMLInputElement>('combobox').value).toBe('vega');
+});
+
+test('the end of the list asks for one more page', async () => {
+  const user = userEvent.setup();
+  render(
+    <Loaded
+      source={source({ isLoadingMore: true })}
+      names={['Ana Vega', 'Luis Salas']}
+    />
+  );
+
+  await user.click(screen.getByRole('button', { name: /Show suggestions/ }));
+
+  /*
+   * The sentinel is a ROW of the list, after the options — measured, and the
+   * right shape: a list growing under somebody's scroll says so where they are
+   * looking, and a row is what a reader reaches. Whether SCROLLING to it
+   * triggers the load is a browser's question, because jsdom has no observer
+   * and the stub above is a stub.
+   */
+  expect(rows()).toEqual(['Ana Vega', 'Luis Salas', 'Loading']);
+});
+
+test('a field with no source has no sentinel at all', async () => {
+  const user = userEvent.setup();
+  render(<Doctors />);
+
+  await user.click(screen.getByRole('button', { name: /Show suggestions/ }));
+
+  expect(document.querySelector('.bb-combobox-empty')).toBeNull();
 });

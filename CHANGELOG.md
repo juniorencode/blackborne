@@ -12,6 +12,70 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **`useAsyncOptions`** — options that arrive from somewhere, paged and
+  debounced, for a `ComboBox`.
+
+  ```tsx
+  const doctors = useAsyncOptions<Doctor>({
+    minQueryLength: 2,
+    load: async ({ query, cursor, signal }) => {
+      const page = await search(query, cursor, signal);
+      return { items: page.rows, cursor: page.next };
+    }
+  });
+
+  <ComboBox label="Doctor" source={doctors} onSelectionChange={setDoctor}>
+    {doctors.items.map(doctor => (
+      <ComboBoxItem key={doctor.id} id={doctor.id}>
+        {doctor.name}
+      </ComboBoxItem>
+    ))}
+  </ComboBox>;
+  ```
+
+  **A hook and not a second component.** The request was an "async combo box"
+  beside the ordinary one; paging, waiting and the states an empty list can be
+  in are all logic, and P6's corollary forbids an assembly with a capability
+  its pieces lack. So the logic is a hook, the field is the field it already
+  was, and the two meet at one prop — the shape `useToasts` established.
+
+  **It brings no network.** `load` is a function that returns a promise; a test
+  hands it an array. The **page size is nobody's prop** either: the loader
+  closes over it, which is the same answer the page-size selector got one level
+  up.
+
+  **What it adds to the base is the waiting.** A run of keystrokes costs one
+  request rather than one each, and a minimum query length keeps a catalogue of
+  two hundred thousand rows from being asked for its first page before anybody
+  has typed. A pending keystroke counts as loading, because the alternative is
+  a list showing the previous query's answers with nothing saying they are
+  stale.
+
+  **An empty list now says which kind of empty it is, five ways**: nothing
+  asked for yet, the asking failed, the answer is on its way, a query came back
+  empty, or there was never anything to come back. "Could not load" is not "no
+  results" — blaming the query for a server's silence is the wrong answer to
+  the wrong person — and the failed row is text, with a `retry` on the hook for
+  a control of your own.
+
+  **A field with a source does not filter what it is given.** The query went to
+  the loader and these came back, so `keywords` have nothing to do: searching
+  by something a row does not show is a `WHERE` clause rather than a prop.
+
+  Three things were measured that shaped it, and all three are the kind that
+  look fine until they are looked at. The base's load-more sentinel triggers
+  within one list-height of the fold, so **a list fills itself page by page
+  while there is room** — a check that waits for a scroll to prove paging
+  proves nothing. `loadMore` past the last page asks for nothing, because a
+  page with no cursor is how the end is declared. And `useAsyncList` loads once
+  on mount whether anything asked it to or not, which is why a minimum query
+  length is enforced inside the loader — **a browser check of ours was reading
+  "keep typing" during a request rather than because nothing had been asked.**
+
+  One note for tests: a field with a source renders the base's sentinel, which
+  needs `IntersectionObserver`. jsdom has none, so a unit test rendering one
+  has to stub it; there is a stub in the component's own tests to copy.
+
 - **A `ComboBox` can hold several values**, each as a chip inside the field.
 
   ```tsx

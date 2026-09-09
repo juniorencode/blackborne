@@ -55,14 +55,15 @@ than a leftover — the question the catalog said to ask once `Select` existed
 was asked, and how many rows to fetch belongs to the listing rather than to the
 thing that moves between pages.
 
-**The batch after composition is under way**, in six waves, and the shape of
+**The batch after composition is half done**, in six waves, and the shape of
 it is in [the catalog](./docs/catalog-and-build-order.md) §3.2 — read that
-before starting one. `ComboBox` has landed and so has the same component
-holding **several** values, as a discriminated union rather than a flag. What
-follows is `useAsyncOptions`, which is a hook and not a component, then
-`Calendar` and `RangeCalendar`, `DateField` and `DatePicker`, and `TimeField`
-with `DateRangePicker`. It spans three levels, so the order is the dependency
-and not the level number.
+before starting one. Three have landed: `ComboBox`, the same component holding
+**several** values as a discriminated union rather than a flag, and
+`useAsyncOptions` — a **hook**, because paging and waiting are logic and P6's
+corollary forbids an assembly with a capability its pieces lack. What remains
+is `Calendar` and `RangeCalendar`, `DateField` and `DatePicker`, and
+`TimeField` with `DateRangePicker`. It spans three levels, so the order is the
+dependency and not the level number.
 
 **And the risk component paid for itself twice.** The catalog predicted that
 per-option keywords would mean `ComboBox` filtered its own rows. It cannot: the
@@ -78,6 +79,13 @@ toggle's props unless told to take no context
 ([decision 0022](./docs/decisions/0022-several-values-are-a-union-and-the-chips-are-not-tags.md)).
 One context per collection, and the table suite is made of collections — which
 is exactly what building the risk component early was for.
+
+**And the third wave found a check of ours passing for the wrong reason**,
+which is the failure mode this repository keeps paying for: a browser check
+read "keep typing" while a request was in flight rather than because nothing
+had been asked. `useAsyncList` loads once on mount whether anything told it to
+or not, so a minimum query length has to be enforced inside the loader. The
+check now asserts the request COUNT, which is a state rather than a moment.
 
 **Two things were settled before it started**, in the wave that opened it:
 [doc 07](./docs/foundations/07-forms.md) §2.2 gained a seventh contender for a
