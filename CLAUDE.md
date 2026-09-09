@@ -33,41 +33,43 @@ this file is out of date. Fix this file.
 assuming anything exists.
 
 At the time of writing: all ten foundations are written, the pipeline is
-complete, and **twenty-seven components exist** — the ten simple fields and
+complete, and **thirty-four components exist** — the ten simple fields and
 controls, `Button`, the flat pieces around them (`Alert`, `Badge`, `Card`,
-`EmptyState`, `Separator`, `Skeleton`, `Spinner`, `VisuallyHidden`), and seven
-layers: `Dialog`, `Drawer`, `ConfirmDialog`, `Tooltip`, `Popover`, `Preview`
-and `Toast`.
+`EmptyState`, `Separator`, `Skeleton`, `Spinner`, `VisuallyHidden`), seven
+layers (`Dialog`, `Drawer`, `ConfirmDialog`, `Tooltip`, `Popover`, `Preview`,
+`Toast`), and the composition batch so far: `Accordion`, `Collapsible`, `Link`,
+`Breadcrumbs`, `Pagination`, `CursorPagination`, `Menu` and `Select`.
 
 **The layer batch is finished.** It landed in that order, with `Toast` last by
-decision (doc 08 §7.1). `Menu` was deliberately not in it, and `SplitButton`
-waits with `Menu`.
+decision (doc 08 §7.1). `Menu` was deliberately not in it.
 
-**What comes next is decided, and it is not those two on their own.** The next
-batch is composition, and it is split in two halves with `Menu` and `Select` in
-the middle — the plan and the reason are in
+**The composition batch is past its middle.** It is split in two halves with
+`Menu` and `Select` in between — the plan and the reason are in
 [the catalog](./docs/catalog-and-build-order.md) §3.1, which is what to read
-before starting. Briefly: `Accordion`, `Collapsible`, `Link`, `Breadcrumbs`,
-`Pagination` and `CursorPagination` first, because nothing blocks them; then
-`Menu` and `Select`, which three deferred features wait on; then `Tabs` in
-full.
+before starting. The first half and both middle components have landed; what is
+left is `Tabs` in full, the two features that were waiting on those two (a
+collapsed breadcrumb trail, a page-size selector), and `SplitButton`, which was
+waiting on `Menu` and is now unblocked.
 
 **Three things in it are settled and not open for reinvention:** a stepper is
 two components and only one of them is ours (decision 0015), the two pagers do
 not merge (decision 0014), and a link is a component, with navigation arriving
 through the configuration the way the portal container does (decision 0016).
 
-**And N3 has never run.** Every adaptive thing built so far is CSS or the one
-viewport exception. Doc 04 §6.1 writes the contract of the single
-structural-change hook before the hook exists, with the prediction it will be
-measured against. `Tabs`, `Pagination` and `Steps` all want it, and it lands
-with its first caller rather than alone: a hook nobody calls cannot be
-verified.
+**N3 has now run, and the prediction beside it was wrong.** Doc 04 §6.1 wrote
+the contract of the single structural-change hook before the hook existed, and
+what landed with `Pagination` resolves no token: CSS publishes which step
+applies through the same container variants a component would use at N2, and
+`internal/useContainerStep` reads the resolved value on resize. §6.2 has the
+measurement; §6.1 keeps its withdrawn text struck through. `Tabs` and `Steps`
+are the next callers, and they call it rather than inventing a second answer.
 
-One thing to do early rather than later: **the chevron gets drawn once**, in
-`src/internal`, the first time something needs it. Six components in and around
-this batch want the same shape, and the cross reached four copies with
-different geometry before anybody noticed.
+**The shared glyphs are drawn once**, in `src/internal` — the cross, the tone
+marks, the chevron and the tick — and the tick is the one that is shared as a
+PATH rather than as a component, because a checkbox's tick is one of two paths
+in a single svg and cannot be a separate element. The cross reached four copies
+with different geometry before anybody noticed, which is what all four exist to
+prevent.
 
 `Toast` is the one component that ships as **two pieces**: `useToasts()` makes
 the queue, which the CONSUMER owns and keeps, and `ToastRegion` renders it. The

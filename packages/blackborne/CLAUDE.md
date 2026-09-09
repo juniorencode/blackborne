@@ -165,6 +165,25 @@ cannot know what level it landed at. Emphasis comes from weight and colour.
   none and a section in a group renders one at the level the group was given
   (doc 06 §2.1). The level travels by context, never exported, which is doc 02
   §3.1.1's rule for a property that belongs to the SET.
+- **A collection item's children must be PLAIN TEXT, or the typeahead dies
+  quietly.** The base derives an item's `textValue` from its children, and
+  anything that is not a string — a render function, an element — derives
+  nothing: typing a letter in the list then moves the highlight nowhere. It says
+  so in a development warning, which is worth nothing if nothing reads the
+  console, and that is how a select's tick drawn from a render prop shipped a
+  dead typeahead through a green suite. Two halves to the fix: render the mark
+  unconditionally and hide it with a `data-selected` variant (which the row
+  needed anyway, so it does not move as the selection walks), and pass
+  `textValue` through where the children are a string. `select.spec.ts` has the
+  one check in this repository that reads the console.
+- **A list that matches its trigger's width spells the base's variable.** A
+  popover publishes `--trigger-width`, and `Select`'s list declares
+  `min-w-(--trigger-width)` with the narrow container as a ceiling — `min`, so a
+  long option grows the list rather than truncating every row. It is the same
+  coupling a disclosure's height animation has, with the same failure: rename it
+  upstream and the declaration is merely invalid, the list falls back to its
+  content width, and nothing appears in the console. The browser check measures
+  the list against the field rather than against a remembered number.
 - **A height animation is the base's, not ours.** `useDisclosure` publishes
   `--disclosure-panel-height` on the panel, sets it in pixels, switches it to
   `auto` when the animations finish, and on the way closed waits for
@@ -187,6 +206,26 @@ separate entry point and are optional.
 
 The library restricts input and presents errors. It does not decide whether a
 value is valid, and it does not write the message.
+
+**Not every field publishes a group context, so a frame may have to be TOLD.**
+`ControlFrame` reads `isInvalid` and `isDisabled` from the base's group context,
+which a `TextField` publishes and a **`Select` does not** — measured. Passed
+implicitly it silently does nothing, and the box looks ordinary while the field
+is invalid or switched off. Check it on any new composed field: the frame is the
+element a person sees the edge of, and it has to carry the state the field is
+in.
+
+**And a select's required state is announced by nothing the base gives the
+trigger.** `Field` hides the asterisk from a reader on the grounds that the base
+sets `aria-required` — true of an input, and measured false of a select: the
+base puts `required` on the hidden native control it renders for a form, and the
+button a person operates carries none of it. The base's select label is not a
+`<label>` either, because a `<label>` cannot label a button — the name arrives
+by `aria-labelledby`. So `Select` composes a visually hidden word into its own
+label, where the name comes from: the asterisk stays the visible channel, the
+word is the announced one, and nothing is said twice. The component with the gap
+is the component that fills it (doc 06 §2), and the gap is on doc 06 §5's list
+for the screen-reader pass.
 
 ## Text and formatting
 

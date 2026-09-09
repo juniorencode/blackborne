@@ -184,6 +184,18 @@ export type {
   SearchFieldSize
 } from './components/SearchField';
 
+/*
+ * The first composed field: the field structure with a layer hanging off it.
+ * `SelectItem` is public with it because an option is an element the consumer
+ * writes and the base's collection reads.
+ */
+export { Select, SelectItem } from './components/Select';
+export type {
+  SelectItemProps,
+  SelectProps,
+  SelectSize
+} from './components/Select';
+
 export { Separator } from './components/Separator';
 export type {
   SeparatorOrientation,

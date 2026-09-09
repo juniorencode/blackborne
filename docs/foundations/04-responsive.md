@@ -405,7 +405,14 @@ asked for on a scale §4 keeps deliberately short. The check that matters is
 three of the same component at three widths inside one 1280px window, which is
 P4's own question asked of the thing that decides.
 
-Everything else is solved at N0, N1 or N2 barring proof to the contrary. Four
+Everything else is solved at N0, N1 or N2 barring proof to the contrary. Six
 components examined in the batch that produced the rows above need nothing at
-all: `Accordion`, `Collapsible`, `Link` and `CursorPagination` are all N0.
-Recorded because the interesting half of this list is what is not on it.
+all: `Accordion`, `Collapsible`, `Link` and `CursorPagination` are all N0, and
+the two anchored layers in the middle of that batch are N1 — a `Menu`'s panel
+and a `Select`'s list are sized by their contents between a floor and a
+ceiling, with no threshold anywhere. The select's floor is the interesting one,
+because it is the width of its own trigger rather than a number: a list
+narrower than the field it belongs to reads as a different control, and one
+that truncated every row to the field's width would hide the ends of the very
+options somebody opened it to read. Recorded because the interesting half of
+this list is what is not on it.

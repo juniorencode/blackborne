@@ -249,6 +249,21 @@ Two that are almost always forgotten and worth pointing out:
   7). If the reason matters, an active control that explains the situation is
   better.
 
+**A field may genuinely lack one of these, and read-only is the one that goes
+missing.** `Select` has seven: the base's select has no read-only mode, and
+that is a decision rather than an omission — a select is either offered or it
+is not. Read-only means a value you can read, select and copy, which is a
+property of text in a box; on a control whose value is a choice, "you may not
+change this" and "this is switched off" have the same appearance and the same
+behaviour, and painting two states that cannot be told apart is worse than
+having one.
+
+So the requirement is every state the component HAS, and a missing one is not a
+gap to be filled quietly: the reason goes in the component, and the state goes
+on the catalog's rejected list where somebody proposing it will find it. The
+same shape as a switch having no error state
+([decision 0009](../decisions/0009-a-switch-has-no-error-state.md)).
+
 ## 7. Composing a form
 
 The library provides structural pieces — groups, sections, rows of fields, an

@@ -34,7 +34,11 @@ export interface FieldStructureProps {
    * writing it, belongs to the project (doc 07 §1).
    */
   errorMessage?: React.ReactNode;
-  /** Marks the label. The announcement comes from the base's `aria-required`. */
+  /**
+   * Marks the label. On a field with an INPUT the announcement comes from the
+   * base's `aria-required`; where the base publishes no such attribute, the
+   * component says the word itself (decision 0017).
+   */
   isRequired?: boolean;
   /** Waiting for data the field needs, such as a list of options. */
   isLoading?: boolean;
@@ -106,10 +110,19 @@ export function Field({
         {label}
         {isRequired ? (
           /*
-           * Decoration only. The announcement comes from the base's
-           * aria-required, so reading the asterisk aloud would say it twice.
-           * Doc 07 §4 asks that "required" reach the reader — it does, through
-           * the attribute, which is the channel screen readers already know.
+           * Decoration only, and the reason is the ATTRIBUTE rather than the
+           * asterisk: the base sets `aria-required` on a control a person types
+           * in, so reading the mark aloud would say it twice. Doc 07 §4 asks
+           * that "required" reach the reader — through the channel screen
+           * readers already know.
+           *
+           * WHICH IS NOT TRUE OF EVERY FIELD, and this comment used to claim it
+           * was. Measured on `Select`: the base puts nothing on the button a
+           * person operates, so the asterisk would have been the only channel.
+           * A field whose base publishes no attribute says the word itself, in
+           * the label, where the name comes from — decision 0017. `Field`
+           * cannot do it here, because it cannot know which container is above
+           * it.
            */
           <span aria-hidden="true" className="bb:text-danger-text bb:ms-1">
             *

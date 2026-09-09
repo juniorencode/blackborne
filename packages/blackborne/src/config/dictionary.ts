@@ -123,7 +123,25 @@ export const en = {
    * A translation that drops the placeholder loses the number, so the
    * placeholder is part of the contract rather than a convenience.
    */
-  page: 'Page {page}'
+  page: 'Page {page}',
+  /**
+   * "Required", for a field whose control cannot say so itself.
+   *
+   * MEASURED, and it is the reason this key exists at all. `Field` marks a
+   * required label with an asterisk and hides it from the reader, because for
+   * an input the base sets `aria-required` and reading the star aloud would
+   * say it twice. The base's SELECT does not: `required` goes on the hidden
+   * native control it renders for the form, and the button a person actually
+   * uses carries nothing.
+   *
+   * So for that field the asterisk is the only channel, and an asterisk
+   * announces nothing. This word goes into the label — visually hidden — where
+   * it becomes part of the control's accessible name: "Currency required".
+   *
+   * A word rather than a symbol, because a symbol is not translatable and
+   * "asterisk" is not what anybody means.
+   */
+  required: 'required'
 } as const;
 
 export type DictionaryKey = keyof typeof en;

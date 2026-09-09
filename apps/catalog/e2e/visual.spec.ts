@@ -140,6 +140,14 @@ const STATES: Array<[string, string]> = [
    * open. A menu does.
    */
   ['components-menu--open', 'menu-open'],
+  /*
+   * A select is a field and a layer, so it earns both kinds of baseline: the
+   * closed states doc 07 §6 asks for, and the open list where the tick and the
+   * matched width are.
+   */
+  ['components-select--states', 'select-states'],
+  ['components-select--open', 'select-open'],
+  ['components-select--long-options', 'select-long-options'],
   ['components-menu--long-list', 'menu-long-list'],
   ['components-menu--long-label', 'menu-long-label'],
   ['components-pagination--positions', 'pagination-positions'],
@@ -334,6 +342,9 @@ const TOGETHER: Array<[string, string]> = [
   /* Where a menu actually goes: behind a mark at the end of a row, with the
      name on the button and nowhere else. */
   ['components-menu--in-a-row', 'menu-in-a-row'],
+  /* The row doc 03 §9 asks for by name: a field, a select and a button of the
+     same size, the same height, from the same tokens. */
+  ['components-select--aligns-with-others', 'alignment-select-in-a-row'],
   /* Where a trail actually goes: above a heading and the page it describes,
      quieter than both. */
   ['components-breadcrumbs--above-page-content', 'breadcrumbs-above-content']
@@ -401,7 +412,12 @@ const AXES: Array<[string, string]> = [
      layer, and RTL where it aligns to the other edge of its trigger. */
   ['components-menu--dark', 'axis-menu-dark'],
   ['components-menu--compact', 'axis-menu-compact'],
-  ['components-menu--direction', 'axis-menu-rtl']
+  ['components-menu--direction', 'axis-menu-rtl'],
+  /* A select's own three, all with the list open — the axis reaches a
+     portalled layer only because it is mounted inside the page. */
+  ['components-select--dark', 'axis-select-dark'],
+  ['components-select--compact', 'axis-select-compact'],
+  ['components-select--direction', 'axis-select-rtl']
 ];
 
 for (const [id, name] of AXES) {
