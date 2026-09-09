@@ -46,6 +46,22 @@ export const en = {
   emptyStateNoData: 'Nothing here yet',
   emptyStateNoResults: 'No results',
   /**
+   * The two an option list says when it is loaded from somewhere.
+   *
+   * `keepTyping` is what a field with a minimum query length shows before that
+   * minimum is reached, and it carries NO NUMBER on purpose: "type at least 3
+   * characters" would need a placeholder in a sentence, and how far doc 05
+   * §2.2 rule 5's "simple value substitution" stretches is a question the
+   * catalog has open rather than one to settle in passing.
+   *
+   * `loadFailed` is the row a list shows when the load did not arrive. It says
+   * what happened and not what to do about it, because what to do depends on
+   * the application: typing again asks again, and the hook hands a consumer a
+   * `retry` for a control of their own.
+   */
+  keepTyping: 'Keep typing',
+  loadFailed: 'Could not load',
+  /**
    * The button that empties a field. It carries a cross and no text, and what
    * it clears is named by the field's own label beside it.
    */

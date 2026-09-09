@@ -22,6 +22,7 @@ import {
   type ComboBoxOneProps,
   type ComboBoxSize
 } from './ComboBox';
+import { useAsyncOptions, type OptionsRequest } from './useAsyncOptions';
 
 const SIZES = ['sm', 'md', 'lg'] as const satisfies readonly ComboBoxSize[];
 
@@ -734,4 +735,280 @@ export const SeveralOpen: Story = {
       </Opened>
     </LayerPage>
   )
+};
+
+/* -------------------------------------------------------- from a source
+ *
+ * Options that arrive from somewhere. The loader here is a function over a
+ * local array with a delay in front of it — no network, which is P2 and also
+ * what makes these stories deterministic enough to photograph.
+ */
+
+/*
+ * A roster long enough for the paging to be the point.
+ *
+ * Sixty rather than twelve, and the number is a measurement rather than a
+ * flourish: the base's sentinel triggers when it comes within ONE list-height
+ * of the fold — `scrollOffset` defaults to 100% — so a first page that only
+ * just fills the box loads the second one immediately, with nobody scrolling.
+ * Twenty rows of sixty is past that, so the second page waits to be asked for.
+ */
+const FIRST_NAMES = [
+  'Ana',
+  'Elena',
+  'José',
+  'Luis',
+  'Marta',
+  'Nadia',
+  'Óscar',
+  'Pablo',
+  'Rosa',
+  'Sofía'
+];
+
+const SURNAMES = ['Vega', 'Ortiz', 'Salas', 'Prado', 'Cruz', 'Medina'];
+
+const ROSTER = SURNAMES.flatMap((surname, block) =>
+  FIRST_NAMES.map((first, index) => ({
+    id: String(block * FIRST_NAMES.length + index + 1),
+    name: `${first} ${surname}`
+  }))
+);
+
+const PAGE_SIZE = 20;
+
+/**
+ * A loader over the roster, with a delay.
+ *
+ * The page size is closed over rather than passed in, which is the whole
+ * argument for it living here: how many rows to fetch is the request's
+ * business, not the field's.
+ */
+const rosterLoader =
+  (delay = 400) =>
+  async ({ query, cursor }: OptionsRequest) => {
+    await new Promise(resolve => {
+      setTimeout(resolve, delay);
+    });
+
+    const matching = ROSTER.filter(doctor =>
+      doctor.name.toLowerCase().includes(query.toLowerCase())
+    );
+    const from = cursor === undefined ? 0 : Number(cursor);
+    const items = matching.slice(from, from + PAGE_SIZE);
+    const next = from + PAGE_SIZE;
+
+    return {
+      items,
+      ...(next < matching.length ? { cursor: String(next) } : {})
+    };
+  };
+
+/**
+ * Options loaded from somewhere, paged and debounced.
+ *
+ * **Worth typing into slowly and then quickly.** A run of keystrokes makes ONE
+ * request, after the wait; the box shows what you typed the whole time, and
+ * the list says it is thinking rather than showing the previous query's
+ * answers as though they were current.
+ *
+ * **Then scroll the list.** It holds twenty at a time and asks for twenty
+ * more when the end comes within a screen of the fold — and asking past the
+ * last page asks for nothing at all, because a page with no cursor is how the
+ * loader says there is an end.
+ *
+ * The loader is a function over an array with a delay in front of it. Nothing
+ * in the library makes a request (P2); `load` is handed in, and a test hands
+ * it an array.
+ */
+export const FromASource: Story = {
+  name: 'From a source',
+  render: () => {
+    function Demo() {
+      const [doctor, setDoctor] = useState<string | null>(null);
+      /*
+       * The requests are counted and shown, which is the interesting number in
+       * this story: a run of keystrokes should cost ONE, and sixty rows arrive
+       * in three. A ref does the counting, so counting cannot cause the render
+       * that would count again; a piece of state carries it to the screen.
+       */
+      const requests = useRef(0);
+      const [shown, setShown] = useState(0);
+      const load = rosterLoader();
+      const doctors = useAsyncOptions<{ id: string; name: string }>({
+        load: async request => {
+          requests.current += 1;
+          setShown(requests.current);
+          return load(request);
+        }
+      });
+
+      return (
+        <div className="catalog-stack" style={{ maxWidth: 320 }}>
+          <ComboBox
+            label="Doctor"
+            placeholder="Search the roster"
+            description="Twenty at a time, and more as you scroll."
+            source={doctors}
+            selectedKey={doctor}
+            onSelectionChange={setDoctor}
+          >
+            {doctors.items.map(item => (
+              <ComboBoxItem key={item.id} id={item.id}>
+                {item.name}
+              </ComboBoxItem>
+            ))}
+          </ComboBox>
+          <p className="catalog-label" style={{ marginBlockEnd: 0 }}>
+            {doctor === null ? 'Nothing chosen yet.' : `Chosen: ${doctor}`}
+          </p>
+          <p className="catalog-label" style={{ marginBlockEnd: 0 }}>
+            {`Loaded ${doctors.items.length} · requests: ${shown}`}
+          </p>
+        </div>
+      );
+    }
+
+    return <Demo />;
+  }
+};
+
+/**
+ * A list that is loading a further page, under the options already shown.
+ *
+ * The row at the end is the base's own sentinel: it watches for itself coming
+ * into view and asks for one more page, which is how a list loads while
+ * somebody scrolls rather than when they press something. It is a ROW of the
+ * list rather than a bar under it, so a reader arrives at it like anything
+ * else.
+ */
+export const LoadingMore: Story = {
+  name: 'From a source · loading more',
+  render: () => (
+    <LayerPage label="The page behind.">
+      <Opened>
+        <div style={{ width: 280 }}>
+          <ComboBox
+            label="Doctor"
+            source={{
+              isLoading: false,
+              isLoadingMore: true,
+              error: undefined,
+              isWaitingForQuery: false,
+              query: '',
+              onQueryChange: () => {},
+              loadMore: () => {}
+            }}
+          >
+            {ROSTER.slice(0, 3).map(item => (
+              <ComboBoxItem key={item.id} id={item.id}>
+                {item.name}
+              </ComboBoxItem>
+            ))}
+          </ComboBox>
+        </div>
+      </Opened>
+    </LayerPage>
+  )
+};
+
+/**
+ * The five things an empty list can say once its options come from somewhere,
+ * and they are not interchangeable.
+ *
+ * Nothing has been asked for yet; the asking failed; the answer is on its way;
+ * a query came back empty; or there was never anything to come back. Doc 09
+ * asks for the last two to be told apart by name, and the first three are what
+ * a loaded list adds to that.
+ *
+ * A list can only be open one at a time on a page, so this one is the state
+ * hardest to reach by hand: a load that failed. **"Could not load" and not "no
+ * results"** — blaming the query for a server's silence is the wrong answer to
+ * the wrong person. What to do about it is the application's: typing again
+ * asks again, and the hook hands over a `retry` for a control of your own.
+ */
+export const LoadFailed: Story = {
+  name: 'From a source · load failed',
+  render: () => (
+    <LayerPage label="The page behind.">
+      <Opened>
+        <div style={{ width: 280 }}>
+          <ComboBox
+            label="Doctor"
+            source={{
+              isLoading: false,
+              isLoadingMore: false,
+              error: new Error('the server said no'),
+              isWaitingForQuery: false,
+              query: 'vega',
+              onQueryChange: () => {},
+              loadMore: () => {}
+            }}
+          >
+            {[]}
+          </ComboBox>
+        </div>
+      </Opened>
+    </LayerPage>
+  )
+};
+
+/**
+ * A query too short to ask with.
+ *
+ * A catalogue of two hundred thousand rows is not a first page, so a field can
+ * ask for two or three characters before it goes anywhere — and until then the
+ * list says so rather than showing a page of nothing in particular.
+ *
+ * **The message carries no number**, which is deliberate: "type at least 3
+ * characters" needs a placeholder inside a sentence, and how far doc 05 §2.2
+ * rule 5's simple substitution stretches is a question the catalog has open
+ * rather than one to settle in passing.
+ */
+export const WaitingForAQuery: Story = {
+  name: 'From a source · waiting for a query',
+  render: () => {
+    function Demo() {
+      /*
+       * Counted here too, and this is the field where the number is legible:
+       * with a minimum of three characters nothing is asked until the third
+       * one lands, so typing four characters is ONE request and the paging
+       * that muddies the count elsewhere never starts.
+       */
+      const requests = useRef(0);
+      const [shown, setShown] = useState(0);
+      const load = rosterLoader(200);
+      const doctors = useAsyncOptions<{ id: string; name: string }>({
+        minQueryLength: 3,
+        load: async request => {
+          requests.current += 1;
+          setShown(requests.current);
+          return load(request);
+        }
+      });
+
+      return (
+        <LayerPage label="The page behind.">
+          <Opened>
+            <div style={{ width: 280 }}>
+              <ComboBox
+                label="Doctor"
+                placeholder="At least three characters"
+                description={`Requests: ${shown}`}
+                source={doctors}
+              >
+                {doctors.items.map(item => (
+                  <ComboBoxItem key={item.id} id={item.id}>
+                    {item.name}
+                  </ComboBoxItem>
+                ))}
+              </ComboBox>
+            </div>
+          </Opened>
+        </LayerPage>
+      );
+    }
+
+    return <Demo />;
+  }
 };

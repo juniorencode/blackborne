@@ -68,7 +68,7 @@ The library is being rewritten from scratch. Phases, in order:
 | F8    | The rest of level 0 and level 1: the pieces with no dependencies                   | Two left |
 | F9    | The layer base, and everything that depends on a portal                            | Done     |
 | F10   | Composition: the pieces that arrange other pieces, and the first structural change | One left |
-| F11   | Search, and the locale front nothing has proved yet                                | One in   |
+| F11   | Search, and the locale front nothing has proved yet                                | Half in  |
 
 Which components exist and in what order is not a phase question: it lives in
 [catalog-and-build-order.md](./catalog-and-build-order.md), which is the list
@@ -127,7 +127,15 @@ the base builds its collection in a render pass detached from the surrounding
 context, so a filter written there cannot see what was typed
 ([decision 0021](./decisions/0021-a-combo-box-extends-the-bases-filter.md)).
 The filter extends the base's instead, and the prediction is kept beside the
-measurement rather than quietly replaced. The batch and its six waves are in
+measurement rather than quietly replaced.
+
+**Three waves of six have landed**: one value, several, and options that arrive
+from somewhere. The third is a **hook** rather than the second component
+somebody proposed — `useAsyncOptions`, which is P6's corollary applied to a
+request: paging, waiting and the states an empty list can be in are logic, and
+an assembly may not have a capability its pieces lack. What remains is the date
+family, which is where this phase's other half — the locale front — actually
+gets proved. The batch and its six waves are in
 [catalog-and-build-order.md](./catalog-and-build-order.md) §3.2, with what was
 deliberately left out of it.
 

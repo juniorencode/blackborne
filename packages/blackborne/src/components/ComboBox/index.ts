@@ -4,5 +4,13 @@ export type {
   ComboBoxOneProps,
   ComboBoxProps,
   ComboBoxSeveralProps,
-  ComboBoxSize
+  ComboBoxSize,
+  ComboBoxSource
 } from './ComboBox';
+export { useAsyncOptions } from './useAsyncOptions';
+export type {
+  AsyncOptions,
+  AsyncOptionsConfig,
+  OptionsPage,
+  OptionsRequest
+} from './useAsyncOptions';

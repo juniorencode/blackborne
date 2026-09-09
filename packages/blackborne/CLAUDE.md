@@ -329,6 +329,20 @@ Dates, numbers, currency, sorting and plurals are formatted through the
 platform's locale APIs. The time zone is **received, never taken from the
 browser** — the browser's zone is the viewer's machine, not the data's context.
 
+**A field that loads its options needs `IntersectionObserver` in a test.**
+The base's load-more sentinel watches for itself coming into view, and jsdom
+has none — measured, the render throws `IntersectionObserver is not defined`.
+So a unit test that renders a `ComboBox` with a `source` has to stub it (there
+is one in `ComboBox.test.tsx` to copy), and whether SCROLLING actually loads
+the next page is a question only a browser can be asked.
+
+Two more things about that sentinel, both measured and neither obvious. It
+triggers when it comes within ONE list-height of the fold — `scrollOffset`
+defaults to 100% — so **a list fills itself page by page while there is room**,
+with nobody scrolling; a check that waits for a scroll to prove paging proves
+nothing. And `loadMore` past the last page calls nothing at all, because a page
+with no cursor is how the loader declares the end.
+
 **A locale-sensitive search is the base's collator, not `includes`.** `useFilter({ sensitivity: 'base' })` is what the base's own combo box builds —
 read in its source — and it is what "jose" finding "José" rests on. A filter of
 ours passes that same `contains` in rather than writing one, so a consumer who

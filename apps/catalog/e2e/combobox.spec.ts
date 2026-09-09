@@ -573,3 +573,151 @@ test('while saving, the cross keeps its room and takes no clicks', async ({
   const box = await hidden.boundingBox();
   expect(box!.width).toBeCloseTo(ordinary!.width, 0);
 });
+
+/* -------------------------------------------------------- from a source
+ *
+ * The half of an asynchronous list that jsdom cannot answer at all: the base's
+ * load-more sentinel watches for itself coming into view with an
+ * `IntersectionObserver`, which jsdom does not have. So whether SCROLLING
+ * actually loads the next page is a question only a browser can be asked, and
+ * this is where it is asked.
+ */
+
+const FROM_A_SOURCE = 'components-combobox--from-a-source';
+const LOADING_MORE = 'components-combobox--loading-more';
+const LOAD_FAILED = 'components-combobox--load-failed';
+const WAITING = 'components-combobox--waiting-for-a-query';
+
+test('a source loads a first page, and says so while it does', async ({
+  page
+}) => {
+  await gotoStory(page, FROM_A_SOURCE);
+
+  const input = page.locator('.bb-combobox-input');
+  await input.click();
+  await input.fill('a');
+
+  /*
+   * The row says "Loading" before the answers arrive — the state a list is in
+   * while a keystroke is still waiting counts as loading too, because the
+   * alternative is showing the previous query's answers with nothing saying
+   * they are stale.
+   */
+  await expect(page.locator('.bb-combobox-empty')).toHaveText('Loading');
+  await expect(page.getByRole('option').first()).not.toHaveText('Loading');
+});
+
+test('the list arrives in pages, and asks once per page', async ({ page }) => {
+  await gotoStory(page, FROM_A_SOURCE);
+
+  await page.locator('.bb-combobox-toggle').click();
+
+  /*
+   * MEASURED, AND NOT WHAT THIS CHECK FIRST ASSUMED. The base's sentinel
+   * triggers when it comes within ONE list-height of the fold —
+   * `scrollOffset` defaults to 100% — so in a list 776px tall a page of
+   * twenty rows is never out of range, and the list fills ITSELF page by page
+   * with nobody scrolling. Counts watched over two seconds: 1, 21, 40, 41,
+   * 60.
+   *
+   * Which is the right behaviour, and the reason this asserts the REQUESTS
+   * rather than a scroll: sixty rows in pages of twenty is three requests,
+   * whether the fold or a person asked for them.
+   */
+  await expect(page.getByText('Loaded 60 · requests: 3')).toBeVisible();
+  await expect(page.getByRole('option')).toHaveCount(60);
+});
+
+test('and asking past the last page asks for nothing', async ({ page }) => {
+  await gotoStory(page, FROM_A_SOURCE);
+
+  await page.locator('.bb-combobox-toggle').click();
+  await expect(page.getByText('Loaded 60 · requests: 3')).toBeVisible();
+
+  const toBottom = () =>
+    page.locator('.bb-combobox-options').evaluate(list => {
+      list.scrollTop = list.scrollHeight;
+    });
+
+  for (let round = 0; round < 3; round += 1) {
+    await toBottom();
+    await page.waitForTimeout(200);
+  }
+
+  /*
+   * Still three: a page with no cursor is how the loader declares the end, and
+   * the base stops asking. Without it, scrolling the bottom of a finished list
+   * would be a request loop nobody notices until a bill arrives — and the
+   * loading row being gone is the visible half of the same fact.
+   */
+  await expect(page.getByText('Loaded 60 · requests: 3')).toBeVisible();
+  await expect(page.locator('.bb-combobox-empty')).toHaveCount(0);
+});
+
+test('a run of keystrokes costs one request, not one each', async ({
+  page
+}) => {
+  await gotoStory(page, WAITING);
+
+  /*
+   * Asked of the field with a MINIMUM, because it is the only place the number
+   * is legible: with three characters required, nothing is asked until the
+   * third one lands, and the paging that fills a list on its own never starts.
+   * Measured on the other story, where opening the list mid-typing put two
+   * page requests between the keystrokes and the query.
+   */
+  await expect(page.getByText('Requests: 0')).toBeVisible();
+
+  const input = page.locator('.bb-combobox-input');
+  await input.pressSequentially('vega', { delay: 40 });
+
+  /* Four keystrokes, ONE request, and it carried the whole query. */
+  await expect(page.getByText('Requests: 1')).toBeVisible();
+  await expect(page.getByRole('option')).toHaveCount(10);
+  await expect(page.getByRole('option').first()).toHaveText('Ana Vega');
+});
+
+test('the loading row sits after the options, as a row', async ({ page }) => {
+  await gotoStory(page, LOADING_MORE);
+
+  const rows = page.getByRole('option');
+  await expect(rows).toHaveCount(4);
+  await expect(rows.last()).toHaveText('Loading');
+
+  // Under the options rather than over them, which is where somebody scrolling
+  // is looking.
+  const first = await rows.first().boundingBox();
+  const last = await rows.last().boundingBox();
+  expect(last!.y).toBeGreaterThan(first!.y);
+});
+
+test('a load that failed says so, and not "no results"', async ({ page }) => {
+  await gotoStory(page, LOAD_FAILED);
+
+  await expect(page.locator('.bb-combobox-empty')).toHaveText('Could not load');
+});
+
+test('and a query too short to ask with says to keep typing', async ({
+  page
+}) => {
+  await gotoStory(page, WAITING);
+
+  /*
+   * The row AND the request count, because this check used to pass for the
+   * wrong reason: `useAsyncList` loads once on mount whether anything asked it
+   * to or not, so the field fetched a first page for the empty query and the
+   * "keep typing" row was only visible for the length of that request. The
+   * count staying at zero is what says nothing was asked.
+   */
+  await expect(page.locator('.bb-combobox-empty')).toHaveText('Keep typing');
+  await expect(page.getByText('Requests: 0')).toBeVisible();
+
+  const input = page.locator('.bb-combobox-input');
+  await input.fill('ve');
+  await expect(page.locator('.bb-combobox-empty')).toHaveText('Keep typing');
+  await expect(page.getByText('Requests: 0')).toBeVisible();
+
+  await input.fill('veg');
+  await expect(page.getByRole('option').first()).toHaveText('Ana Vega');
+  await expect(page.getByText('Requests: 1')).toBeVisible();
+});

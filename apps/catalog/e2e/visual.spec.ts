@@ -192,6 +192,13 @@ const STATES: Array<[string, string]> = [
    * its toggle still at the top of the edge. `several-narrow` is the same box
    * in 320px, where the chips wrap and one of them truncates.
    */
+  /*
+   * A list loading a further page, which is the one picture of the
+   * asynchronous half worth keeping: the options, then the row at the end
+   * saying more is on its way. The other four things an empty list can say are
+   * one line of muted text each, and the browser checks read them by text.
+   */
+  ['components-combobox--loading-more', 'combobox-loading-more'],
   ['components-combobox--several-states', 'combobox-several-states'],
   ['components-combobox--several-in-a-narrow-panel', 'combobox-several-narrow'],
   ['components-menu--long-list', 'menu-long-list'],

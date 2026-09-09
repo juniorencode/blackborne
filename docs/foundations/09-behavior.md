@@ -141,6 +141,22 @@ pointer can travel diagonally from a word in a sentence to a card below and to
 the side of it, and the layer stays open however long that takes. The base's
 own comment says it works "even when closeDelay is 0".
 
+**Date:** 2026-09-09. And one delay in this library is NOT one decision for
+it, which is the exception this section needs stated rather than discovered: a
+field that loads its options waits after a keystroke before asking, and how
+long is a prop.
+
+The rule above holds because a hover delay is about how an interface FEELS, and
+two screens that feel different are two applications. A request delay is about
+how much traffic somebody's server can take — measured in requests rather than
+in milliseconds of patience — and this library never talks to that server, so
+it has no opinion to impose. 300 ms is the default because a typist is around
+there; a catalogue behind a slow endpoint wants 500, and a search over a local
+index wants 0, and neither of those is a matter of taste.
+
+The same argument does NOT extend to the delay's cousin. How many rows to fetch
+is not a delay at all, and it is nobody's prop: the loader closes over it.
+
 So the 150 ms closes a layer nobody is travelling towards. It is for the case
 §3.1 opens with — moving between two adjacent controls, where the first panel
 must not hang over the second — and not for the journey into the panel. Those
