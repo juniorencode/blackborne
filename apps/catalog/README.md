@@ -3,9 +3,23 @@
 The Storybook that shows every component in every state.
 
 ```sh
-pnpm --filter catalog dev     # http://127.0.0.1:6006
-pnpm --filter catalog test:e2e
+pnpm --filter catalog dev      # http://127.0.0.1:6006, for working on a story
+pnpm build:catalog             # build the package and the catalog, ~10s
+pnpm --filter catalog test:e2e # behaviour, against the BUILT catalog on 6007
+pnpm --filter catalog test:a11y
 ```
+
+**Two servers, two ports, on purpose.** 6006 is the dev server a person works
+against. The checks are served from the static build on 6007, because a dev
+server compiles a story the first time it is asked for — which has timed a
+story out three times here under a full run — and because a built directory is
+what makes running the suites in parallel safe. Keeping the ports apart is what
+stops a run from silently verifying whatever server happened to be up:
+`e2e/catalog.ts` has the whole argument.
+
+So a check run needs `pnpm build:catalog` first. `pnpm verify:full` and CI do it
+for you; iterating on one spec means building once and re-running, since the
+preview server is reused.
 
 It is not a nice-to-have. Several rules in the foundations can only be checked
 here, and the stories are built around them:

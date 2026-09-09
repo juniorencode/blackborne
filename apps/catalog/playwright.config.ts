@@ -1,4 +1,5 @@
 import { defineConfig } from '@playwright/test';
+import { CATALOG_URL } from './e2e/catalog';
 
 /*
  * Doc 10's layer table puts a browser under "visual regression, slow". Two
@@ -11,8 +12,52 @@ export default defineConfig({
   testDir: './e2e',
   // A failing colour or pixel assertion must not be shrugged off as flakiness.
   retries: 0,
+  /*
+   * WORK IS HANDED OUT PER FILE, and that is left alone here on purpose —
+   * splitting a file's tests across workers is switched on for exactly one
+   * project below.
+   *
+   * The reason is measured, and the two suites have opposite shapes.
+   *
+   * The behaviour checks are 253 tests across 28 files, so handing out whole
+   * files already uses every worker: 7.5 minutes serial against 2.7 with six
+   * workers. Splitting the files' tests as well bought nothing on top of that
+   * — 2.7 either way — and one three-worker run dropped three checks, so it
+   * stays off where it has nothing to offer.
+   *
+   * The accessibility suite is 357 checks in ONE file, which file-level
+   * parallelism cannot touch at all. Splitting it took 13.1 minutes to 4.6.
+   *
+   * So: file-level for everything, test-level for the one file that is a suite
+   * in its own right.
+   */
+  /*
+   * Half the cores, which is Playwright's own local default made explicit —
+   * because **in CI its default is one**, and that is where the whole cost is
+   * paid. Every number below was measured locally with six workers; before
+   * this line existed, CI ran all of it in a single worker, so the pipeline was
+   * slower than any of these measurements even at its best.
+   *
+   * What it is worth:
+   *
+   *   behaviour     · 253 tests, 28 files · 7.5m serial → 2.7m
+   *   accessibility · 357 checks, 1 file  · 13.1m       → 4.6m
+   *
+   * Half rather than all, because each worker is a browser and the machine
+   * still has a server and an operating system to run. Where the curve turns
+   * is a property of the MACHINE rather than of this suite, and there is a
+   * measurement for that too: on the same repository with 2.4GB free, thirty
+   * checks took 2m10s at one worker, 1m10s at two, and 1m17s at six — six was
+   * slower than two and dropped a check. The same six workers on the same
+   * machine an hour later, with memory back, produced the 4.6m above.
+   *
+   * So: a fraction here, and `--workers=N` on the command line when a
+   * particular machine disagrees. A number baked in would be wrong on both of
+   * those machines and they are the same one.
+   */
+  workers: '50%',
   use: {
-    baseURL: 'http://127.0.0.1:6006',
+    baseURL: CATALOG_URL,
     /*
      * A fixed viewport, because a screenshot taken at a different size is a
      * different screenshot. Wide enough for the side-by-side stories.
@@ -90,7 +135,33 @@ export default defineConfig({
   projects: [
     {
       name: 'checks',
-      testIgnore: ['**/visual.spec.ts', '**/*.narrow.spec.ts']
+      /*
+       * THE ACCESSIBILITY SUITE IS IGNORED HERE, and that one line was worth
+       * twelve minutes of every CI run.
+       *
+       * It used to live in this project, so `test:e2e` — which runs `checks`
+       * and `narrow` — executed all 349 of its story checks, and then the next
+       * CI step ran the identical suite again by name. Twelve minutes, twice,
+       * for one set of results. A project of its own is what makes "run the
+       * behaviour checks" and "run axe over every story" two different things
+       * rather than one thing and a superset of it.
+       */
+      testIgnore: [
+        '**/visual.spec.ts',
+        '**/*.narrow.spec.ts',
+        '**/accessibility.spec.ts'
+      ]
+    },
+    {
+      name: 'a11y',
+      testMatch: ['**/accessibility.spec.ts'],
+      /*
+       * The one place tests inside a file are split across workers. It
+       * generates one check per story from Storybook's own index — 357 of them
+       * — and each one loads a page and runs axe over it, sharing nothing with
+       * its neighbours. Serial, that was 13.1 minutes; split, 4.6.
+       */
+      fullyParallel: true
     },
     { name: 'visual', testMatch: ['**/visual.spec.ts'] },
     /*
@@ -121,10 +192,30 @@ export default defineConfig({
     }
   ],
 
+  /*
+   * THE BUILT CATALOG, SERVED STATICALLY, and not the dev server.
+   *
+   * `storybook dev` compiles a story the first time it is asked for. Under a
+   * full run that is a measurable hazard rather than a theoretical one: three
+   * times in one evening a story spent the whole 30s test budget waiting for
+   * its stylesheet while the server compiled it, each time in a full run and
+   * never in isolation (`story.ts` records all three). A built directory has
+   * nothing left to compile, so the wait it was timing out on cannot happen —
+   * and parallel workers become safe, which is what makes the setting above
+   * worth having.
+   *
+   * The build itself costs about ten seconds. It is not part of this command
+   * on purpose: `verify:full` and CI build once, and a person iterating on one
+   * spec builds once and re-runs against the server this reuses. Naming the
+   * build here would pay it again on every invocation, and making it
+   * conditional on the output being present would reintroduce exactly the
+   * stale-artefact trap the separate port exists to close (see `e2e/catalog`).
+   */
   webServer: {
-    command: 'pnpm dev',
-    url: 'http://127.0.0.1:6006',
+    command: 'pnpm preview',
+    url: CATALOG_URL,
     reuseExistingServer: !process.env['CI'],
-    timeout: 180_000
+    timeout: 180_000,
+    stdout: 'ignore'
   }
 });

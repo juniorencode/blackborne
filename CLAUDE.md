@@ -117,20 +117,33 @@ things to keep in mind anyway:
 
 ## Commands
 
-| Command            | What it does                                                   |
-| ------------------ | -------------------------------------------------------------- |
-| `pnpm install`     | Install. Uses the committed lockfile; versions never drift     |
-| `pnpm verify`      | The full gate: format, lint, types, tests. Run before every PR |
-| `pnpm lint`        | ESLint, including this project's own rules                     |
-| `pnpm typecheck`   | Types across the workspace                                     |
-| `pnpm test`        | Vitest                                                         |
-| `pnpm verify:full` | Everything above, plus the browser checks against the catalog  |
-| `pnpm format`      | Apply formatting                                               |
+| Command              | What it does                                                          |
+| -------------------- | --------------------------------------------------------------------- |
+| `pnpm install`       | Install. Uses the committed lockfile; versions never drift            |
+| `pnpm verify`        | The full gate: format, lint, types, tests. Run before every PR        |
+| `pnpm lint`          | ESLint, including this project's own rules                            |
+| `pnpm typecheck`     | Types across the workspace                                            |
+| `pnpm test`          | Vitest                                                                |
+| `pnpm verify:full`   | Everything above, plus the browser and accessibility checks           |
+| `pnpm build:catalog` | The package and the catalog, which the browser checks are served from |
+| `pnpm format`        | Apply formatting                                                      |
 
 Two levels, on purpose. `pnpm verify` is the fast gate and the same thing CI
 runs first, so a green local run means a green first job. `pnpm verify:full`
 adds the browser checks, which need Chromium and run as a separate CI job so
 they never delay the fast one.
+
+**The browser checks are served from the BUILT catalog, on port 6007** — not
+from the dev server on 6006, which is for working on a story. The two ports are
+kept apart deliberately: a dev server compiles each story on demand, which has
+timed a story out three times under a full run, and a run that reuses whatever
+server is up verifies whatever that server last compiled. `e2e/catalog.ts`
+carries the reasoning. That is also what makes the suites safe to run in
+parallel, and parallel is where the time went: 7.5 minutes of behaviour checks
+became 2.7, and the accessibility suite — 357 checks in a single file, which
+file-level parallelism cannot touch — dropped from 13.1 minutes to 4.6. **CI
+was worse than any of that**, because Playwright uses one worker there by
+default until told otherwise.
 
 A browser is not optional pedantry: jsdom does not implement real tab order, so
 it cannot say where focus goes, and it does not resolve CSS variables, so it

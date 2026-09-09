@@ -82,11 +82,23 @@ docker run --rm \
     # --frozen-lockfile, so the container installs exactly what is committed.
     pnpm install --frozen-lockfile --store-dir /tmp/pnpm-store
     pnpm --filter blackborne build
+    # And the catalog, because the checks are served from the BUILT catalog
+    # rather than from a dev server: ten seconds here, against a server that
+    # compiles each story on demand and has timed out doing it. The reason is
+    # in playwright.config.ts beside the webServer.
+    pnpm --filter catalog build
     # The quoted expansion, and not a bare one: this string is built by the
     # HOST shell, so an unquoted expansion hands the container bare words. A
     # filter such as -g accordion,collapsible written with a vertical bar then
     # arrives as a PIPE, and the run dies with EPIPE from a Playwright process
     # writing into nothing. @Q quotes each word on the way in, and expands to
     # nothing at all when there are no arguments.
-    pnpm --filter catalog exec playwright test --project=visual ${*@Q}
+    # --workers=1 EXPLICITLY, and not by accident of the environment. The
+    # config asks for half the cores now, which is what makes the other suites
+    # quick; a screenshot taken while three other browsers compete for the
+    # machine is a screenshot taken at a different moment, and this suite's
+    # whole premise is that a picture is byte-identical or wrong. CI=1 used to
+    # imply one worker on its own, and an explicit config setting overrides
+    # that — so the guarantee has to be written here.
+    pnpm --filter catalog exec playwright test --project=visual --workers=1 ${*@Q}
   "
