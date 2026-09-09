@@ -130,6 +130,21 @@ export type {
   NumberFieldSize
 } from './components/NumberField';
 
+/*
+ * Two pagers, because the two take different data and share no prop: one is
+ * given a total and computes a window from it, the other is given two
+ * booleans and cannot know a total at all (decision 0014).
+ *
+ * `pageWindow` is public with them. It is the whole of the offset pager's
+ * logic as a pure function (P6), and a consumer building their own row of
+ * numbers — inside a table's own footer, say — should not have to rewrite the
+ * arithmetic to get the same shape.
+ */
+export { Pagination, pageWindow } from './components/Pagination';
+export type { PageSlot, PaginationProps } from './components/Pagination';
+export { CursorPagination } from './components/CursorPagination';
+export type { CursorPaginationProps } from './components/CursorPagination';
+
 export { Popover } from './components/Popover';
 export type { PopoverProps } from './components/Popover';
 export { Preview } from './components/Preview';
