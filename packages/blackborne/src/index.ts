@@ -93,6 +93,12 @@ export type { CheckboxGroupProps } from './components/CheckboxGroup';
  * nothing, because deciding which options exist right now is the whole
  * difference between a combo box and a select (decision 0021).
  *
+ * Both branches of its props are exported beside the union, because a
+ * consumer writing a wrapper needs to name one: props typed as the union
+ * cannot be spread and then added to, since the addition has to satisfy both
+ * branches (decision 0022).
+ * Its own stories hit that first.
+ *
  * `matchOptions`, which is that decision's other half, is NOT exported yet:
  * it is pure and it is the logic, which is the shape `pageWindow` was
  * published as — but P5 asks which screen needs it today, and the one that
@@ -102,7 +108,9 @@ export type { CheckboxGroupProps } from './components/CheckboxGroup';
 export { ComboBox, ComboBoxItem } from './components/ComboBox';
 export type {
   ComboBoxItemProps,
+  ComboBoxOneProps,
   ComboBoxProps,
+  ComboBoxSeveralProps,
   ComboBoxSize
 } from './components/ComboBox';
 

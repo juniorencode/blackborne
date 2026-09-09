@@ -410,3 +410,166 @@ test('in a 320px panel nothing overflows', async ({ page }) => {
     frame!.x + frame!.width + 1
   );
 });
+
+/* ------------------------------------------------------------------ several
+ *
+ * The measurements that only a box can answer: the field GROWS with its chips
+ * and the toggle does not move, the chips wrap inside the frame rather than
+ * pushing it wider, and the draft input follows the last chip onto its line.
+ */
+
+const SEVERAL = 'components-combobox--several';
+const SEVERAL_STATES = 'components-combobox--several-states';
+const SEVERAL_NARROW = 'components-combobox--several-in-a-narrow-panel';
+
+test('the chips and the input share one wrapping flow', async ({ page }) => {
+  await gotoStory(page, SEVERAL);
+
+  const chip = await page.locator('.bb-value-chip').first().boundingBox();
+  const input = await page.locator('.bb-combobox-input').boundingBox();
+
+  /*
+   * The input FOLLOWS the chip on the same line rather than taking a line of
+   * its own — which is what `flex-1` on a wrapping flow buys, and what a plain
+   * block beside the chips would not.
+   */
+  expect(chip).not.toBeNull();
+  expect(input).not.toBeNull();
+  expect(input!.y).toBeLessThan(chip!.y + chip!.height);
+  expect(input!.x).toBeGreaterThan(chip!.x);
+});
+
+test('the box grows with its chips, and the toggle stays at the edge', async ({
+  page
+}) => {
+  await gotoStory(page, SEVERAL_STATES);
+
+  const frames = page.locator('.bb-field-box');
+  const empty = await frames.first().boundingBox();
+  const four = await frames.last().boundingBox();
+
+  // One row measures a control's height; four values measure more than one.
+  expect(four!.height).toBeGreaterThan(empty!.height);
+
+  /*
+   * And the toggle is still at the trailing edge of the frame rather than
+   * wrapped onto a line of its own, which is the reason the wrapping happens
+   * inside `ControlFrame` instead of replacing it.
+   */
+  const toggle = await page
+    .locator('.bb-field-box')
+    .last()
+    .locator('.bb-combobox-toggle')
+    .boundingBox();
+  expect(toggle!.x + toggle!.width).toBeLessThanOrEqual(
+    four!.x + four!.width + 1
+  );
+  expect(toggle!.y).toBeLessThan(four!.y + four!.height / 2);
+});
+
+test('choosing several keeps the list open and empties the box', async ({
+  page
+}) => {
+  await gotoStory(page, SEVERAL);
+
+  const input = page.locator('.bb-combobox-input');
+  await input.click();
+  await input.fill('cardio');
+  await page.getByRole('option').first().click();
+
+  /*
+   * The base's own behaviour, asserted here because it is the difference
+   * between picking four values and picking one four times.
+   */
+  await expect(page.getByRole('listbox')).toBeVisible();
+  await expect(input).toHaveValue('');
+});
+
+test('a chip is removed by its cross, and the row re-wraps', async ({
+  page
+}) => {
+  await gotoStory(page, SEVERAL_NARROW);
+
+  const chips = page.locator('.bb-value-chip');
+  const before = await chips.count();
+  const tallBefore = await page.locator('.bb-field-box').boundingBox();
+
+  await page
+    .getByRole('button', { name: /^Remove/ })
+    .first()
+    .click();
+
+  await expect(chips).toHaveCount(before - 1);
+  const tallAfter = await page.locator('.bb-field-box').boundingBox();
+  expect(tallAfter!.height).toBeLessThanOrEqual(tallBefore!.height);
+});
+
+test('in a 320px panel the chips wrap rather than widen the field', async ({
+  page
+}) => {
+  await gotoStory(page, SEVERAL_NARROW);
+
+  const panel = await page.locator('.catalog-panel').boundingBox();
+  const frame = await page.locator('.bb-field-box').boundingBox();
+
+  expect(frame!.width).toBeLessThanOrEqual(panel!.width);
+
+  // And the box is more than one row tall, which is what wrapping looks like.
+  const chip = await page.locator('.bb-value-chip').first().boundingBox();
+  expect(frame!.height).toBeGreaterThan(chip!.height * 1.5);
+
+  // No chip reaches past the frame it sits in.
+  const overflow = await page
+    .locator('.bb-value-chip')
+    .evaluateAll(
+      (chips, edge) =>
+        chips.filter(c => c.getBoundingClientRect().right > edge + 1).length,
+      frame!.x + frame!.width
+    );
+  expect(overflow).toBe(0);
+});
+
+test('a cross is a target of the minimum size, at compact density', async ({
+  page
+}) => {
+  await gotoStory(page, SEVERAL_STATES);
+
+  const cross = page.locator('.bb-value-chip-remove').first();
+  const box = await cross.boundingBox();
+  const minimum = await cross.evaluate(element =>
+    parseFloat(
+      getComputedStyle(element).getPropertyValue('--bb-control-hit-area')
+    )
+  );
+
+  expect(minimum).toBeGreaterThan(0);
+  expect(box!.width).toBeGreaterThanOrEqual(minimum - 0.5);
+  expect(box!.height).toBeGreaterThanOrEqual(minimum - 0.5);
+});
+
+test('while saving, the cross keeps its room and takes no clicks', async ({
+  page
+}) => {
+  await gotoStory(page, SEVERAL_STATES);
+
+  /*
+   * Doc 07 §2.2 rule 1 inside the chip, measured as the two things that make
+   * it true: the room is the same as an ordinary chip's, and the element is
+   * `inert`, so a click at its centre reaches nothing.
+   */
+  const saving = page
+    .getByRole('combobox', { name: 'Saving' })
+    .locator('xpath=ancestor::*[contains(@class,"bb-field-box")]');
+
+  const hidden = saving.locator('.bb-value-chip-remove').first();
+  expect(
+    await hidden.evaluate(element => getComputedStyle(element).visibility)
+  ).toBe('hidden');
+
+  const ordinary = await page
+    .locator('.bb-value-chip-remove')
+    .first()
+    .boundingBox();
+  const box = await hidden.boundingBox();
+  expect(box!.width).toBeCloseTo(ordinary!.width, 0);
+});

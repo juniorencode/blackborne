@@ -278,6 +278,25 @@ Do not reach for the usual trick of swapping the chevron for a cross on hover:
 something that appears only on hover is not there for touch and never there for
 a keyboard.
 
+**ONE CONTEXT PER COLLECTION, and two components inside one field will fight
+over it.** Measured twice on `ComboBox`, and this is the trap to know before
+composing anything inside a field that has a collection of its own:
+
+- **A `TagGroup` inside a `ComboBox` does not work.** The combo box publishes
+  its own `ListStateContext` for its options, and `useTag` reads that context
+  to find its collection — so a chip inside one resolves the wrong collection.
+  With a dynamic `items` list it exhausts the heap; with static children it
+  throws from `useGridListItem`. The chips are spans instead (decision 0022).
+- **And a `Button` inside a `ComboBox` takes the toggle's props.** The combo
+  box publishes one `ButtonContext`, so every `Button` in the subtree wears the
+  toggle's id, name and ref — three buttons on one field, and the toggle's own
+  name ruined by the last chip's. `slot={null}` means "take no context at all",
+  which is read in the base's `useSlottedContext` and is the fix.
+
+The general shape: when a base component publishes a context for its own
+child, every descendant of that type consumes it. Check what a field publishes
+before putting another of the base's collections inside it.
+
 **A collection is built in a render pass you cannot see from.** Measured on
 `ComboBox`: the base renders a list's children again, on its own, to build the
 collection — and that pass is detached from the surrounding context, so a

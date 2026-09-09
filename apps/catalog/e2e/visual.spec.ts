@@ -184,6 +184,16 @@ const STATES: Array<[string, string]> = [
   ['components-combobox--states', 'combobox-states'],
   ['components-combobox--open', 'combobox-open'],
   ['components-combobox--no-options', 'combobox-no-options'],
+  /*
+   * And two more for the field that holds SEVERAL, because the chips are a
+   * different box: `several-states` is the one to look at — read-only and
+   * disabled keeping their chips while their crosses go, saving keeping the
+   * cross and its room, and four values making the field two lines tall with
+   * its toggle still at the top of the edge. `several-narrow` is the same box
+   * in 320px, where the chips wrap and one of them truncates.
+   */
+  ['components-combobox--several-states', 'combobox-several-states'],
+  ['components-combobox--several-in-a-narrow-panel', 'combobox-several-narrow'],
   ['components-menu--long-list', 'menu-long-list'],
   ['components-menu--long-label', 'menu-long-label'],
   ['components-pagination--positions', 'pagination-positions'],

@@ -57,21 +57,27 @@ thing that moves between pages.
 
 **The batch after composition is under way**, in six waves, and the shape of
 it is in [the catalog](./docs/catalog-and-build-order.md) §3.2 — read that
-before starting one. `ComboBox` has landed, and what follows is the same
-component holding several values, then `useAsyncOptions`, which is a hook and
-not a component, then `Calendar` and `RangeCalendar`, `DateField` and
-`DatePicker`, and `TimeField` with `DateRangePicker`. It spans three levels, so
-the order is the dependency and not the level number.
+before starting one. `ComboBox` has landed and so has the same component
+holding **several** values, as a discriminated union rather than a flag. What
+follows is `useAsyncOptions`, which is a hook and not a component, then
+`Calendar` and `RangeCalendar`, `DateField` and `DatePicker`, and `TimeField`
+with `DateRangePicker`. It spans three levels, so the order is the dependency
+and not the level number.
 
-**And the risk component paid for itself in the first wave.** The catalog
-predicted that per-option keywords would mean `ComboBox` filtered its own rows.
-It cannot: the base builds its collection in a render pass **detached from the
-surrounding context**, so a filter written there sees no query and keeps every
-option — the list showed all three while the component's own render had
-narrowed them to one. The filter extends the base's instead
+**And the risk component paid for itself twice.** The catalog predicted that
+per-option keywords would mean `ComboBox` filtered its own rows. It cannot: the
+base builds its collection in a render pass **detached from the surrounding
+context**, so a filter written there sees no query and keeps every option — the
+list showed all three while the component's own render had narrowed them to one
 ([decision 0021](./docs/decisions/0021-a-combo-box-extends-the-bases-filter.md)).
-Anything that needs to know what a collection is being asked for has the same
-problem, and the table suite is made of collections.
+
+Then holding SEVERAL values found the other half of the same wall: **a
+`TagGroup` inside a `ComboBox` resolves the combo box's own list state** and
+either exhausts the heap or throws, and every `Button` inside one wears the
+toggle's props unless told to take no context
+([decision 0022](./docs/decisions/0022-several-values-are-a-union-and-the-chips-are-not-tags.md)).
+One context per collection, and the table suite is made of collections — which
+is exactly what building the risk component early was for.
 
 **Two things were settled before it started**, in the wave that opened it:
 [doc 07](./docs/foundations/07-forms.md) §2.2 gained a seventh contender for a

@@ -12,7 +12,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, test, vi } from 'vitest';
 import { ConfigProvider } from '../../config';
-import { ComboBox, ComboBoxItem } from './ComboBox';
+import { ComboBox, ComboBoxItem, type ComboBoxSeveralProps } from './ComboBox';
 
 const Doctors = (props: Partial<Parameters<typeof ComboBox>[0]> = {}) => (
   <ComboBox label="Doctor" {...props}>
@@ -453,4 +453,308 @@ test('and one whose options found nothing blames the query', async () => {
   await user.type(screen.getByRole('combobox'), 'zzz');
 
   expect(screen.getByRole('option', { name: 'No results' })).toBeDefined();
+});
+
+/* ------------------------------------------------------------------ several
+ *
+ * The same component holding more than one value, which changes the shape of
+ * the value rather than adding a flag — so the props are a union and the wrong
+ * pairing does not compile.
+ *
+ * The chips are NOT the base's tags, and that is measured rather than chosen:
+ * a `TagGroup` inside a `ComboBox` resolves the combo box's own list state and
+ * either exhausts the heap or throws. So each chip is a span with a button,
+ * and the announcement comes from `ComboBoxValue` — which the base points the
+ * input's `aria-describedby` at.
+ */
+
+const Team = (props: Partial<ComboBoxSeveralProps> = {}) => (
+  <ComboBox label="Doctors" selectionMode="multiple" {...props}>
+    <ComboBoxItem id="ruiz" keywords={['cardiology']}>
+      José Ruiz
+    </ComboBoxItem>
+    <ComboBoxItem id="vega" keywords={['paediatrics']}>
+      Ana Vega
+    </ComboBoxItem>
+    <ComboBoxItem id="salas">Luis Salas</ComboBoxItem>
+  </ComboBox>
+);
+
+const chips = () =>
+  [...document.querySelectorAll('.bb-value-chip')].map(chip =>
+    chip.textContent?.trim()
+  );
+
+const crosses = () => screen.queryAllByRole('button', { name: /Remove/ });
+
+test('with nothing chosen there are no chips', () => {
+  render(<Team />);
+
+  expect(chips()).toEqual([]);
+  expect(screen.getByRole('combobox', { name: 'Doctors' })).toBeDefined();
+});
+
+test('choosing two keeps both, and reports them in order', async () => {
+  const user = userEvent.setup();
+  const onSelectionChange = vi.fn();
+  render(<Team onSelectionChange={onSelectionChange} />);
+
+  await user.click(screen.getByRole('button', { name: /Show suggestions/ }));
+  await user.click(screen.getByRole('option', { name: 'Ana Vega' }));
+  await user.click(screen.getByRole('option', { name: 'Luis Salas' }));
+
+  expect(onSelectionChange).toHaveBeenLastCalledWith(['vega', 'salas']);
+  expect(chips()).toEqual(['Ana Vega', 'Luis Salas']);
+});
+
+/*
+ * MEASURED ON THE BASE, and it is the behaviour that makes choosing several
+ * bearable: the input empties itself and the list stays open, so the next one
+ * is one press away rather than a reopen and a retype.
+ */
+test('the input empties after each choice and the list stays open', async () => {
+  const user = userEvent.setup();
+  render(<Team />);
+
+  const input = screen.getByRole<HTMLInputElement>('combobox');
+  await user.type(input, 'vega');
+  await user.click(screen.getByRole('option', { name: 'Ana Vega' }));
+
+  expect(input.value).toBe('');
+  expect(screen.getByRole('listbox')).toBeDefined();
+});
+
+/*
+ * WHAT A READER HEARS, and the reason the chips did not need to be a grid.
+ *
+ * `ComboBoxValue` renders the chosen values as text and the base points the
+ * input's `aria-describedby` at it — measured. So the values are announced
+ * when the field is reached, and the chips are the same value seen rather than
+ * heard.
+ */
+test('the chosen values are announced through the field itself', async () => {
+  const user = userEvent.setup();
+  render(<Team defaultSelectedKeys={['vega']} />);
+
+  const input = screen.getByRole('combobox');
+  const describedBy = input.getAttribute('aria-describedby') ?? '';
+  expect(describedBy).not.toBe('');
+
+  const described = describedBy
+    .split(' ')
+    .map(id => document.getElementById(id)?.textContent ?? '')
+    .join(' ');
+  expect(described).toContain('Ana Vega');
+
+  // And it keeps up: a second value joins the same text.
+  await user.click(screen.getByRole('button', { name: /Show suggestions/ }));
+  await user.click(screen.getByRole('option', { name: 'Luis Salas' }));
+
+  const after = (input.getAttribute('aria-describedby') ?? '')
+    .split(' ')
+    .map(id => document.getElementById(id)?.textContent ?? '')
+    .join(' ');
+  expect(after).toContain('Luis Salas');
+});
+
+test('and a description of its own is still announced with them', () => {
+  render(<Team defaultSelectedKeys={['vega']} description="Pick a rota." />);
+
+  const described = (
+    screen.getByRole('combobox').getAttribute('aria-describedby') ?? ''
+  )
+    .split(' ')
+    .map(id => document.getElementById(id)?.textContent ?? '')
+    .join(' ');
+
+  expect(described).toContain('Ana Vega');
+  expect(described).toContain('Pick a rota.');
+});
+
+test('the list says which rows are already chosen', async () => {
+  const user = userEvent.setup();
+  render(<Team defaultSelectedKeys={['vega']} />);
+
+  await user.click(screen.getByRole('button', { name: /Show suggestions/ }));
+
+  const marked = screen
+    .getAllByRole('option')
+    .filter(row => row.getAttribute('aria-selected') === 'true')
+    .map(row => row.textContent);
+
+  expect(marked).toEqual(['Ana Vega']);
+  // The base declares the list itself, which is what a reader needs to hear.
+  expect(screen.getByRole('listbox').getAttribute('aria-multiselectable')).toBe(
+    'true'
+  );
+});
+
+test('a chip is removed by its cross, and the rest are reported', async () => {
+  const user = userEvent.setup();
+  const onSelectionChange = vi.fn();
+  render(
+    <Team
+      defaultSelectedKeys={['vega', 'salas']}
+      onSelectionChange={onSelectionChange}
+    />
+  );
+
+  await user.click(crosses()[0]!);
+
+  expect(onSelectionChange).toHaveBeenCalledWith(['salas']);
+  expect(chips()).toEqual(['Luis Salas']);
+});
+
+/*
+ * The cross is named by REFERENCES rather than by a glued string: its own
+ * "Remove" and the element holding the value, in document order. Doc 05 §2.2
+ * rule 5 forbids building the sentence, and this is how the base composes the
+ * same name inside a tag.
+ */
+test('each cross says which value it removes', () => {
+  render(<Team defaultSelectedKeys={['vega', 'salas']} />);
+
+  expect(screen.getByRole('button', { name: 'Remove Ana Vega' })).toBeDefined();
+  expect(
+    screen.getByRole('button', { name: 'Remove Luis Salas' })
+  ).toBeDefined();
+});
+
+/*
+ * The keyboard, and what it lost. A `TagGroup` would have given an arrow-key
+ * walk along the chips and `Delete` on the focused one; it cannot be used
+ * here. What is left is plainer and complete: every cross is in the tab order
+ * and answers `Enter`.
+ */
+test('a chip is removed from the keyboard, through its cross', async () => {
+  const user = userEvent.setup();
+  const onSelectionChange = vi.fn();
+  render(
+    <Team
+      defaultSelectedKeys={['vega', 'salas']}
+      onSelectionChange={onSelectionChange}
+    />
+  );
+
+  crosses()[1]!.focus();
+  await user.keyboard('{Enter}');
+
+  expect(onSelectionChange).toHaveBeenCalledWith(['vega']);
+});
+
+test('removing the last one reports an empty list rather than nothing', async () => {
+  const user = userEvent.setup();
+  const onSelectionChange = vi.fn();
+  render(
+    <Team
+      defaultSelectedKeys={['vega']}
+      onSelectionChange={onSelectionChange}
+    />
+  );
+
+  await user.click(crosses()[0]!);
+
+  /*
+   * `[]` and not `undefined`: a consumer holding the value in their own state
+   * has to be able to see the last one go, which is the same argument that
+   * makes the single mode report `null`.
+   */
+  expect(onSelectionChange).toHaveBeenCalledWith([]);
+  expect(chips()).toEqual([]);
+});
+
+test('a controlled field shows what it is given and nothing else', async () => {
+  const user = userEvent.setup();
+  const onSelectionChange = vi.fn();
+  render(
+    <Team selectedKeys={['vega']} onSelectionChange={onSelectionChange} />
+  );
+
+  await user.click(screen.getByRole('button', { name: /Show suggestions/ }));
+  await user.click(screen.getByRole('option', { name: 'Luis Salas' }));
+
+  // Reported, and not shown: a controlled value stays its owner's to decide.
+  expect(onSelectionChange).toHaveBeenCalledWith(['vega', 'salas']);
+  expect(chips()).toEqual(['Ana Vega']);
+});
+
+test('typing still narrows the list, keywords included', async () => {
+  const user = userEvent.setup();
+  render(<Team />);
+
+  await user.type(screen.getByRole('combobox'), 'cardio');
+
+  expect(rows()).toEqual(['José Ruiz']);
+});
+
+test('a chosen id with no option behind it keeps its own id as the chip', () => {
+  /*
+   * Which happens legitimately while the options are still arriving. A chip
+   * that is not drawn is a value nobody can remove, so it is drawn with what
+   * is known about it.
+   */
+  render(<Team defaultSelectedKeys={['unknown-id']} />);
+
+  expect(chips()).toEqual(['unknown-id']);
+});
+
+test('read-only keeps the chips readable and takes their crosses away', () => {
+  render(<Team defaultSelectedKeys={['vega']} isReadOnly />);
+
+  expect(chips()).toEqual(['Ana Vega']);
+  expect(crosses()).toEqual([]);
+});
+
+test('and disabled does the same, with the field switched off', () => {
+  render(<Team defaultSelectedKeys={['vega']} isDisabled />);
+
+  expect(chips()).toEqual(['Ana Vega']);
+  expect(crosses()).toEqual([]);
+  expect(screen.getByRole('combobox').getAttribute('disabled')).not.toBeNull();
+});
+
+test('while saving, a cross is present and out of reach', () => {
+  render(<Team defaultSelectedKeys={['vega']} isSaving />);
+
+  /*
+   * Doc 07 §2.2 rule 1, inside the chip: hidden from the reader and
+   * unfocusable, and still taking its width — a cross that disappeared would
+   * re-wrap every chip behind it at the moment somebody is waiting.
+   */
+  expect(crosses()).toEqual([]);
+  expect(document.querySelector('.bb-value-chip-remove')).not.toBeNull();
+});
+
+test('it needs no provider in this mode either', () => {
+  render(<Team defaultSelectedKeys={['vega']} />);
+
+  expect(screen.getByRole('combobox', { name: 'Doctors' })).toBeDefined();
+});
+
+/*
+ * FOUND BY AXE, and it is a real one rather than a rule being pedantic.
+ *
+ * While the list is open the base hides everything outside it from a reader —
+ * the chips included — and a cross that stayed in the tab order would be a
+ * control somebody could reach and never be told about. So while the list is
+ * open the crosses are inert, and they stay visible: nothing moves.
+ */
+test('while the list is open, a chip cross is out of the tab order', async () => {
+  const user = userEvent.setup();
+  render(<Team defaultSelectedKeys={['vega']} />);
+
+  const cross = document.querySelector('.bb-value-chip-remove');
+  expect(cross).not.toBeNull();
+  expect(cross!.closest('[inert]')).toBeNull();
+
+  await user.click(screen.getByRole('button', { name: /Show suggestions/ }));
+
+  expect(cross!.closest('[inert]')).not.toBeNull();
+  /*
+   * And still visible, because taking its room away would re-wrap the chips.
+   * Asserted through the class list rather than a selector: the class carries
+   * the library's colon prefix, and escaping it in a selector is the kind of
+   * thing that quietly matches nothing.
+   */
+  expect(cross!.parentElement?.className.includes('bb:invisible')).toBe(false);
 });

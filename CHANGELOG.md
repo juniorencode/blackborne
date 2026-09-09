@@ -12,6 +12,62 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **A `ComboBox` can hold several values**, each as a chip inside the field.
+
+  ```tsx
+  <ComboBox
+    label="Doctors"
+    selectionMode="multiple"
+    selectedKeys={team}
+    onSelectionChange={setTeam}
+  >
+    <ComboBoxItem id="7" keywords={['cardiology']}>
+      Dr. Ruiz
+    </ComboBoxItem>
+    <ComboBoxItem id="9" keywords={['paediatrics']}>
+      Dr. Vega
+    </ComboBoxItem>
+  </ComboBox>
+  ```
+
+  **The props are a union, not a flag.** One value or several changes the SHAPE
+  of the value, so `selectedKey`/`selectedKeys` are two branches typed by
+  `selectionMode` — the wrong pairing does not compile. Both branches are
+  exported (`ComboBoxOneProps`, `ComboBoxSeveralProps`), because props typed as
+  a union cannot be spread and then added to, and a consumer writing a wrapper
+  needs to name one.
+
+  **Choosing one leaves the list open and empties the box**, so the next is one
+  press away — the base's behaviour, kept. The field's box GROWS with its
+  chips, and the toggle stays at the trailing edge rather than dropping onto a
+  line of its own: the wrapping happens inside the frame instead of replacing
+  it.
+
+  **Each chip's cross is named by what it removes** — "Remove Ana Vega",
+  composed from element references rather than a glued string — and read-only
+  and disabled keep the chips while taking the crosses away, because a value
+  you cannot see is not read-only, it is gone.
+
+  Two measurements shaped all of it
+  ([decision 0022](docs/decisions/0022-several-values-are-a-union-and-the-chips-are-not-tags.md)).
+  **A `TagGroup` inside a `ComboBox` does not work**: the combo box publishes
+  its own `ListStateContext` for its options, so a tag inside it resolves the
+  wrong collection — the heap runs out with a dynamic list and it throws with a
+  static one. **And every `Button` inside one wears the toggle's props**, so
+  three buttons on one field all carried the toggle's id and name until the
+  crosses were told to take no context at all. What that costs is the arrow-key
+  walk along the chips; what it does not cost is the announcement, which the
+  base still supplies through the field's own description.
+
+  Two more things came out of it. The chip is now shared with `TagsInput` as an
+  internal piece — its two visual baselines are byte-identical after the move,
+  which is what says the appearance did not drift. And the base's `validate` is
+  no longer forwarded by this component: it is a form-validation hook, and this
+  library's answer to validation is that the project decides
+  ([decision 0005](docs/decisions/0005-validation-stays-in-the-project.md)).
+  The other fields still forward it, which is now a row in the catalog rather
+  than a thing nobody had noticed.
+
 - **`ComboBox`** — typing to find one of a long list, and the first component
   of the batch after composition.
 

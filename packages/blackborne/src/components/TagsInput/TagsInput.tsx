@@ -1,6 +1,5 @@
 import { forwardRef, useEffect, useRef, useState } from 'react';
 import {
-  Button,
   Group,
   Input,
   Label,
@@ -11,9 +10,14 @@ import {
   type Key,
   type TextFieldProps as AriaTextFieldProps
 } from 'react-aria-components';
-import { CONTROL_BOX, CONTROL_INSIDE, Field } from '../../internal/Field';
+import {
+  CHIP,
+  ChipRemove,
+  CONTROL_BOX,
+  CONTROL_INSIDE,
+  Field
+} from '../../internal/Field';
 import { useMessage } from '../../config';
-import { CrossGlyph } from '../../internal/CrossGlyph';
 import { cx } from '../../internal/cx';
 import { useDevWarning } from '../../internal/useDevWarning';
 import { mergeRefs } from '../../internal/mergeRefs';
@@ -64,6 +68,11 @@ export type TagsInputSize = 'sm' | 'md' | 'lg';
  */
 
 /*
+ * THE CHIP MOVED. It lives in `internal/Field/ValueChip` now, shared with the
+ * combo box that holds several values — which is the third cross the note
+ * below asked about, and the second copy of this chip. Nothing about the
+ * appearance changed, and the two visual baselines are what say so.
+ *
  * `Badge` is this library's removable chip and it is not used here.
  *
  * The blocking reason is mechanical: a `Tag` publishes `ButtonContext` with
@@ -245,89 +254,6 @@ const INPUT = cx(
    * what it is for.
    */
   'bb:placeholder:text-text-muted'
-);
-
-/*
- * A tag.
- *
- * No hover state, and that is correct rather than missing: a tag is not a
- * control. The base disables its own hover tracking when a tag allows neither
- * selection nor an action, so `data-hovered` never appears — the target inside
- * it is the cross, and that is what answers the pointer.
- *
- * Focus reads `data-focus-visible` where Badge's cross reads `data-focused`,
- * and the divergence is deliberate. A tag is only ever reached with the arrow
- * keys, so keyboard-only loses nothing; and styling the row on `data-focused`
- * would ring the chip at the same moment the cross inside it rang itself,
- * which is the two nested rings doc 06 §3 has exactly one of.
- *
- * No trailing padding: the cross is flush with the chip's end, and its own
- * 28px target centres the mark 7px from that edge — within a pixel of the
- * padding the label gets on the other side. Badge needs a negative margin to
- * reach the same place because it also renders WITHOUT a cross; here the
- * trailing edge is always the cross or the room it would take.
- */
-const CHIP = cx(
-  'bb:box-border bb:inline-flex bb:max-w-full bb:items-center',
-  /*
-   * As tall as the target it contains, always — the reasoning Badge records.
-   * A row of tags wraps, so a target that overhung its chip would land on the
-   * chip in the line above; the chip is sized to the target instead.
-   */
-  'bb:min-h-hit',
-  // radius-sm is the tag step (doc 03 §4.3). Not radius-full: a pill whose
-  // label wraps has ends that stop matching its corners.
-  'bb:rounded-sm',
-  'bb:ps-(--bb-space-3)',
-  /*
-   * Soft neutral, the pair taken together (doc 03 §4.0). The "on" half is read
-   * from the token rather than through `bb:text-text`, which carries the same
-   * value today and is the trap rather than the shortcut: the day a theme
-   * moves one and not the other, the pair is broken and nothing says so.
-   */
-  'bb:bg-surface-sunken bb:text-(color:--bb-surface-sunken-on)',
-  'bb:font-sans bb:leading-tight',
-  'bb:cursor-default bb:outline-hidden',
-  // The transparent border reserves the ring's edge at rest, so nothing shifts
-  // when it appears.
-  'bb:border bb:border-solid bb:border-transparent',
-  'bb:transition-[border-color,box-shadow]',
-  'bb:duration-(--bb-duration-fast) bb:ease-standard',
-  'bb:data-focus-visible:border-focus-ring',
-  'bb:data-focus-visible:shadow-[0_0_0_4px_color-mix(in_oklab,var(--bb-focus-ring)_var(--bb-focus-ring-halo-strength),transparent)]',
-  'bb:data-disabled:bg-surface-disabled bb:data-disabled:text-text-disabled'
-);
-
-const REMOVE = cx(
-  'bb:box-border bb:flex bb:flex-none bb:items-center bb:justify-center',
-  /*
-   * The target, which is the part of a removable chip that is usually wrong. A
-   * cross drawn at 14px is a 14px target unless something says otherwise, and
-   * doc 06 §3 wants the minimum at EVERY density, compact included — 28px
-   * normal, 24px compact, with the mark going 14px to 11px underneath it.
-   *
-   * The inline axis reads `--min-width-hit`, which exists precisely because
-   * `min-w-*` resolves from its own namespace and does not fall back to
-   * `--height-*` the way `min-h-*` does.
-   */
-  'bb:min-h-hit bb:min-w-hit',
-  'bb:rounded-e-sm',
-  'bb:cursor-pointer bb:bg-transparent bb:text-inherit',
-  'bb:border bb:border-solid bb:border-transparent',
-  'bb:outline-hidden',
-  'bb:transition-[background-color,border-color,box-shadow]',
-  'bb:duration-(--bb-duration-fast) bb:ease-standard',
-  /*
-   * Hover and pressed are mixed from the text colour rather than taken from
-   * surface-hover, the argument Badge's cross already had with itself: a
-   * control sitting on a chip that hovers back to grey leaves its own colour
-   * family and reads as a different component.
-   */
-  'bb:data-hovered:bg-[color-mix(in_oklab,currentColor_15%,transparent)]',
-  'bb:data-pressed:bg-[color-mix(in_oklab,currentColor_28%,transparent)]',
-  'bb:data-focused:border-focus-ring',
-  'bb:data-focused:shadow-[0_0_0_4px_color-mix(in_oklab,var(--bb-focus-ring)_var(--bb-focus-ring-halo-strength),transparent)]',
-  'bb:data-disabled:cursor-not-allowed bb:data-disabled:text-text-disabled'
 );
 
 /*
@@ -715,52 +641,11 @@ export const TagsInput = forwardRef<HTMLInputElement, TagsInputProps>(
                         container (P4: 320px is a real width). */}
                     <span className="bb:min-w-0 bb:truncate">{item.id}</span>
                     {isRemovable ? (
-                      /*
-                       * Unreachable in every sense that matters while busy,
-                       * and still the same width — `ControlFrame`'s mechanism,
-                       * applied inside the chip. `inert` takes it out of focus
-                       * order and hit testing, `aria-hidden` out of the
-                       * accessibility tree, and the class out of sight;
-                       * `visibility: hidden` alone would be invisible to a
-                       * test environment with no stylesheet.
-                       */
-                      <span
-                        className={cx(
-                          'bb:flex bb:flex-none bb:items-stretch',
-                          !canRemove && 'bb:invisible'
-                        )}
-                        {...(canRemove
-                          ? {}
-                          : { inert: true, 'aria-hidden': true })}
-                      >
-                        <Button
-                          slot="remove"
-                          className={REMOVE}
-                          /*
-                           * The name is OURS, replacing the base's own
-                           * localised "Remove". Two dictionaries in one
-                           * interface is one too many: a project that
-                           * translated `remove` would see its word on every
-                           * badge and not on a tag, which is the finding
-                           * `ClearButton` already recorded.
-                           *
-                           * It composes with the tag beside it, because the
-                           * base points `aria-labelledby` at this button plus
-                           * the tag's row — so the name comes out "Remove
-                           * alpha" rather than a row of buttons all announcing
-                           * themselves as "Remove".
-                           */
-                          aria-label={removeLabel}
-                        >
-                          {/*
-                           * The library's own cross, shared rather than
-                           * copied — this file held one of the four copies
-                           * that made the case for extracting it (doc 02
-                           * §11.4).
-                           */}
-                          <CrossGlyph />
-                        </Button>
-                      </span>
+                      <ChipRemove
+                        slot="remove"
+                        canRemove={canRemove}
+                        removeLabel={removeLabel}
+                      />
                     ) : null}
                   </Tag>
                 )}

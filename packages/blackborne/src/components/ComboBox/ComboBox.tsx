@@ -1,7 +1,9 @@
-import { forwardRef, useMemo } from 'react';
+import { forwardRef, useContext, useId, useMemo } from 'react';
 import {
   Button as AriaButton,
   ComboBox as AriaComboBox,
+  ComboBoxStateContext,
+  ComboBoxValue,
   Input,
   ListBox as AriaListBox,
   ListBoxItem as AriaListBoxItem,
@@ -11,11 +13,14 @@ import {
   type Key
 } from 'react-aria-components';
 import {
+  CHIP,
+  ChipRemove,
   CONTROL_INSIDE,
   CONTROL_TEXT,
   ControlFrame,
   EDGE_BUTTON,
-  Field
+  Field,
+  useOwnedValue
 } from '../../internal/Field';
 import { useMessage } from '../../config';
 import { CheckGlyph } from '../../internal/CheckGlyph';
@@ -37,6 +42,71 @@ const SIZE: Record<ComboBoxSize, { frame: string; text: string }> = {
 
 /* The value is typed, so the control is an input filling the frame. */
 const INPUT = cx('bb-combobox-input', CONTROL_INSIDE, CONTROL_TEXT);
+
+/*
+ * The same heights again, as a MINIMUM, for the field that holds several.
+ *
+ * `min-h` rather than `h` is the whole difference: the box grows with its
+ * chips. With one row the minimum decides, so it still measures exactly the
+ * control height and still lines up in a row with a button (doc 03 §9); with
+ * three rows the content decides.
+ *
+ * The type size goes on the FRAME here as well as on the input, and both read
+ * this one entry so they cannot drift: a chip is a `div` and inherits
+ * `font-size`, while an `<input>` does not — browsers set a font on form
+ * controls and this package ships no reset to undo it.
+ */
+const GROWS: Record<ComboBoxSize, { frame: string; text: string }> = {
+  sm: { frame: 'bb:h-auto bb:min-h-control-sm', text: 'bb:text-xs' },
+  md: { frame: 'bb:h-auto bb:min-h-control-md', text: 'bb:text-md' },
+  lg: { frame: 'bb:h-auto bb:min-h-control-lg', text: 'bb:text-lg' }
+} satisfies Record<ComboBoxSize, { frame: string; text: string }>;
+
+/*
+ * The one wrapping flow the chips and the draft input share, inside the frame.
+ *
+ * The vertical padding is `--bb-space-1` for the reason `TagsInput` records:
+ * at every size and both densities `hit + 2 + 2` stays under the control
+ * height, so a box with one row of chips is exactly as tall as a field.
+ */
+const WRAPPING_FLOW = cx(
+  'bb-combobox-values',
+  'bb:box-border bb:flex bb:min-w-0 bb:flex-1 bb:flex-wrap bb:items-center',
+  'bb:gap-x-(--bb-space-2) bb:gap-y-(--bb-space-1)',
+  'bb:py-(--bb-space-1)'
+);
+
+/*
+ * The draft input, when it shares its line with chips.
+ *
+ * It keeps `CONTROL_INSIDE`'s `flex-1`, which is what makes it follow the last
+ * chip rather than taking a line of its own, and it gives up the control's
+ * inline padding — the flow above owns that, because the chips sit inside it
+ * too. `self-stretch`, so the click target is the whole row rather than the
+ * 21px the text happens to occupy.
+ */
+const DRAFT = cx('bb:px-0 bb:self-stretch');
+
+/*
+ * The empty list of chosen keys, as one frozen value.
+ *
+ * A new `[]` on every render would be a new dependency on every render, and
+ * `useOwnedValue` seeds its own state from this: a fresh array would reseed
+ * nothing but would make every memo downstream of it useless.
+ */
+const NO_KEYS: readonly string[] = Object.freeze([]);
+
+/*
+ * The two ids a chip needs, so its cross can be named by pointing at itself
+ * and at the value beside it. By POSITION rather than by key: an id is one
+ * space-separated token in `aria-labelledby`, and an option's id is a string
+ * the consumer chose — one with a space in it would silently name the wrong
+ * thing.
+ */
+const textId = (scope: string, index: number): string =>
+  `${scope}-value-${index}`;
+const crossId = (scope: string, index: number): string =>
+  `${scope}-remove-${index}`;
 
 /*
  * THE TOGGLE, and it is a button of its own — which is what made doc 07 §2.2
@@ -191,12 +261,31 @@ export interface ComboBoxItemProps {
 export const ComboBoxItem: (props: ComboBoxItemProps) => React.ReactNode = () =>
   null;
 
-export interface ComboBoxProps extends Omit<
+/*
+ * THE VALUE PROPS ARE OURS, and the base's are all omitted below — including
+ * the ones it still accepts.
+ *
+ * Measured in the installed types: `selectedKey`, `defaultSelectedKey` and
+ * `onSelectionChange` are **`@deprecated`** on the base's combo box, replaced
+ * by `value`, `defaultValue` and `onChange` from its shared `ValueBase`. They
+ * still work for one value — the first wave shipped on them — and they are not
+ * called at all when several are allowed, which is how the deprecation was
+ * found rather than read.
+ *
+ * So this component maps onto the CURRENT base props internally and keeps the
+ * vocabulary `Select` already publishes. Decision 0007 says prop names follow
+ * the base, and here the base has two spellings for one thing and deprecates
+ * one of them in one component and not the other: following it literally would
+ * mean a select with a `selectedKey` beside a combo box with a `value`, for no
+ * reason a consumer could ever guess.
+ */
+interface ComboBoxSharedProps extends Omit<
   AriaComboBoxProps<Record<string, never>>,
   | 'children'
   | 'className'
   | 'style'
   | 'items'
+  | 'defaultItems'
   | 'defaultFilter'
   | 'allowsEmptyCollection'
   | 'allowsCustomValue'
@@ -204,11 +293,32 @@ export interface ComboBoxProps extends Omit<
   | 'inputValue'
   | 'defaultInputValue'
   | 'onInputChange'
+  | 'value'
+  | 'defaultValue'
+  | 'onChange'
   | 'selectedKey'
   | 'defaultSelectedKey'
   | 'onSelectionChange'
   | 'formValue'
   | 'validationBehavior'
+  /*
+   * `validate` goes too, and it is the one omission here that is about
+   * doctrine rather than about types.
+   *
+   * It is the base's hook for driving form validation, and this library's
+   * answer to validation is [decision 0005](../../../../docs/decisions/0005-validation-stays-in-the-project.md):
+   * the project decides a value is wrong and passes `isInvalid` with a message,
+   * and the library presents it. A callback whose argument is
+   * `ComboBoxValidationValue` would also put a base interface in a public
+   * signature, which the catalog has refused twice.
+   *
+   * The type system is what made it visible: `Validation<…<M>>` carries the
+   * selection mode, so forwarding it pinned this component's generic to one
+   * value and the plural branch would not compile. **The other fields forward
+   * it**, silently and without meaning to, and that inconsistency is now a row
+   * in catalog §7 rather than a thing this file fixed on its way past.
+   */
+  | 'validate'
 > {
   /** Always required. It may be visually hidden, but it always exists. */
   label: React.ReactNode;
@@ -229,6 +339,16 @@ export interface ComboBoxProps extends Omit<
   /** Height and type size. Aligns with a `Button` of the same size. */
   size?: ComboBoxSize;
   /**
+   * Applied to the field's outermost element, for placement in the consumer's
+   * layout. Nothing reaches an internal node (doc 02 §6).
+   */
+  className?: string;
+}
+
+/** One of the options, which is what a combo box does unless told otherwise. */
+export interface ComboBoxOneProps extends ComboBoxSharedProps {
+  selectionMode?: 'single';
+  /**
    * Which option is chosen, by its `id`.
    *
    * A string rather than the base's `string | number`: the base's own types
@@ -239,11 +359,77 @@ export interface ComboBoxProps extends Omit<
   defaultSelectedKey?: string;
   /** Called with the chosen option's `id`, or `null`. */
   onSelectionChange?: (key: string | null) => void;
-  /**
-   * Applied to the field's outermost element, for placement in the consumer's
-   * layout. Nothing reaches an internal node (doc 02 §6).
+  /*
+   * The plural pair, declared as impossible rather than merely absent.
+   *
+   * `?: never` is what makes the union DISCRIMINATE for a caller who spreads:
+   * with the props simply missing from this branch, `{...props}` plus one
+   * singular prop matches neither member and the error names the wrong thing.
+   * Declared this way, the wrong pairing fails on the branch it belongs to and
+   * the message says which prop does not belong. Found by the component's own
+   * stories, which spread their args.
    */
-  className?: string;
+  selectedKeys?: never;
+  defaultSelectedKeys?: never;
+}
+
+/** Several of them, each shown as a chip inside the field. */
+export interface ComboBoxSeveralProps extends ComboBoxSharedProps {
+  selectionMode: 'multiple';
+  /** Which options are chosen, by their `id`, in the order they were chosen. */
+  selectedKeys?: readonly string[];
+  /** The uncontrolled shortcut (doc 02 §8). */
+  defaultSelectedKeys?: readonly string[];
+  /** Called with every chosen `id`. Empty when the last one is removed. */
+  onSelectionChange?: (keys: string[]) => void;
+  /** The singular pair, declared as impossible — see the branch above. */
+  selectedKey?: never;
+  defaultSelectedKey?: never;
+}
+
+/**
+ * One value or several, and the two are a UNION rather than a boolean.
+ *
+ * The value changes shape with the mode — one id or a list of them — so a
+ * single prop set would have to accept both and mean one, which is the
+ * impossible combination doc 02 §3 rejects booleans for. Typed as a union, the
+ * wrong pairing is an error where it is written rather than a surprise at
+ * runtime: `selectedKeys` on a field that holds one does not compile.
+ *
+ * The precedent is `MenuItem`, which holds three shapes the same way. What is
+ * NOT the precedent is [decision 0014](../../../../docs/decisions/0014-cursor-pagination-is-its-own-component.md),
+ * which split the two paginations into two components — those share no prop
+ * and disagree about what a page even is, where these two share every prop but
+ * one and agree about everything except how many answers are allowed.
+ */
+export type ComboBoxProps = ComboBoxOneProps | ComboBoxSeveralProps;
+
+/*
+ * The props this component owns rather than forwards.
+ *
+ * They are removed by name instead of being destructured into variables
+ * nobody reads: the value pair is read through the narrowed props (which is
+ * what keeps the two callback signatures apart without a cast), and forwarding
+ * `onSelectionChange` would be worse than untidy — it is the base's own
+ * deprecated callback, so the consumer's handler would be called twice for one
+ * choice.
+ */
+const OWN_VALUE_PROPS = [
+  'selectedKey',
+  'defaultSelectedKey',
+  'selectedKeys',
+  'defaultSelectedKeys',
+  'onSelectionChange'
+] as const;
+
+type OwnValueProp = (typeof OWN_VALUE_PROPS)[number];
+
+/** Everything the base takes, which is everything this component does not. */
+function forwardable<T extends object>(props: T): Omit<T, OwnValueProp> {
+  const rest = { ...props };
+  for (const name of OWN_VALUE_PROPS)
+    delete (rest as Record<string, unknown>)[name];
+  return rest;
 }
 
 /** What an option is searched by, and nothing about how it is drawn. */
@@ -253,6 +439,81 @@ const termsOf = (option: ComboBoxItemProps): OptionTerms => ({
     (typeof option.children === 'string' ? option.children : ''),
   terms: option.keywords ?? []
 });
+
+/**
+ * The chosen values, drawn.
+ *
+ * A component of its own for the same reason `Options` was one in the wave
+ * before this: it has to read the base's state, and the state is provided
+ * INSIDE the combo box element. What it needs is whether the list is open —
+ * because while it is, the base hides everything outside it from a reader, and
+ * a cross that is still tabbable would be a control nobody is told about.
+ *
+ * With no state at all — which happens in the render pass the base builds its
+ * collection in — the answer is "closed", which is what a first paint shows.
+ */
+const Chips = ({
+  scope,
+  chosen,
+  labelOf,
+  isRemovable,
+  canRemove,
+  removeLabel,
+  onRemove
+}: {
+  scope: string;
+  chosen: readonly string[];
+  labelOf: (key: string) => string;
+  isRemovable: boolean;
+  canRemove: boolean;
+  removeLabel: string;
+  onRemove: (key: string) => void;
+}) => {
+  const state = useContext(ComboBoxStateContext);
+  const isOpen = state?.isOpen ?? false;
+
+  return (
+    <>
+      {chosen.map((key, index) => (
+        <span key={key} className={CHIP}>
+          {/* `truncate` and `min-w-0`, so one very long value ends in an
+              ellipsis instead of forcing the box wider than its container
+              (P4: 320px is a real width). */}
+          <span id={textId(scope, index)} className="bb:min-w-0 bb:truncate">
+            {labelOf(key)}
+          </span>
+          {isRemovable ? (
+            <ChipRemove
+              /*
+               * No ambient button context. A combo box publishes one for its
+               * toggle and every `Button` inside it takes it — see
+               * `ChipRemove`, where the measurement is.
+               */
+              slot={null}
+              id={crossId(scope, index)}
+              canRemove={canRemove}
+              isReachable={!isOpen}
+              removeLabel={removeLabel}
+              onPress={() => onRemove(key)}
+              /*
+               * "Remove" and then the value, composed the way the base
+               * composes it inside a `Tag`: two element references, in the
+               * order the document has them. Not a template string — doc 05
+               * §2.2 rule 5 is about exactly that, and a sentence built from
+               * fragments comes out backwards in some languages.
+               *
+               * The index rather than the key, because an id is a
+               * space-separated token here and an option's id is a string the
+               * consumer chose.
+               */
+              labelledBy={`${crossId(scope, index)} ${textId(scope, index)}`}
+            />
+          ) : null}
+        </span>
+      ))}
+    </>
+  );
+};
 
 /**
  * Typing to find one of a long list.
@@ -305,8 +566,8 @@ const termsOf = (option: ComboBoxItemProps): OptionTerms => ({
  * the value rather than adding a flag.
  */
 export const ComboBox = forwardRef<HTMLInputElement, ComboBoxProps>(
-  function ComboBox(
-    {
+  function ComboBox(props, ref) {
+    const {
       label,
       children,
       description,
@@ -316,16 +577,29 @@ export const ComboBox = forwardRef<HTMLInputElement, ComboBoxProps>(
       isLoading = false,
       isSaving = false,
       size = 'md',
-      onSelectionChange,
       className,
-      ...ariaProps
-    },
-    ref
-  ) {
+      selectionMode = 'single'
+    } = props;
+
+    const ids = useId();
+    const several = selectionMode === 'multiple';
+
+    /*
+     * The callback, narrowed once. It reports one id in one mode and a list of
+     * them in the other, so read off the union it is a function that can only
+     * be called with an argument satisfying both — which is nothing. Narrowing
+     * on `props.selectionMode` is what separates them, and it is why the mode
+     * is read from `props` here rather than from the boolean above.
+     */
+    const reportSeveral =
+      props.selectionMode === 'multiple' ? props.onSelectionChange : undefined;
+    const reportOne =
+      props.selectionMode === 'multiple' ? undefined : props.onSelectionChange;
     const busy = isLoading || isSaving;
     const noResults = useMessage('emptyStateNoResults');
     const noOptions = useMessage('emptyStateNoData');
     const loading = useMessage('loading');
+    const removeLabel = useMessage('remove');
 
     /*
      * The base's own collator, with the base's own options, so a consumer who
@@ -392,53 +666,129 @@ export const ComboBox = forwardRef<HTMLInputElement, ComboBoxProps>(
       [fingerprint, contains]
     );
 
-    return (
-      <AriaComboBox
-        /*
-         * `aria` rather than the base's default `native`, as every field here
-         * does: the browser's own bubble is not styleable, not translatable
-         * and not ours to time (doc 07 §1). It is also what puts
-         * `aria-required` on the input rather than the native attribute —
-         * measured both ways, and the reason this field composes no word into
-         * its label.
-         */
-        validationBehavior="aria"
-        /*
-         * The base does the filtering; this only tells it what each row's text
-         * stands for. Everything that depends on the base filtering keeps
-         * working because none of it moved: the value in the input, the
-         * selection, and the reopening that shows every option again.
-         */
-        defaultFilter={matcher}
-        /* A list that found nothing says so, rather than closing. */
-        allowsEmptyCollection
-        className={cx('bb:group bb:w-full', className)}
-        {...ariaProps}
-        {...(onSelectionChange === undefined
-          ? {}
-          : {
-              /*
-               * The base hands back `string | number`; ours promises a string,
-               * and every id that can enter came in as one. Mapped rather than
-               * cast, for the reason `Accordion` records: a cast proves it
-               * once and then hopes.
-               */
-              onSelectionChange: (key: Key | null) => {
-                onSelectionChange(key === null ? null : String(key));
-              }
-            })}
-      >
+    /*
+     * THE CHOSEN VALUES, HELD HERE WHEN THERE ARE SEVERAL — which is the fifth
+     * feature to hit the wall `useOwnedValue` was written for, and the note in
+     * that file describes this one exactly: a field that has to DRAW its value
+     * cannot read it out of the base when nobody controls it.
+     *
+     * The chips are that drawing. With one value there is nothing to hold — the
+     * base writes the chosen option's text into the input and the field shows
+     * it — and this stays switched off, so a combo box holding one behaves
+     * exactly as it did before this existed.
+     */
+    const owned = useOwnedValue<readonly string[]>({
+      isTracked: several,
+      value: several ? props.selectedKeys : undefined,
+      defaultValue: several ? props.defaultSelectedKeys : undefined,
+      empty: NO_KEYS,
+      onChange: several ? keys => reportSeveral?.([...keys]) : undefined
+    });
+
+    const chosen = owned.current ?? NO_KEYS;
+
+    /*
+     * What each chip says. An id with no option behind it keeps its own id as
+     * the label rather than vanishing: the value exists — the base is holding
+     * it — and a chip that is not drawn is a value nobody can remove. It
+     * happens legitimately while the options are still arriving, so it warns
+     * about nothing.
+     */
+    const labelOf = (key: string): string => {
+      const option = found.find(item => item.id === key);
+      if (option === undefined) return key;
+      const { label: text } = termsOf(option);
+      return text === '' ? key : text;
+    };
+
+    const removeOne = (key: string): void => {
+      owned.set(chosen.filter(held => held !== key));
+    };
+
+    /*
+     * The chips can act on removal unless the field says otherwise, and while
+     * it is busy the cross stays put and goes out of reach (doc 07 §2.2
+     * rule 1).
+     */
+    const isRemovable =
+      !(props.isReadOnly ?? false) && !(props.isDisabled ?? false);
+
+    const control = several ? (
+      /*
+       * THE CHIPS AND THE INPUT IN ONE WRAPPING FLOW, inside the frame rather
+       * than instead of it.
+       *
+       * `TagsInput` could not use `ControlFrame` at all — it has no edge
+       * control, and the frame lays a control out as one item in a row that
+       * does not wrap. This field has the toggle at its trailing edge (doc 07
+       * §2.2 rule 5), so the frame is exactly right: the wrapping happens
+       * INSIDE it, and the toggle stays put at the edge instead of dropping
+       * onto a line of its own when the chips fill the row.
+       *
+       * ## Why these are not `Tag`s
+       *
+       * They were, for an afternoon. **A `TagGroup` inside a `ComboBox` does
+       * not work**, and the reason is the same context collision the wave
+       * before this one met from the other side: the combo box publishes its
+       * own `ListStateContext` for its options, and `useTag` reads that
+       * context to find its collection — so a chip inside one resolves the
+       * wrong collection. With a dynamic `items` list it exhausts the heap;
+       * with static children it throws from `useGridListItem`, reading a row
+       * that is not there.
+       *
+       * What that costs is real and worth naming: no arrow-key walk along the
+       * chips, and no `Delete` on a focused one. What replaces it is plainer
+       * and complete — each cross is a button in the tab order, named by
+       * element references rather than by a glued string.
+       *
+       * What it does NOT cost is the announcement, which was the part that
+       * looked lost. `ComboBoxValue` is what the base points the input's
+       * `aria-describedby` at (measured), so a reader arriving at the field
+       * hears the chosen values from the base's own text. The chips are the
+       * visual channel of the same value, which is doc 06 §3's "never colour
+       * alone" arriving in a shape nobody expects.
+       */
+      <div className={WRAPPING_FLOW}>
+        <ComboBoxValue className="bb:sr-only" />
+        <Chips
+          scope={ids}
+          chosen={chosen}
+          labelOf={labelOf}
+          isRemovable={isRemovable}
+          canRemove={!busy}
+          removeLabel={removeLabel}
+          onRemove={removeOne}
+        />
+        <Input
+          ref={ref}
+          className={cx(INPUT, DRAFT, SIZE[size].text)}
+          {...(placeholder === undefined ? {} : { placeholder })}
+        />
+      </div>
+    ) : (
+      <Input
+        ref={ref}
+        className={cx(INPUT, SIZE[size].text)}
+        {...(placeholder === undefined ? {} : { placeholder })}
+      />
+    );
+
+    const body = (
+      <>
         <Field
           label={label}
           {...(description === undefined ? {} : { description })}
           {...(errorMessage === undefined ? {} : { errorMessage })}
-          isRequired={ariaProps.isRequired ?? false}
+          isRequired={props.isRequired ?? false}
           isLabelHidden={isLabelHidden}
           isLoading={isLoading}
           isSaving={isSaving}
         >
           <ControlFrame
-            className={SIZE[size].frame}
+            className={cx(
+              several ? GROWS[size].frame : SIZE[size].frame,
+              several && GROWS[size].text
+            )}
             trailing={
               <AriaButton className={TOGGLE}>
                 <ChevronGlyph className={CHEVRON} />
@@ -451,13 +801,9 @@ export const ComboBox = forwardRef<HTMLInputElement, ComboBoxProps>(
              * (doc 06 §4 point 7); a read-only field is offered for reading,
              * so a toggle that will not open is the same empty promise.
              */
-            isTrailingHidden={busy || (ariaProps.isReadOnly ?? false)}
+            isTrailingHidden={busy || (props.isReadOnly ?? false)}
           >
-            <Input
-              ref={ref}
-              className={cx(INPUT, SIZE[size].text)}
-              {...(placeholder === undefined ? {} : { placeholder })}
-            />
+            {control}
           </ControlFrame>
         </Field>
         <AriaPopover className={LIST_WRAPPER} offset={LAYER_OFFSET}>
@@ -505,6 +851,88 @@ export const ComboBox = forwardRef<HTMLInputElement, ComboBoxProps>(
             </AriaListBox>
           </div>
         </AriaPopover>
+      </>
+    );
+
+    /*
+     * TWO ELEMENTS RATHER THAN ONE, and the duplication is one line each.
+     *
+     * The base's combo box is generic over its selection mode, and the value
+     * props change type with it — so a props object built by branching and
+     * then spread loses the inference that makes the pair type-safe. Written
+     * out twice, each branch checks: `value` is a list in one and a key or
+     * `null` in the other, and neither can be handed the wrong shape.
+     *
+     * `value` and `onChange` rather than `selectedKey` and
+     * `onSelectionChange`: measured, the second pair is `@deprecated` on the
+     * base and is not called at all when several values are allowed.
+     */
+    const shared = {
+      /*
+       * `aria` rather than the base's default `native`, as every field here
+       * does: the browser's own bubble is not styleable, not translatable and
+       * not ours to time (doc 07 §1). It is also what puts `aria-required` on
+       * the input rather than the native attribute — measured both ways, and
+       * the reason this field composes no word into its label.
+       */
+      validationBehavior: 'aria' as const,
+      /*
+       * The base does the filtering; this only tells it what each row's text
+       * stands for. Everything that depends on the base filtering keeps
+       * working because none of it moved: the value in the input, the
+       * selection, and the reopening that shows every option again.
+       */
+      defaultFilter: matcher,
+      /* A list that found nothing says so, rather than closing. */
+      allowsEmptyCollection: true,
+      className: cx('bb:group bb:w-full', className)
+    };
+
+    if (props.selectionMode === 'multiple') {
+      return (
+        <AriaComboBox
+          {...forwardable(props)}
+          /*
+           * After the spread, not before it: the consumer's own
+           * `selectionMode` travels in that spread and would overwrite it,
+           * and the literal is what tells the base's generic which shape the
+           * value has.
+           */
+          selectionMode="multiple"
+          {...shared}
+          value={chosen}
+          onChange={keys => owned.set(keys.map(String))}
+        >
+          {body}
+        </AriaComboBox>
+      );
+    }
+
+    return (
+      <AriaComboBox
+        {...forwardable(props)}
+        {...shared}
+        {...(props.selectedKey === undefined
+          ? {}
+          : { value: props.selectedKey })}
+        {...(props.defaultSelectedKey === undefined
+          ? {}
+          : { defaultValue: props.defaultSelectedKey })}
+        {...(reportOne === undefined
+          ? {}
+          : {
+              /*
+               * The base hands back `string | number`; ours promises a string,
+               * and every id that can enter came in as one. Mapped rather than
+               * cast, for the reason `Accordion` records: a cast proves it
+               * once and then hopes.
+               */
+              onChange: (key: Key | null) => {
+                reportOne(key === null ? null : String(key));
+              }
+            })}
+      >
+        {body}
       </AriaComboBox>
     );
   }
