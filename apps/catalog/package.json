@@ -7,10 +7,11 @@
   "scripts": {
     "dev": "storybook dev -p 6006 --host 127.0.0.1 --no-open",
     "build": "storybook build -o storybook-static",
+    "preview": "vite preview --outDir storybook-static --host 127.0.0.1 --port 6007 --strictPort",
     "typecheck": "tsc -p tsconfig.json",
     "test:e2e": "playwright test --project=checks --project=narrow",
-    "test:a11y": "playwright test e2e/accessibility.spec.ts",
-    "test:visual": "playwright test --project=visual"
+    "test:a11y": "playwright test --project=a11y",
+    "test:visual": "playwright test --project=visual --workers=1"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",

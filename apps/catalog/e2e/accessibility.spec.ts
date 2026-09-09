@@ -17,6 +17,7 @@
  */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
+import { CATALOG_INDEX } from './catalog';
 import { gotoStory } from './story';
 
 type StoryEntry = { id: string; name: string; title: string; type: string };
@@ -30,7 +31,7 @@ type StoryEntry = { id: string; name: string; title: string; type: string };
  * suite runs. The catalog has to be up — which the webServer config
  * guarantees.
  */
-const INDEX_URL = 'http://127.0.0.1:6006/index.json';
+const INDEX_URL = CATALOG_INDEX;
 
 const stories: StoryEntry[] = await fetch(INDEX_URL)
   .then(

@@ -54,10 +54,32 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       # The catalog renders the built stylesheet, exactly as a consumer does,
-      # so this has to come first.
-      - name: Build the package
-        run: pnpm --filter blackborne build
+      # and the checks are served from the BUILT catalog rather than from a dev
+      # server — so both builds come first, once, for the three suites below.
+      #
+      # The catalog build takes about ten seconds and buys two things. A dev
+      # server compiles each story the first time it is asked for, which has
+      # timed a story out three times in this repository under load; and
+      # nothing left to compile is what makes running the suites in parallel
+      # safe rather than a way to produce more of those timeouts.
+      - name: Build the package and the catalog
+        run: pnpm build:catalog
 
+      # The three suites are three steps rather than one command, so a failure
+      # says which layer failed in the job's own log. They no longer overlap:
+      # the accessibility suite is its own project, and until this run it was
+      # ALSO part of the behaviour checks — so its 357 story checks ran twice
+      # per pipeline, for one set of results.
+      #
+      # Measured on the way in, and the reason this job was the long pole:
+      #
+      #   behaviour     · 7.5m serial → 2.7m
+      #   accessibility · 13.1m       → 4.6m, and it ran twice
+      #   visual        · 4.8m, one worker on purpose
+      #
+      # Playwright defaults to ONE worker when CI is set, so every one of those
+      # serial numbers was what this job actually paid. `workers` is now
+      # explicit in the config, which is where the rest of the reasoning is.
       - name: Behaviour checks
         run: pnpm --filter catalog test:e2e
 

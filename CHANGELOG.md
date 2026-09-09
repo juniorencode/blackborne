@@ -882,6 +882,29 @@ minor versions. Every break is listed here with its migration.
 
 ### Changed
 
+- **The browser checks take a third of the time**, and nothing about what they
+  check has changed. Three findings, in order of what they were worth:
+
+  **The accessibility suite was running twice.** It lived in the `checks`
+  project, so the behaviour step executed all 357 of its story checks, and the
+  next step ran the same suite again by name. It is its own project now, and
+  `test:a11y` names it.
+
+  **Playwright uses one worker when `CI` is set**, so the pipeline serialised
+  everything even where the local machine did not — the numbers CI actually
+  paid were the serial ones. `workers` is explicit now, and tests inside a file
+  are split for the one suite shaped like that: 357 checks in a single file
+  that file-level parallelism cannot touch. Measured: 13.1 minutes to 4.6, and
+  the behaviour checks 7.5 to 2.7.
+
+  **And the checks are served from the built catalog**, on a port of their own,
+  rather than from the dev server. A dev server compiles a story the first time
+  it is asked for, which has timed a story out three times here under load —
+  and a built directory is what makes running the suites in parallel safe
+  rather than a way to produce more of those timeouts. It costs ten seconds to
+  build. All 149 visual baselines are byte-identical against it, which was the
+  one thing that had to be true before this could land.
+
 - **Breaking — a `Breadcrumb` declares its address instead of holding a `Link`**
   ([decision 0019](docs/decisions/0019-a-breadcrumb-declares-its-address.md)).
 

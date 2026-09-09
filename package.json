@@ -21,7 +21,8 @@
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "pnpm -r --if-present test",
     "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test",
-    "verify:full": "pnpm verify && pnpm --filter blackborne build && pnpm --filter catalog test:e2e",
+    "verify:full": "pnpm verify && pnpm build:catalog && pnpm --filter catalog test:e2e && pnpm --filter catalog test:a11y",
+    "build:catalog": "pnpm --filter blackborne build && pnpm --filter catalog build",
     "verify:clean": "node scripts/clean-install.mjs && pnpm verify",
     "visual": "bash apps/catalog/docker-visual.sh",
     "visual:update": "bash apps/catalog/docker-visual.sh --update-snapshots"
