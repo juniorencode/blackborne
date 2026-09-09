@@ -12,6 +12,43 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **`SplitButton`** — one action, with the near alternatives behind an arrow.
+  The last component that was waiting for `Menu`, and the one that closes the
+  layer batch.
+
+  ```tsx
+  <SplitButton label="Save" onPress={save}>
+    <MenuItem onAction={saveAndNew}>Save and add another</MenuItem>
+    <MenuItem onAction={saveAsDraft}>Save as a draft</MenuItem>
+    <MenuSeparator />
+    <MenuItem tone="danger" onAction={discard}>
+      Discard the changes
+    </MenuItem>
+  </SplitButton>
+  ```
+
+  **It is two buttons, not one**, and a screen reader hears exactly that:
+  "Save" and "More actions", both named, neither pretending to be the other.
+  Hover and focus land on one half at a time, because pressing them does
+  different things.
+
+  **Two variants**, and the reason is the seam. A `secondary` split button
+  turns its two borders into one 1px line; a `primary` one has a border the
+  colour of its own fill, so it draws a divider mixed from the pair's text
+  colour — which follows a brand override for free. A `ghost` or `link` split
+  button would be two invisible halves that only exist on hover, and a `danger`
+  one is the shape doc 09 §5 argues against.
+
+  **`isPending` switches the arrow off as well.** The menu holds alternatives
+  to the action that is already running, and starting a second one mid-flight
+  is the state doc 09 §7 is about — the same argument that disables
+  `ConfirmDialog`'s cancelling button.
+
+  And **the destructive command does not go first**: opening the menu with a
+  key focuses its first row, so a destructive one there is a press away. Doc 09
+  §5.2 now carries that as a rule of its own, and the component warns in
+  development instead of trusting it to be remembered.
+
 - **A breadcrumb trail folds its middle into a menu when the container is
   narrow**, which is the third caller of doc 04 §6's hook and the last of the
   three features that were waiting for `Menu` and `Select`.

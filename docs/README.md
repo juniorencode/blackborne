@@ -66,8 +66,8 @@ The library is being rewritten from scratch. Phases, in order:
 | F6    | Full pipeline with the first component (`Button`)                                  | Done     |
 | F7    | The fields, and the browser checks that verify them                                | Done     |
 | F8    | The rest of level 0 and level 1: the pieces with no dependencies                   | Two left |
-| F9    | The layer base, and everything that depends on a portal                            | Two left |
-| F10   | Composition: the pieces that arrange other pieces, and the first structural change | Now      |
+| F9    | The layer base, and everything that depends on a portal                            | Done     |
+| F10   | Composition: the pieces that arrange other pieces, and the first structural change | One left |
 
 Which components exist and in what order is not a phase question: it lives in
 [catalog-and-build-order.md](./catalog-and-build-order.md), which is the list
@@ -81,11 +81,20 @@ than twenty components wait on, which is criterion 1 of the catalog's own
 ordering. Recorded here rather than marked Done, because a phase table that
 rounds up is a phase table nobody believes.
 
-**F9 is left open for the same reason**, and by the same criterion. The layer
-base and seven layers landed, and `Menu` and `Select` landed in the middle of
-F10 rather than here, by dependency: three of its features were waiting on
-exactly those two (catalog §3.1). What is left of F9 is `SplitButton`, which
-was waiting on `Menu` and is now unblocked.
+**F9 is closed.** The layer base and seven layers landed; `Menu` and `Select`
+landed in the middle of F10 rather than here, by dependency, because three of
+its features were waiting on exactly those two (catalog §3.1); and
+`SplitButton`, which had been waiting on `Menu` since the batch began, landed
+last. Nine layers and everything that depends on a portal.
+
+**F10 has one thing left, and it is a batch rather than a leftover.** The
+composition batch is finished — `Accordion`, `Collapsible`, `Link`,
+`Breadcrumbs` with its collapse, both pagers, `Menu`, `Select`, `Tabs` and
+`SplitButton` — and the page-size selector that was in the plan is now a
+**Never**: the question the catalog said to ask once `Select` existed was
+asked, and how many rows to fetch belongs to the listing. What remains under
+this heading is the table pieces, which are hooks plus presentational parts and
+their own piece of work, the same shape F8's two leftovers have.
 
 **What F10 proves** is the one level of doc 04 that had never run: N3, a
 structural change in JavaScript. Everything before it was N0, N1, N2 or the one

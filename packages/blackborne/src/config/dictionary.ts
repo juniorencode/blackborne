@@ -152,7 +152,21 @@ export const en = {
    * Not "Show more", which is the phrase that says nothing: more of what, and
    * a trail has exactly one kind of thing in it.
    */
-  moreSteps: 'More steps'
+  moreSteps: 'More steps',
+  /**
+   * The name of a `SplitButton`'s arrow — the half that opens the menu.
+   *
+   * Its visible content is a chevron, so this is the whole name, and it names
+   * what pressing it gives you rather than the shape it is. It also names the
+   * MENU: the base points a menu's accessible name at the control that opened
+   * it, which was measured while `Menu` was built.
+   *
+   * Deliberately not "Save options" or anything derived from the primary
+   * action's words. The library does not build sentences out of fragments (doc
+   * 05 §2.2 rule 5), and a label glued together from a consumer's own string
+   * is exactly that in the language where the word order is different.
+   */
+  moreActions: 'More actions'
 } as const;
 
 export type DictionaryKey = keyof typeof en;
