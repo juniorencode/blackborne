@@ -78,13 +78,64 @@ export function Force({
      * React Aria stamps [data-rac] on that root, and querySelector returns
      * tree order, so the outermost one is the one we want.
      */
-    const element =
-      (target === undefined ? null : ref.current?.querySelector(target)) ??
-      ref.current?.querySelector('[data-rac]') ??
-      ref.current?.firstElementChild;
-    if (!element) return;
-    element.setAttribute(state, 'true');
-    return () => element.removeAttribute(state);
+    const host = ref.current;
+    if (host === null) return;
+
+    let marked: Element | null = null;
+
+    const apply = (): boolean => {
+      /*
+       * A GIVEN TARGET HAS NO FALLBACK, and that is a fix rather than a
+       * simplification.
+       *
+       * The chain used to run `target ?? [data-rac] ?? firstElementChild` all
+       * the way down, so a selector that matched nothing quietly marked the
+       * outermost React Aria element instead — the wrong node, which is the
+       * one failure this helper exists to prevent, produced by the helper
+       * itself. It hid the case below completely: the target was absent for a
+       * frame, the fallback succeeded, and nothing ever looked again.
+       */
+      const element =
+        target === undefined
+          ? (host.querySelector('[data-rac]') ?? host.firstElementChild)
+          : host.querySelector(target);
+      if (element === null || element === marked) return false;
+      marked = element;
+      element.setAttribute(state, 'true');
+      return true;
+    };
+
+    const clear = () => {
+      marked?.removeAttribute(state);
+      marked = null;
+    };
+
+    if (apply()) return clear;
+
+    /*
+     * THE TARGET MAY NOT EXIST YET, and a layout effect is too early to know.
+     *
+     * Added by the first component whose structure is chosen after the first
+     * paint: `Tabs` renders its narrow structure first — a `ResizeObserver`
+     * reports after layout, so there is nothing to measure before painting —
+     * and the row of tabs arrives a frame later. This effect had already run,
+     * found no tab, and returned; the three "states" then photographed
+     * identically to the default, which is the exact failure this helper was
+     * written for, arriving a fourth time and from a new direction.
+     *
+     * So it waits. One observation, disconnected the moment the element turns
+     * up, because a catalog fixture that keeps watching would re-mark the next
+     * structure the moment somebody resized the frame.
+     */
+    const observer = new MutationObserver(() => {
+      if (apply()) observer.disconnect();
+    });
+    observer.observe(host, { childList: true, subtree: true });
+
+    return () => {
+      observer.disconnect();
+      clear();
+    };
   }, [state, target]);
 
   return (
