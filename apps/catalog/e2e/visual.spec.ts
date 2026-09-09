@@ -172,6 +172,18 @@ const STATES: Array<[string, string]> = [
   ['components-select--states', 'select-states'],
   ['components-select--open', 'select-open'],
   ['components-select--long-options', 'select-long-options'],
+  /*
+   * A combo box earns three, and each one is a picture no other baseline
+   * holds. `states` is the field half, and it is the only field in this
+   * library with all EIGHT of doc 07 §6's states — read-only included, which
+   * a select cannot have. `open` is the list, where the tick, the matched
+   * width and the highlight are. And `no-options` is the row that says WHICH
+   * kind of empty a list is: doc 09's distinction, which this field makes
+   * three ways and which would otherwise only exist in a comment.
+   */
+  ['components-combobox--states', 'combobox-states'],
+  ['components-combobox--open', 'combobox-open'],
+  ['components-combobox--no-options', 'combobox-no-options'],
   ['components-menu--long-list', 'menu-long-list'],
   ['components-menu--long-label', 'menu-long-label'],
   ['components-pagination--positions', 'pagination-positions'],

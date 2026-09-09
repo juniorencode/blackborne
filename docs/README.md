@@ -68,7 +68,7 @@ The library is being rewritten from scratch. Phases, in order:
 | F8    | The rest of level 0 and level 1: the pieces with no dependencies                   | Two left |
 | F9    | The layer base, and everything that depends on a portal                            | Done     |
 | F10   | Composition: the pieces that arrange other pieces, and the first structural change | One left |
-| F11   | Search, and the locale front nothing has proved yet                                | Starting |
+| F11   | Search, and the locale front nothing has proved yet                                | One in   |
 
 Which components exist and in what order is not a phase question: it lives in
 [catalog-and-build-order.md](./catalog-and-build-order.md), which is the list
@@ -105,7 +105,7 @@ was **wrong**: the hook resolves no token, it reads a step CSS publishes. §6.2
 has the measurement and §6.1 keeps the withdrawn text struck through, because a
 prediction that is quietly deleted afterwards teaches nobody anything.
 
-**F11 is starting, and it is the first phase about correctness rather than
+**F11 has begun, and it is the first phase about correctness rather than
 structure.** Everything so far proved a mechanism: tokens, a portal, a
 container query, a structural change in JavaScript. What none of it touched is
 [doc 05](./foundations/05-languages-and-formatting.md)'s second front —
@@ -117,11 +117,17 @@ correctness depends on the locale, the calendar system and the received time
 zone rather than on a measurement in pixels. `NumberField` leans on the
 provider already, and it leans on one number.
 
-The other half of the phase is the risk component. `ComboBox` has been the
-named risk since level 4 was drawn, on the grounds that it stresses field,
-layer, keyboard, filtering, locale and long lists at once — and the reason to
-build it before the table suite is that if the composition model does not hold
-here, it will not hold there either. The batch and its six waves are in
+The other half of the phase is the risk component, and **it has landed.**
+`ComboBox` was the named risk since level 4 was drawn, on the grounds that it
+stresses field, layer, keyboard, filtering, locale and long lists at once. The
+composition model held. What did not hold was the plan for its filtering: the
+catalog predicted that per-option keywords would mean the component filtered
+its own rows, and that is impossible for a reason nothing here had met before —
+the base builds its collection in a render pass detached from the surrounding
+context, so a filter written there cannot see what was typed
+([decision 0021](./decisions/0021-a-combo-box-extends-the-bases-filter.md)).
+The filter extends the base's instead, and the prediction is kept beside the
+measurement rather than quietly replaced. The batch and its six waves are in
 [catalog-and-build-order.md](./catalog-and-build-order.md) §3.2, with what was
 deliberately left out of it.
 

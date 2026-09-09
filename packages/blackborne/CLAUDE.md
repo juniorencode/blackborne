@@ -278,6 +278,15 @@ Do not reach for the usual trick of swapping the chevron for a cross on hover:
 something that appears only on hover is not there for touch and never there for
 a keyboard.
 
+**A collection is built in a render pass you cannot see from.** Measured on
+`ComboBox`: the base renders a list's children again, on its own, to build the
+collection — and that pass is detached from the surrounding context, so a
+component reading a state context inside it gets `null`. The symptom is a
+filter that computes the right answer and a list that ignores it. Anything that
+has to know what the collection is being asked for cannot ask from inside it;
+`ComboBox` hands the base a filter instead of filtering the rows
+(decision 0021), and the table suite will meet the same wall.
+
 **And a select's required state is announced by nothing the base gives the
 trigger.** `Field` hides the asterisk from a reader on the grounds that the base
 sets `aria-required` — true of an input, and measured false of a select: the
@@ -300,6 +309,11 @@ no error in the console.
 Dates, numbers, currency, sorting and plurals are formatted through the
 platform's locale APIs. The time zone is **received, never taken from the
 browser** — the browser's zone is the viewer's machine, not the data's context.
+
+**A locale-sensitive search is the base's collator, not `includes`.** `useFilter({ sensitivity: 'base' })` is what the base's own combo box builds —
+read in its source — and it is what "jose" finding "José" rests on. A filter of
+ours passes that same `contains` in rather than writing one, so a consumer who
+declares no keywords gets exactly the behaviour the base would have given them.
 
 **A date crosses the public boundary as an ISO string**, not as one of the
 base's calendar objects — `2026-09-09`, `14:30`,

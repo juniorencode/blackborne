@@ -31,3 +31,4 @@ the folder is that you can see what was believed when.
 | [0018](./0018-a-tab-declares-its-own-panel.md)                        | A tab declares its own panel, and the narrow structure is not a tab list | One declaration cannot drift from itself; a select claims no tab roles       |
 | [0019](./0019-a-breadcrumb-declares-its-address.md)                   | A breadcrumb declares its address                                        | The same step has to be a link in the row and a row in the menu              |
 | [0020](./0020-a-date-crosses-the-boundary-as-a-string.md)             | A date crosses the boundary as a string                                  | The base's calendar objects stay inside; `2026-09-09` is the public value    |
+| [0021](./0021-a-combo-box-extends-the-bases-filter.md)                | A combo box extends the base's filter, so its options are declarations   | A filter that cannot be seen from inside the collection is not a filter      |
