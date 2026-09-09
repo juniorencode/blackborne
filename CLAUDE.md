@@ -44,20 +44,42 @@ layers (`Dialog`, `Drawer`, `ConfirmDialog`, `Tooltip`, `Popover`, `Preview`,
 **The layer batch is finished.** It landed in that order, with `Toast` last by
 decision (doc 08 §7.1). `Menu` was deliberately not in it.
 
-**The composition batch is past its middle.** It is split in two halves with
-`Menu` and `Select` in between — the plan and the reason are in
-[the catalog](./docs/catalog-and-build-order.md) §3.1, which is what to read
-before starting. **The composition batch is finished**, and so is the
-layer batch it was waiting on: the first half, both middle components, `Tabs`,
-the collapsed breadcrumb trail and `SplitButton` have all landed. The one
+**The composition batch is finished**, and so is the layer batch it was waiting
+on. It was split in two halves with `Menu` and `Select` in between — the plan
+and the reason are in [the catalog](./docs/catalog-and-build-order.md) §3.1 —
+and the first half, both middle components, `Tabs`, the collapsed breadcrumb
+trail and `SplitButton` have all landed. The one
 feature that did not is the page-size selector, and it is a **Never** rather
 than a leftover — the question the catalog said to ask once `Select` existed
 was asked, and how many rows to fetch belongs to the listing rather than to the
 thing that moves between pages.
 
-What is next is not this batch: `ComboBox` — the risk component of level 4 —
-`DatePicker`, `Steps` beside `Progress`, and the table pieces. `Progress` and
-`ButtonGroup` are still F8's two leftovers and still block nothing.
+**What is next is a chosen batch, in six waves**, and the shape of it is in
+[the catalog](./docs/catalog-and-build-order.md) §3.2 — read that before
+starting one. `ComboBox` first, because it is the named risk of level 4; then
+the same component holding several values; then `useAsyncOptions`, which is a
+hook and not a component; then `Calendar` and `RangeCalendar`, `DateField` and
+`DatePicker`, and `TimeField` with `DateRangePicker`. It spans three levels, so
+the order is the dependency and not the level number.
+
+**Two things were settled before it started**, in the wave that opened it:
+[doc 07](./docs/foundations/07-forms.md) §2.2 gained a seventh contender for a
+field's trailing edge — the disclosure chevron, which never competed while a
+`Select` was the only field with one — and a date crosses the public boundary
+as an ISO string rather than as the base's calendar object
+([decision 0020](./docs/decisions/0020-a-date-crosses-the-boundary-as-a-string.md)).
+
+The list that batch was read from proposed thirteen pieces, and §7 now carries
+seventeen new rows saying what did not get in and why. Two of them are worth
+knowing about before proposing anything: **the four catalogue fields are pure
+functions rather than components**, because `Intl` already holds 418 time zones
+and 162 currencies and names them in the locale received — and **an
+asynchronous combo box is a hook**, because a component there would be an
+assembly with a capability its pieces lack, which is the one thing P6's
+corollary forbids outright.
+
+`Progress` and `ButtonGroup` are still F8's two leftovers. `Progress` no longer
+blocks nothing: a file uploader shows progress per file, so it goes first.
 
 **Three things in it are settled and not open for reinvention:** a stepper is
 two components and only one of them is ours (decision 0015), the two pagers do
@@ -73,8 +95,8 @@ measurement; §6.1 keeps its withdrawn text struck through. `Tabs` is the second
 and the collapsed breadcrumb trail the third, and doc 04 §11.1 and §11.2 record
 what they needed on top of the hook: a wrapping row for the widths a query
 cannot judge, an observed element that outlives both structures, and — twice
-now — a rule that a control must never hide a single thing. `Steps` is next,
-and it calls the same hook rather than inventing a second answer.
+now — a rule that a control must never hide a single thing. `Steps` calls the
+same hook when it arrives, rather than inventing a second answer.
 
 **The shared glyphs are drawn once**, in `src/internal` — the cross, the tone
 marks, the chevron and the tick — and the tick is the one that is shared as a
@@ -238,6 +260,14 @@ Things that look like improvements and are not:
   focus and keyboard come from React Aria. Table state, drag and drop, rich
   text and phone formatting come from existing libraries. Building one by hand
   is the last resort and needs a written justification.
+- **Do not put a date object in a public signature.** The base speaks
+  `CalendarDate` and `ZonedDateTime`, and passing them straight through looks
+  like the obvious thing to do. Dates cross as ISO strings — `2026-09-09` — and
+  are parsed inside against the received time zone
+  ([decision 0020](./docs/decisions/0020-a-date-crosses-the-boundary-as-a-string.md)).
+  A JavaScript `Date` is not the alternative either: it is a timestamp, so
+  `new Date('2026-09-09')` is the 8th in Lima and the 9th in Tokyo — measured,
+  and the exact bug doc 05 §3.1 exists to prevent.
 - **Do not reference private projects** in code, examples or documentation. The
   library is public and its API is designed for strangers.
 

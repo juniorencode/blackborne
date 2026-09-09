@@ -68,6 +68,7 @@ The library is being rewritten from scratch. Phases, in order:
 | F8    | The rest of level 0 and level 1: the pieces with no dependencies                   | Two left |
 | F9    | The layer base, and everything that depends on a portal                            | Done     |
 | F10   | Composition: the pieces that arrange other pieces, and the first structural change | One left |
+| F11   | Search, and the locale front nothing has proved yet                                | Starting |
 
 Which components exist and in what order is not a phase question: it lives in
 [catalog-and-build-order.md](./catalog-and-build-order.md), which is the list
@@ -103,6 +104,31 @@ existed, with the prediction it would be measured against — and the prediction
 was **wrong**: the hook resolves no token, it reads a step CSS publishes. §6.2
 has the measurement and §6.1 keeps the withdrawn text struck through, because a
 prediction that is quietly deleted afterwards teaches nobody anything.
+
+**F11 is starting, and it is the first phase about correctness rather than
+structure.** Everything so far proved a mechanism: tokens, a portal, a
+container query, a structural change in JavaScript. What none of it touched is
+[doc 05](./foundations/05-languages-and-formatting.md)'s second front —
+formatting — which that document calls the underestimated one: "translating
+'Cancel' is trivial; having a date display in the correct order, with the
+correct first day of the week, and sorted correctly, is not." A calendar, a
+segmented date field and a time field are the first components whose
+correctness depends on the locale, the calendar system and the received time
+zone rather than on a measurement in pixels. `NumberField` leans on the
+provider already, and it leans on one number.
+
+The other half of the phase is the risk component. `ComboBox` has been the
+named risk since level 4 was drawn, on the grounds that it stresses field,
+layer, keyboard, filtering, locale and long lists at once — and the reason to
+build it before the table suite is that if the composition model does not hold
+here, it will not hold there either. The batch and its six waves are in
+[catalog-and-build-order.md](./catalog-and-build-order.md) §3.2, with what was
+deliberately left out of it.
+
+Two lines were written before any of it, because a foundation is changed before
+the code and never afterwards to justify it: a seventh contender for a field's
+trailing edge (doc 07 §2.2 rule 5), and the shape of a date at the public
+boundary ([decision 0020](./decisions/0020-a-date-crosses-the-boundary-as-a-string.md)).
 
 Nothing from the `0.1.1` codebase is carried over. It stays available under the
 `v0.1.1` git tag.
