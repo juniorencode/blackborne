@@ -12,6 +12,56 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **`DateField`** and **`DatePicker`** — a date typed, and a date typed or
+  pointed at.
+
+  ```tsx
+  <DateField label="Invoice date" value={day} onChange={setDay} />
+  <DatePicker label="Appointment" value={day} onChange={setDay} />
+  ```
+
+  Both cross the boundary as `2026-09-09` (decision 0020). The field is the
+  base's segments — day, month and year as separate targets, the arrows
+  stepping one, typing filling it and advancing — and **their order and their
+  separators are the locale's**: month first in `en-US`, day first in `es-PE`,
+  year first in `ja-JP` with a different mark between them. Nothing here
+  formats a date by hand.
+
+  The picker adds the layer and composes rather than reimplements: the segments
+  are the same internal, and the calendar in the layer is the shared body
+  `Calendar` is built from. Two routes to one value, and neither is a fallback —
+  somebody who knows the date types it and never opens the layer.
+
+  **What the segments restrict, and what they do not.** Measured: there is no
+  month 13, and the 31st of February can be shown and is never reported. So the
+  pieces restrict what is typed into each of them and leave the combination to
+  the value, which puts doc 07 §2's line somewhere more interesting than
+  expected — an impossible date is a state the field can be in and a value it
+  never emits.
+
+- **Doc 07 §2.2 has an exception now, and the date family is the only thing
+  under it.**
+
+  Rule 5 sends a field that opens a layer to the chevron alone, and its reason
+  is explicit: clearing has routes that cost no width — an option that returns
+  to no value, or the cross each value carries in a field holding several. A
+  `Select` has the first. A `ComboBox` holding several has the second. **A date
+  field has neither**, and measured, it has something worse: clearing the month
+  and the day leaves the reported value at the last complete date, and the year
+  segment does not clear at all. A person blanks what they see and the field
+  neither holds nothing nor says so.
+
+  So the premise is false and the conclusion does not follow.
+  [§2.2a](docs/foundations/07-forms.md) admits both controls at one edge, with
+  four conditions and a browser check for each: both targets clear the minimum
+  hit area at every density (28 against a floor of 28, and 24 against 24 at
+  compact), the cross is unreachable rather than absent when it has nothing to
+  offer, the chevron never yields to it, and **the clearing is reported** —
+  which makes that button the one route by which a date field's value becomes
+  nothing. Rule 4 is amended for the reason its own wording always gave: the
+  rule is that a second control is redundant, so where it is not redundant the
+  rule does not apply.
+
 - **`RangeCalendar`** — two months, and the range across them.
 
   ```tsx
@@ -1484,6 +1534,29 @@ minor versions. Every break is listed here with its migration.
   `packages/blackborne`, the visual catalog in `apps/catalog`.
 
 ### Fixed
+
+- **Three things the date family found, two of them in the field structure
+  every other component shares.**
+
+  **A field's frame was a group inside a group.** The box every field draws is
+  the base's `Group`, and a date field's control is a group of its own — the
+  base's `DateInput` renders one so the row of spin buttons has a name to
+  belong to. Measured in a browser: two nested groups carrying the same name,
+  which a reader says twice. `ControlFrame` takes a `role` now and the date
+  fields pass `presentation`; nothing about the box changes, because the state
+  the frame styles from is render props rather than the role.
+
+  **The clear button had no name a check could find.** `EDGE_BUTTON` is shared
+  with the steppers and the reveal toggle, so the cross carried no `bb-` class
+  of its own — and §2.2a's first condition is a measurement of its hit area
+  beside another control's, which needs something to select. It is
+  `bb-field-clear`.
+
+  **And the picker's chevron never turned.** `bb:group` was on the root and the
+  `aria-expanded` is on the toggle, so the variant matched nothing — the same
+  trap the package guide already recorded from `SplitButton`, arriving on the
+  next component with a portalled layer. Measured after the fix: `none` shut,
+  `180deg` open.
 
 - **Today's ring was below the contrast floor**, and finding it took three
   steps that are worth keeping in order, because each one was only reachable

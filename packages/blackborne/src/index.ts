@@ -87,6 +87,10 @@ export type {
  * (decision 0023).
  */
 export { Calendar } from './components/Calendar';
+export { DateField } from './components/DateField';
+export { DatePicker } from './components/DatePicker';
+export type { DatePickerProps, DatePickerSize } from './components/DatePicker';
+export type { DateFieldProps, DateFieldSize } from './components/DateField';
 export type { CalendarProps } from './components/Calendar';
 export { RangeCalendar } from './components/RangeCalendar';
 export type { DateRange, RangeCalendarProps } from './components/RangeCalendar';
