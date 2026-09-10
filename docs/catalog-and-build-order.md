@@ -160,12 +160,12 @@ copies that way.
 The uploader goes last because it has the most doctrine to settle and is the
 one piece that might turn out not to be a component.
 
-| Wave | What               | Why there                                                                                                                                                       |
-| ---- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1    | `Avatar`           | Level 1, depends on nothing, and settles the image-with-a-fallback the uploader needs                                                                           |
-| 2    | `ColorSwatchField` | The cheap half of the colour pair, by its own row. It settles the VALUE's boundary with the least machinery around it                                           |
-| 3    | `ColorPicker`      | Area and sliders in a layer, on the boundary wave 2 settled. Exactly `DatePicker`'s shape, because the base publishes a colour state the same way               |
-| 4–5  | The file uploader  | The zone and the list first, the restrictions and the errors second. It is also where "a retry button inside a loaded list" finally has somewhere to be decided |
+| Wave | What               | Why there                                                                                                                                                                                                                                     |
+| ---- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | `Avatar`           | Level 1, depends on nothing, and settles the image-with-a-fallback the uploader needs                                                                                                                                                         |
+| 2    | `ColorSwatchField` | **Done.** The cheap half of the colour pair, by its own row. It settled the VALUE's boundary with the least machinery around it — [decision 0024](./decisions/0024-a-colour-crosses-as-a-string-and-the-format-is-declared.md), written first |
+| 3    | `ColorPicker`      | Area and sliders in a layer, on the boundary wave 2 settled. Exactly `DatePicker`'s shape, because the base publishes a colour state the same way                                                                                             |
+| 4–5  | The file uploader  | The zone and the list first, the restrictions and the errors second. It is also where "a retry button inside a loaded list" finally has somewhere to be decided                                                                               |
 
 **Three things are settled before any of it is written**, because a foundation
 changes before the code and never afterwards to justify it:

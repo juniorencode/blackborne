@@ -372,6 +372,21 @@ const STATES: Array<[string, string]> = [
    * "equal" either looks right or looks like three things that happen to
    * measure the same.
    */
+  /*
+   * A PALETTE EARNS TWO. `color-swatch-field-states` is the states in both
+   * modes, and the border round every swatch is the thing to check: white on
+   * the light surface and near-black on the dark one have no edge without it,
+   * and a palette holds colours the library has never seen.
+   *
+   * `color-swatch-field-rings` is the one that carries a decision. Nothing may
+   * be drawn INSIDE a swatch — a mark on a colour we do not control is white
+   * on pale half the time — so both marks are outside, in the two mechanisms
+   * doc 06 §3.1 names: an offset outline for chosen, the border and halo for
+   * focus. The third row is one swatch carrying both, which is the picture that
+   * says whether they compose or fight.
+   */
+  ['components-colorswatchfield--states', 'color-swatch-field-states'],
+  ['components-colorswatchfield--rings', 'color-swatch-field-rings'],
   ['components-avatar--states', 'avatar-states'],
   ['components-avatar--in-a-row', 'avatar-in-a-row'],
   ['components-timepicker--opened', 'time-picker-opened'],

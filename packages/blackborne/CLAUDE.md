@@ -254,6 +254,43 @@ cannot know what level it landed at. Emphasis comes from weight and colour.
   may carry **no padding**, because a border-box height is floored at padding
   plus border and a closed panel would rest two dozen pixels tall.
 
+**A BASE COLLECTION FORWARDS FOUR ARIA ATTRIBUTES AND DROPS THE REST.**
+Measured on `ColorSwatchPicker`, which passes its props through
+`filterDOMProps(props, { labelable: true })`: `aria-label`, `aria-labelledby`,
+`aria-describedby` and `aria-details` arrive, and everything else is discarded
+silently. `aria-invalid` was written, typed, rendered and simply not there —
+TypeScript accepted it because the props extend `GlobalDOMAttributes`, and the
+filter is a run-time decision the types know nothing about.
+
+So a palette says it is invalid through its MESSAGE, referenced by
+`aria-describedby`, which the filter does pass. Doc 06 §3 asks that a state not
+depend on colour alone and the message is text, so the arrangement is honest
+rather than a defeat — but check the filter before planning an attribute onto
+anything else built on one of the base's collections.
+
+**TWO MARKS ON ONE ELEMENT ARE TWO MECHANISMS, and doc 06 §3.1 already said
+which.** `ColorSwatchField` needs to say both "this colour is chosen" and
+"the keyboard is here", and nothing may be drawn INSIDE a swatch — a mark on a
+colour the library has never seen is white on pale half the time, measured on a
+calendar at 1.12:1. The first version drew both as an offset outline and took
+the focus colour from `--bb-focus-ring`, which is the accent: **the same
+colour**, so a focused swatch was indistinguishable from a chosen one.
+
+§3.1 has the answer and it predates the component: a BOX rings with a border in
+the ring colour plus a halo, and the offset outline belongs to a run of text.
+Two mechanisms, so they compose — one swatch can carry both and show both. The
+chosen outline is `--bb-text`, which is the calendar's rule again: a ring is
+the text colour of whatever it SITS on, and this one sits on the field's
+surface rather than on the swatch.
+
+**AND `outline-hidden` KILLS AN OUTLINE YOU MEANT TO KEEP.** It sets
+`outline-style: none`, so it beat the `outline-2` beside it and the chosen ring
+never drew at all — the baseline showed three identical swatches on a row
+labelled "Chosen". It was also unnecessary: a declared transparent outline is a
+real outline with a width, a style and a colour, and an author rule beats the
+browser's own `:focus-visible` ring. One declaration suppresses the default and
+carries the state; two cancel.
+
 **A PICTURE HAS TO WAIT FOR ITS IMAGES, and this is the fourth time a check
 has measured the machine rather than the component.** `gotoStory` waits for a
 story to mount and `toHaveScreenshot` waits for fonts; neither waits for an

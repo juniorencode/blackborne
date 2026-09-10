@@ -79,6 +79,14 @@ export type {
 export { Avatar } from './components/Avatar';
 export type { AvatarProps, AvatarSize } from './components/Avatar';
 
+/*
+ * A colour chosen from a closed palette. The value is the string from `colors`,
+ * verbatim — decision 0024's exception, because the answer is one of the
+ * inputs.
+ */
+export { ColorSwatchField } from './components/ColorSwatchField';
+export type { ColorSwatchFieldProps } from './components/ColorSwatchField';
+
 export { Button } from './components/Button';
 export type {
   ButtonProps,
