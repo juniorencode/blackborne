@@ -103,6 +103,8 @@ export type {
 export type { DatePickerProps, DatePickerSize } from './components/DatePicker';
 export type { DateFieldProps, DateFieldSize } from './components/DateField';
 export type { CalendarProps } from './components/Calendar';
+export { Progress } from './components/Progress';
+export type { ProgressProps, ProgressSize } from './components/Progress';
 export { RangeCalendar } from './components/RangeCalendar';
 export type { DateRange, RangeCalendarProps } from './components/RangeCalendar';
 
