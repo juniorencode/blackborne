@@ -12,6 +12,51 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **`Avatar`** — a picture of somebody, with something in its place when there
+  is none.
+
+  ```tsx
+  <Avatar name="Carlos Ramos" src={photo}>
+    CR
+  </Avatar>
+  ```
+
+  **It does not make the initials.** Turning "Carlos Ramos" into "CR" looks
+  like string handling and is a transformation of a person's NAME, which fails
+  in more languages than it works in: a Japanese name has no space to split on,
+  Arabic is read the other way so the first letter is not the first character,
+  and "de la Cruz" yields "D" from any rule short enough to write. Doc 05 §4.2
+  is the new line, written before the component. The fallback arrives as
+  children the way an icon does; the full name arrives as a prop.
+
+  **Named or decorative, and never neither.** `name` is required and
+  `isDecorative` decides whether it is announced — the arrangement `Spinner`
+  has, because an avatar beside the name it belongs to would otherwise have a
+  reader hear it twice in one breath. An unnamed picture of a person does not
+  compile, which a `@ts-expect-error` asserts.
+
+  **The name is on the box, not on the picture.** An `<img alt>` names itself
+  perfectly well and initials cannot, so `role="img"` with an `aria-label`
+  carries it either way — measured with an aria snapshot, which also corrected
+  the claim that followed: `img` is marked "children presentational" in the
+  ARIA specification, and the snapshot still shows the letters in the node. So
+  whether a reader says them is on doc 06 §5's list rather than asserted.
+
+  **Sized off the control heights**, which is what keeps a row of avatar,
+  button and field aligned and makes compact density free. Its width comes from
+  `aspect-square`: there is no `--width-control-*` in the theme, rightly, and
+  the first version's `w-control-md` compiled to nothing.
+
+  Two more things it does rather than fail quietly: a picture that does not
+  arrive falls back to the children, and the state is WHICH url failed rather
+  than a boolean — so swapping one person for another tries the new picture
+  instead of assuming it is broken too.
+
+  It is not a loading state (that is `<Skeleton variant="circle" />`) and not a
+  group: a row of overlapping faces with "+3" at the end is a second component,
+  because the number is a count of children and "+{n}" is a string with a
+  placeholder in it.
+
 - **`TimePicker`** — a time chosen from a list, on a step.
 
   ```tsx

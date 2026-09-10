@@ -86,6 +86,36 @@ const capture = async (
   // the note on gotoStory.
   await gotoStory(page, id);
 
+  /*
+   * AND EVERY IMAGE HAS SETTLED, which is doc 10 §11 — a check may not depend on
+   * the machine's SPEED — arriving through a picture rather than through an
+   * assertion.
+   *
+   * `gotoStory` waits for the story to mount and `toHaveScreenshot` waits for
+   * fonts, and neither waits for an image. An `<img>` that resolves to
+   * something is one thing; an `<img>` that FAILS is the case that caught us,
+   * because failing is what makes a component fall back — so the picture is
+   * either the fallback or the browser's broken-image glyph depending on
+   * whether the error had happened yet.
+   *
+   * Measured, on CI: `avatar-states` came back 225 pixels different from the
+   * reference generated locally, stable across both of Playwright's retries,
+   * and 225 pixels is about the size of that glyph. The baseline held the
+   * letters the component falls back to; CI held the glyph. Nothing was wrong
+   * with either machine.
+   *
+   * `complete` is true for a loaded image AND for a failed one, and a
+   * component that swaps the image out on failure removes it from this list
+   * altogether — all three of which are "settled". A lazily loaded image that
+   * is out of view never completes, so a story that scrolls will time out
+   * here, and the message will say which picture was not ready.
+   */
+  await expect
+    .poll(() =>
+      page.evaluate(() => [...document.images].every(image => image.complete))
+    )
+    .toBe(true);
+
   // The story root, not the viewport: a full-page shot would include the
   // scrollbar, which differs between platforms even inside one container.
   await expect(page.locator('body')).toHaveScreenshot(`${name}.png`);
@@ -329,6 +359,21 @@ const STATES: Array<[string, string]> = [
    * ways — `2:00 PM`, `2:00 p. m.` and `14:00`. Two of those locales are both
    * twelve-hour and disagree about how to write the marker.
    */
+  /*
+   * AN AVATAR EARNS TWO, and neither is the circle. `avatar-states` is the
+   * three sizes with a picture, the three without, a picture that did not
+   * arrive and a fallback that is a glyph rather than letters — in both modes,
+   * because the fallback's surface is a pair and the border is what separates
+   * an unknown image from an unknown background.
+   *
+   * `avatar-in-a-row` is the one that carries the argument for the SCALE: an
+   * avatar beside a button and a field of the same size, three times. The
+   * check measures that the three heights are equal; the picture is where
+   * "equal" either looks right or looks like three things that happen to
+   * measure the same.
+   */
+  ['components-avatar--states', 'avatar-states'],
+  ['components-avatar--in-a-row', 'avatar-in-a-row'],
   ['components-timepicker--opened', 'time-picker-opened'],
   ['components-timepicker--in-every-locale', 'time-picker-locales'],
   ['components-timepicker--states', 'time-picker-states'],

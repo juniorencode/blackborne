@@ -71,6 +71,14 @@ export type {
   BreadcrumbsProps
 } from './components/Breadcrumbs';
 
+/*
+ * A picture of somebody, with something in its place when there is none. The
+ * fallback arrives as CHILDREN: turning a name into initials is a
+ * locale-dependent transformation and doc 05 §4.2 forbids the library doing it.
+ */
+export { Avatar } from './components/Avatar';
+export type { AvatarProps, AvatarSize } from './components/Avatar';
+
 export { Button } from './components/Button';
 export type {
   ButtonProps,

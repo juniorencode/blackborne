@@ -254,6 +254,76 @@ cannot know what level it landed at. Emphasis comes from weight and colour.
   may carry **no padding**, because a border-box height is floored at padding
   plus border and a closed panel would rest two dozen pixels tall.
 
+**A PICTURE HAS TO WAIT FOR ITS IMAGES, and this is the fourth time a check
+has measured the machine rather than the component.** `gotoStory` waits for a
+story to mount and `toHaveScreenshot` waits for fonts; neither waits for an
+`<img>`. `Avatar` is the first component in this library to render one, and its
+baseline came back **225 pixels different on CI** — stable across both of
+Playwright's retries, so not a flake, and reproducible locally once the
+capture's timing changed.
+
+The content was identical either way: the difference was antialiasing on the
+circular borders, which is what a page rasterised at two different moments
+gives. `capture()` now polls until every `<img>` in the document is `complete`
+— loaded, failed, or removed by a component that swapped it out, all three of
+which are settled — and it is where the uploader's thumbnails will need the
+same wait.
+
+Two smaller things came with it. **A failure in a story is a data uri that
+cannot decode, not a url that 404s**: what a static server answers for an
+unknown path is not this library's business, and a fallback page returning 200
+makes the browser fail on the decode instead, later and by a different amount
+on a different machine. And **a diff is worth opening before theorising**: the
+225 pixels were assumed to be the browser's broken-image glyph, which is about
+that size, and the artefact showed rings round every circle instead.
+
+**A SLOT SIZES WHAT ARRIVES IN IT, and a slot that forgets renders nothing.**
+Doc 02 §11 says an icon arrives as children and the component sizes and colours
+it — `Badge` has `[&>svg]:size-4` for exactly this. `Avatar`'s fallback slot
+did not, and the first baseline showed a silhouette passed in as an svg as an
+EMPTY CIRCLE: an svg with a `viewBox` and no width or height has no intrinsic
+size to fall back on. Sized in `em` here rather than with a token, so one rule
+covers all three sizes — the type size is what changes between them, and the
+glyph follows the letters it replaces.
+
+**`w-control-*` DOES NOT EXIST, AND A SQUARE ELEMENT TAKES ITS WIDTH FROM
+`aspect-square`.** The theme declares `--height-control-*` and no width
+counterpart, which is right: a control's width is its contents. So a circle
+sized `h-control-md w-control-md` had a height and no width, and nothing in the
+source looked wrong — the third utility in this package found to compile to
+nothing (`size-box` and `min-w-hit` are the other two, and the theme's own
+comment records the second). Grep the compiled stylesheet; it is the only place
+that answers.
+
+**THE STATE IS WHICH URL FAILED, NOT A BOOLEAN.** An avatar whose image does
+not arrive falls back to its children, and the obvious `hasFailed` flag has to
+be reset when `src` changes — an effect that runs after a paint, so swapping
+one person for another shows the new picture as broken for a frame, or never
+tries it at all. Remembering the url that failed makes the comparison the state
+itself: a new url has not failed, so it is attempted. Asserted by a rerender in
+the unit tests.
+
+**AND AN EMPTY `alt` IS NOT A USER-FACING STRING.** The project's own rule
+against literal labels flagged `alt=""` on the first `<img>` this library ever
+rendered. The rule now exempts an empty value, with the reason in
+`eslint.rules.js`: an empty `alt` is the declaration that there is nothing to
+read — the standard way to say a picture is decorative because something else
+already names it. There is no dictionary key for "no text", and taking it as a
+prop would let a consumer put a second copy of the name inside an element that
+already carries one.
+
+**AND AN ARIA SNAPSHOT CORRECTED A CLAIM THIS COMPONENT WAS WRITTEN WITH.**
+`Avatar` puts the name on the box as `role="img"` rather than on the picture,
+because initials cannot name themselves — "CR" is what the screen says and not
+what the person is called. The comment claimed the rest followed: `img` is
+marked "children presentational" in the ARIA specification, so the letters
+inside should not be announced. `locator.ariaSnapshot()` reads
+`- img "Ana Vega": AV`, with the text still in the node — so the tool does not
+settle it, the check asserts only the half that is settled, and the question is
+on doc 06 §5's list for a person with a screen reader. Worth knowing that the
+snapshot exists at all: `page.accessibility` is gone from this version of
+Playwright and this is what replaced it.
+
 **A COMPONENT CAN BE ANOTHER ONE WITH ITS DATA GENERATED, and that is not a
 lesser component.** `TimePicker` is a `Select` whose rows come from a pure
 function: the trigger, the panel, the list's width, the tick, the typeahead,
