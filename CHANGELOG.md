@@ -12,6 +12,61 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **`ButtonGroup`** — a row of buttons joined into one control.
+
+  ```tsx
+  <ButtonGroup variant="primary" size="sm">
+    <Button onPress={previous}>Previous</Button>
+    <Button onPress={next}>Next</Button>
+  </ButtonGroup>
+  ```
+
+  For actions of one kind, where the adjacency is the point. A row of unrelated
+  actions is a row of buttons with a gap, which is layout and belongs to the
+  consumer: joining them says they are alternatives, and saying that when it is
+  false is worse than saying nothing.
+
+  **It is not a segmented control.** A joined row that expresses a CHOICE — one
+  of the three is on, and pressing another moves it — is a field with a value
+  and has to announce itself as one. That is a different component and it is
+  not built.
+
+  **`size` and `variant` travel by context**, which is doc 02 §3.1.1's rule for
+  a variant belonging to the set. A member's own prop still wins, so a row of
+  secondaries with one primary in it is written the obvious way — the group's
+  appearance is a default, not a rule. And a consumer's own component that
+  renders a `Button` takes it too, which cloning the children could never have
+  managed.
+
+  **Three of the six variants**, and the other three are refused rather than
+  forgotten. `ghost` and `link` carry no border and no fill, so there is
+  nothing for the seam to be made of and joining them would do nothing at all;
+  `danger` is out for `SplitButton`'s reason, a set of adjacent destructive
+  actions that look identical being one misclick from the wrong one.
+
+  **No role and no name.** Five buttons in a row are five buttons, every one
+  already named; a `role="group"` would add something to announce and nothing
+  to do with it. Whether a row that LOOKS like one control and announces as
+  several costs anything is on doc 06 §5's list for the screen-reader pass.
+
+  Three things it found, and all three are recorded rather than quietly fixed:
+
+  - **A set's context crosses a portal.** A popover opened from inside the
+    group rendered its footer in the group's own size and variant — measured
+    with a probe, which read `primary/sm` where a person would have seen small
+    primary buttons in a dialog. Every layer that can hold a button now closes
+    the set around its content, which is one call site for four of them because
+    they share the sheet. Doc 02 §3.1.1 has the rule, and why it arrives with
+    buttons rather than with `RadioGroup`.
+  - **A focus ring needs somewhere to be on top.** The ring is a border plus a
+    4px halo drawn as a box-shadow and the buttons overlap by a pixel, so with
+    no z-index the later sibling paints over the halo and the ring of anything
+    but the last button is cut in half. Nothing in the DOM is wrong, a
+    box-shadow is not hit-tested, and the baseline is what shows it.
+  - **The catalog predicted the wrong thing about it**, which its row now says.
+    This was to be "the first component to propagate through context"; it is
+    the third, after `RadioGroup` and `Accordion`.
+
 - **`Steps`** — where something is in a process, step by step.
 
   ```tsx
@@ -1363,6 +1418,20 @@ minor versions. Every break is listed here with its migration.
   between them.
 
 ### Changed
+
+- **`SplitButton`'s divider is now the shared seam.** It has drawn a line down
+  its own middle since it shipped, mixed from the pair's text colour, because a
+  primary split button's border is the same colour as its fill. `ButtonGroup`
+  needs that line on an unknown number of children, so the recipe moved to
+  `internal/seam` and both components read `--bb-seam` from the root. No
+  appearance changed: all seven of the component's baselines came out
+  identical.
+
+- **`ButtonVariant` and `ButtonSize` are declared in one place and re-exported
+  by `Button`.** Three files need the vocabulary now, and the project's own
+  lint rule is what moved it: a piece shared between components belongs in
+  `src/internal`. **Nothing about the public API changed** — both types are
+  still imported from the library root and mean exactly what they did.
 
 - **`@internationalized/date` is now a declared dependency**, pinned to
   `3.12.4` — the version `react-aria-components` resolves — and moving with the

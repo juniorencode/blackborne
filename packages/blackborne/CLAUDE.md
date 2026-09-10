@@ -254,6 +254,70 @@ cannot know what level it landed at. Emphasis comes from weight and colour.
   may carry **no padding**, because a border-box height is floored at padding
   plus border and a closed panel would rest two dozen pixels tall.
 
+**AND `internal/mergeRefs` ALREADY EXISTED, TWICE OVER.** `RangeCalendar` and
+`Steps` each wrote their own two-ref merger while forwarding a ref to an
+element they also observe — the same eleven lines, three callers away from the
+shared one that four other components import. Found while looking for something
+else, which is how the cross reached four copies with four geometries. Check
+`internal` before writing a helper: it is a short directory and reading it
+takes less time than writing the function.
+
+**A SET'S CONTEXT CROSSES A PORTAL, so every layer that can hold a member
+closes it.** `ButtonGroup` sends its size and variant down a context, which is
+doc 02 §3.1.1's rule for a variant belonging to the set — and a React context
+does not stop at a portal. Measured with a probe in a popover's footer: it read
+`primary/sm` inside a row of small primary buttons, so a person opening that
+layer would have seen a footer of small primary buttons in a dialog.
+`internal/buttonAppearance` exports `NoButtonSet`, and four of the five layers
+close the set at ONE call site because they share `ModalSheet`; `Preview` says
+it itself, being the one layer that cannot use the sheet (doc 08 §4).
+
+The part worth carrying forward is why this arrives now. The exposure is not
+the context, it is **what the members are**: a radio inside a dialog inside a
+radio group is not a thing anybody writes, and a button inside a dialog inside
+a row of buttons is ordinary. So the rule belongs to any set whose member type
+also appears inside layers — today buttons, tomorrow whatever the table suite
+puts in a row.
+
+**And a set with two things to send is two contexts, each carrying a
+primitive.** That is the same section's last constraint, and it was tempting to
+break it: one object with `{ variant, size }` is one provider instead of two.
+It also needs memoising and puts an identity in the tree for somebody to reason
+about, which is exactly what the constraint is for. `RadioGroup` set the shape
+with one primitive; this is the same shape twice.
+
+**A COLOUR RECIPE USED TWICE IS A VARIABLE, NOT A CLASS WRITTEN TWICE.** Two
+adjacent buttons both carry a border, so joining them means pulling the second
+back a pixel and letting one border do the work of two — enough for
+`secondary`, whose border differs from its fill, and not enough for a variant
+whose border IS its fill. A row of primary buttons pulled together is one
+accent blob. `SplitButton` has drawn a divider for that since it shipped, and
+`ButtonGroup` needs the same line on an unknown number of children from a
+stylesheet, so the two declarations are different and the colour is the same.
+`internal/seam` publishes `--bb-seam` on whichever root declares the set and
+both read it; Tailwind cannot see a class name built at run time, which is why
+that file is a map of literal strings rather than a function. Extracting it
+changed no pixels: all seven of `SplitButton`'s baselines came out identical.
+
+Two details in it are measured. `secondary` publishes the ORDINARY border
+colour rather than nothing, so every caller reads the variable unconditionally
+— an invalid `var()` in `border-inline-start-color` computes to `currentColor`,
+so a missing variable would put the label's colour down the middle of the row
+and look deliberate. And a `color-mix` reports back in the mixing space:
+`oklab(0.999994 0.0000455678 0.0000200868 / 0.25)`, which is why the browser
+check compares the three colours to each other instead of parsing any of them.
+
+**A FOCUS RING NEEDS SOMEWHERE TO BE ON TOP.** The ring is a 1px border plus a
+4px halo drawn as a box-shadow, and in a joined row the buttons overlap by a
+pixel. Every `Button` is already `position: relative` — the pending spinner
+needs somewhere to centre — so with no z-index the later sibling paints over
+the halo and the ring of anything but the last button is cut in half down its
+trailing edge. Nothing in the DOM is wrong when that happens, a box-shadow is
+not hit-tested, and no computed value says who painted over whom: the check
+asserts `z-index: 1` on the focused child and the BASELINE is what shows the
+ring. Focus only — raising on hover as well would shift the seam by a pixel
+whenever a pointer crossed the row.
+
 **A position is a fact about the LIST, so CSS counts it.** `Steps` numbers its
 steps with a counter rather than a prop or an index: a `number` prop lets a
 consumer write 1, 2, 2, 4 and a component cannot help them, and an index

@@ -4,12 +4,21 @@ import {
   type ButtonProps as AriaButtonProps
 } from 'react-aria-components';
 import { Spinner, type SpinnerSize } from '../Spinner';
+import {
+  useButtonSet,
+  type ButtonSize,
+  type ButtonVariant
+} from '../../internal/buttonAppearance';
 import { cx } from '../../internal/cx';
 
-export type ButtonVariant =
-  'primary' | 'secondary' | 'subtle' | 'danger' | 'ghost' | 'link';
-
-export type ButtonSize = 'sm' | 'md' | 'lg';
+/*
+ * DECLARED IN `internal/buttonAppearance` AND RE-EXPORTED HERE, which is a
+ * move the project's own lint rule asked for rather than a preference: three
+ * files need this vocabulary — the map below, `ButtonGroup`'s set, and the
+ * subset `internal/seam` can join — and a piece shared between components
+ * belongs in `src/internal` (doc 01). The public API is unchanged.
+ */
+export type { ButtonSize, ButtonVariant };
 
 /*
  * The variant map. ONE place, typed, per component (doc 03 §4.4).
@@ -229,7 +238,13 @@ export interface ButtonProps extends Omit<
   'children' | 'className' | 'style'
 > {
   children?: React.ReactNode;
-  /** Appearance. A closed set — never a boolean per variant (doc 02 §3). */
+  /**
+   * Appearance. A closed set — never a boolean per variant (doc 02 §3).
+   *
+   * Inside a `ButtonGroup` this defaults to the group's rather than to
+   * `secondary`, and passing it here still wins: a group's appearance is a
+   * default for its members, not a rule about them.
+   */
   variant?: ButtonVariant;
   /** Height and type size. Aligns with fields and selects of the same size. */
   size?: ButtonSize;
@@ -253,10 +268,17 @@ export interface ButtonProps extends Omit<
  * `aria-label` (doc 06 §3).
  */
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  function Button(
-    { variant = 'secondary', size = 'md', className, children, ...ariaProps },
-    ref
-  ) {
+  function Button({ variant, size, className, children, ...ariaProps }, ref) {
+    /*
+     * NO DEFAULT IN THE DESTRUCTURING, because a default there cannot tell
+     * "not given" from "given as secondary" — and the set has to sit between
+     * the two. The order is the button's own prop, then the set it is in, then
+     * the library's default, which is the order of who knows most.
+     */
+    const set = useButtonSet();
+    const appearance = variant ?? set?.variant ?? 'secondary';
+    const height = size ?? set?.size ?? 'md';
+
     /*
      * `...ariaProps` rather than naming each prop: with
      * exactOptionalPropertyTypes, forwarding an optional prop by name is a
@@ -268,7 +290,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <AriaButton
         ref={ref}
-        className={cx(BASE, VARIANT[variant], SIZE[size], className)}
+        className={cx(BASE, VARIANT[appearance], SIZE[height], className)}
         {...ariaProps}
       >
         <span className={cx(CONTENT, isPending && 'bb:opacity-0')}>
@@ -294,7 +316,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
              * three sizes each carry a different type size. One spinner size
              * for all three would read small on `lg` and crowd `sm`.
              */}
-            <Spinner size={SPINNER[size]} isDecorative />
+            <Spinner size={SPINNER[height]} isDecorative />
           </span>
         )}
       </AriaButton>

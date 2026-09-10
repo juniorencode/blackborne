@@ -570,6 +570,14 @@ is what applies: what a component knows must survive the structure changing,
 and a name is the most basic thing it knows. Nothing in `Steps` is focusable,
 so `sr-only` costs a reader nothing and `display: none` costs them everything.
 
+**And a joined row is N0 because it CANNOT be anything else.** `ButtonGroup`
+pulls its buttons together so that one border does the work of two, and a row
+that wrapped would show squared corners in mid-air where the joint used to be.
+There is no structure for it to change into and no threshold to pick: what
+survives a container too narrow for its actions is the toolbar that collapses
+into a menu, which is its own row in the table above. Recorded here because
+"joins a row of things" looks like an N3 candidate and is the opposite of one.
+
 Everything else is solved at N0, N1 or N2 barring proof to the contrary. Six
 components examined in the batch that produced the rows above need nothing at
 all: `Accordion`, `Collapsible`, `Link` and `CursorPagination` are all N0, and

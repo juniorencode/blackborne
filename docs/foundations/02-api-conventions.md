@@ -142,7 +142,32 @@ Two constraints come with it. The context carries **appearance only** —
 behaviour and accessibility wiring already come down the base's own context,
 and a second channel for the same thing is [doc 01](./01-principles.md) §7. And
 the value stays a primitive, so there is no object identity to memoise and no
-way for a consumer to be surprised by a re-render.
+way for a consumer to be surprised by a re-render. A set with two things to
+send is **two contexts**, which is what `ButtonGroup` does — one object would
+have needed memoising, and the constraint is cheaper to keep than to argue
+with.
+
+#### And the context has to be CLOSED at a layer
+
+**Date:** 2026-09-10, with `ButtonGroup`.
+
+A React context crosses a portal. So a layer opened from inside one of these
+groups is inside the group as far as React is concerned, and its content takes
+the set's appearance — measured with a probe in a popover's footer, which read
+`primary/sm` inside a row of small primary buttons, where a person would have
+seen a footer of small primary buttons in a dialog.
+
+**Every layer that can hold a member closes the set around its content.** In
+this library that is one call site for four of them, because a dialog, a
+drawer, a confirmation and a popover share the same sheet; the fifth is the one
+layer that cannot use the sheet and says so itself.
+
+Worth being precise about why this arrives now and not with `RadioGroup`. The
+exposure is not the context, it is **what the members are**: a radio inside a
+dialog inside a radio group is not a thing anybody writes, and a button inside
+a dialog inside a row of buttons is ordinary. So the rule applies to a set
+whose member type also appears inside layers, which today means buttons and
+tomorrow means whatever the table suite puts in a row.
 
 ### 3.2 One vocabulary for `align`
 

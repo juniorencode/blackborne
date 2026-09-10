@@ -289,6 +289,25 @@ const STATES: Array<[string, string]> = [
    * lengths. `together` is the tone surfaces in dark mode, where a soft green
    * and a soft red are two steps of a scale rather than two hues.
    */
+  /*
+   * A BUTTON GROUP EARNS THREE, and every one of them is a thing no assertion
+   * reaches. `button-group-variants` is the SEAM in both modes: a secondary
+   * row has two borders turned into one, and the other two have no visible
+   * border at all, so the line is mixed from the pair's own text colour and a
+   * row without it is one accent blob. `button-group-states` is the group of
+   * one that keeps all four corners, a member overriding the row, and a
+   * pending button holding its width in the middle of a joint.
+   *
+   * `button-group-focus` is the one that matters most. The ring is a border
+   * plus a 4px halo drawn as a box-shadow, and the buttons overlap by a pixel
+   * — so with no z-index the later sibling paints over the halo and the ring
+   * of anything but the last button is cut in half down one edge. Nothing in
+   * the DOM is wrong when that happens, a box-shadow is not hit-tested, and no
+   * computed value says who painted over whom.
+   */
+  ['components-buttongroup--variants', 'button-group-variants'],
+  ['components-buttongroup--states', 'button-group-states'],
+  ['components-buttongroup--the-focus-ring', 'button-group-focus'],
   ['components-steps--states', 'steps-states'],
   ['components-steps--structures', 'steps-structures'],
   ['components-steps--together', 'steps-together'],
@@ -588,6 +607,12 @@ const AXES: Array<[string, string]> = [
   ['components-select--brand-override', 'axis-select-brand'],
   /* And the tabs' three axes plus the brand, which has to reach the one thing
      that marks the open tab: the rule under it. */
+  /* And the button group's brand, for the half of the seam a default theme
+     cannot show: the primary line is mixed from `--bb-accent-on` rather than
+     chosen beside it, so an overridden brand has to arrive in it without
+     anything being told. The same claim the split button's divider makes, on
+     an unknown number of children. */
+  ['components-buttongroup--brand-override', 'axis-button-group-brand'],
   /* And the split button's four, because the divider is mixed from the pair's
      own text colour and has to follow every one of them. */
   ['components-splitbutton--dark', 'axis-split-button-dark'],

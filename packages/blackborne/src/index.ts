@@ -79,6 +79,17 @@ export type {
 } from './components/Button';
 
 /*
+ * A row of buttons joined into one control, with the size and the variant
+ * declared once for the set. The context that carries them is NOT exported —
+ * doc 02 §3.1.1, and §10's not-public list.
+ */
+export { ButtonGroup } from './components/ButtonGroup';
+export type {
+  ButtonGroupProps,
+  ButtonGroupVariant
+} from './components/ButtonGroup';
+
+/*
  * A month of days, and the content of the picker that will open one. Its value
  * crosses as an ISO string rather than as the base's calendar object
  * (decision 0020),

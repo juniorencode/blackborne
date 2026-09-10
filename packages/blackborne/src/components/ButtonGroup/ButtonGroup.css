@@ -1,0 +1,96 @@
+/*
+ * JOINING N BUTTONS, in CSS because every rule here depends on a child's
+ * POSITION and the number of children is not known.
+ *
+ * Unlayered on purpose, like `Steps.css` and `controlBox.css`: everything
+ * Tailwind emits lives in `@layer utilities`, and an unlayered rule outranks a
+ * layered one whatever its specificity. That is exactly what is needed —
+ * `Button` declares `rounded-md` on itself and these rules have to replace it,
+ * not compete with it.
+ *
+ * ## Why not arbitrary variants on the root
+ *
+ * `bb:[&>*:not(:first-child)]:-ms-px` would compile, and `SplitButton` proves
+ * the shape works for two halves written by hand. It stops being readable at
+ * four rules, and one of those rules has to change a longhand
+ * (`border-inline-start-color`) that Tailwind's own `border-*` shorthand also
+ * writes — a fight decided by the order of the compiled stylesheet, which is
+ * the thing the package guide warns about twice. An unlayered file states the
+ * precedence instead of hoping for it.
+ */
+
+/*
+ * THE INNER CORNERS GO AND THE OUTER ONES STAY.
+ *
+ * Cleared on every child and restored on the two ends, rather than squared
+ * per position: with one child the same element is both ends and keeps all
+ * four corners, which is what a group of one has to look like.
+ *
+ * The logical corner properties, never `top-left`: the first word is the block
+ * axis and the second is the inline one, so `start-start` is the top-left
+ * corner in a left-to-right language and the top-RIGHT in Arabic. Hard rule 2,
+ * and the browser check measures it in both directions.
+ */
+.bb-button-group > * {
+  border-radius: 0;
+}
+
+.bb-button-group > *:first-child {
+  border-start-start-radius: var(--bb-radius-md);
+  border-end-start-radius: var(--bb-radius-md);
+}
+
+.bb-button-group > *:last-child {
+  border-start-end-radius: var(--bb-radius-md);
+  border-end-end-radius: var(--bb-radius-md);
+}
+
+/*
+ * ONE BORDER BETWEEN TWO BUTTONS INSTEAD OF TWO.
+ *
+ * Both carry one, so without the negative margin the line down the middle of
+ * a group is 2px where every other border in the library is 1px — measured on
+ * `SplitButton`, which needed the same pixel for the same reason.
+ *
+ * And the colour comes from `--bb-seam`, published on the root by
+ * `internal/seam`: a variant whose border matches its fill has no visible seam
+ * of its own, so a row of primary buttons would be one accent blob. The
+ * variable is always defined, which is why there is no rule per variant here.
+ */
+.bb-button-group > * + * {
+  margin-inline-start: -1px;
+  border-inline-start-color: var(--bb-seam);
+}
+
+/*
+ * AND A DISABLED MEMBER'S SEAM IS LEFT ALONE, which is a decision taken from a
+ * picture rather than an omission.
+ *
+ * Measured on a primary row with its middle button off: the fills either side
+ * are `rgb(62, 99, 221)` and the disabled one is `rgb(249, 249, 251)`, so its
+ * own start border — white at 25% — resolves to nothing against its own
+ * near-white fill. One of the two boundaries around it therefore draws a line
+ * and the other does not.
+ *
+ * A rule for it would be a mechanism with no job: the seam exists for the case
+ * where two ADJACENT FILLS ARE THE SAME, and a disabled member's fill is never
+ * the same as an enabled one's. What the picture actually shows is `Button`'s
+ * disabled appearance in a joined row, which belongs to `Button`.
+ */
+
+/*
+ * THE FOCUSED BUTTON PAINTS OVER ITS NEIGHBOUR, NOT UNDER IT.
+ *
+ * The focus ring is a 1px border plus a 4px halo drawn as a box-shadow, and
+ * the halo reaches 4px into the button beside it. Every button is already
+ * `position: relative` — the pending spinner needs it — so with no z-index the
+ * later sibling wins and the ring of anything but the last button is cut in
+ * half down its trailing edge. Nothing in the DOM is wrong, no assertion can
+ * read a box-shadow, and the baseline is what shows it.
+ *
+ * Focus only. Hover raising the same way would shift the seam by a pixel
+ * whenever a pointer crossed the row, which is movement nobody asked for.
+ */
+.bb-button-group > *[data-focused] {
+  z-index: 1;
+}

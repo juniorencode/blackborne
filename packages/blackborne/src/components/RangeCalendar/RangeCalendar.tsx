@@ -7,6 +7,7 @@ import {
 import type { CalendarDate } from '@internationalized/date';
 import { FRAME, RangeBody } from '../../internal/Calendar';
 import { cx } from '../../internal/cx';
+import { mergeRefs } from '../../internal/mergeRefs';
 import {
   CONTAINER_STEPS,
   useContainerStep
@@ -195,15 +196,3 @@ const toAria = (
   const end = parseDay(range.end);
   return start === undefined || end === undefined ? null : { start, end };
 };
-
-/** Two refs on one element, and neither of them optional here. */
-const mergeRefs =
-  (
-    forwarded: React.ForwardedRef<HTMLDivElement>,
-    own: React.RefObject<HTMLDivElement | null>
-  ) =>
-  (element: HTMLDivElement | null): void => {
-    own.current = element;
-    if (typeof forwarded === 'function') forwarded(element);
-    else if (forwarded !== null) forwarded.current = element;
-  };
