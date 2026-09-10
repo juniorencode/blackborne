@@ -5,7 +5,18 @@ import { useLayoutEffect, useRef } from 'react';
  * state normally reachable only by pointing at the thing is visible in the
  * catalog and can be photographed.
  */
-export type ForcedState = 'data-hovered' | 'data-pressed' | 'data-focused';
+export type ForcedState =
+  | 'data-hovered'
+  | 'data-pressed'
+  | 'data-focused'
+  /*
+   * `data-dragging` arrived with `Slider`, and it is the one state in this
+   * union that CANNOT be reached by poking at the component: hover and press
+   * happen under a pointer that is passing through, and dragging exists only
+   * while one is held down and moving. So it is the state a baseline is the
+   * only way to see.
+   */
+  | 'data-dragging';
 
 /**
  * Force one of those states for the catalog.

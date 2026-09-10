@@ -254,6 +254,72 @@ cannot know what level it landed at. Emphasis comes from weight and colour.
   may carry **no padding**, because a border-box height is floored at padding
   plus border and a closed panel would rest two dozen pixels tall.
 
+**A `dir` ATTRIBUTE IS NOT A LOCALE, and a component that uses both mechanisms
+can disagree with itself.** A slider draws two things against one rail: the
+fill's offset is `inset-inline-start`, which the stylesheet mirrors on its own,
+and the handle's is a computed `left` percentage the base mirrors only when the
+LOCALE says right-to-left. Measured on a story with `dir="rtl"` and no locale:
+at 30 out of 100 the fill occupied the right 30% of the rail and the handle sat
+at 30% from the LEFT — a handle at the wrong end of its own fill, with nothing
+wrong in either half.
+
+Two things to carry: an RTL story for anything whose JavaScript positions
+something declares `ConfigProvider locale="ar-EG"` rather than a `dir` div, and
+the check asserts that the two AGREE. "The fill starts at the right" and "the
+handle is at 30%" are both true in the broken case; "the handle is at the
+leading edge of the fill" is the invariant. Doc 05 §4.1.
+
+**A DISABLED CONTROL STILL HAS TO SAY WHAT IT HOLDS.** The slider's disabled
+fill was `surface-disabled`, which against the rail measures **1.08:1 in light
+and 1.00:1 in dark — the same colour, exactly** — so a disabled slider showed
+no value at all. Found by opening the first baseline, which is the fourth
+defect that layer has caught in this family and the same one `Calendar` shipped
+a false claim about.
+
+The token is `--bb-text-disabled` (2.90:1 and 3.43:1 against the rail), chosen
+for what it NAMES rather than for a number: doc 03 §5 rule 2's 3:1 floor is for
+a graphical element carrying information, WCAG exempts an inactive control from
+it, and the token that clears the floor comfortably — `text-muted` at 5.22:1 —
+would draw a disabled fill with more contrast than the accent has when it is
+live.
+
+**`size-*` IS NOT `h-* w-*`, AND IT COMPILES TO NOTHING HERE.** Tailwind
+resolves `size-*` from its own `--size-*` namespace, and this theme declares
+`--height-box` and `--width-box`. So `size-box` produced no rule at all and the
+slider's knob collapsed to its border, looking like a styling accident rather
+than a missing utility. The theme's own comment records the same trap for
+`min-w-hit`; the way to check either is to grep the COMPILED stylesheet, which
+is where `.bb\:h-box` either exists or does not.
+
+**`justify-between` PUTS A SINGLE ITEM AT THE START.** A hidden label is
+`sr-only`, which is out of flow — so a row of label-and-number with the label
+hidden has one item in it, and the number moved to the leading edge. Measured
+at x = 0 against x = 305 on every other row of the same story. `ms-auto` on the
+number is the fix, and `Progress` has the same row and took it too, before any
+story of its own could find it.
+
+**THE BASE'S SLIDER FILL TAKES THE FULL HEIGHT OF ITS CONTAINING BLOCK**, which
+is why the rail is a separate element from the target. Read in its source and
+confirmed: the fill's default style is
+`position: absolute; inset-inline-start: X%; width: Y%; height: 100%`. The
+track has to clear the minimum hit area (28px, 24px at compact), so a fill
+placed directly in it would be 28px tall. A rail inside the target, with the
+fill inside the rail, gives an 8px bar — `Progress`'s own thickness — in a
+target nobody has to aim at.
+
+And the thumb needs `top-1/2` FROM US: the base sets `left` and
+`transform: translate(-50%, -50%)` and no vertical position at all, so without
+it the transform pulls the handle half its height above the rail. The base's
+own documented CSS does the same thing, which is how it was found.
+
+**AND ITS HANDLE OVERHANGS THE COMPONENT'S BOX BY HALF THE TARGET.** 14px at
+the maximum, measured and pinned by a check rather than fixed: the handle's
+CENTRE marks the value, which is what a slider means. Insetting the rail by
+14px at each end would keep everything inside the box and cost 9% of a 320px
+panel, and stop the rail lining up with a `Progress` bar above it. What it
+means for a consumer is that a slider inside a box with `overflow: hidden` and
+no padding loses half its handle at the extremes.
+
 **AND `internal/mergeRefs` ALREADY EXISTED, TWICE OVER.** `RangeCalendar` and
 `Steps` each wrote their own two-ref merger while forwarding a ref to an
 element they also observe — the same eleven lines, three callers away from the

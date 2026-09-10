@@ -12,6 +12,62 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **`Slider`** — one value on a range, dragged or typed with the arrow keys.
+
+  ```tsx
+  <Slider
+    label="Sample rate"
+    value={rate}
+    onChangeEnd={setRate}
+    maxValue={1}
+    step={0.01}
+    formatOptions={{ style: 'percent' }}
+  />
+  ```
+
+  **For a value where the approximate is the point** — a threshold, a weight,
+  an opacity. It shows the whole range at once, which is what makes it worth
+  the width. Where an exact figure matters it is a `NumberField`: a slider
+  cannot be typed into, and its precision is a step somebody else chose.
+
+  **It reads `Progress`'s row and `Progress`'s rail**, down to the token: the
+  same `label` and `isLabelHidden`, the number at the trailing end with
+  `isValueHidden` to drop it, and a well in `surface-sunken` with the accent
+  filling it. The two are the same object read two ways. The one difference is
+  that the fill has no transition — a bar is told about a value that changed
+  somewhere else, and this one is being dragged, so easing it would put the
+  fill behind the pointer.
+
+  **Two callbacks and they are not the same.** `onChange` fires on every step
+  of a drag, which is what a preview wants; `onChangeEnd` fires once, where the
+  value came to rest, which is what anything that costs something has to use.
+
+  **One value.** A two-ended range is reachable — the base takes an array — and
+  it is not here, because nothing needs it today. When it arrives it is a
+  discriminated union the way `ComboBox` holds several values, not an `isRange`
+  flag; the catalog has that as a row rather than left to memory.
+
+  **And no `errorMessage`.** A value is clamped to its range and snapped to its
+  step, so there is no way to hold one that is wrong. A rule about acceptable
+  values is a rule about `minValue` and `maxValue`.
+
+  Three things it found:
+
+  - **A `dir` attribute is not a locale.** The fill's offset is a logical CSS
+    property the stylesheet mirrors on its own; the handle's is a percentage
+    the base mirrors only when the LOCALE is right-to-left. Measured on a story
+    with `dir="rtl"` and no locale: at 30 out of 100 the fill occupied the
+    right 30% of the rail and the handle sat at 30% from the LEFT. Doc 05 has
+    it as §4.1, and the check asserts the two AGREE rather than asserting each
+    one — both halves are true in the broken case.
+  - **A disabled slider showed no value at all.** The disabled fill was
+    `surface-disabled`, which against the rail measures 1.08:1 in light and
+    1.00:1 in dark — the same colour exactly. Found by opening the first
+    baseline. It is `text-disabled` now, at 2.90:1 and 3.43:1.
+  - **`justify-between` puts a single item at the start**, so a hidden label
+    moved the number to the leading edge — measured at x = 0 against x = 305 on
+    every other row.
+
 - **`ButtonGroup`** — a row of buttons joined into one control.
 
   ```tsx
@@ -1739,6 +1795,14 @@ minor versions. Every break is listed here with its migration.
   `packages/blackborne`, the visual catalog in `apps/catalog`.
 
 ### Fixed
+
+- **`Progress` keeps its number at the trailing end when the label is hidden.**
+  The row is `justify-between`, a hidden label is `sr-only` and therefore out
+  of flow, and `justify-between` puts a SINGLE item at the start — so a bar
+  with `isLabelHidden` and a visible number drew the number at the leading
+  edge. Found on `Slider`, which shares the row and has a story that does
+  exactly that, and fixed in both. No existing baseline moved: no story of
+  `Progress`'s own hides the label while showing the number.
 
 - **A hidden label left the control nameless, in the first draft of
   `Progress`.** It rendered a plain `<span>` and left it out when hidden, on

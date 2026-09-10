@@ -305,6 +305,20 @@ const STATES: Array<[string, string]> = [
    * the DOM is wrong when that happens, a box-shadow is not hit-tested, and no
    * computed value says who painted over whom.
    */
+  /*
+   * A SLIDER EARNS TWO. `slider-states` is the rail against the thumb in both
+   * modes — the rail is `Progress`'s track down to the token, and the two have
+   * to read as one control rather than as a bar with a dot near it — plus the
+   * value at each end of the range, where a fill at 100% has to be the rail's
+   * own shape and one at 0 has to be nothing at all.
+   *
+   * `slider-interaction` is the one nothing else replaces: hover, focus and
+   * DRAGGING, the last of which exists only while a pointer is held down and
+   * therefore cannot be seen by poking at the component. It is the first state
+   * in `Force`'s union that is unreachable by hand.
+   */
+  ['components-slider--states', 'slider-states'],
+  ['components-slider--interaction', 'slider-interaction'],
   ['components-buttongroup--variants', 'button-group-variants'],
   ['components-buttongroup--states', 'button-group-states'],
   ['components-buttongroup--the-focus-ring', 'button-group-focus'],
@@ -607,6 +621,12 @@ const AXES: Array<[string, string]> = [
   ['components-select--brand-override', 'axis-select-brand'],
   /* And the tabs' three axes plus the brand, which has to reach the one thing
      that marks the open tab: the rule under it. */
+  /* And the slider's RTL, which is the axis it has a defect history on: the
+     fill's offset is a logical CSS property and the handle's is a computed
+     percentage the base mirrors from the LOCALE, so the two can disagree and
+     put the handle at the wrong end of its own fill. Measured once, asserted
+     in the checks, and photographed here because it is a geometry. */
+  ['components-slider--direction', 'axis-slider-rtl'],
   /* And the button group's brand, for the half of the seam a default theme
      cannot show: the primary line is mixed from `--bb-accent-on` rather than
      chosen beside it, so an overridden brand has to arrive in it without

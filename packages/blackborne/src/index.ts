@@ -301,6 +301,13 @@ export type { SpinnerProps, SpinnerSize } from './components/Spinner';
  * One action with the near alternatives behind an arrow. Two buttons, so it
  * exports no item type of its own: the rows are `MenuItem`s.
  */
+/*
+ * One value on a range. A slider is for a value where the approximate is the
+ * point; where an exact figure matters it is a `NumberField`.
+ */
+export { Slider } from './components/Slider';
+export type { SliderProps } from './components/Slider';
+
 export { SplitButton } from './components/SplitButton';
 export type {
   SplitButtonProps,
