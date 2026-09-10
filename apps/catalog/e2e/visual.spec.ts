@@ -279,6 +279,19 @@ const STATES: Array<[string, string]> = [
    * against its track in dark mode, which is the pairing a check measures at
    * 4.58:1 in light and which a picture is what makes anybody believe.
    */
+  /*
+   * STEPS EARNS THREE, and `structures` is the one no number replaces: two of
+   * the same component at two container widths in one window, where the narrow
+   * one has to read as a finished chain of indicators rather than as a row
+   * whose labels went missing. `states` is doc 06 §3's requirement made
+   * visible — four states that differ in shape before they differ in hue — and
+   * it is also the picture that found the connectors were three different
+   * lengths. `together` is the tone surfaces in dark mode, where a soft green
+   * and a soft red are two steps of a scale rather than two hues.
+   */
+  ['components-steps--states', 'steps-states'],
+  ['components-steps--structures', 'steps-structures'],
+  ['components-steps--together', 'steps-together'],
   ['components-progress--states', 'progress-states'],
   ['components-progress--together', 'progress-together'],
   ['components-timefield--in-every-locale', 'time-field-locales'],

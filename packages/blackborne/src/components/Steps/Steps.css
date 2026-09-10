@@ -1,0 +1,111 @@
+/*
+ * THE NUMBER AND THE CONNECTOR, in CSS because both are counting problems.
+ *
+ * Unlayered on purpose, like `controlBox.css` and `Checkbox.css`: everything
+ * Tailwind emits lives in `@layer utilities`, and an unlayered rule outranks a
+ * layered one whatever its specificity. So this states the precedence instead
+ * of competing for it.
+ *
+ * ## Why the number is a counter and not a prop
+ *
+ * A step's position is not a fact about the step, it is a fact about the list
+ * — so a `number` prop would let a consumer write 1, 2, 2, 4 and a component
+ * cannot help them. Counting in JavaScript would mean reading the children,
+ * which `Tabs` and `Breadcrumbs` do only because their pieces land in
+ * different places (decision 0018), and which brings the constraint with it: a
+ * component of your own that returns a `Step` is not one.
+ *
+ * CSS counts on its own and RE-EVALUATES on its own, which is the property
+ * that matters: a consumer rendering a step conditionally gets 1, 2, 3 rather
+ * than a stale index. `Breadcrumbs` chose CSS over counting for exactly this
+ * reason and named the accordion's joined-list layout as the failure it was
+ * avoiding.
+ *
+ * ## And the number is decorative
+ *
+ * The indicator is `aria-hidden`, so this generated content is not announced.
+ * A reader gets the step's title, the word for its status, and
+ * `aria-current="step"` on the one somebody is on — words rather than a number
+ * that would go "1, 2, Details completed, 4" the moment a glyph replaced one.
+ */
+
+.bb-steps {
+  counter-reset: bb-step;
+}
+
+.bb-step {
+  counter-increment: bb-step;
+}
+
+/* The number, until a glyph takes its place. */
+.bb-step-indicator::before {
+  content: counter(bb-step);
+}
+
+/*
+ * A step whose indicator is a glyph shows no number. `:has()` rather than a
+ * data attribute on the indicator, so the status lives in ONE place — on the
+ * step — and nothing has to be kept in step with it.
+ */
+.bb-step-indicator:has(svg)::before {
+  content: none;
+}
+
+/*
+ * THE CONNECTOR BELONGS TO THE STEP THAT FOLLOWS IT, dropped on the first by a
+ * rule keyed on `:first-child`.
+ *
+ * `Breadcrumbs`' rule, and the same reason: CSS re-evaluates when a consumer
+ * renders the first step conditionally, and a component counting in JavaScript
+ * would draw a line leading in from nothing.
+ */
+.bb-step-connector {
+  display: block;
+}
+
+.bb-step:first-child .bb-step-connector {
+  display: none;
+}
+
+/*
+ * THE NARROW STRUCTURE, driven from the root rather than from each step.
+ *
+ * `Steps` reads the container step and stamps the answer on itself; the steps
+ * are children, so CSS is what carries it down. The alternative was a context
+ * with a boolean in it, which is a second mechanism for a thing one selector
+ * already does.
+ *
+ * ## `sr-only` and NOT `display: none`
+ *
+ * The first version used `display: none` and argued that losing the step's
+ * name was survivable because the list still had a count. It is not
+ * survivable, and the argument does not hold: at 320px a reader would get a
+ * list of five items with no names in it at all, which is strictly worse than
+ * one whose names are only in the tree.
+ *
+ * The rule that looked like it forbade this is doc 06 §4 rule 5 — do not hide
+ * from the reader something that is still focusable — and nothing here is
+ * focusable. `Steps` navigates nothing (decision 0015), so there is no control
+ * to reach and nothing to be surprised by. Doc 04 rule 4 is the one that
+ * applies: what the component knows must survive the structure changing, and a
+ * name is the most basic thing it knows.
+ *
+ * So the titles go out of SIGHT and stay in the tree, which is the same trade
+ * every other visually hidden label in this library makes.
+ */
+.bb-steps[data-titles='hidden'] .bb-step-body {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* With no titles on screen the last step needs no room to grow into. */
+.bb-steps[data-titles='hidden'] .bb-step:last-child {
+  flex: 0 0 auto;
+}

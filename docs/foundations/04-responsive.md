@@ -413,7 +413,7 @@ which is why one row below is a correction and not a forecast:
 | Toolbar / actions | Collapse into a menu                                            | Forecast             |
 | Pagination        | Fewer page slots as the width falls, previous/next as the floor | **Done** · §6.2      |
 | Breadcrumbs       | The middle collapses into a menu                                | **Done** · §11.2     |
-| Steps             | To the indicators alone, scrolling                              | Forecast             |
+| Steps             | To the indicators alone, scrolling                              | **Done** · §11.4     |
 | RangeCalendar     | Two months where there is room, one where there is not          | **Done** · §11.3     |
 
 **Dialog turned out not to need JavaScript.** It is a media query and the §5
@@ -544,6 +544,31 @@ has to survive the change, and so does the behaviour.
 Rule 4 itself held, and it is asserted across the boundary and back: the eight
 days of a chosen range are the same eight at 640px, at 320px, and at 640px
 again.
+
+### 11.4 What the steps row turned out to need
+
+**The forecast was half right, which is the interesting half.** The row read
+"to the indicators alone, scrolling". The indicators alone is exactly what
+landed; the scrolling was never needed — measured, four indicators and three
+24px connectors occupy well under 320px, so there is nothing to scroll and a
+scroll container would have been a mechanism with no job. Recorded rather than
+quietly dropped, because a forecast that predicted a fallback nobody needed is
+worth as much as one that was wrong outright.
+
+**The fourth caller of the hook, and it needed nothing new.** That is the point
+worth making after §11.1 and §11.3 each added a rule: the observed element is
+the root, which is `w-full` and therefore tracks the container (§11.3's
+addition), it outlives both structures (§11.1's), and the answer travels DOWN
+to the steps through a data attribute and a selector rather than a second
+context. Three levels of the hierarchy and one hook, which is what §6 asked
+for.
+
+**And the thing it got wrong first was not responsive at all.** The narrow
+structure hid the titles with `display: none`, which takes them out of the
+accessibility tree — a list of four items with no names in it at 320px. Rule 4
+is what applies: what a component knows must survive the structure changing,
+and a name is the most basic thing it knows. Nothing in `Steps` is focusable,
+so `sr-only` costs a reader nothing and `display: none` costs them everything.
 
 Everything else is solved at N0, N1 or N2 barring proof to the contrary. Six
 components examined in the batch that produced the rows above need nothing at

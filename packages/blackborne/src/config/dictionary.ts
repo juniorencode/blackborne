@@ -158,6 +158,22 @@ export const en = {
    * "asterisk" is not what anybody means.
    */
   required: 'required',
+  /*
+   * THE TWO STATUSES A STEP HAS TO SAY IN WORDS.
+   *
+   * A step indicator is `aria-hidden` — a tick and a triangle announce
+   * nothing — so the status joins the step title as visually hidden text, the
+   * same arrangement `Select` uses for its required state: the visible
+   * channel is the mark, the announced one is a word, and nothing is said
+   * twice.
+   *
+   * Two and not four. `active` is `aria-current="step"`, which the platform
+   * already announces; `pending` says nothing on purpose, because it is the
+   * absence of the other three and a reader hearing it on five steps of seven
+   * would hear the word more often than the useful part.
+   */
+  stepCompleted: 'completed',
+  stepFailed: 'failed',
   /**
    * The name of the "…" that holds the middle of a collapsed breadcrumb trail.
    *

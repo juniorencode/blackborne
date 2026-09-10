@@ -33,7 +33,7 @@ this file is out of date. Fix this file.
 assuming anything exists.
 
 At the time of writing: all ten foundations are written, the pipeline is
-complete, and **forty-four components exist** — the ten simple fields and
+complete, and **forty-five components exist** — the ten simple fields and
 controls, `Button`, the flat pieces around them (`Alert`, `Badge`, `Card`,
 `EmptyState`, `Separator`, `Skeleton`, `Spinner`, `VisuallyHidden`), seven
 layers (`Dialog`, `Drawer`, `ConfirmDialog`, `Tooltip`, `Popover`, `Preview`,
@@ -166,7 +166,10 @@ asynchronous combo box is a hook**, because a component there would be an
 assembly with a capability its pieces lack, which is the one thing P6's
 corollary forbids outright.
 
-`ButtonGroup` is F8's last leftover, and `Steps` is still pending beside it.
+`ButtonGroup` is F8's last leftover. **`Steps` has landed**, and it is the
+fourth caller of doc 04 §6's hook — the first one that needed no new rule,
+which is what three levels of the hierarchy sharing one mechanism looks like
+when it is finished (§11.4).
 **`Progress` has landed**, which unblocks the file uploader: a bar per file was
 the dependency, not a nicety.
 

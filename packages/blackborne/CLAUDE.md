@@ -254,6 +254,24 @@ cannot know what level it landed at. Emphasis comes from weight and colour.
   may carry **no padding**, because a border-box height is floored at padding
   plus border and a closed panel would rest two dozen pixels tall.
 
+**A position is a fact about the LIST, so CSS counts it.** `Steps` numbers its
+steps with a counter rather than a prop or an index: a `number` prop lets a
+consumer write 1, 2, 2, 4 and a component cannot help them, and an index
+computed in JavaScript means reading the children — which `Tabs` and
+`Breadcrumbs` do only because their pieces land in different places (decision
+0018), and which brings that constraint with it. CSS re-evaluates on its own, so
+a step rendered conditionally still numbers 1, 2, 3. `Breadcrumbs` chose CSS
+over counting for the same reason.
+
+**And `sr-only` is not `display: none`, which is the whole difference in a
+narrow structure.** `Steps` hides its titles below the `medium` step, and the
+first version used `display: none` — which takes them out of the accessibility
+tree and leaves a list of four items with no names at 320px. The rule that looks
+like it forbids the alternative is doc 06 §4 rule 5, and it does not apply:
+nothing in `Steps` is focusable, so there is no control to reach. Doc 04 rule 4
+is the one that does — what the component knows must survive the structure
+changing.
+
 **A hidden label is still a label, and it has to be the BASE's.** Anything
 outside `Field` that offers `isLabelHidden` has to render the base's own
 `Label` and hide it with `bb:sr-only`, never leave it out: the base publishes a
