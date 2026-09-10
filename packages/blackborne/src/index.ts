@@ -88,6 +88,8 @@ export type {
  */
 export { Calendar } from './components/Calendar';
 export type { CalendarProps } from './components/Calendar';
+export { RangeCalendar } from './components/RangeCalendar';
+export type { DateRange, RangeCalendarProps } from './components/RangeCalendar';
 
 export { Card } from './components/Card';
 export type { CardProps } from './components/Card';

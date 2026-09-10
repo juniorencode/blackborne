@@ -384,6 +384,7 @@ which is why one row below is a correction and not a forecast:
 | Pagination        | Fewer page slots as the width falls, previous/next as the floor | **Done** · §6.2      |
 | Breadcrumbs       | The middle collapses into a menu                                | **Done** · §11.2     |
 | Steps             | To the indicators alone, scrolling                              | Forecast             |
+| RangeCalendar     | Two months where there is room, one where there is not          | **Done** · §11.3     |
 
 **Dialog turned out not to need JavaScript.** It is a media query and the §5
 exception: same threshold, same outcome, no different tree to mount. Worth
@@ -470,6 +471,49 @@ comfortably from medium onward, and a nine-number row would be a step nobody
 asked for on a scale §4 keeps deliberately short. The check that matters is
 three of the same component at three widths inside one 1280px window, which is
 P4's own question asked of the thing that decides.
+
+### 11.3 What the range calendar turned out to need
+
+**The other half of §11.1's rule, and it cost an afternoon.** That section
+hands the next component a trap: the element the step is read from must OUTLIVE
+both structures, or the observer ends up watching a detached node. True, and
+not sufficient.
+
+> The observed element must also CHANGE SIZE with the container.
+
+A calendar is sized by its own contents — that is what a month is — so its box
+is `fit-content`, and `fit-content` cannot go below its own min-content.
+Measured: a two-month range calendar is **408px wide in a 640px container and
+408px wide in a 320px one**. The element satisfies §11.1 perfectly, never
+resizes, and the `ResizeObserver` therefore never fires: the step is read once
+on mount and never again, so the structure simply does not change. Nothing
+errors, nothing warns, and the component looks like it ignores its container.
+
+**So a structural component that is sized by its contents is two elements.** A
+full-width frame carries the container-step classes and is what gets observed;
+the body inside it is sized by its contents, with `items-start` to stop the
+frame stretching it. The frame paints nothing, and the picture is identical.
+
+That generalises past this component: anything at N3 whose natural width is its
+content's — a toolbar collapsing into a menu, a row of steps — needs the same
+arrangement. The rule to carry forward is that **the observed element must
+track the container, not the content.**
+
+**Two months from `medium`, and the boundary is measured rather than chosen.**
+Two months of grid measure 408px; the scale's `narrow` step is 384px, so two
+months do not fit there, and `medium` at 480px is the first step with room.
+`Tabs` and the folded trail use the same boundary for reasons of their own,
+which is §4's point about one scale rather than three.
+
+**The arrows step ONE month, whatever the structure.** The base's default is to
+advance by the whole visible duration, which would mean the same press moving
+one month in a panel and two in a page. A control whose meaning changes with
+the width is what rule 4 is about, read forward instead of backward: the state
+has to survive the change, and so does the behaviour.
+
+Rule 4 itself held, and it is asserted across the boundary and back: the eight
+days of a chosen range are the same eight at 640px, at 320px, and at 640px
+again.
 
 Everything else is solved at N0, N1 or N2 barring proof to the contrary. Six
 components examined in the batch that produced the rows above need nothing at

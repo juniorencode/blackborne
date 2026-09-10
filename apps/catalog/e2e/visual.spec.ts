@@ -211,17 +211,41 @@ const STATES: Array<[string, string]> = [
    */
   /*
    * A calendar earns three, and each holds something no assertion does.
-   * `states` is where the four appearances of a day sit together — chosen,
-   * read-only, struck through because it is unavailable, and dimmed because it
-   * is outside the range — and telling those last two apart is doc 07 §6's
-   * rule arriving on a grid. `together` is the density claim: the same month at
-   * both densities, where the cells shrink and the targets do not. And `rtl` is
-   * the grid reading from the right with the arrows swapped, which is half of
-   * what RTL support means.
+   *
+   * `states` is where the appearances of a day sit together — chosen, today
+   * beside a different chosen day, struck through because it is unavailable,
+   * and dimmed because the whole calendar is off — and telling the last two
+   * apart is doc 07 §6's rule arriving on a grid. There is no read-only panel
+   * on it, which is the point: this picture is what removed the state, because
+   * it photographed identically to an ordinary calendar. `together` is the
+   * density claim: the same month at both densities, where the cells shrink and
+   * the targets do not. And `rtl` is the grid reading from the right with the
+   * arrows swapped, which is half of what RTL support means.
    */
   ['components-calendar--states', 'calendar-states'],
   ['components-calendar--together', 'calendar-together'],
   ['components-calendar--direction', 'calendar-rtl'],
+  /*
+   * A RANGE CALENDAR EARNS A FOURTH, and it is `structures`.
+   *
+   * Two of the same component at two container widths in one window: one month
+   * below the medium step and two from it up. Nothing else in this suite
+   * photographs a structural change at all — `Tabs` and the folded trail are
+   * asserted rather than pictured — and it is the one thing about this
+   * component that a number cannot show, because what matters is that both
+   * structures look like finished calendars rather than one looking like a
+   * broken version of the other.
+   *
+   * `states` carries the band across a month boundary, which is the shape the
+   * two logical corners and the square middle exist to make. `together` is the
+   * band in dark mode, where the soft accent is a different step of the scale
+   * and today's ring changes with it. And `rtl` is a range whose corners follow
+   * the reading direction.
+   */
+  ['components-rangecalendar--structures', 'range-calendar-structures'],
+  ['components-rangecalendar--states', 'range-calendar-states'],
+  ['components-rangecalendar--together', 'range-calendar-together'],
+  ['components-rangecalendar--direction', 'range-calendar-rtl'],
   ['components-combobox--loading-more', 'combobox-loading-more'],
   ['components-combobox--several-states', 'combobox-several-states'],
   ['components-combobox--several-in-a-narrow-panel', 'combobox-several-narrow'],
