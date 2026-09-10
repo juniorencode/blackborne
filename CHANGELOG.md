@@ -12,6 +12,63 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **`ColorSwatchField`** — a colour chosen from a closed palette.
+
+  ```tsx
+  <ColorSwatchField
+    label="Label colour"
+    colors={['#3e63dd', '#e5484d', '#30a46c']}
+    value={colour}
+    onChange={setColour}
+  />
+  ```
+
+  A management application asking for a colour usually means "one of ours" — a
+  label on a task, a colour for a calendar — and the answer is a set the
+  project already owns. Where a colour genuinely is arbitrary, that is
+  `ColorPicker` and it is a different component.
+
+  **The value is the string you wrote.**
+  [Decision 0024](docs/decisions/0024-a-colour-crosses-as-a-string-and-the-format-is-declared.md),
+  written before the component: a colour crosses as a string, and the format is
+  declared rather than guessed — because `toString()` turns `#3e63dd` into
+  `rgba(62, 99, 221, 1)`, `toString('hex')` uppercases it, and `hex` silently
+  drops the alpha. That decision's exception is this component: since the
+  answer can only be one of `colors`, it reports that exact string, in the same
+  case and the same notation. So there is no `format` prop here; the picker
+  will have one, because a value dragged out of an area was never one of its
+  inputs.
+
+  **The palette is a prop, not children**, because a palette is data — and it
+  is what makes the exact report possible at all.
+
+  **Every swatch is named by the platform**: "dark vibrant blue", localised,
+  with a role description of "color swatch", both from the base's own strings
+  rather than from this library's dictionary. Doc 05 §2.3's list grows by two,
+  and naming ten thousand colours in every language is not a job for a
+  component library.
+
+  **Nothing is drawn inside a swatch, ever.** A mark on a colour the library
+  has never seen is white on pale half the time — measured on a calendar at
+  1.12:1 — so both marks a swatch can carry are outside it, in the two
+  mechanisms doc 06 §3.1 names: an offset outline for chosen, the border and
+  halo for focus. They compose, so one swatch can carry both.
+
+  Three things it found:
+
+  - **A base collection forwards four aria attributes and drops the rest.**
+    `aria-invalid` was written, typed and simply not rendered:
+    `filterDOMProps(props, { labelable: true })` passes `aria-label`,
+    `aria-labelledby`, `aria-describedby` and `aria-details` and discards
+    everything else. So the error reaches a reader through the description,
+    which is asserted rather than assumed.
+  - **Two marks in one mechanism are one mark.** The first version drew chosen
+    and focused as the same offset outline, and took the focus colour from
+    `--bb-focus-ring` — the accent, the same colour. A focused swatch looked
+    chosen.
+  - **`outline-hidden` kills an outline you meant to keep**, and the first
+    baseline showed three identical swatches on a row labelled "Chosen".
+
 - **`Avatar`** — a picture of somebody, with something in its place when there
   is none.
 

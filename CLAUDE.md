@@ -33,7 +33,7 @@ this file is out of date. Fix this file.
 assuming anything exists.
 
 At the time of writing: all ten foundations are written, the pipeline is
-complete, and **forty-nine components exist** — the ten simple fields and
+complete, and **fifty components exist** — the ten simple fields and
 controls, `Button` with `ButtonGroup`, `Slider`, the flat pieces around them
 (`Alert`, `Avatar`, `Badge`, `Card`, `EmptyState`, `Progress`, `Separator`,
 `Skeleton`, `Spinner`, `Steps`, `VisuallyHidden`), seven
@@ -74,10 +74,13 @@ share is in `internal/Calendar` and `internal/Field`.
 
 **The three rows that were only ever sequencing are next**, and the order is
 in [the catalog](./docs/catalog-and-build-order.md) §3.3 with the reason:
-`Avatar`, then the colour controls, then the file uploader. `Avatar` has
-landed, and it went first because it shares a wall with the uploader that
-nothing else shares — a box holding an image that may not arrive, with
-something in its place, which a thumbnail needs as much as a face does. Three
+`Avatar`, then the colour controls, then the file uploader. `Avatar` and
+`ColorSwatchField` have landed. `Avatar` went first because it shares a wall
+with the uploader that nothing else shares — a box holding an image that may
+not arrive, with something in its place, which a thumbnail needs as much as a
+face does — and the palette went second because it settles the colour boundary
+with the least machinery around it
+([decision 0024](./docs/decisions/0024-a-colour-crosses-as-a-string-and-the-format-is-declared.md)). Three
 things were settled in writing before any of it: initials are not derived from
 a name ([doc 05](./docs/foundations/05-languages-and-formatting.md) §4.2), a
 colour crosses as a string in the format it arrived in, and the uploader does

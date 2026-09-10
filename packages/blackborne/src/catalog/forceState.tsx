@@ -16,7 +16,15 @@ export type ForcedState =
    * while one is held down and moving. So it is the state a baseline is the
    * only way to see.
    */
-  | 'data-dragging';
+  | 'data-dragging'
+  /*
+   * And `data-focus-visible` arrived with `ColorSwatchField`, which is the
+   * first component to paint something on it rather than on `data-focused`.
+   * The reason is the ring's geometry: a swatch's chosen ring and its focus
+   * ring are the same outline in two colours, so showing the focus one to a
+   * pointer would make a click look like a second kind of selection.
+   */
+  | 'data-focus-visible';
 
 /**
  * Force one of those states for the catalog.

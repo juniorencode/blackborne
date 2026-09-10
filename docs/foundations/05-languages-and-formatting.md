@@ -80,6 +80,15 @@ in the dictionary. An instruction about how a widget works is the base's, and
 re-declaring all of them would be maintaining a second translation set for
 nothing.
 
+**And one of them is not an instruction but a vocabulary.** Added with
+`ColorSwatchField`: the base names every colour swatch with
+`color.getColorName(locale)` — `#3e63dd` is announced as "dark vibrant blue",
+localised — and gives it a role description of "color swatch" from
+`@react-aria/color`'s own strings. Neither is reachable from the dictionary and
+neither should be: naming ten thousand colours in every language is not a job
+for a component library, and it is the clearest case yet of the line above
+being drawn in the right place.
+
 ## 3. Formatting
 
 Delegated to the platform's locale capabilities and to the headless base. The
