@@ -10,6 +10,80 @@ minor versions. Every break is listed here with its migration.
 
 ## [Unreleased]
 
+### Changed
+
+- **A middle click clicks the LINK, not a point where the link used to be.**
+  It was the only one of the four tab checks reading `boundingBox()` and then
+  clicking that coordinate, and it is the one that failed on CI: anything that
+  reflows between the two reads leaves the click on the page background, which
+  opens no tab, raises no error, and spends fifteen seconds polling for
+  something that was never going to arrive. `locator.click({ button: 'middle' })`
+  re-resolves the element and waits for it to receive events at click time,
+  which the ctrl-click beside it has always done.
+
+  And because none of those four checks has ever reproduced locally, the
+  helper now says what it FOUND when no tab appears — how many pages the
+  context holds, and each one's `url()` beside its own `location.href`. Those
+  separate the three outcomes that need different fixes: the browser opened
+  nothing, the click was taken as an ordinary navigation, or Playwright lost
+  the target. `Expected: 2, Received: 1` separates none of them.
+
+- **A polled callback no longer throws where the render has not caught up.**
+  Measured, and it is a property of the instrument rather than of one check:
+  `expect.poll` does **not** retry a callback that throws — it propagates on
+  the first call and never consults its timeout. So a callback reading
+  `getComputedStyle(querySelector(...)!)` has one attempt wearing a
+  five-second budget. `checkbox-marks` was the one call site that provably
+  could, and it now returns a sentinel the assertion will not match, which is
+  a retry. No failure has been attributed to it; this is a weakness removed
+  rather than a cause fixed (doc 10 §11.4).
+
+- **There is one accessibility engine in a story page, and the panel runs when
+  a person asks it to.** The suite failed once with
+  `Error: Axe is already running`, on one story, and never again — the kind of
+  thing a repository writes off. It was not weather.
+
+  Storybook's accessibility addon runs axe in the preview after **every** story
+  render, and `AxeBuilder` injects a second engine over `globalThis.axe` and
+  calls into it. If the addon's run has not finished, that call lands on an
+  engine mid-run. Measured with an assertion added to the suite for exactly
+  this purpose: **11 of 480 stories** carried the flag before injection under
+  six workers, and none at all in isolation, which is why it looked like a
+  flake.
+
+  The switch is not the obvious one. The addon's default parameter is
+  `test: 'todo'`, so removing our own `a11y: { test: 'error' }` changed nothing
+  — measured, 11 of 480 again, and that is the step that would have looked like
+  the fix. What stops it is the addon's `manual` global. Three full runs since:
+  clean.
+
+  Nothing is lost: `test` configures Storybook's own test runner, which this
+  repository does not have. `accessibility.spec.ts` walks all 480 stories in
+  the built catalog and fails the build, and the panel is still a keypress
+  away with the same rules — which it did not have before, since it disabled
+  one rule of its own where the suite disables seven. Both now read
+  `e2e/a11yRules`.
+
+  The assertion stays in the suite rather than coming out with the cause, so a
+  second path to it names itself (doc 10 §11.3).
+
+- **The accessibility suite no longer waits for the network to go quiet.** It
+  used `waitForLoadState('networkidle')`, which is a 500ms floor on a page that
+  painted in 21ms and unbounded on a page that never gets 500ms of silence —
+  and how often a chunk arrives is a property of how many browsers are
+  competing for the machine, which doc 10 §11 says a check may not depend on.
+  It is what an `a11y timeout under load` turned out to be.
+
+  Two `requestAnimationFrame` callbacks are what the colour-contrast rule
+  actually needs, and they cost 21ms against 574. The suite is 3.8 minutes
+  instead of 4.3, and the guarantee is stronger rather than weaker: it already
+  asserts on every story that the contrast rule RAN, so a wait too short to
+  settle the page fails 480 times instead of passing quietly.
+
+  That wait and the image poll `Avatar` earned now live in `e2e/settle`, shared
+  by the accessibility suite and the visual one. All 196 baselines came out
+  byte-identical, which is the proof the extraction changed nothing.
+
 ### Added
 
 - **`FileUpload`** — a field for choosing files, with a row per file.

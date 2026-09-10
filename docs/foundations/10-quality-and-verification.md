@@ -360,6 +360,143 @@ harness. §11's version of that question is about the machine; this one is about
 the input, and both are answered the same way: by naming a thing the component
 does, and asserting that.
 
+### 11.2 A WAIT is a check, and it can measure the machine too
+
+**Added 2026-09-10.** §11 and §11.1 are both about assertions. The same rule
+reaches the line above them, and this suite broke it in the most ordinary way
+there is: `page.waitForLoadState('networkidle')`.
+
+"Idle" means **500ms with no request in flight**, which makes the wait two
+things at once. It is a floor — it cannot cost less than half a second, however
+ready the page was — and it is UNBOUNDED, because a page that never gets 500ms
+of quiet waits until the test times out. How often a chunk arrives depends on
+how many other browsers are competing for the machine, which is exactly the
+value §11 says a check may not depend on. The reported symptom was an
+accessibility check timing out on one story under load and passing in
+isolation.
+
+What the wait was actually for is one painted frame: the colour-contrast rule
+samples computed colours from real geometry and declines to run rather than
+guessing when there is none. Two `requestAnimationFrame` callbacks guarantee
+that — the first runs before the paint it belongs to, so the second is the
+proof the frame happened. Measured on three stories of the built catalog:
+
+| Story                   | `networkidle` | two frames |
+| ----------------------- | ------------- | ---------- |
+| `Separator / Semantics` | 574ms         | 21ms       |
+| `DatePicker / States`   | 574ms         | 23ms       |
+| `FileUpload / States`   | 547ms         | 17ms       |
+
+Twenty-five times cheaper, bounded, and it asserts the state the rule needs
+rather than a property of the network. Across 480 stories the suite went from
+4.3 minutes to 3.8 with six workers, and the guarantee got stronger rather than
+weaker: the suite already asserts that the contrast rule RAN, on every story,
+so a wait too short to settle the page fails 480 times rather than passing
+silently.
+
+The generalisation is short. **A wait belongs to a state the page reaches** —
+an element attached, an attribute set, an image `complete`, a frame painted.
+A wait for a quantity the machine produces — silence on the network, elapsed
+milliseconds, a number of frames — is the same defect as an assertion on one,
+and it is easier to miss because a wait looks like plumbing rather than like a
+claim.
+
+### 11.3 A flake you cannot reproduce gets instrumentation, not a guess
+
+**Added 2026-09-10**, and it is the rule that actually found the cause of the
+one above's neighbour.
+
+The accessibility suite failed once, on one story, with
+`Error: Axe is already running`. Not reproducible: the story passed in
+isolation every time, and a week of reasoning produced a plausible cause that
+turned out to be wrong. Three separate measurements said the leading theory was
+false — there ARE two axe-core engines in every story page, Storybook's
+accessibility addon puts one there and `AxeBuilder` injects a second that
+replaces `globalThis.axe`, and hooking the assignment counted **zero** runs
+from the page in the seconds after it loaded.
+
+> Where a flake cannot be reproduced, the deliverable is the assertion that
+> will attribute the next occurrence. A fix for a cause you have not measured
+> is a guess with a commit message.
+
+So the suite gained one line before its own analysis: read whether anything is
+already running axe, and fail naming the other engine. It attributed the cause
+on the first run — **11 of 480 stories** under six workers, none in isolation.
+
+Two things about the cause are worth carrying, because both are traps rather
+than trivia.
+
+**The addon runs axe after every story render**, in its own `afterEach`, and
+the switch is not the one it looks like. Read in its source, four conditions
+have to hold for it to run, and its default parameter is `test: 'todo'` — so
+removing our `a11y: { test: 'error' }` changed nothing at all, measured: 11 of
+480 again. That is the step that would have looked like the fix, and shipping
+it would have left the flake in place with a commit claiming otherwise. The
+lever that works is the addon's own `manual` global, and the wording is honest:
+there IS automated accessibility here, and it is this suite.
+
+**And the hook that finds it is a FLAG, not a call.** The wrapper on
+`axe.run` measured nothing because the addon resolves its engine through a
+module import rather than through the global, so the call never passed the
+window object. `axe._running` is a state, and reading a state is what worked —
+the same distinction §11 draws between a moment and a state, arriving in the
+instrumentation rather than in the assertion.
+
+### 11.4 `expect.poll` does not retry a callback that throws
+
+**Added 2026-09-10.** This repository reaches for `expect.poll` thirty-one
+times, because §11 keeps sending it there: a state that is polled is the
+answer to almost every "assert a moment" defect in this suite. So it is worth
+knowing exactly what it retries.
+
+> Measured: a callback that throws is **propagated on the first call**. The
+> timeout is not consulted, and the poll does not tick again.
+
+```
+POLL AND THROW: it propagated: not yet after 1 call(s)
+```
+
+That makes the shape of the callback part of the check. `page.evaluate` and
+`locator.evaluate` are safe as the OUTER call — a locator waits for its
+element — but the code inside runs against whatever the DOM held at that
+instant, and `getComputedStyle(null)` throws. A poll whose callback reads
+`querySelector(...)!.something` is a poll with a five-second timeout and one
+attempt.
+
+The rule: **a polled callback returns a value for every state, including
+"not there yet".** A sentinel the assertion will not match is a retry; an
+exception is a failed test.
+
+### 11.5 And when several DIFFERENT checks fail, suspect the machine
+
+**Added 2026-09-10**, from an afternoon that looked like a broken branch.
+
+Three consecutive full runs of the behaviour suite, at two workers, each
+dropped exactly one check — and a different one each time, with a different
+symptom: fifteen seconds of polling for a tab that never opened, a poll on two
+computed styles, and a story that never mounted inside thirty seconds. Every
+one of them passed in isolation, immediately.
+
+The cause was not in any of the three. **3.1GB free of 15.85**, with 3.1GB
+still held by nineteen node and browser processes left behind by earlier runs.
+With those stopped and 5.48GB free, two consecutive runs of all 438 passed.
+
+So memory belongs on §11's list beside speed, the clock and the
+configuration — it is a form of speed, and the Playwright configuration in
+this repository already carries the measurement that six workers on a machine
+with 2.4GB free were slower than two AND dropped a check.
+
+The part worth carrying is the DIAGNOSTIC, because it is cheap and it is the
+opposite of what a failure invites you to do:
+
+- One check failing repeatedly, in the same place, is the check or the code.
+- Several different checks failing once each, none of them repeating, is the
+  machine. Reproduce in isolation before reading a single line of the failure.
+
+The habit that follows: after a long session of full runs, look at what is
+still resident before believing a new failure. Nineteen orphaned browsers is
+not an exotic state — it is what an interrupted run leaves.
+
 ## 10. Definition of green
 
 A version is not published if any of these fails:

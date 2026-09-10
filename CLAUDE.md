@@ -477,6 +477,39 @@ Things that look like improvements and are not:
   fill, with nothing wrong in either half. Stories declare
   `ConfigProvider locale="ar-EG"`, and the check asserts the two AGREE rather
   than asserting each one ([doc 05](./docs/foundations/05-languages-and-formatting.md) §4.1).
+- **Do not let a WAIT measure the machine either.** The rule above is usually
+  read as being about assertions, and the cheapest way to break it is
+  `waitForLoadState('networkidle')`: "idle" means 500ms of network silence, so
+  it is a half-second floor on a page that painted in 21ms AND unbounded on a
+  page that never gets 500ms of quiet. Measured, and it is what an
+  accessibility check timing out under load turned out to be
+  ([doc 10](./docs/foundations/10-quality-and-verification.md) §11.2). A wait
+  belongs to a state the page reaches — an element attached, an image
+  `complete`, a frame painted — and `e2e/settle` holds the two this catalog
+  uses.
+- **Do not guess at a flake you cannot reproduce.** Ship the assertion that
+  will attribute the next occurrence instead. `Error: Axe is already running`
+  survived a week of plausible theories, three of which were measured false;
+  one line reading whether anything already held axe's run flag attributed it
+  on the first run, at 11 of 480 stories under six workers. And the switch was
+  not the obvious one: Storybook's accessibility addon runs axe after every
+  story render, its default parameter is `test: 'todo'`, so removing our
+  `test: 'error'` changed nothing — the lever is its `manual` global, and the
+  panel now runs when a person asks it to (doc 10 §11.3).
+- **Do not let a polled callback throw.** `expect.poll` is this repository's
+  answer to half of the rule above, and it does **not** retry a callback that
+  throws — measured: it propagates on the first call and never consults the
+  timeout. So a poll reading `querySelector(...)!.something` has one attempt
+  wearing a five-second budget, and `getComputedStyle(null)` throws. Return a
+  sentinel for "not there yet"; the assertion will not match it and the poll
+  ticks again (doc 10 §11.4).
+- **Do not read a failure before checking the machine.** One check failing
+  repeatedly in the same place is the check or the code. SEVERAL different
+  checks failing once each, none repeating, is the machine: measured, three
+  consecutive full runs each dropped a different check with a different
+  symptom, with 3.1GB free of 15.85 and 3.1GB of it held by nineteen orphaned
+  node and browser processes. Stopped, at 5.48GB free, two runs of all 438
+  passed. Reproduce in isolation first (doc 10 §11.5).
 - **Do not reference private projects** in code, examples or documentation. The
   library is public and its API is designed for strangers.
 

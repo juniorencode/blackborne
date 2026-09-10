@@ -1,4 +1,5 @@
 import type { Decorator, Preview } from '@storybook/react-vite';
+import { a11yParameter } from '../e2e/a11yRules';
 
 /*
  * The stylesheet is the BUILT artifact; the components are the source.
@@ -62,10 +63,49 @@ const resizableContainer: Decorator = Story => (
 
 const preview: Preview = {
   decorators: [resizableContainer],
+  /*
+   * THE ACCESSIBILITY PANEL RUNS WHEN A PERSON ASKS IT TO, and that one word
+   * is the fix for a failure this suite reported once and nearly wrote off as
+   * a flake.
+   *
+   * Read in the addon's own `afterEach`: it runs axe in the preview after
+   * EVERY story render, and the three things that stop it are
+   * `parameters.a11y.disable`, `parameters.a11y.test === 'off'` and this
+   * global. Its default parameter is `test: 'todo'`, so removing our own
+   * `test: 'error'` changed nothing at all — measured, and that is the step
+   * that would have looked like the fix.
+   *
+   * What went wrong with it on: `AxeBuilder` injects a second axe engine over
+   * `globalThis.axe` and calls `runPartial` on it, and if the addon's run has
+   * not finished, that call lands on an engine mid-run and throws "Axe is
+   * already running". Measured with an assertion added to the suite for
+   * exactly this purpose — **11 of 480 stories** carried the flag before
+   * injection under six workers, on each of two runs, and none at all in
+   * isolation. With this line: three full runs of 480, clean. One run in
+   * between showed a single failure on one story whose message was not
+   * captured, so the assertion stays in the suite rather than coming out with
+   * the cause — if there is a second path to it, the next occurrence names it
+   * instead of looking like weather.
+   *
+   * `manual` rather than `test: 'off'` because it is the honest word: there IS
+   * automated accessibility here, and it is `accessibility.spec.ts` walking
+   * all 480 stories in the built catalog with the rule set below. This is the
+   * PANEL, for a person with a story open, and it is a global so anyone can
+   * turn it back on from the toolbar for one session.
+   */
+  initialGlobals: { a11y: { manual: true } },
   parameters: {
     layout: 'padded',
     controls: { expanded: true },
-    a11y: { test: 'error' },
+    /*
+     * THE SAME RULE SET THE BUILD USES, from `e2e/a11yRules`. The panel and
+     * `accessibility.spec.ts` are two things running axe over one catalog, and
+     * they used to disagree about six rules: this addon disables exactly one
+     * of its own (`region`) where the suite disables seven, all of them about
+     * a PAGE that a story mounted at a root does not have.
+     *
+     */
+    a11y: a11yParameter,
     options: {
       storySort: {
         order: ['Overview', 'Components', ['Button']]

@@ -17,7 +17,9 @@
  */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
+import { RULES_A_FRAGMENT_IS_NOT_RESPONSIBLE_FOR } from './a11yRules';
 import { CATALOG_INDEX } from './catalog';
+import { imagesSettled, painted } from './settle';
 import { gotoStory } from './story';
 
 type StoryEntry = { id: string; name: string; title: string; type: string };
@@ -61,21 +63,58 @@ test.describe('automated accessibility', () => {
   for (const entry of stories) {
     test(`${entry.title} / ${entry.name}`, async ({ page }) => {
       await gotoStory(page, entry.id);
-      await page.evaluate(() => document.fonts.ready);
 
       /*
-       * Wait for the page to settle before analysing.
+       * Wait for the page to have PAINTED before analysing, and for its
+       * pictures to have settled.
        *
        * The colour-contrast rule needs a laid-out, painted page: it samples
        * computed colours from real geometry, and on a page still settling it
-       * declines to run rather than guessing — silently. Without this wait
-       * the suite reported every story passing while contrast was never
-       * checked at all.
+       * declines to run rather than guessing — silently. Without a wait the
+       * suite reported every story passing while contrast was never checked at
+       * all. The failure mode of an automated check is usually silence rather
+       * than a false alarm, which is why the assertion below exists.
        *
-       * The failure mode of an automated check is usually silence, not a
-       * false alarm, which is why the assertion below exists.
+       * This used to be `waitForLoadState('networkidle')`, which was the wrong
+       * instrument twice over: it waits for 500ms of network silence, so it
+       * costs 574ms on a story that painted in 21 — and it is UNBOUNDED, so a
+       * page that never gets 500ms of quiet waits until the test times out.
+       * That is what this suite's `a11y timeout under load` was, and doc 10
+       * §11 is the rule it broke: the wait measured how many other browsers
+       * were competing for the machine. `e2e/settle` has the table.
        */
-      await page.waitForLoadState('networkidle');
+      await painted(page);
+      await imagesSettled(page);
+
+      /*
+       * AND NOTHING ELSE IS ALREADY RUNNING AXE, which is instrumentation
+       * rather than a fix.
+       *
+       * A run of this suite once failed with "Axe is already running", on one
+       * story, once. It was not reproduced: measured, there are TWO axe-core
+       * engines in every story page — Storybook's accessibility addon puts one
+       * there and `AxeBuilder` injects a second that REPLACES `globalThis.axe`
+       * — and the addon does not run its one on a plain `iframe.html` load
+       * (hooked at the assignment: zero calls). So the two engines are a real
+       * hazard with a shared global name, and not a proven cause.
+       *
+       * Doc 10 §11 forbids the tempting response, which would be a retry: that
+       * turns a real failure into a coincidence. What is left is to make the
+       * NEXT occurrence say who did it. If the flag is set before we inject,
+       * the holder is the addon's engine and this fails naming it; if it is
+       * clear here and the run still collides, it is ours, and that is worth
+       * knowing too.
+       */
+      const engineBusy = await page.evaluate(
+        () =>
+          (window as unknown as { axe?: { _running?: boolean } }).axe
+            ?._running === true
+      );
+
+      expect(
+        engineBusy,
+        `axe was already running in ${entry.id} before this suite injected its own engine, so the run in flight belongs to Storybook's accessibility addon rather than to this check`
+      ).toBe(false);
 
       const results = await new AxeBuilder({ page })
         /*
@@ -93,26 +132,15 @@ test.describe('automated accessibility', () => {
          * Found by breaking the contrast on purpose and watching the suite
          * stay green. A check that cannot fail is not a check.
          */
-        .disableRules([
-          /*
-           * Page-structure rules. Every story is a fragment mounted at the
-           * root, so there is no page for it to structure. Landmarks and
-           * heading hierarchy belong to the consuming application (doc 06 §2,
-           * third column) — asserting them here would measure the catalog
-           * rather than the library.
-           */
-          'region',
-          'page-has-heading-one',
-          'landmark-one-main',
-          'html-has-lang',
-          'html-lang-valid',
-          'document-title',
-          /*
-           * The catalog's own iframe wrapper, not something the library
-           * renders.
-           */
-          'meta-viewport'
-        ])
+        /*
+         * The list lives in `e2e/a11yRules`, because Storybook's own
+         * accessibility panel reads it too. It used to be written here alone,
+         * and the panel therefore disagreed with this suite about six rules —
+         * a panel reporting violations the build excludes on purpose is a
+         * panel people learn to ignore, and it is the only one anybody looks
+         * at while the code is still in their head.
+         */
+        .disableRules([...RULES_A_FRAGMENT_IS_NOT_RESPONSIBLE_FOR])
         .analyze();
 
       /*
