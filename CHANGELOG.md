@@ -12,6 +12,64 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **`Steps`** — where something is in a process, step by step.
+
+  ```tsx
+  <Steps label="Onboarding">
+    <Step status="completed">Details</Step>
+    <Step status="active" description="Two documents">
+      Documents
+    </Step>
+    <Step status="error">Review</Step>
+    <Step>Signature</Step>
+  </Steps>
+  ```
+
+  Four statuses — `pending`, `active`, `completed`, `error` — and no
+  `disabled`: a step nobody may reach yet is pending, and switched off with no
+  way to know why is doc 06 §4 rule 7. Whether step 3 may be opened is
+  validation, and validation is the project's.
+
+  **Nothing in it can be pressed**, which is decision 0015 rather than an
+  omission. A stepper is two components and only one of them is here; the half
+  that navigates is `Tabs` with disabled tabs, and it already exists. A list
+  with the current step marked says the true thing and promises nothing — a row
+  of tabs would announce "tab 3 of 5" and imply the arrow keys move between
+  them. It takes `Progress`'s vocabulary for the rest, the same `label` and
+  `isLabelHidden`, because the two answer one question with different amounts
+  of detail.
+
+  **The numbers come from a CSS counter.** A `number` prop lets a consumer
+  write 1, 2, 2, 4 and a component cannot help them; an index computed in
+  JavaScript means reading the children, which is the constraint decision 0018
+  brings with it and which `Tabs` and `Breadcrumbs` accept only because their
+  pieces land in different places. A counter re-evaluates on its own, so a step
+  rendered conditionally still numbers 1, 2, 3 — the same argument that gave
+  the breadcrumb separator to the step after it rather than to a loop.
+
+  **Below `medium` the titles go and the indicators stay**, through doc 04
+  §6's one hook and its one scale. That row's forecast in §11 read "to the
+  indicators alone, scrolling", and the second half turned out not to be
+  needed: four indicators and three 24px lines fit inside 320px with room to
+  spare, so a scroll container would have been a mechanism with no job.
+  Recorded rather than quietly dropped (§11.4).
+
+  **And the hidden titles are `sr-only`, not `display: none`.** The first
+  version used the second, which takes them out of the accessibility tree — a
+  list of four items with no names in it at 320px. Nothing in `Steps` is
+  focusable, so out of sight costs a reader nothing and out of the tree costs
+  them everything.
+
+  **Three things the first baseline found**, which is the layer that catches
+  what an assertion cannot. The connectors were `flex-1` and came out 110px,
+  28px and 85px in one row — nothing wrong with any of them and the row read as
+  an accident, so the line has a fixed length and the leftover goes to the
+  titles. The four indicators are separated by shape before hue, which doc 06
+  §3 requires and no automated layer checks, because axe measures the contrast
+  of text and a filled circle is not text. And the two tone states reuse
+  `Alert`'s and `Toast`'s surfaces, so a step in error looks like every other
+  error in the library.
+
 - **`Progress`** — how much of something is done.
 
   ```tsx
