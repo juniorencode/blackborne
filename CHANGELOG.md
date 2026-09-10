@@ -12,6 +12,32 @@ minor versions. Every break is listed here with its migration.
 
 ### Changed
 
+- **A middle click clicks the LINK, not a point where the link used to be.**
+  It was the only one of the four tab checks reading `boundingBox()` and then
+  clicking that coordinate, and it is the one that failed on CI: anything that
+  reflows between the two reads leaves the click on the page background, which
+  opens no tab, raises no error, and spends fifteen seconds polling for
+  something that was never going to arrive. `locator.click({ button: 'middle' })`
+  re-resolves the element and waits for it to receive events at click time,
+  which the ctrl-click beside it has always done.
+
+  And because none of those four checks has ever reproduced locally, the
+  helper now says what it FOUND when no tab appears — how many pages the
+  context holds, and each one's `url()` beside its own `location.href`. Those
+  separate the three outcomes that need different fixes: the browser opened
+  nothing, the click was taken as an ordinary navigation, or Playwright lost
+  the target. `Expected: 2, Received: 1` separates none of them.
+
+- **A polled callback no longer throws where the render has not caught up.**
+  Measured, and it is a property of the instrument rather than of one check:
+  `expect.poll` does **not** retry a callback that throws — it propagates on
+  the first call and never consults its timeout. So a callback reading
+  `getComputedStyle(querySelector(...)!)` has one attempt wearing a
+  five-second budget. `checkbox-marks` was the one call site that provably
+  could, and it now returns a sentinel the assertion will not match, which is
+  a retry. No failure has been attributed to it; this is a weakness removed
+  rather than a cause fixed (doc 10 §11.4).
+
 - **There is one accessibility engine in a story page, and the panel runs when
   a person asks it to.** The suite failed once with
   `Error: Axe is already running`, on one story, and never again — the kind of

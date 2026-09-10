@@ -107,6 +107,12 @@ const openedAt = async (
  *    page event within thirty seconds for a ctrl-click, on a run of 348
  *    checks. The middle click in the same file passed, and eighteen local runs
  *    with four workers reproduced nothing.
+ * 4. And THIS instrument — polling the state — failed on CI the same day, on
+ *    the middle click, 437 of 438 passing. That one had a cause in the check
+ *    rather than in the instrument: it was the only one of the four clicking a
+ *    coordinate read earlier instead of the element, so a reflow between the
+ *    two reads left the click on the page background. Fixed at the call site;
+ *    the note is on the test.
  *
  * One thing is under all three: **an event is a moment, and Playwright's
  * bookkeeping for a new target is racing the browser.** So this asks for a
@@ -118,6 +124,12 @@ const openedAt = async (
  * A longer timeout was never the answer and is not the answer now: case 2 was
  * permanent rather than slow, and a check that needs thirty seconds of a
  * loaded runner to be right is a check nobody trusts by its tenth failure.
+ *
+ * And because none of the four has ever reproduced locally, this says what it
+ * FOUND when the tab does not arrive — doc 10 §11.3, which is the rule that
+ * "a flake you cannot reproduce gets instrumentation rather than a guess". A
+ * count of one where two was expected names the symptom; the three outcomes it
+ * could be need different fixes, and the message below separates them.
  */
 const tabOpenedBy = async (
   page: Page,
@@ -128,9 +140,41 @@ const tabOpenedBy = async (
 
   await act();
 
-  await expect
-    .poll(() => context.pages().length, { timeout: 15_000 })
-    .toBe(before + 1);
+  try {
+    await expect
+      .poll(() => context.pages().length, { timeout: 15_000 })
+      .toBe(before + 1);
+  } catch (cause) {
+    /*
+     * AND SAY WHAT THE CONTEXT ACTUALLY HELD, which is doc 10 §11.3 arriving
+     * on the fourth failure of these four checks: `Expected: 2, Received: 1`
+     * names the symptom and nothing else, and this has never reproduced
+     * locally — eighteen runs at four workers, twice at two.
+     *
+     * Three outcomes are possible when no tab appears and they need different
+     * fixes, so the message separates them. The source page still on its
+     * story with one page in the context means the browser opened nothing.
+     * The source page somewhere ELSE means the click was taken as an ordinary
+     * navigation rather than as a middle click. And a page whose `url()` is
+     * blank while its own `location.href` is not is Playwright's bookkeeping
+     * losing a target, which is the failure `openedAt` was written for and
+     * would mean it happens one step earlier than we thought.
+     */
+    const held = await Promise.all(
+      context.pages().map(async one => {
+        const inside = await one
+          .evaluate(() => window.location.href)
+          .catch(() => 'unreachable');
+        return `page.url()=${one.url()} location.href=${inside}`;
+      })
+    );
+
+    throw new Error(
+      `no tab appeared: the context holds ${String(context.pages().length)} ` +
+        `page(s) where ${String(before + 1)} was expected — ${held.join(' | ')}`,
+      { cause }
+    );
+  }
 
   const opened = context.pages().at(-1);
   expect(
@@ -180,15 +224,32 @@ test('it is an anchor, with an address the browser has resolved', async ({
 test('a middle click opens another tab', async ({ page }) => {
   await gotoStory(page, AGAINST_A_BUTTON);
 
-  const box = await page
-    .getByRole('link', { name: 'Astilleros del Sur' })
-    .boundingBox();
-  expect(box).not.toBeNull();
-
+  /*
+   * THE ELEMENT, NOT A REMEMBERED POINT, and this check was the only one of
+   * the four that did it the other way — which is also the one that failed on
+   * CI (2026-09-10, two workers, 437 of 438 passing).
+   *
+   * It used to read `boundingBox()` and then `page.mouse.click` at that
+   * coordinate. Between the two reads anything that reflows moves the link out
+   * from under the point, and a middle click on the page background opens
+   * nothing at all: no error, no tab, and fifteen seconds of polling for
+   * something that was never going to arrive. The coordinate is a value the
+   * check remembered rather than a state it asserted, which is doc 10 §11's
+   * rule one layer down from where that section usually applies.
+   *
+   * `locator.click` re-resolves the element and waits for it to be visible,
+   * stable and receiving pointer events — AT CLICK TIME — and it takes
+   * `button: 'middle'` like any other. The ctrl-click below it and the
+   * `target` check have always done this.
+   *
+   * There is no hover to arrange here, which is the one reason this file
+   * reaches for `page.mouse` elsewhere: `travelTo` moves the pointer in steps
+   * because the base's `useHover` does not register a teleport.
+   */
   const opened = await tabOpenedBy(page, () =>
-    page.mouse.click(box!.x + box!.width / 2, box!.y + box!.height / 2, {
-      button: 'middle'
-    })
+    page
+      .getByRole('link', { name: 'Astilleros del Sur' })
+      .click({ button: 'middle' })
   );
 
   expect(await openedAt(opened, /\/customers\/4821/)).toContain(

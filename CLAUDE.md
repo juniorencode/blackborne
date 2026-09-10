@@ -496,6 +496,20 @@ Things that look like improvements and are not:
   story render, its default parameter is `test: 'todo'`, so removing our
   `test: 'error'` changed nothing — the lever is its `manual` global, and the
   panel now runs when a person asks it to (doc 10 §11.3).
+- **Do not let a polled callback throw.** `expect.poll` is this repository's
+  answer to half of the rule above, and it does **not** retry a callback that
+  throws — measured: it propagates on the first call and never consults the
+  timeout. So a poll reading `querySelector(...)!.something` has one attempt
+  wearing a five-second budget, and `getComputedStyle(null)` throws. Return a
+  sentinel for "not there yet"; the assertion will not match it and the poll
+  ticks again (doc 10 §11.4).
+- **Do not read a failure before checking the machine.** One check failing
+  repeatedly in the same place is the check or the code. SEVERAL different
+  checks failing once each, none repeating, is the machine: measured, three
+  consecutive full runs each dropped a different check with a different
+  symptom, with 3.1GB free of 15.85 and 3.1GB of it held by nineteen orphaned
+  node and browser processes. Stopped, at 5.48GB free, two runs of all 438
+  passed. Reproduce in isolation first (doc 10 §11.5).
 - **Do not reference private projects** in code, examples or documentation. The
   library is public and its API is designed for strangers.
 

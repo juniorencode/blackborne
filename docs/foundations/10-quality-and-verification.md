@@ -442,6 +442,61 @@ window object. `axe._running` is a state, and reading a state is what worked —
 the same distinction §11 draws between a moment and a state, arriving in the
 instrumentation rather than in the assertion.
 
+### 11.4 `expect.poll` does not retry a callback that throws
+
+**Added 2026-09-10.** This repository reaches for `expect.poll` thirty-one
+times, because §11 keeps sending it there: a state that is polled is the
+answer to almost every "assert a moment" defect in this suite. So it is worth
+knowing exactly what it retries.
+
+> Measured: a callback that throws is **propagated on the first call**. The
+> timeout is not consulted, and the poll does not tick again.
+
+```
+POLL AND THROW: it propagated: not yet after 1 call(s)
+```
+
+That makes the shape of the callback part of the check. `page.evaluate` and
+`locator.evaluate` are safe as the OUTER call — a locator waits for its
+element — but the code inside runs against whatever the DOM held at that
+instant, and `getComputedStyle(null)` throws. A poll whose callback reads
+`querySelector(...)!.something` is a poll with a five-second timeout and one
+attempt.
+
+The rule: **a polled callback returns a value for every state, including
+"not there yet".** A sentinel the assertion will not match is a retry; an
+exception is a failed test.
+
+### 11.5 And when several DIFFERENT checks fail, suspect the machine
+
+**Added 2026-09-10**, from an afternoon that looked like a broken branch.
+
+Three consecutive full runs of the behaviour suite, at two workers, each
+dropped exactly one check — and a different one each time, with a different
+symptom: fifteen seconds of polling for a tab that never opened, a poll on two
+computed styles, and a story that never mounted inside thirty seconds. Every
+one of them passed in isolation, immediately.
+
+The cause was not in any of the three. **3.1GB free of 15.85**, with 3.1GB
+still held by nineteen node and browser processes left behind by earlier runs.
+With those stopped and 5.48GB free, two consecutive runs of all 438 passed.
+
+So memory belongs on §11's list beside speed, the clock and the
+configuration — it is a form of speed, and the Playwright configuration in
+this repository already carries the measurement that six workers on a machine
+with 2.4GB free were slower than two AND dropped a check.
+
+The part worth carrying is the DIAGNOSTIC, because it is cheap and it is the
+opposite of what a failure invites you to do:
+
+- One check failing repeatedly, in the same place, is the check or the code.
+- Several different checks failing once each, none of them repeating, is the
+  machine. Reproduce in isolation before reading a single line of the failure.
+
+The habit that follows: after a long session of full runs, look at what is
+still resident before believing a new failure. Nineteen orphaned browsers is
+not an exotic state — it is what an interrupted run leaves.
+
 ## 10. Definition of green
 
 A version is not published if any of these fails:

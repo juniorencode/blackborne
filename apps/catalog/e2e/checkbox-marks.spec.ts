@@ -129,11 +129,30 @@ test.describe('select all', () => {
 
   const marks = (page: import('@playwright/test').Page) =>
     page.getByRole('checkbox', { name: PARENT }).evaluate(input => {
-      const row = input.closest('label')?.parentElement as HTMLElement;
+      /*
+       * NOTHING IN HERE MAY THROW, and that is a property of the poll below
+       * rather than caution for its own sake. Measured: `expect.poll` does NOT
+       * retry a callback that throws — it propagates on the FIRST call, so a
+       * timeout of five seconds is worth nothing to a callback that
+       * dereferences something the render has not produced yet.
+       *
+       * `getComputedStyle(null)` throws, and both marks are read through a
+       * `querySelector` that can answer null. Returning "missing" instead
+       * turns a mark that is not there yet into another poll rather than into
+       * a failed test. No failure here has been attributed to it — this is a
+       * weakness removed, not a cause fixed.
+       */
+      const row = input.closest('label')?.parentElement ?? null;
+      const displayOf = (selector: string) => {
+        const found = row?.querySelector(selector);
+        return found === null || found === undefined
+          ? 'missing'
+          : getComputedStyle(found).display;
+      };
+
       return {
-        tick: getComputedStyle(row.querySelector('.bb-checkbox-check')!)
-          .display,
-        dash: getComputedStyle(row.querySelector('.bb-checkbox-dash')!).display
+        tick: displayOf('.bb-checkbox-check'),
+        dash: displayOf('.bb-checkbox-dash')
       };
     });
 
