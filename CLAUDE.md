@@ -33,7 +33,7 @@ this file is out of date. Fix this file.
 assuming anything exists.
 
 At the time of writing: all ten foundations are written, the pipeline is
-complete, and **fifty-one components exist** — the ten simple fields and
+complete, and **fifty-two components exist** — the ten simple fields and
 controls, `Button` with `ButtonGroup`, `Slider`, the flat pieces around them
 (`Alert`, `Avatar`, `Badge`, `Card`, `EmptyState`, `Progress`, `Separator`,
 `Skeleton`, `Spinner`, `Steps`, `VisuallyHidden`), seven
@@ -74,9 +74,9 @@ share is in `internal/Calendar` and `internal/Field`.
 
 **The three rows that were only ever sequencing are next**, and the order is
 in [the catalog](./docs/catalog-and-build-order.md) §3.3 with the reason:
-`Avatar`, then the colour controls, then the file uploader. `Avatar`,
-`ColorSwatchField` and `ColorPicker` have landed, so only the file uploader is
-left of the three. `Avatar` went first because it shares a wall
+`Avatar`, then the colour controls, then the file uploader. **All three have
+landed and that batch is finished** — `Avatar`, `ColorSwatchField`,
+`ColorPicker` and `FileUpload`. `Avatar` went first because it shares a wall
 with the uploader that nothing else shares — a box holding an image that may
 not arrive, with something in its place, which a thumbnail needs as much as a
 face does — and the palette went second because it settles the colour boundary
@@ -86,6 +86,15 @@ things were settled in writing before any of it: initials are not derived from
 a name ([doc 05](./docs/foundations/05-languages-and-formatting.md) §4.2), a
 colour crosses as a string in the format it arrived in, and the uploader does
 not upload.
+
+**And the uploader took one wave where the catalog planned two.** §3.3 split it
+into "the zone and the list" and then "the restrictions and the errors", and
+the second half turned out to be four props and no new machinery: `accept`
+narrows what the dialog offers, and every error is text the PROJECT wrote,
+because the component never sent anything and cannot know. What it did need was
+an instrument — a drop built in the page delivers no file, measured, so the
+check drives a real drag through the DevTools protocol
+([doc 10](./docs/foundations/10-quality-and-verification.md) §11.1).
 
 **And the original plan is finished.** `TimePicker` was the last row of it —
 the choosing half of a time control, and where a minute step belongs — and it

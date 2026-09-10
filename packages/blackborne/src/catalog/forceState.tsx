@@ -24,7 +24,14 @@ export type ForcedState =
    * ring are the same outline in two colours, so showing the focus one to a
    * pointer would make a click look like a second kind of selection.
    */
-  | 'data-focus-visible';
+  | 'data-focus-visible'
+  /*
+   * And `data-drop-target` arrived with `FileUpload`, which is the second
+   * state in this union that cannot be reached by poking at a component: it
+   * exists only while something is being DRAGGED over a zone, before anything
+   * has been released. A baseline is the only way to see it.
+   */
+  | 'data-drop-target';
 
 /**
  * Force one of those states for the catalog.

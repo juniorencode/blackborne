@@ -218,7 +218,20 @@ export const en = {
    * named by the base — it knows the channel names in every locale — and this
    * one is a plain field with nothing to derive a name from.
    */
-  colorValue: 'Colour value'
+  colorValue: 'Colour value',
+
+  /*
+   * A file field's own three. The base names its drop zone in every locale it
+   * ships, and the words a person READS in the zone are ours — which is the
+   * line §2.3 draws: an instruction about how a widget works is the base's, and
+   * a label a project would plausibly want in its own words is ours.
+   *
+   * `retry` is the one that settles an old question: a retry belongs to the
+   * row that failed, so the word has to exist somewhere.
+   */
+  chooseFiles: 'Choose files',
+  dropFiles: 'or drop them here',
+  retry: 'Retry'
 } as const;
 
 export type DictionaryKey = keyof typeof en;

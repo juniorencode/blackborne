@@ -310,6 +310,56 @@ direction: generate every reference in the same container so the tolerance can
 stay at zero (§6). Removing the dependence is the fix in both cases; agreeing
 to ignore it is not.
 
+### 11.1 And an instrument may not fake the thing it measures
+
+**Added 2026-09-10**, from the other head of the same beast. A check that fails
+at random teaches people to re-run the job; a check that PASSES without
+exercising anything teaches nobody anything at all, and it does it quietly.
+
+> A check that builds its own input has to be checked against the real one, or
+> it is measuring its own scaffolding.
+
+**The measurement.** A file field's whole reason to exist is the drop, and
+jsdom implements no data transfer at all, so the drop is a browser's question.
+The recipe everybody copies builds the transfer in the page:
+
+```js
+const dt = new DataTransfer();
+dt.items.add(new File(['x'], 'dropped.txt', { type: 'text/plain' }));
+await zone.dispatchEvent('drop', { dataTransfer: dt });
+```
+
+Measured in this catalog, that transfer is perfect from JavaScript —
+`types: ['Files']`, `files.length: 1`, `items[0].kind: 'file'` — and
+`items[0].webkitGetAsEntry()` returns **null**, because Chromium attaches a
+filesystem entry only to an item that came from a real drag. React Aria reads a
+drop through `readFromDataTransfer`, which calls that method wherever it exists
+and skips the item when it answers null. So every drag event fires, the drop
+target lights up, the drop handler runs — **and the list of files is empty.**
+
+The first version of the check asserted the events and read as a check of the
+drop. It would have gone on passing with the filtering deleted, the handler
+rewritten, or the whole payload thrown away.
+
+**The fix is a real drag, not a lower bar.** `Input.dispatchDragEvent` over a
+DevTools session takes file PATHS and lets the browser build the transfer
+itself, entries included — one row, named after the file on disk. It is
+Chromium-only, and that suite is Chromium-only.
+
+**And the one-of-each shape is worth stealing.** "A folder is left on the
+floor" cannot be checked by dropping a folder: an empty list is also what a
+drop that never arrived gives, so the check passes whether the library filtered
+the folder out or the browser refused the drag. Dropping a folder AND a file
+says both halves — the drop demonstrably arrived, and exactly the file survived
+it. Where a check's expected result is "nothing happened", something has to
+happen beside it.
+
+**How to tell before it costs you.** Ask what would still make the check fail.
+If the answer is "nothing in the component", the check is measuring the
+harness. §11's version of that question is about the machine; this one is about
+the input, and both are answered the same way: by naming a thing the component
+does, and asserting that.
+
 ## 10. Definition of green
 
 A version is not published if any of these fails:

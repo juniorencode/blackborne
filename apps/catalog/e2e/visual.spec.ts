@@ -393,6 +393,23 @@ const STATES: Array<[string, string]> = [
    * modes, and `color-picker-alpha` is the second slider plus the checkerboard
    * a transparent colour needs behind it to be legible at all.
    */
+  /*
+   * AN UPLOADER EARNS TWO, and the second one is the whole reason this
+   * component gets a baseline at all: `file-upload-zone` is the zone at rest,
+   * hovered, focused and WITH SOMETHING OVER IT — the one state in this
+   * library that exists only while a person is holding a file and deciding
+   * whether to let go. Nobody can see it by poking at the catalog, and the
+   * browser check can only say the colours differ; whether the difference
+   * reads as "let go here" is what the picture is for. It is also the only
+   * dashed border in the library, which is a convention borrowed on purpose.
+   *
+   * `file-upload-states` is a row per thing a project can know about a file:
+   * waiting, going, and failed with its reason under it — in both modes,
+   * because a row is a bordered card on a surface and the failure's text is
+   * the danger step, which is defined per mode rather than derived.
+   */
+  ['components-fileupload--zone', 'file-upload-zone'],
+  ['components-fileupload--states', 'file-upload-states'],
   ['components-colorpicker--opened', 'color-picker-opened'],
   ['components-colorpicker--with-alpha', 'color-picker-alpha'],
   ['components-colorswatchfield--states', 'color-swatch-field-states'],
@@ -715,6 +732,14 @@ const AXES: Array<[string, string]> = [
      put the handle at the wrong end of its own fill. Measured once, asserted
      in the checks, and photographed here because it is a geometry. */
   ['components-slider--direction', 'axis-slider-rtl'],
+  /* And the uploader's two, where RTL is the interesting one for a reason
+     that is not the layout: the row mirrors in CSS, and the SIZE beside the
+     name goes through `Intl` in the received locale — so the story declares
+     `ar-EG` rather than a direction and the picture is the two mechanisms
+     agreeing (doc 05 §4.1). Compact trims the zone's padding and the gap
+     between rows while the file names keep their size. */
+  ['components-fileupload--direction', 'axis-file-upload-rtl'],
+  ['components-fileupload--compact', 'axis-file-upload-compact'],
   /* And the button group's brand, for the half of the seam a default theme
      cannot show: the primary line is mixed from `--bb-accent-on` rather than
      chosen beside it, so an overridden brand has to arrive in it without
