@@ -351,13 +351,15 @@ Things that look like improvements and are not:
   measurements — including the half that does not fail: photographed from a
   month with no today in it, a reference stops guarding what it was made for
   and goes on passing.
-- **Do not widen a check to make it pass.** A browser check that fails at
-  random is measuring the machine rather than the component, and lowering its
-  bar turns a real failure into a coincidence. The rule and the two measured
-  examples are [doc 10](./docs/foundations/10-quality-and-verification.md) §11:
-  counting animation frames asserts the frame rate, and racing a 160ms
-  transition asserts how loaded the CPU was. Slow the clock, ask the animation,
-  or assert a state — never relax the number.
+- **Do not widen a check to make it pass.** A check that fails on one machine
+  and not another is measuring the machine rather than the component, and
+  lowering its bar turns a real failure into a coincidence. The rule and the
+  three measured examples are
+  [doc 10](./docs/foundations/10-quality-and-verification.md) §11: counting
+  animation frames asserts the frame rate, racing a 160ms transition asserts
+  how loaded the CPU was, and comparing our today against the base own mark
+  asserts the runner TIME ZONE. Speed, clock and configuration are the three,
+  and they are all values the test did not set and cannot see.
 - **Do not reference private projects** in code, examples or documentation. The
   library is public and its API is designed for strangers.
 

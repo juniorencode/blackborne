@@ -176,6 +176,13 @@ test('with no zone configured, nothing is marked as today', () => {
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
   render(<RangeCalendar label="Stay" defaultValue={STAY} />);
 
+  /*
+   * No clock pinned here, and that is deliberate: this asserts the ABSENCE of
+   * our own mark, which holds at every instant and in every zone. Which day
+   * gets marked when a zone IS configured is the shared hook's claim, and it
+   * is tested once, on `Calendar`, with one instant and two zones — the
+   * machine-dependent version of that test is what failed CI.
+   */
   expect(document.querySelectorAll('.bb-calendar-today')).toHaveLength(0);
   expect(warn).toHaveBeenCalledWith(
     expect.stringContaining('RangeCalendar: no time zone')

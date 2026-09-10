@@ -137,38 +137,102 @@ test('and a day inside the range can still be unavailable', async () => {
 });
 
 /*
- * TODAY IS THE PROVIDER'S DAY. The base marks a `data-today` of its own
- * computed from the browser's zone — read in `useCalendarState` — and doc 05
- * §3.1 says the browser's zone belongs to the machine of whoever is looking.
- * So this component marks its own, from the configured zone.
+ * TODAY IS THE PROVIDER'S DAY, and this is the pair of tests for it. The base
+ * marks a `data-today` of its own computed from the browser's zone — read in
+ * `useCalendarState` — and doc 05 §3.1 says the browser's zone belongs to the
+ * machine of whoever is looking. So this component marks its own, from the
+ * configured zone.
+ *
+ * ## THE CLOCK IS FIXED, and only `Date` is faked
+ *
+ * Both of these are dated, so both pin an instant. The first version of the
+ * test below did not, and it asserted that our marked cell also carried the
+ * base's `data-today` — with the comment "the one the base agrees is today in
+ * this environment", which is the defect written down. That holds only while
+ * the runner's own zone agrees with the configured one: it passed here, where
+ * the machine is in Lima, and failed on CI at 00:35 UTC, where it was already
+ * the next day. A check that also depends on how the machine is configured is
+ * measuring the machine (doc 10 §11), and the browser suite pins the same
+ * instant for the same reason (§6.1, `apps/catalog/e2e/clock.ts`).
+ *
+ * `toFake: ['Date']` and not the timers: React's scheduler runs on real ones,
+ * and faking those to answer a question about a calendar is how a test suite
+ * acquires a hang nobody can explain.
  */
-test('with a zone configured, today is marked from it', () => {
-  render(<Appointments />);
+const atInstant = (iso: string, run: () => void): void => {
+  vi.useFakeTimers({ now: new Date(iso), toFake: ['Date'] });
+  try {
+    run();
+  } finally {
+    vi.useRealTimers();
+  }
+};
 
-  const marked = days().filter(day =>
-    day.className.includes('bb-calendar-today')
-  );
+const markedDay = (): string | undefined =>
+  days().find(day => day.className.includes('bb-calendar-today'))
+    ?.textContent ?? undefined;
 
-  // One day, and it is the one the base agrees is today in this environment.
-  expect(marked).toHaveLength(1);
-  expect(marked[0]?.getAttribute('data-today')).toBe('true');
+test('today comes from the configured zone rather than the machine', () => {
+  /*
+   * ONE INSTANT, TWO ZONES, TWO DIFFERENT DAYS. At 03:00 UTC it is still the
+   * eighth in Lima and already the ninth in Tokyo, so this is the claim the
+   * component exists to make rather than a coincidence between the runner and
+   * the provider — and it is what the assertion this replaces could not say.
+   */
+  atInstant('2026-09-09T03:00:00Z', () => {
+    const lima = render(
+      <ConfigProvider timeZone="America/Lima">
+        <Calendar label="Appointment" defaultValue="2026-09-09" />
+      </ConfigProvider>
+    );
+    expect(markedDay()).toBe('8');
+    lima.unmount();
+
+    render(
+      <ConfigProvider timeZone="Asia/Tokyo">
+        <Calendar label="Appointment" defaultValue="2026-09-09" />
+      </ConfigProvider>
+    );
+    expect(markedDay()).toBe('9');
+  });
+});
+
+test('exactly one day is marked, and it is not the base own mark', () => {
+  atInstant('2026-09-09T12:00:00Z', () => {
+    render(<Appointments />);
+
+    const marked = days().filter(day =>
+      day.className.includes('bb-calendar-today')
+    );
+    expect(marked).toHaveLength(1);
+    expect(marked[0]?.textContent).toBe('9');
+  });
 });
 
 test('with no zone configured, nothing is marked and it says why', () => {
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-  render(<Calendar label="Appointment" defaultValue="2026-09-09" />);
-
-  expect(
-    days().filter(day => day.className.includes('bb-calendar-today'))
-  ).toEqual([]);
-
   /*
-   * And the base's own mark is still in the DOM, unstyled: that is the
-   * distinction this test exists for. A component that read `data-today`
-   * would be showing the machine's today with nobody having said so.
+   * Midday UTC, which is the instant every zone from UTC−12 to UTC+11 is on
+   * the same day — so the base's own mark is deterministically inside the
+   * month on screen whatever the runner's zone is, which the assertion below
+   * needs and which the real clock stops providing every October.
    */
-  expect(document.querySelector('[data-today]')).not.toBeNull();
+  atInstant('2026-09-09T12:00:00Z', () => {
+    render(<Calendar label="Appointment" defaultValue="2026-09-09" />);
+
+    expect(
+      days().filter(day => day.className.includes('bb-calendar-today'))
+    ).toEqual([]);
+
+    /*
+     * And the base's own mark is still in the DOM, unstyled: that is the
+     * distinction this test exists for. A component that read `data-today`
+     * would be showing the machine's today with nobody having said so.
+     */
+    expect(document.querySelector('[data-today]')).not.toBeNull();
+  });
+
   expect(warn).toHaveBeenCalled();
   expect(warn.mock.calls[0]?.[0]).toContain('time zone');
   warn.mockRestore();

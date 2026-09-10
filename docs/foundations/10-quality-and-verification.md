@@ -273,6 +273,37 @@ on through the base's own end-of-animation signal rather than a sleep, and the
 step a container query resolves to is read from CSS rather than compared
 against a measured width (doc 04 §6.2).
 
+**And "the machine" is not only its speed.** Added 2026-09-10, after a UNIT
+test failed on CI having passed everywhere else. It asserted that the day a
+calendar marks as today also carries the base's own `data-today` — with the
+comment "the one the base agrees is today in this environment", which is the
+defect written down in the test itself. Ours comes from the configured zone and
+the base's from the machine's, so the two coincide only while the runner is
+configured like the developer. Measured at the instant CI failed,
+`2026-09-10T00:35:00Z`, with a calendar configured in Lima:
+
+| Runner's zone  | Our mark | The base's mark | The assertion |
+| -------------- | -------- | --------------- | ------------- |
+| `America/Lima` | the 9th  | the 9th         | passes        |
+| `UTC`          | the 9th  | the 10th        | **fails**     |
+
+The component was right in both. So the list of things a check may not depend
+on is the machine's SPEED, its CLOCK (§6.1) and its CONFIGURATION — its zone,
+its locale, its font stack. All three have the same shape: a value the test did
+not set and cannot see.
+
+**The replacement is stronger, again.** Rather than comparing our mark against
+the base's, it fixes one instant and renders twice: at 03:00 UTC it is still
+the eighth in Lima and already the ninth in Tokyo, so two zones give two
+different marked days from one clock. That is the claim the component exists to
+make, and the assertion it replaces could not state it at all. Verified by
+running the calendar's tests under four zones from UTC−11 to UTC+14.
+
+One practical note, because it is the trap underneath the fix: fake only
+`Date`. Faking the timers to answer a question about a calendar hands React's
+scheduler a clock nobody advances, and the symptom is a suite that hangs rather
+than fails.
+
 **This does not license a slow check to be deleted.** The machine-dependent
 suite in this repository is the visual one, and its answer is the opposite
 direction: generate every reference in the same container so the tolerance can
