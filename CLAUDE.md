@@ -33,10 +33,10 @@ this file is out of date. Fix this file.
 assuming anything exists.
 
 At the time of writing: all ten foundations are written, the pipeline is
-complete, and **forty-eight components exist** — the ten simple fields and
+complete, and **forty-nine components exist** — the ten simple fields and
 controls, `Button` with `ButtonGroup`, `Slider`, the flat pieces around them
-(`Alert`, `Badge`, `Card`, `EmptyState`, `Progress`, `Separator`, `Skeleton`,
-`Spinner`, `Steps`, `VisuallyHidden`), seven
+(`Alert`, `Avatar`, `Badge`, `Card`, `EmptyState`, `Progress`, `Separator`,
+`Skeleton`, `Spinner`, `Steps`, `VisuallyHidden`), seven
 layers (`Dialog`, `Drawer`, `ConfirmDialog`, `Tooltip`, `Popover`, `Preview`,
 `Toast`), and the composition batch so far: `Accordion`, `Collapsible`, `Link`,
 `Breadcrumbs`, `Pagination`, `CursorPagination`, `Menu`, `Select`, `Tabs` and
@@ -71,6 +71,17 @@ P6's corollary forbids an assembly with a capability its pieces lack —
 structural change in the library, and the four of the date family:
 `DateField`, `DatePicker`, `TimeField` and `DateRangePicker`. Everything they
 share is in `internal/Calendar` and `internal/Field`.
+
+**The three rows that were only ever sequencing are next**, and the order is
+in [the catalog](./docs/catalog-and-build-order.md) §3.3 with the reason:
+`Avatar`, then the colour controls, then the file uploader. `Avatar` has
+landed, and it went first because it shares a wall with the uploader that
+nothing else shares — a box holding an image that may not arrive, with
+something in its place, which a thumbnail needs as much as a face does. Three
+things were settled in writing before any of it: initials are not derived from
+a name ([doc 05](./docs/foundations/05-languages-and-formatting.md) §4.2), a
+colour crosses as a string in the format it arrived in, and the uploader does
+not upload.
 
 **And the original plan is finished.** `TimePicker` was the last row of it —
 the choosing half of a time control, and where a minute step belongs — and it
@@ -438,6 +449,13 @@ Things that look like improvements and are not:
   `primary/sm` where a person would have seen small primary buttons in a
   dialog. `internal/buttonAppearance`'s `NoButtonSet` is what closes it, and
   the shared sheet is where four of the five layers do so at once.
+- **Do not size a square element with a `w-*` token.** The theme has
+  `--height-control-*` and NO `--width-control-*`, rightly, because a control's
+  width is its contents — so `w-control-md` compiles to nothing and leaves a
+  box with a height and no width. `aspect-square` against a height token is
+  the way, and the way to check either is to grep the COMPILED stylesheet.
+  Measured on `Avatar`, and it is the third utility in this repository found to
+  produce no rule at all while looking right in the source.
 - **Do not test RTL with a `dir` attribute alone.** Direction reaches CSS
   through the stylesheet and reaches JavaScript through the LOCALE, and a
   component using one of each can disagree with itself: measured on `Slider`,

@@ -181,6 +181,37 @@ AND moves the handle rightwards — the handle follows the key, the number
 follows the axis. The block axis does not mirror: up is more, in every
 language.
 
+### 4.2 A name is not a source of initials
+
+**Date:** 2026-09-10, with `Avatar`.
+
+Taking "CR" from "Carlos Ramos" looks like string handling and is a
+**transformation of a person's name**, which is the one kind of text this
+library is least entitled to touch.
+
+It fails in more languages than it works in. A Japanese name is written with no
+space between its parts, so there is nothing to split on. Arabic and Hebrew are
+read the other way, so "the first letter" is not the first character in the
+string. Spanish surnames come in pairs and Dutch ones carry particles, so
+"de la Cruz" yields "D" from any rule simple enough to write. And a single
+Chinese character is a whole given name rather than an initial of anything.
+
+**So the library does not do it.** A component that shows a fallback for a
+missing image receives that fallback as CHILDREN, the way an icon arrives
+(doc 02 §11) — initials, a monogram, a silhouette the consumer already owns.
+Only the project knows how names are written where its people are.
+
+What the library still owns is the accessible name: the component takes the
+full name as a prop and puts it on the box, so a fallback reading "CR" on the
+screen is named "Carlos Ramos" in the accessibility tree. The two channels
+carry different things on purpose, and that much is measured.
+
+**Whether a reader ALSO says the letters is not settled.** The ARIA
+specification marks `img` as "children presentational", so it should not — and
+an aria snapshot of the component reads `- img "Ana Vega": AV`, with the text
+still in the node. The tool does not answer the question, so it is on
+[doc 06](./06-accessibility.md) §5's list rather than claimed here.
+
 ## 5. Text expansion
 
 - No width or height sized so one particular label fits.

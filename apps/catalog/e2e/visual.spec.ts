@@ -329,6 +329,21 @@ const STATES: Array<[string, string]> = [
    * ways — `2:00 PM`, `2:00 p. m.` and `14:00`. Two of those locales are both
    * twelve-hour and disagree about how to write the marker.
    */
+  /*
+   * AN AVATAR EARNS TWO, and neither is the circle. `avatar-states` is the
+   * three sizes with a picture, the three without, a picture that did not
+   * arrive and a fallback that is a glyph rather than letters — in both modes,
+   * because the fallback's surface is a pair and the border is what separates
+   * an unknown image from an unknown background.
+   *
+   * `avatar-in-a-row` is the one that carries the argument for the SCALE: an
+   * avatar beside a button and a field of the same size, three times. The
+   * check measures that the three heights are equal; the picture is where
+   * "equal" either looks right or looks like three things that happen to
+   * measure the same.
+   */
+  ['components-avatar--states', 'avatar-states'],
+  ['components-avatar--in-a-row', 'avatar-in-a-row'],
   ['components-timepicker--opened', 'time-picker-opened'],
   ['components-timepicker--in-every-locale', 'time-picker-locales'],
   ['components-timepicker--states', 'time-picker-states'],

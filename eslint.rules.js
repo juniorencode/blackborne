@@ -28,8 +28,22 @@ const PHYSICAL_STYLE =
 const VIEWPORT_CLASS = 'Literal[value=/[: ](sm|md|lg|xl|2xl):/]';
 const VIEWPORT_MEDIA = 'Literal[value=/@media[^)]*(min-width|max-width)/]';
 
+/*
+ * The label attributes, EXCEPT an empty one.
+ *
+ * `:not([value=''])` was added with `Avatar`, the first component in the
+ * library to render an `<img>`. An empty `alt` is not text a person reads — it
+ * is the declaration that there is nothing to read, and the standard way to
+ * say an image is decorative because something else already names it. There is
+ * no dictionary key for "no text", and taking it as a prop would let a
+ * consumer put a second copy of the name on a picture inside an element that
+ * already carries one.
+ *
+ * The rule still catches every non-empty literal, which is the case it exists
+ * for.
+ */
 const LITERAL_LABEL =
-  'JSXAttribute[name.name=/^(aria-label|aria-description|aria-placeholder|aria-roledescription|aria-valuetext|title|placeholder|alt)$/] > Literal';
+  "JSXAttribute[name.name=/^(aria-label|aria-description|aria-placeholder|aria-roledescription|aria-valuetext|title|placeholder|alt)$/] > Literal:not([value=''])";
 const LITERAL_TEXT = 'JSXText[value=/[A-Za-z][A-Za-z][A-Za-z]/]';
 
 const msg = {
