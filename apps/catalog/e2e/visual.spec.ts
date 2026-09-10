@@ -385,6 +385,16 @@ const STATES: Array<[string, string]> = [
    * focus. The third row is one swatch carrying both, which is the picture that
    * says whether they compose or fight.
    */
+  /*
+   * A COLOUR PICKER EARNS TWO, and the thumb is what to read in both. Every
+   * other handle in this library sits on a surface the library chose; this one
+   * sits on the colour itself, anywhere in a gradient, so it carries a light
+   * ring and a dark one. `color-picker-opened` is the whole layer in both
+   * modes, and `color-picker-alpha` is the second slider plus the checkerboard
+   * a transparent colour needs behind it to be legible at all.
+   */
+  ['components-colorpicker--opened', 'color-picker-opened'],
+  ['components-colorpicker--with-alpha', 'color-picker-alpha'],
   ['components-colorswatchfield--states', 'color-swatch-field-states'],
   ['components-colorswatchfield--rings', 'color-swatch-field-rings'],
   ['components-avatar--states', 'avatar-states'],

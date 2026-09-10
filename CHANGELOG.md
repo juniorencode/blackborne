@@ -12,6 +12,54 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **`ColorPicker`** — a colour chosen from a gradient.
+
+  ```tsx
+  <ColorPicker label="Brand colour" value={colour} onChange={setColour} />
+  ```
+
+  The other half of the pair: **for a colour nobody has decided yet** — a
+  brand, a theme, a chart series somebody is tuning. `ColorSwatchField` is for
+  one chosen from a set the project already owns, which is the more common case
+  in a management application by some distance.
+
+  **Four ways in, and the base wires all of them**: the area for saturation and
+  brightness, a slider for hue, another for transparency when it is offered,
+  and a field for typing a hex somebody already knows. Every one is
+  keyboard-operable — the area is two range inputs, one per axis — which is the
+  thing that usually makes a colour picker fail this library's entry gate.
+
+  **The format is declared** (decision 0024), and this is the component that
+  prop exists for. After a drag in the area the colour's own space is `hsb`, so
+  `toString()` would report `hsb(226, 72%, 87%)` to a project that wanted hex.
+  Two development warnings come with it: offering transparency with a format
+  that cannot carry it, and a value that already has transparency arriving into
+  one.
+
+  **It always holds a colour**, and there is no clear button. That is the
+  base's shape rather than an omission — measured: `useColorPickerState` falls
+  back to `#000000` and its setter refuses null, because a two-dimensional area
+  always points somewhere. Where "no colour" is a real state it belongs to
+  something beside this field.
+
+  Four things it found, three of them defects of my own:
+
+  - **A colour that might be transparent needs a checkerboard behind it.**
+    Without one, a half-transparent blue is just a paler blue. `internal/checkerboard`
+    is the pattern, and it goes on a WRAPPER: the base writes the colour
+    inline, and a background image on the same element paints over its colour
+    rather than behind it.
+  - **A `group-*` variant only matches a descendant**, and this was the third
+    shape of that trap here. The chevron sat in the frame's trailing slot — a
+    sibling of the trigger that carries `aria-expanded` — so it never turned.
+  - **A control that cannot express the value is not offered.** The base's hex
+    field speaks six digits and nothing else, so with transparency on it would
+    show an opaque colour and typing in it would report one. It is dropped
+    there.
+  - **`LayerPage` is the theme scope as well as the portal container.** The
+    first dark baseline showed a light panel of gradients over a dark card,
+    because a layer is portalled to the body and the theme was on a panel.
+
 - **`ColorSwatchField`** — a colour chosen from a closed palette.
 
   ```tsx
@@ -1625,6 +1673,13 @@ minor versions. Every break is listed here with its migration.
   between them.
 
 ### Changed
+
+- **A `ColorSwatchField`'s swatches sit on a checkerboard too.** A declared
+  palette may carry an alpha — `#3e63dd80` is a legitimate entry — and on the
+  surface alone it reads as a paler blue rather than a transparent one. Found
+  while building `ColorPicker`, where the same problem is unavoidable rather
+  than occasional, so the pattern lives in `internal/checkerboard` and both
+  components read it.
 
 - **`SplitButton`'s divider is now the shared seam.** It has drawn a line down
   its own middle since it shipped, mixed from the pair's text colour, because a

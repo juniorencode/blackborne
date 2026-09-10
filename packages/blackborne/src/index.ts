@@ -84,6 +84,17 @@ export type { AvatarProps, AvatarSize } from './components/Avatar';
  * verbatim — decision 0024's exception, because the answer is one of the
  * inputs.
  */
+/*
+ * A colour chosen from a gradient, for one nobody has decided yet. Its value's
+ * format is DECLARED (decision 0024), because a value dragged out of an area
+ * was never one of the inputs.
+ */
+export { ColorPicker } from './components/ColorPicker';
+export type {
+  ColorPickerProps,
+  ColorPickerSize
+} from './components/ColorPicker';
+
 export { ColorSwatchField } from './components/ColorSwatchField';
 export type { ColorSwatchFieldProps } from './components/ColorSwatchField';
 

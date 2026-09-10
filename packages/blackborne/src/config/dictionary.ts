@@ -211,7 +211,14 @@ export const en = {
    * "No time" rather than "None", which reads as an absence of anything in a
    * list of times.
    */
-  noTime: 'No time'
+  noTime: 'No time',
+
+  /*
+   * The hex field inside a `ColorPicker`'s layer. The area and the sliders are
+   * named by the base — it knows the channel names in every locale — and this
+   * one is a plain field with nothing to derive a name from.
+   */
+  colorValue: 'Colour value'
 } as const;
 
 export type DictionaryKey = keyof typeof en;
