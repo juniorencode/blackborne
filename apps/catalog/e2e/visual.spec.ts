@@ -31,6 +31,7 @@
  */
 import { expect, test } from '@playwright/test';
 import { pinClock } from './clock';
+import { imagesSettled } from './settle';
 import { gotoStory } from './story';
 
 /*
@@ -89,32 +90,10 @@ const capture = async (
   /*
    * AND EVERY IMAGE HAS SETTLED, which is doc 10 §11 — a check may not depend on
    * the machine's SPEED — arriving through a picture rather than through an
-   * assertion.
-   *
-   * `gotoStory` waits for the story to mount and `toHaveScreenshot` waits for
-   * fonts, and neither waits for an image. An `<img>` that resolves to
-   * something is one thing; an `<img>` that FAILS is the case that caught us,
-   * because failing is what makes a component fall back — so the picture is
-   * either the fallback or the browser's broken-image glyph depending on
-   * whether the error had happened yet.
-   *
-   * Measured, on CI: `avatar-states` came back 225 pixels different from the
-   * reference generated locally, stable across both of Playwright's retries,
-   * and 225 pixels is about the size of that glyph. The baseline held the
-   * letters the component falls back to; CI held the glyph. Nothing was wrong
-   * with either machine.
-   *
-   * `complete` is true for a loaded image AND for a failed one, and a
-   * component that swaps the image out on failure removes it from this list
-   * altogether — all three of which are "settled". A lazily loaded image that
-   * is out of view never completes, so a story that scrolls will time out
-   * here, and the message will say which picture was not ready.
+   * assertion. The measurement and the three things "settled" means are in
+   * `e2e/settle`, which the accessibility suite is the second caller of.
    */
-  await expect
-    .poll(() =>
-      page.evaluate(() => [...document.images].every(image => image.complete))
-    )
-    .toBe(true);
+  await imagesSettled(page);
 
   // The story root, not the viewport: a full-page shot would include the
   // scrollbar, which differs between platforms even inside one container.
