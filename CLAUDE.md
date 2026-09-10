@@ -33,7 +33,7 @@ this file is out of date. Fix this file.
 assuming anything exists.
 
 At the time of writing: all ten foundations are written, the pipeline is
-complete, and **thirty-nine components exist** — the ten simple fields and
+complete, and **forty-one components exist** — the ten simple fields and
 controls, `Button`, the flat pieces around them (`Alert`, `Badge`, `Card`,
 `EmptyState`, `Separator`, `Skeleton`, `Spinner`, `VisuallyHidden`), seven
 layers (`Dialog`, `Drawer`, `ConfirmDialog`, `Tooltip`, `Popover`, `Preview`,
@@ -41,7 +41,8 @@ layers (`Dialog`, `Drawer`, `ConfirmDialog`, `Tooltip`, `Popover`, `Preview`,
 `Breadcrumbs`, `Pagination`, `CursorPagination`, `Menu`, `Select`, `Tabs` and
 `SplitButton`. `ComboBox` is the thirty-seventh and the first of the batch
 that follows; `Calendar` and `RangeCalendar` are the thirty-eighth and
-thirty-ninth.
+thirty-ninth, and `DateField` and `DatePicker` close level 2 and level 4 of the
+date family.
 
 **The layer batch is finished.** It landed in that order, with `Toast` last by
 decision (doc 08 §7.1). `Menu` was deliberately not in it.
@@ -61,14 +62,14 @@ rather than six — the shape is in
 [the catalog](./docs/catalog-and-build-order.md) §3.2, which records the split
 and why. Read that before starting one.
 
-Five have landed: `ComboBox`, the same component holding **several** values as
+Six have landed: `ComboBox`, the same component holding **several** values as
 a discriminated union rather than a flag, `useAsyncOptions` — a **hook**,
 because paging and waiting are logic and P6's corollary forbids an assembly
 with a capability its pieces lack — `Calendar`, with its three chained views,
-and `RangeCalendar`, which shares all of that through `internal/Calendar` and
-adds the second structural change in the library. What remains is `DateField`
-with `DatePicker`, and `TimeField` with `DateRangePicker`. It spans three
-levels, so the order is the dependency and not the level number.
+`RangeCalendar`, which shares all of that through `internal/Calendar` and adds
+the second structural change in the library, and `DateField` with
+`DatePicker`. What remains is `TimeField` with `DateRangePicker`. It spans
+three levels, so the order is the dependency and not the level number.
 
 **And the risk component paid for itself twice.** The catalog predicted that
 per-option keywords would mean `ComboBox` filtered its own rows. It cannot: the
@@ -122,6 +123,18 @@ must not be changed is disabled, with its chosen day still legible" is false —
 measured on both calendars, controlled and uncontrolled: a disabled calendar
 marks no selection at all. A value that must not be changed is a formatted
 date.
+
+**And the sixth wave changed a foundation rather than working around it.**
+Doc 07 §2.2 rule 5 says a field that opens a layer keeps the chevron and has no
+clear button, and its reason is that clearing has a route costing no width — an
+option that returns to no value, or the cross each value carries. A date field
+has neither, and measured, its segments cannot even report being emptied:
+clearing the month and the day leaves the reported value at the last complete
+date and the year segment does not clear at all. Where the premise is false the
+conclusion does not follow, so **[§2.2a](./docs/foundations/07-forms.md) is a
+bounded exception with four conditions**, every one of them a browser check,
+and the date family is the only thing in this library with two controls at one
+edge.
 
 **Two things were settled before it started**, in the wave that opened it:
 [doc 07](./docs/foundations/07-forms.md) §2.2 gained a seventh contender for a
@@ -327,6 +340,12 @@ Things that look like improvements and are not:
   whose zone this library may use: today is marked from the configured zone or
   not at all
   ([decision 0023](./docs/decisions/0023-today-comes-from-the-configured-zone.md)).
+- **Do not let a field's frame be a group when its control already is one.**
+  Every field here draws the base's `Group` as its box, and a date field's
+  control is a group of its own — the base's `DateInput` renders one so the row
+  of spin buttons has a name to belong to. Measured in a browser: two nested
+  groups carrying one name, which a reader says twice. `ControlFrame` takes a
+  `role` for that, and `presentation` is the answer.
 - **Do not assume a component sized by its contents can be observed.**
   `useContainerStep` reads the step on resize, so an element whose own box does
   not change with the container never gets a callback — measured: a two-month

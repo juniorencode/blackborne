@@ -275,6 +275,33 @@ is invalid or switched off. Check it on any new composed field: the frame is the
 element a person sees the edge of, and it has to carry the state the field is
 in.
 
+**TWO CONTROLS AT ONE EDGE, once, and only for the date family.** Doc 07
+§2.2a is the exception and it carries four conditions, all four of them browser
+checks rather than intentions: both targets clear the minimum hit area at every
+density (measured: 28 against a floor of 28, and 24 against 24 at compact), the
+cross is unreachable rather than absent when it has nothing to offer, the
+chevron never yields to it, and the clearing is REPORTED.
+
+That last one is the whole justification. Measured on the base's segments, in
+jsdom and then in a browser: clearing the month and the day leaves the reported
+value at the last complete date, and the year segment does not clear at all. So
+emptying a date field is otherwise unobservable — a person blanks what they see
+and neither the field nor the project knows. Rule 5's premise is that clearing
+has a route costing no width, and a date has none of them.
+
+**And the cross needs `slot={null}`.** A `DatePicker` publishes an unslotted
+`ButtonContext` carrying the toggle's own props, so without it the cross wears
+the toggle's id, name and press handler — and pressing it opens the calendar
+instead of emptying the field. Which leaves the toggle as the only button in
+the row that names no slot, so it is the one the context reaches: an
+arrangement that works because there are exactly two.
+
+**A field's frame may not be a group when its control already is one.** The box
+every field draws is the base's `Group`, and the base's `DateInput` renders a
+group of its own so the row of spin buttons has a name to belong to — two
+nested groups with one name, which a reader says twice. `ControlFrame` takes a
+`role` and the date fields pass `presentation`.
+
 **The trailing edge holds one thing, and a field that opens a layer holds the
 chevron.** Seven things want that edge and doc 07 §2.2 orders them; the rule
 that arrives with the searchable fields is the last one. A `ComboBox`, a
@@ -400,6 +427,15 @@ marks nothing and says so in development (decision 0023). Two zones are in
 play and they answer different questions: which day it is TODAY needs the real
 one, and formatting a month's name needs none at all — a day has no zone, so
 the headings format against UTC.
+
+**A picker holds the calendar's BODY, not the public `Calendar`.** The base
+names the DIALOG round the layer, with an `aria-labelledby` pointing at the
+toggle and the field's label — measured, its `calendarProps` carry no
+`aria-label` at all — so a public `Calendar` inside one would say the field's
+name a second time. `internal/Calendar`'s `SingleBody` is everything inside an
+`AriaCalendar` and nothing about the element, which is what lets the picker own
+the element and the label. Given no label the base names the grid by its month,
+which is better than silence and different from the dialog's name.
 
 **A date crosses the public boundary as an ISO string**, not as one of the
 base's calendar objects — `2026-09-09`, `14:30`,

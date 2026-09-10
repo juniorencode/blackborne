@@ -152,6 +152,14 @@ seven". It is an order of precedence, decided once here:
 4. **At most one library-owned control at a time.** A field showing a stepper
    does not also show a clear button: the arrows already reach every value
    including the empty one.
+
+   **Amended 2026-09-10**, and the amendment is the clause that was doing the
+   work all along: _the arrows already reach the empty one_. The rule is not
+   about tidiness, it is that a second control is redundant — so where a
+   field's value has **no other route to empty**, the second control is not
+   redundant and the rule does not apply. §2.2a has the case that found it and
+   what it has to prove before it is allowed.
+
 5. **A field that opens a layer keeps the chevron and has no clear button.**
 
    The chevron wins for the reason
@@ -186,6 +194,14 @@ seven". It is an order of precedence, decided once here:
    never be told about. It goes out of reach and stays visible, which is rule 1
    again with the other half of the pair moving.
 
+   **Date:** 2026-09-10 — **and this rule now has an exception, in §2.2a.** The
+   sentence it rests on is "clearing has routes that cost no width at all", and
+   a date field has none of them: there is no option that returns to no value,
+   no per-value cross, and — measured — no way for the field to report that
+   somebody emptied it. Where the premise is false the conclusion does not
+   follow, so the answer is an exception with its own conditions rather than a
+   rule quietly bent.
+
 And one exception to the reservation, for a field whose box **wraps**: it
 reserves the indicator's lane in every state rather than only while busy. 36px
 appearing at the end of a wrapping row can push a value onto a new line, which
@@ -195,9 +211,63 @@ holds several values typed one at a time, and it covers, unchanged, the combo
 box that holds several the same way.
 
 The rule behind all five: **the trailing edge belongs to at most one thing, and
-the field decides which.** A field that lets a consumer stack them is a field
-whose hit areas depend on how it was configured, which is not something anyone
-can test.
+the field decides which** — with the one exception §2.2a states and bounds. A
+field that lets a CONSUMER stack them is a different matter and still forbidden:
+that is a field whose hit areas depend on how it was configured, which is not
+something anyone can test.
+
+### 2.2a The one field that keeps two controls
+
+**Date:** 2026-09-10. Written when the date family arrived, and written here
+rather than in the component, because an exception that lives in the code is a
+rule nobody else will find.
+
+> A field that opens a layer **and** whose value has no other route to empty
+> keeps both the chevron and a clear button.
+
+**Why the general rule does not cover it.** Rule 5 sends a field that opens a
+layer to the chevron alone, and its reason is explicit: clearing has routes
+that cost no width — an option that returns to no value, or the cross each
+value carries in a field holding several. A `Select` has the first. A `ComboBox`
+holding several values has the second. **A date field has neither**, and it has
+something worse: measured on the base's segments, in jsdom and then in a
+browser, clearing the month and the day leaves the reported value at the last
+complete date and the year segment does not clear at all. So a person can blank
+what they see and the field will neither hold nothing nor say so, and a project
+cannot offer its own clear because nothing tells it the value changed.
+
+That is doc 09 §3 with no way out from the consumer's side: an interaction with
+no response, in the one direction a date field is asked for most often on a
+filter row.
+
+**What the exception costs, stated rather than waved past.** Two
+library-owned controls at one edge, which rule 4 forbids and which the closing
+rule of §2.2 forbids again. Rule 4 is amended above for the reason its own
+wording gives; this is the case that made the wording matter.
+
+**What it has to prove.** An exception with no conditions is a rule with a hole
+in it, so these are conditions and each of them is a check rather than an
+intention:
+
+1. **Both targets clear the minimum hit area, at every density.** Doc 06 §3 is
+   not negotiable and two controls at one edge is exactly where it gets bent.
+   Measured in a browser, at compact as well as normal.
+2. **The cross is unreachable, not absent, when it has nothing to offer** —
+   empty, disabled, read-only, busy. Rule 1, unchanged, and the room stays so
+   the value does not slide.
+3. **The chevron never yields TO THE CROSS.** It is still the control with no
+   alternative route, so where the cross appears the chevron stays and where
+   the cross goes unreachable the chevron does not follow it. Rule 1 is
+   untouched and applies to both: while the field is busy or read-only neither
+   is reachable, because neither can act.
+4. **The field reports the clearing.** The whole justification is that emptying
+   is otherwise unobservable, so the button that does it calls back — which
+   makes it the only route by which a date field's value becomes nothing.
+
+**What this does not open.** It is not a licence for two controls wherever they
+seem convenient. The test is the premise: a field whose value can already be
+emptied by a route that costs no width keeps one control, and every field in
+this library except the date family is in that group.
 
 ## 3. The core is controlled
 
@@ -393,7 +463,11 @@ form opens. Nothing is autofocused without the person having asked
       not move while typing (§2.1 — checked in a browser)
 - [ ] At most one library-owned control sits at the trailing edge, and busy
       removes it — a field that opens a layer keeps the chevron and offers no
-      clear button (§2.2)
+      clear button (§2.2). **Unless its value has no other route to empty**,
+      which is the one exception and carries four checks of its own (§2.2a):
+      both targets clear the hit area at every density, the cross is
+      unreachable rather than absent when it has nothing to offer, the chevron
+      never yields, and the clearing is reported
 - [ ] Number, date and currency formatting respects the locale; the time zone
       is the one received, not the browser's (doc 05)
 - [ ] Complete keyboard traversal, with focus visible in every state

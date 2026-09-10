@@ -12,11 +12,14 @@ export {
 } from './controlBox';
 export type { ControlAlign } from './controlBox';
 export { ControlFrame } from './ControlFrame';
+export { DateSegments } from './DateSegments';
 export type { ControlFrameProps } from './ControlFrame';
 export { useFieldValue } from './useFieldValue';
 export { CharacterCounter } from './CharacterCounter';
 export type { CharacterCounterProps } from './CharacterCounter';
 export { ClearButton } from './ClearButton';
+export { ClearDate } from './ClearDate';
+export { KeepsItsRoom } from './KeepsItsRoom';
 export type { ClearButtonProps } from './ClearButton';
 export { useOwnedValue } from './useOwnedValue';
 export { CHIP, CHIP_REMOVE, ChipRemove } from './ValueChip';

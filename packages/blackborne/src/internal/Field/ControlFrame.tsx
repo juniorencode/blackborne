@@ -1,6 +1,7 @@
 import { Group } from 'react-aria-components';
 import { cx } from '../cx';
 import { CONTROL_BOX } from './controlBox';
+import { KeepsItsRoom } from './KeepsItsRoom';
 
 /*
  * INTERNAL. The frame a field's control sits in, when something else has to
@@ -44,6 +45,22 @@ export interface ControlFrameProps {
   leading?: React.ReactNode;
   /** A control the field owns at the trailing edge — a stepper's `+`, a cross. */
   trailing?: React.ReactNode;
+  /**
+   * What the box is, to a reader. `group` by default, which is what the base
+   * makes it and what every field wants.
+   *
+   * **`presentation` is for a field whose control is ALREADY a group**, and
+   * that is not hypothetical: a date field's segments are a group of their own
+   * — the base's `DateInput` renders one, because a row of spin buttons needs
+   * a name to belong to — so a frame that is also a group puts two nested
+   * groups with the same name in the tree. Measured in a browser: "Invoice
+   * date group, Invoice date group", which is doc 06's noise rather than
+   * doc 06's structure.
+   *
+   * It changes nothing about the box: the state attributes the frame styles
+   * from are render props, not the role.
+   */
+  role?: 'group' | 'region' | 'presentation';
   /**
    * Make the edge controls unreachable while keeping the room they occupy.
    *
@@ -99,25 +116,14 @@ const AFFIX = cx(
 /**
  * Unreachable in every sense that matters, and still the same width.
  *
- * `inert` rather than a class, because `visibility: hidden` is invisible to a
- * test environment with no stylesheet: the control would keep answering to
- * `getByRole` and a check asserting it is gone would pass for the wrong
- * reason. `inert` takes it out of focus order and hit testing, `aria-hidden`
- * out of the accessibility tree, and the class out of sight.
+ * The mechanism moved to `KeepsItsRoom` when doc 07 §2.2a admitted a SECOND
+ * control at one edge: the cross of a date field goes when there is nothing to
+ * clear and the chevron beside it stays, so a slot-wide answer was no longer
+ * enough. This is the same behaviour applied to a whole slot.
  */
 function edge(content: React.ReactNode, isHidden: boolean): React.ReactNode {
   if (content === undefined) return null;
-  return (
-    <span
-      className={cx(
-        'bb:flex bb:flex-none bb:items-stretch',
-        isHidden && 'bb:invisible'
-      )}
-      {...(isHidden ? { inert: true, 'aria-hidden': true } : {})}
-    >
-      {content}
-    </span>
-  );
+  return <KeepsItsRoom isReachable={!isHidden}>{content}</KeepsItsRoom>;
 }
 
 export function ControlFrame({
@@ -129,6 +135,7 @@ export function ControlFrame({
   isTrailingHidden = false,
   isInvalid,
   isDisabled,
+  role,
   children,
   className
 }: ControlFrameProps): React.ReactNode {
@@ -140,6 +147,7 @@ export function ControlFrame({
   return (
     <Group
       className={cx(CONTROL_BOX, 'bb:flex bb:items-stretch', className)}
+      {...(role === undefined ? {} : { role })}
       /*
        * Conditional spreads rather than named props with `undefined`: the
        * repository sets `exactOptionalPropertyTypes`, and passing `undefined`

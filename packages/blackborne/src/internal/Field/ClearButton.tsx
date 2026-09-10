@@ -1,5 +1,6 @@
 import { Button } from 'react-aria-components';
 import { useMessage } from '../../config';
+import { cx } from '../cx';
 import { EDGE_BUTTON } from './controlBox';
 import { CrossGlyph } from '../CrossGlyph';
 
@@ -39,7 +40,13 @@ export interface ClearButtonProps {
   slot?: string | null;
 }
 
-const CLEAR = EDGE_BUTTON;
+/*
+ * A NAME A CHECK CAN FIND. `EDGE_BUTTON` is shared with the steppers and the
+ * reveal toggle, so the marker belongs to this button rather than to the
+ * shared shape — and doc 07 §2.2a's first condition is a measurement of this
+ * control's hit area beside another one's, which needs something to select.
+ */
+const CLEAR = cx('bb-field-clear', EDGE_BUTTON);
 
 export function ClearButton({
   onPress,

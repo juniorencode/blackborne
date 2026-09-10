@@ -242,6 +242,29 @@ const STATES: Array<[string, string]> = [
    * and today's ring changes with it. And `rtl` is a range whose corners follow
    * the reading direction.
    */
+  /*
+   * THE DATE FAMILY EARNS FIVE, and two of them are about the same edge.
+   *
+   * `date-field-states` is doc 07 §6 on one page, and the panel worth looking
+   * at is the empty one: the cross is unreachable there and still occupying
+   * its width, which is rule 1 and the thing a bounding box can assert but
+   * only a picture shows as "nothing moved". `date-field-locales` is the claim
+   * no number makes well — month first, day first, year first, with the
+   * locale's own marks between them. `date-field-together` is density: the
+   * segments shrink and the targets do not.
+   *
+   * `date-picker-opened` is the composition itself, the field and the layer
+   * and the calendar in one frame. And `date-picker-together` is doc 07
+   * §2.2a's exception photographed at three densities, dark included — two
+   * library-owned controls at one edge, which no other field in this library
+   * is allowed and which is the picture to look at if the rule is ever
+   * questioned.
+   */
+  ['components-datefield--states', 'date-field-states'],
+  ['components-datefield--in-every-locale', 'date-field-locales'],
+  ['components-datefield--together', 'date-field-together'],
+  ['components-datepicker--opened', 'date-picker-opened'],
+  ['components-datepicker--together', 'date-picker-together'],
   ['components-rangecalendar--structures', 'range-calendar-structures'],
   ['components-rangecalendar--states', 'range-calendar-states'],
   ['components-rangecalendar--together', 'range-calendar-together'],

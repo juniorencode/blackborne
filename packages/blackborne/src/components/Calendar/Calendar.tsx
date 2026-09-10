@@ -1,20 +1,11 @@
-import { forwardRef, useState } from 'react';
+import { forwardRef } from 'react';
 import {
   Calendar as AriaCalendar,
   type CalendarProps as AriaCalendarProps,
   type DateValue
 } from 'react-aria-components';
 import type { CalendarDate } from '@internationalized/date';
-import {
-  CalendarChrome,
-  MonthGrid,
-  PeriodView,
-  ROOT,
-  useDayFormatters,
-  useEitherCalendar,
-  useTodayHere,
-  type View
-} from '../../internal/Calendar';
+import { ROOT, SingleBody, TODAY_ON_ACCENT } from '../../internal/Calendar';
 import { cx } from '../../internal/cx';
 import { formatDay, parseDay } from '../../internal/isoDate';
 
@@ -84,22 +75,6 @@ export interface CalendarProps extends Pick<
   className?: string;
 }
 
-/*
- * TODAY'S RING, ON THE ONE FILL THIS COMPONENT PAINTS.
- *
- * A chosen day is the solid accent pair, so on it the ring is the pair's own
- * text colour — a grey ring inside an accent fill is a grey ring nobody can
- * see, which the first baseline is what found. Everywhere else the shared
- * `TODAY` has already drawn it in `--bb-text-muted`.
- *
- * Here rather than in the shared class because `data-selected` does not mean
- * the same thing in both calendars: measured, a range calendar puts it on
- * every day of its band, where white would be 1.12:1.
- */
-const TODAY_ON_ACCENT = cx(
-  'bb:data-selected:shadow-[inset_0_0_0_1px_var(--bb-accent-on)]'
-);
-
 /**
  * A month of days, with the two views above it.
  *
@@ -147,10 +122,6 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>(
     },
     ref
   ) {
-    const [view, setView] = useState<View>('days');
-    const formatters = useDayFormatters();
-    const todayHere = useTodayHere('Calendar');
-
     const min = parseDay(minValue);
     const max = parseDay(maxValue);
     const chosen = parseDay(value);
@@ -187,52 +158,13 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>(
               }
             })}
       >
-        <Title view={view} onView={setView} min={min} max={max} />
-        {view === 'days' ? (
-          <MonthGrid todayHere={todayHere} todayClass={TODAY_ON_ACCENT} />
-        ) : null}
-        {view === 'days' ? null : (
-          <PeriodView
-            view={view}
-            onView={setView}
-            min={min}
-            max={max}
-            formatters={formatters}
-          />
-        )}
+        <SingleBody
+          min={min}
+          max={max}
+          todayClass={TODAY_ON_ACCENT}
+          component="Calendar"
+        />
       </AriaCalendar>
     );
   }
 );
-
-/**
- * The header, a component of its own for one reason: the days-view title is
- * built from the base's state, which only exists INSIDE the calendar.
- *
- * One month, so the title is the focused date's own month.
- */
-const Title = ({
-  view,
-  onView,
-  min,
-  max
-}: {
-  view: View;
-  onView: (view: View) => void;
-  min: CalendarDate | undefined;
-  max: CalendarDate | undefined;
-}) => {
-  const formatters = useDayFormatters();
-  const focused = useEitherCalendar()?.focusedDate;
-
-  return (
-    <CalendarChrome
-      view={view}
-      onView={onView}
-      min={min}
-      max={max}
-      formatters={formatters}
-      daysTitle={focused === undefined ? '' : formatters.month(focused)}
-    />
-  );
-};
