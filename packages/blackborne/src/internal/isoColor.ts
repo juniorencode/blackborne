@@ -13,11 +13,10 @@ import { isDev } from './isDev';
  * `parseColor` is re-exported by `react-aria-components`, so nothing here
  * reaches past a public entry point and no dependency is added.
  *
- * WHAT IS NOT HERE YET is the formatting half. Reporting a colour in a named
- * format — with the development warning decision 0024 asks for when the format
- * cannot carry the value's alpha — belongs to the component that needs it, and
- * that is the full picker. A closed palette reports the string it was given,
- * so it needs a comparison and not a formatter.
+ * The formatting half arrived with the full picker, which is the component that
+ * needs it: a closed palette reports the string it was GIVEN, so it needs a
+ * comparison, and a value dragged out of a two-dimensional area was never one
+ * of the inputs.
  */
 
 /**
@@ -89,4 +88,41 @@ export const NO_COLOUR = parseColor('rgba(0, 0, 0, 0)');
  */
 export function sameColour(one: Color, other: Color): boolean {
   return one.toString('hexa') === other.toString('hexa');
+}
+
+/**
+ * The formats a colour may be reported in. A closed set (doc 02 §3).
+ *
+ * Six and not the base's full list: `hsb` is left out because nothing outside
+ * a colour picker's own internals speaks it, and a value nobody can paste into
+ * CSS is not a value a project wants stored.
+ */
+export type ColorFormat = 'hex' | 'hexa' | 'rgb' | 'rgba' | 'hsl' | 'hsla';
+
+/**
+ * Whether a format would throw the alpha away.
+ *
+ * Measured, and it is decision 0024's fourth finding: `#3e63dd80` reported as
+ * `hex` comes back `#3E63DD`, with no error anywhere. So a picker that offers
+ * transparency and a format that cannot carry it is a misconfiguration worth
+ * saying out loud rather than a shape to forbid — a project may legitimately
+ * want the opaque value.
+ */
+export function losesAlpha(color: Color, format: ColorFormat): boolean {
+  const opaque = format === 'hex' || format === 'rgb' || format === 'hsl';
+  return opaque && color.getChannelValue('alpha') < 1;
+}
+
+/**
+ * A colour, as the string it crosses back as.
+ *
+ * Straight through to the base's own serialiser, which is the point: what this
+ * function adds is that the format is a DECLARED one rather than
+ * `toString()`'s default — measured, that default turns `#3e63dd` into
+ * `rgba(62, 99, 221, 1)`, and after a drag in a saturation-and-brightness area
+ * the colour's space is `hsb`, so the default would report `hsb(...)` to a
+ * project that only ever wanted hex.
+ */
+export function formatColour(color: Color, format: ColorFormat): string {
+  return color.toString(format);
 }

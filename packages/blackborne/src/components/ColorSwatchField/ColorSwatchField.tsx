@@ -6,6 +6,7 @@ import {
   type Color
 } from 'react-aria-components';
 import { FieldMessages, describedBy } from '../../internal/Field';
+import { CHECKERBOARD } from '../../internal/checkerboard';
 import { cx } from '../../internal/cx';
 import { NO_COLOUR, parseSwatch, sameColour } from '../../internal/isoColor';
 import { useDevWarning } from '../../internal/useDevWarning';
@@ -68,6 +69,19 @@ const PALETTE = cx(
  */
 const SWATCH = cx(
   'bb-color-swatch',
+  /*
+   * AND A CHECKERBOARD BEHIND IT, because a declared colour may carry an
+   * alpha: `#3e63dd80` is a legitimate entry in a palette, and on the surface
+   * alone it reads as a paler blue rather than as a transparent one. Found
+   * while building the picker, where the same problem is unavoidable rather
+   * than occasional — so the pattern lives in `internal/checkerboard` and both
+   * read it.
+   *
+   * On this element rather than on the colour inside it: the base writes the
+   * colour inline, and a background image on the same element paints over its
+   * colour rather than behind it.
+   */
+  CHECKERBOARD,
   'bb:box-border bb:flex bb:h-hit bb:aspect-square bb:flex-none',
   'bb:cursor-pointer bb:overflow-hidden bb:rounded-md',
   'bb:border bb:border-solid bb:border-border',

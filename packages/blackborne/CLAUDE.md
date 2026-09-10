@@ -254,6 +254,50 @@ cannot know what level it landed at. Emphasis comes from weight and colour.
   may carry **no padding**, because a border-box height is floored at padding
   plus border and a closed panel would rest two dozen pixels tall.
 
+**A COLOUR THAT MIGHT BE TRANSPARENT NEEDS SOMETHING BEHIND IT.** A
+half-transparent blue on a white surface is a paler blue, and nothing in the
+picture says which — measured on `ColorPicker`'s first transparency baseline,
+where the alpha slider read as a gradient from white to blue and the trigger's
+swatch read as a lighter blue than the value it held.
+`internal/checkerboard` is the pattern, and the important half is WHERE it
+goes: the base writes the colour inline, and a `background-image` on the same
+element paints OVER its background colour rather than behind it. So it is
+always one element further out, with the coloured element on top — which works
+precisely because the colour is transparent where the pattern needs to show.
+`ColorSwatchField` took it too, since a declared palette may carry an alpha.
+
+**A `group-*` VARIANT ONLY MATCHES A DESCENDANT, AND THIS IS THE THIRD SHAPE OF
+THAT TRAP.** `SplitButton` had it with the group on the root; `DatePicker` had
+it on the wrong element; `ColorPicker` put the chevron in the FRAME's trailing
+slot, which is a SIBLING of the trigger that carries `aria-expanded`. The
+variant matched nothing and the mark sat still — measured, `rotate` was `none`
+before and after opening. The mark belongs inside the trigger, which is also
+where `Select` keeps its own, and where the whole box opens the layer rather
+than a mark beside it.
+
+**A CONTROL THAT CANNOT EXPRESS THE VALUE IS NOT OFFERED.** The base's colour
+FIELD speaks six digits of hex and nothing else — read in
+`useColorFieldState`: it formats with `toString('hex')` and parses by building
+`#RRGGBB` from a clamped integer. So a picker offering transparency would show
+an opaque colour in that field and, worse, typing in it would REPORT one: the
+alpha is replaced rather than preserved. `ColorPicker` drops the field when
+`hasAlpha` is on, and the area, the hue and the transparency slider are all
+still keyboard-operable without it.
+
+**TWO OPEN POPOVERS IN ONE STORY CANNOT BOTH BE TOUCHED.** A popover is modal:
+the base lays a full-window underlay over the page while it is open, so a story
+showing two side by side — one per theme mode — has the second one's underlay
+over the first one's panel. Measured:
+`<div class="catalog-pair"> intercepts pointer events`. A picture of two open
+layers is fine; an interaction check needs a story with one.
+
+**AND `LayerPage` IS THE THEME SCOPE AS WELL AS THE PORTAL CONTAINER**, which
+is the whole reason it exists and is easy to half-use. A `data-bb-mode` on a
+panel dresses everything inside it, and a layer is portalled to the body, which
+is outside — so this component's first dark baseline showed a LIGHT panel of
+gradients floating over a dark card. A `minHeight` on the story is not the same
+fix: it gets the layer into the picture and leaves it in the wrong theme.
+
 **A BASE COLLECTION FORWARDS FOUR ARIA ATTRIBUTES AND DROPS THE REST.**
 Measured on `ColorSwatchPicker`, which passes its props through
 `filterDOMProps(props, { labelable: true })`: `aria-label`, `aria-labelledby`,

@@ -1,0 +1,51 @@
+/*
+ * WHAT GOES BEHIND A COLOUR THAT MIGHT BE TRANSPARENT.
+ *
+ * Unlayered on purpose, like `Steps.css` and `controlBox.css`: everything
+ * Tailwind emits lives in `@layer utilities`, and an unlayered rule outranks a
+ * layered one whatever its specificity.
+ *
+ * ## Why it exists at all
+ *
+ * A half-transparent blue on a white surface is a paler blue, and there is
+ * nothing in the picture to say which — measured on the first baseline of
+ * `ColorPicker`'s transparency story, where the alpha slider read as a
+ * gradient from white to blue and the trigger's swatch read as a lighter blue
+ * than the value it held.
+ *
+ * ## Why it is a wrapper rather than the element itself
+ *
+ * The base writes the colour inline: `background-color` on a swatch,
+ * `background` on a slider's track. A `background-image` on the same element
+ * paints OVER its background colour rather than behind it, so a checkerboard
+ * there would be on top of the colour. It has to be one element further out,
+ * with the coloured element on top of it — which works precisely because the
+ * colour is transparent where the pattern needs to show.
+ *
+ * Two gradients offset by half a tile, which is the standard construction. The
+ * squares are the border colour on the surface, so the pattern follows the
+ * theme rather than being two greys nobody can name.
+ */
+
+.bb-checkerboard {
+  background-color: var(--bb-surface);
+  background-image:
+    linear-gradient(
+      45deg,
+      var(--bb-border) 25%,
+      transparent 25%,
+      transparent 75%,
+      var(--bb-border) 75%
+    ),
+    linear-gradient(
+      45deg,
+      var(--bb-border) 25%,
+      transparent 25%,
+      transparent 75%,
+      var(--bb-border) 75%
+    );
+  background-size: 8px 8px;
+  background-position:
+    0 0,
+    4px 4px;
+}
