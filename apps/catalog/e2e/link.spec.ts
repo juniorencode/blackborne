@@ -91,6 +91,56 @@ const openedAt = async (
 };
 
 /**
+ * Do something that opens a tab, and find the tab by asking the CONTEXT what
+ * it holds rather than by waiting for an event.
+ *
+ * **This is the third instrument these four checks have had, and the second
+ * failure was a different one from the first.** All of it measured, all of it
+ * with two workers and never with one:
+ *
+ * 1. `waitForEvent('page')` then `page.url()` — read the address before the
+ *    navigation committed, so it was `about:blank`.
+ * 2. `waitForURL` — never resolved at all, because when the navigation
+ *    commits before Playwright attaches to the new target no navigation event
+ *    arrives for it. Fixed by asking the document (`openedAt`, below).
+ * 3. And then `waitForEvent('page')` ITSELF timed out on CI, 2026-09-10: no
+ *    page event within thirty seconds for a ctrl-click, on a run of 348
+ *    checks. The middle click in the same file passed, and eighteen local runs
+ *    with four workers reproduced nothing.
+ *
+ * One thing is under all three: **an event is a moment, and Playwright's
+ * bookkeeping for a new target is racing the browser.** So this asks for a
+ * STATE — `context.pages()` is what the context holds, and a tab that exists
+ * is in it whether or not an event was observed at the right instant. Doc 10
+ * §11 is the rule, and it is the same move that fixed the accordion's frame
+ * counting, the chevron's rotation and a segment read mid-transition.
+ *
+ * A longer timeout was never the answer and is not the answer now: case 2 was
+ * permanent rather than slow, and a check that needs thirty seconds of a
+ * loaded runner to be right is a check nobody trusts by its tenth failure.
+ */
+const tabOpenedBy = async (
+  page: Page,
+  act: () => Promise<void>
+): Promise<import('@playwright/test').Page> => {
+  const context = page.context();
+  const before = context.pages().length;
+
+  await act();
+
+  await expect
+    .poll(() => context.pages().length, { timeout: 15_000 })
+    .toBe(before + 1);
+
+  const opened = context.pages().at(-1);
+  expect(
+    opened,
+    'the context gained a page but it cannot be read'
+  ).toBeDefined();
+  return opened!;
+};
+
+/**
  * Move the pointer onto something, as movement rather than a teleport.
  *
  * `locator.hover()` teleports and the base's `useHover` does not register that
@@ -135,12 +185,11 @@ test('a middle click opens another tab', async ({ page }) => {
     .boundingBox();
   expect(box).not.toBeNull();
 
-  const [opened] = await Promise.all([
-    page.context().waitForEvent('page'),
+  const opened = await tabOpenedBy(page, () =>
     page.mouse.click(box!.x + box!.width / 2, box!.y + box!.height / 2, {
       button: 'middle'
     })
-  ]);
+  );
 
   expect(await openedAt(opened, /\/customers\/4821/)).toContain(
     '/customers/4821'
@@ -162,10 +211,9 @@ test('a ctrl-click opens another tab', async ({ page }) => {
   await gotoStory(page, AGAINST_A_BUTTON);
 
   const link = page.getByRole('link', { name: 'Astilleros del Sur' });
-  const [opened] = await Promise.all([
-    page.context().waitForEvent('page'),
+  const opened = await tabOpenedBy(page, () =>
     link.click({ modifiers: ['ControlOrMeta'] })
-  ]);
+  );
 
   expect(await openedAt(opened, /\/customers\/4821/)).toContain(
     '/customers/4821'
@@ -179,10 +227,9 @@ test('a ctrl-click opens another tab', async ({ page }) => {
 test('a target of its own opens another tab', async ({ page }) => {
   await gotoStory(page, ELSEWHERE);
 
-  const [opened] = await Promise.all([
-    page.context().waitForEvent('page'),
+  const opened = await tabOpenedBy(page, () =>
     page.getByRole('link', { name: 'Open in another tab' }).click()
-  ]);
+  );
 
   expect(await openedAt(opened, /#a-tab/)).toContain('#a-tab');
   await opened.close();
@@ -229,10 +276,9 @@ test('and a ctrl-click still opens a tab, router or no router', async ({
   await gotoStory(page, ROUTER);
 
   const link = page.getByRole('link', { name: 'Astilleros del Sur' });
-  const [opened] = await Promise.all([
-    page.context().waitForEvent('page'),
+  const opened = await tabOpenedBy(page, () =>
     link.click({ modifiers: ['ControlOrMeta'] })
-  ]);
+  );
 
   expect(await openedAt(opened, /\/customers\/4821/)).toContain(
     '/customers/4821'

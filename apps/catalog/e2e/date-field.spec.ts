@@ -73,12 +73,37 @@ test('the focused segment is filled, and legibly', async ({ page }) => {
   await gotoStory(page, OVERVIEW);
   await page.locator('.bb-date-segment').first().click();
 
-  const seen = await page
-    .locator('.bb-date-segment[data-focused]')
-    .evaluate(node => {
-      const styles = getComputedStyle(node);
-      return { bg: styles.backgroundColor, colour: styles.color };
-    });
+  /*
+   * WAITED FOR, NOT READ ONCE. The segment's fill and its text colour are
+   * transitioned, so a single read catches them mid-flight: measured under a
+   * full parallel run, `rgb(150, 152, 154)` on `rgba(62, 99, 221, 0.537)` at
+   * 1.80:1 — a half-faded background and a half-faded colour, neither of which
+   * the component ever settles at. In isolation the transition had finished
+   * first, which is exactly the shape doc 10 §11 warns about: a check whose
+   * result depends on how loaded the machine was.
+   *
+   * So it polls until the fill is OPAQUE and then reads both together. What is
+   * asserted is the state the component comes to rest in, which is the claim.
+   */
+  const focused = page.locator('.bb-date-segment[data-focused]');
+  await expect
+    .poll(() =>
+      focused.evaluate(node =>
+        /*
+         * `rgba(` and not a regex over the whole value: an opaque computed
+         * colour serialises as `rgb(...)` and a translucent one as `rgba(...)`,
+         * so the prefix IS the question. The first version of this poll used a
+         * pattern that matched both and therefore never became true.
+         */
+        getComputedStyle(node).backgroundColor.startsWith('rgba(')
+      )
+    )
+    .toBe(false);
+
+  const seen = await focused.evaluate(node => {
+    const styles = getComputedStyle(node);
+    return { bg: styles.backgroundColor, colour: styles.color };
+  });
 
   const ratio = await page.evaluate(
     ([a, b]) => {

@@ -33,7 +33,7 @@ this file is out of date. Fix this file.
 assuming anything exists.
 
 At the time of writing: all ten foundations are written, the pipeline is
-complete, and **forty-one components exist** — the ten simple fields and
+complete, and **forty-three components exist** — the ten simple fields and
 controls, `Button`, the flat pieces around them (`Alert`, `Badge`, `Card`,
 `EmptyState`, `Separator`, `Skeleton`, `Spinner`, `VisuallyHidden`), seven
 layers (`Dialog`, `Drawer`, `ConfirmDialog`, `Tooltip`, `Popover`, `Preview`,
@@ -41,8 +41,8 @@ layers (`Dialog`, `Drawer`, `ConfirmDialog`, `Tooltip`, `Popover`, `Preview`,
 `Breadcrumbs`, `Pagination`, `CursorPagination`, `Menu`, `Select`, `Tabs` and
 `SplitButton`. `ComboBox` is the thirty-seventh and the first of the batch
 that follows; `Calendar` and `RangeCalendar` are the thirty-eighth and
-thirty-ninth, and `DateField` and `DatePicker` close level 2 and level 4 of the
-date family.
+thirty-ninth, and `DateField`, `DatePicker`, `TimeField` and
+`DateRangePicker` are the date family.
 
 **The layer batch is finished.** It landed in that order, with `Toast` last by
 decision (doc 08 §7.1). `Menu` was deliberately not in it.
@@ -62,14 +62,18 @@ rather than six — the shape is in
 [the catalog](./docs/catalog-and-build-order.md) §3.2, which records the split
 and why. Read that before starting one.
 
-Six have landed: `ComboBox`, the same component holding **several** values as
-a discriminated union rather than a flag, `useAsyncOptions` — a **hook**,
-because paging and waiting are logic and P6's corollary forbids an assembly
-with a capability its pieces lack — `Calendar`, with its three chained views,
-`RangeCalendar`, which shares all of that through `internal/Calendar` and adds
-the second structural change in the library, and `DateField` with
-`DatePicker`. What remains is `TimeField` with `DateRangePicker`. It spans
-three levels, so the order is the dependency and not the level number.
+**All seven have landed and the batch is finished.** `ComboBox`, the same
+component holding **several** values as a discriminated union rather than a
+flag, `useAsyncOptions` — a **hook**, because paging and waiting are logic and
+P6's corollary forbids an assembly with a capability its pieces lack —
+`Calendar` with its three chained views, `RangeCalendar` with the second
+structural change in the library, and the four of the date family:
+`DateField`, `DatePicker`, `TimeField` and `DateRangePicker`. Everything they
+share is in `internal/Calendar` and `internal/Field`.
+
+What is left of the original plan is `TimePicker` — the list-shaped half of a
+time control, and where a minute step belongs — which was always a row of its
+own rather than part of this batch.
 
 **And the risk component paid for itself twice.** The catalog predicted that
 per-option keywords would mean `ComboBox` filtered its own rows. It cannot: the
@@ -135,6 +139,16 @@ conclusion does not follow, so **[§2.2a](./docs/foundations/07-forms.md) is a
 bounded exception with four conditions**, every one of them a browser check,
 and the date family is the only thing in this library with two controls at one
 edge.
+
+**And the last wave gave doc 04 §5 its first caller in JavaScript.** That
+section has always granted the viewport exception to components rendered in a
+portal, and until now nothing needed it: `Dialog` answers its own question in
+plain CSS, which is what a presentational change should do. A range calendar
+inside a popover cannot — how many months it builds is a PROP of the base's
+state, and a container query collapses inside a content-sized layer. So
+`internal/useWindowFits` is the one door, the project's lint rule now names
+`matchMedia` so reaching past it is an error, and the number lives in the
+component with the reason beside it.
 
 **Two things were settled before it started**, in the wave that opened it:
 [doc 07](./docs/foundations/07-forms.md) §2.2 gained a seventh contender for a
@@ -340,6 +354,16 @@ Things that look like improvements and are not:
   whose zone this library may use: today is marked from the configured zone or
   not at all
   ([decision 0023](./docs/decisions/0023-today-comes-from-the-configured-zone.md)).
+- **Do not ask the window anything outside `internal/useWindowFits`.** Doc 04
+  §5 grants the viewport exception to components rendered in a portal and
+  nothing else, and the lint rule names `matchMedia` for that reason — it used
+  to be reachable without writing `window`, which let a component query the
+  viewport and pass lint while doing the thing the rule is about.
+- **Do not read a date field's first segment.** In a twelve-hour locale the
+  base wraps the clock in bidi ISOLATE marks and renders them as
+  zero-width LITERAL segments, so the first child of the row cannot be clicked
+  and its colour is the punctuation's. Two checks were written against it
+  before that was measured; `:not([data-type=literal])` is the selector.
 - **Do not let a field's frame be a group when its control already is one.**
   Every field here draws the base's `Group` as its box, and a date field's
   control is a group of its own — the base's `DateInput` renders one so the row

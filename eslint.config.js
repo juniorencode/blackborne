@@ -59,6 +59,24 @@ export default tseslint.config(
   },
 
   // ---------------------------------------------------------------------
+  // THE ONE FILE ALLOWED TO ASK THE WINDOW A QUESTION.
+  //
+  // Doc 04 §5 grants the viewport exception to components rendered in a
+  // portal, whose real container IS the window, and `DateRangePicker` is the
+  // one that needs it in JavaScript rather than in CSS: how many months its
+  // calendar builds is a prop of the base's state, and a container query
+  // collapses inside a content-sized layer (§4.3).
+  //
+  // Scoped to one file on purpose. The alternative was every portalled
+  // component reaching for `matchMedia` on its own authority, which is how a
+  // documented exception becomes an undocumented habit.
+  // ---------------------------------------------------------------------
+  {
+    files: ['packages/*/src/internal/useWindowFits.ts'],
+    rules: { 'no-restricted-globals': 'off' }
+  },
+
+  // ---------------------------------------------------------------------
   // Stories and tests. Not published, so the content rules do not apply:
   // their literal strings and sample colours are the point. The
   // accessibility and hook rules still do.

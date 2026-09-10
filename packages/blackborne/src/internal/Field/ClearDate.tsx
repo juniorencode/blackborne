@@ -1,7 +1,9 @@
 import { useContext, type ReactNode } from 'react';
 import {
   DateFieldStateContext,
-  DatePickerStateContext
+  DatePickerStateContext,
+  DateRangePickerStateContext,
+  TimeFieldStateContext
 } from 'react-aria-components';
 import { ClearButton } from './ClearButton';
 import { KeepsItsRoom } from './KeepsItsRoom';
@@ -23,15 +25,23 @@ import { KeepsItsRoom } from './KeepsItsRoom';
  *
  * ## Whichever of the two states is above
  *
- * A `DateField` publishes `DateFieldStateContext` and a `DatePicker` publishes
- * `DatePickerStateContext`, and neither publishes the other — the same shape as
- * the two calendars, and read the same way the base's own components read
- * them. A cross that knew only one would silently do nothing in the other.
+ * FOUR components hold a date or a time and every one of them publishes its
+ * own state context: `DateFieldStateContext`, `TimeFieldStateContext`,
+ * `DatePickerStateContext` and `DateRangePickerStateContext`. None publishes
+ * another's — the same shape as the two calendars, and read the same way the
+ * base's own components read them.
+ *
+ * A cross that knew only one would silently do nothing in the other three, and
+ * silently is the word: there is no error, the button simply does not clear.
+ * Which is why the reachability and the clearing are asserted per component
+ * rather than once.
  */
 const useEitherDateState = () => {
-  const field = useContext(DateFieldStateContext);
+  const date = useContext(DateFieldStateContext);
+  const time = useContext(TimeFieldStateContext);
   const picker = useContext(DatePickerStateContext);
-  return field ?? picker;
+  const range = useContext(DateRangePickerStateContext);
+  return date ?? time ?? picker ?? range;
 };
 
 /**

@@ -12,6 +12,57 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **`TimeField`** and **`DateRangePicker`** — the two that close the date
+  family, and the batch with it.
+
+  ```tsx
+  <TimeField label="Opens at" value={time} onChange={setTime} />
+  <DateRangePicker label="Stay" value={stay} onChange={setStay} />
+  ```
+
+  A time crosses as `14:30` and a range as two ISO days (decision 0020).
+  `TimeField` is the same segments a date has, asking for hours and minutes —
+  the list-shaped half of a time control is a `TimePicker`, and a minute step
+  of 15 belongs there rather than in a field nobody can stop mid-keystroke.
+
+  **The measurement that settled why a time is not a formatted string.**
+  `en-US` and `es-PE` both show a twelve-hour clock, and they disagree about
+  how to write the marker: `PM` against `p. m.`, spacing and full stops
+  included. `ja-JP` shows twenty-four hours and no marker at all. Two locales
+  agreeing on the clock and disagreeing on the writing is the argument, and it
+  replaced a guess in this component's own documentation that said `es-PE` was
+  a twenty-four hour locale.
+
+  `DateRangePicker` is one control with two fields and a synchronised pair of
+  calendars. Its two halves take **named slots** from the base, or a range is
+  one date typed twice. Presets are declared rather than shipped, and a maximum
+  number of nights is not a prop: it is `isDateUnavailable`, whose second
+  argument is the day the range was started from — a limit that moves with the
+  anchor, which no number could express.
+
+- **Doc 04 §5 has its first caller in JavaScript.**
+
+  That section has always granted the one viewport exception to components
+  rendered in a portal, and nothing had needed it: `Dialog` answers its own
+  question in plain CSS, which is what a presentational change should do. A
+  range calendar inside a popover cannot. How many months it builds is a **prop
+  of the base's state** — paging and the range's arithmetic are computed from
+  the visible duration — and a container query collapses inside a
+  content-sized layer, because inline-size containment computes a width as
+  though the element had no contents.
+
+  So it reads the window, through one door and with three bounds: it happens in
+  `internal/useWindowFits` and nowhere else, the threshold lives in the
+  component with the reason beside it rather than borrowing the container scale
+  (`Dialog.css`'s sentence: that scale "describes how wide a CONTAINER is, not
+  when a window has run out of room"), and the first answer is always the
+  narrow one because `matchMedia` is read in an effect.
+
+  **The project's own lint rule got stricter on the way.** `matchMedia` was
+  reachable without writing `window`, so a component could query the viewport
+  and pass lint while doing exactly what the rule is about. It is named now,
+  with the one allowed file scoped in the config.
+
 - **`DateField`** and **`DatePicker`** — a date typed, and a date typed or
   pointed at.
 
@@ -1534,6 +1585,52 @@ minor versions. Every break is listed here with its migration.
   `packages/blackborne`, the visual catalog in `apps/catalog`.
 
 ### Fixed
+
+- **A new tab is found by asking the context, not by waiting for an event** —
+  the third instrument these four checks have had, and the second time CI
+  failed them for a reason that had nothing to do with the component.
+
+  The history, all of it measured with two workers and never with one:
+  `waitForEvent('page')` plus `page.url()` read the address before the
+  navigation committed; `waitForURL` then never resolved at all, because a
+  navigation that commits before Playwright attaches to the new target emits no
+  navigation event for it; and now `waitForEvent('page')` itself timed out —
+  thirty seconds, no page event, for a ctrl-click on a run of 348 checks. The
+  middle click in the same file passed, and eighteen local runs at four workers
+  reproduced nothing.
+
+  One thing is under all three: **an event is a moment, and Playwright's
+  bookkeeping for a new target is racing the browser.** So the checks ask for a
+  STATE instead. `context.pages()` is what the context holds, and a tab that
+  exists is in it whether or not an event was observed at the right instant —
+  doc 10 §11, and the same move that fixed the accordion's frame counting, a
+  chevron's rotation and a segment read mid-transition.
+
+  A longer timeout was never the answer and is not the answer now: the second
+  failure was permanent rather than slow, and a check that needs thirty seconds
+  of a loaded runner to be right is a check nobody trusts by its tenth failure.
+
+  **Verified by mutation, because the failure does not reproduce here.**
+  Dropping the anchor's address makes no tab open and the poll says so —
+  "Expected: 2, Received: 1" rather than a timeout, which also names what
+  happened instead of leaving a stack trace. 24 runs of the four checks at four
+  workers, and the full 348, green.
+
+- **A twelve-hour locale renders invisible segments, and two checks were
+  written against one.** The base wraps the clock in bidi ISOLATE marks
+  (U+2066 and U+2069) and renders them as zero-width `literal` segments, so the
+  FIRST child of a time field's row cannot be clicked and its colour is the
+  punctuation's rather than the value's. One check timed out on it and another
+  found read-only and disabled identical — both of them measuring an element
+  nobody can see. `:not([data-type=literal])` is the selector, and the finding
+  is in the package guide because every date and time component has that row.
+
+- **A range picker's calendar was told nothing about how many months it had.**
+  Found while wiring the layer: the picker's `calendarProps` carry the value,
+  the limits, the unavailable days and the first day of the week, and nothing
+  about the visible duration — so the grids and the base's state would have
+  disagreed, with paging stepping the wrong distance. Passed explicitly, and
+  written down in both guides.
 
 - **Three things the date family found, two of them in the field structure
   every other component shares.**

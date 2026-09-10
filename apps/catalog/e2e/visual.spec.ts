@@ -260,6 +260,20 @@ const STATES: Array<[string, string]> = [
    * is allowed and which is the picture to look at if the rule is ever
    * questioned.
    */
+  /*
+   * THE DATE FAMILY'S LAST THREE. `time-field-locales` is the picture that
+   * corrected this component's own documentation — two locales agreeing on a
+   * twelve-hour clock and disagreeing about how to write the marker, which is
+   * the argument for the boundary being `14:30` made visible.
+   *
+   * `date-range-picker-opened` is the widest composition this library has:
+   * two segment rows, two edge controls and two synchronised months in a
+   * layer. And `date-range-picker-states` is doc 07 §6 on a control with two
+   * halves, where an empty one has to read as one field rather than two.
+   */
+  ['components-timefield--in-every-locale', 'time-field-locales'],
+  ['components-daterangepicker--opened', 'date-range-picker-opened'],
+  ['components-daterangepicker--states', 'date-range-picker-states'],
   ['components-datefield--states', 'date-field-states'],
   ['components-datefield--in-every-locale', 'date-field-locales'],
   ['components-datefield--together', 'date-field-together'],

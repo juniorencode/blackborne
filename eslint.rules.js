@@ -69,6 +69,28 @@ export const restrictedGlobals = [
     message:
       'The library never reads the window (P3, P4). What it needs — mode, locale, time zone, container width — is received or measured through the shared hook.'
   },
+  /*
+   * ADDED 2026-09-10, and the rule got stricter rather than looser.
+   *
+   * `matchMedia` was reachable without writing `window`, so a component could
+   * query the viewport and pass this rule while doing the thing the rule is
+   * about. Naming it closes that, and doc 04 §5's one legitimate exception — a
+   * component rendered in a PORTAL, whose real container is the window — gets
+   * a single door instead of a hole: `src/internal/useWindowFits.ts`, allowed
+   * by name in the config, with the whole argument in the file.
+   *
+   * `DateRangePicker` is why it exists, and it is not a preference: a range
+   * calendar inside a popover has to build one month or two, and the count is
+   * a PROP of the base's state rather than a paint. Inline-size containment
+   * computes an element's width as though it had no contents, so the container
+   * query the inline calendar uses collapses inside a content-sized layer
+   * (§4.3). CSS cannot answer it and the container cannot either.
+   */
+  {
+    name: 'matchMedia',
+    message:
+      'A viewport query belongs only to a component rendered in a portal (doc 04 §5), and it goes through `internal/useWindowFits` — the one place allowed to ask, with the reason written in it.'
+  },
   {
     name: 'localStorage',
     message:

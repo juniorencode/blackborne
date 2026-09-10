@@ -89,6 +89,17 @@ export type {
 export { Calendar } from './components/Calendar';
 export { DateField } from './components/DateField';
 export { DatePicker } from './components/DatePicker';
+export { DateRangePicker } from './components/DateRangePicker';
+export type {
+  DateRangePickerProps,
+  DateRangePickerSize
+} from './components/DateRangePicker';
+export { TimeField } from './components/TimeField';
+export type {
+  TimeFieldProps,
+  TimeFieldSize,
+  TimePrecision
+} from './components/TimeField';
 export type { DatePickerProps, DatePickerSize } from './components/DatePicker';
 export type { DateFieldProps, DateFieldSize } from './components/DateField';
 export type { CalendarProps } from './components/Calendar';
