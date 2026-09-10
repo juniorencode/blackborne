@@ -1586,6 +1586,36 @@ minor versions. Every break is listed here with its migration.
 
 ### Fixed
 
+- **A new tab is found by asking the context, not by waiting for an event** —
+  the third instrument these four checks have had, and the second time CI
+  failed them for a reason that had nothing to do with the component.
+
+  The history, all of it measured with two workers and never with one:
+  `waitForEvent('page')` plus `page.url()` read the address before the
+  navigation committed; `waitForURL` then never resolved at all, because a
+  navigation that commits before Playwright attaches to the new target emits no
+  navigation event for it; and now `waitForEvent('page')` itself timed out —
+  thirty seconds, no page event, for a ctrl-click on a run of 348 checks. The
+  middle click in the same file passed, and eighteen local runs at four workers
+  reproduced nothing.
+
+  One thing is under all three: **an event is a moment, and Playwright's
+  bookkeeping for a new target is racing the browser.** So the checks ask for a
+  STATE instead. `context.pages()` is what the context holds, and a tab that
+  exists is in it whether or not an event was observed at the right instant —
+  doc 10 §11, and the same move that fixed the accordion's frame counting, a
+  chevron's rotation and a segment read mid-transition.
+
+  A longer timeout was never the answer and is not the answer now: the second
+  failure was permanent rather than slow, and a check that needs thirty seconds
+  of a loaded runner to be right is a check nobody trusts by its tenth failure.
+
+  **Verified by mutation, because the failure does not reproduce here.**
+  Dropping the anchor's address makes no tab open and the poll says so —
+  "Expected: 2, Received: 1" rather than a timeout, which also names what
+  happened instead of leaving a stack trace. 24 runs of the four checks at four
+  workers, and the full 348, green.
+
 - **A twelve-hour locale renders invisible segments, and two checks were
   written against one.** The base wraps the clock in bidi ISOLATE marks
   (U+2066 and U+2069) and renders them as zero-width `literal` segments, so the
