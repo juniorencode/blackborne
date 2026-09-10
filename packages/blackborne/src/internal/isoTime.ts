@@ -61,3 +61,46 @@ export function formatClock(time: Time | null | undefined): string | null {
   const second = String(time.second).padStart(2, '0');
   return `${hour}:${minute}:${second}`;
 }
+
+/**
+ * Every time on a step, between two bounds and inclusive of both ends.
+ *
+ * A PURE FUNCTION, because P7 asks for it and because this is the half of a
+ * time picker that has nothing to do with painting: given a step and two
+ * bounds it is a list, and a list is testable without rendering anything.
+ *
+ * ## The step is the whole reason the picker exists
+ *
+ * A segmented `TimeField` cannot honour a minute step — the restriction has no
+ * expression between the first keystroke and the second, which is why that is
+ * a **Never** in the catalog. A list can: every reachable value is a row, and
+ * there is no state in which something else has been typed.
+ *
+ * ## Minutes of the day rather than `Time.add`
+ *
+ * `Time` has arithmetic and it wraps at midnight, so a loop built on it and
+ * bounded by a comparison runs forever the moment the last step would cross
+ * the end of the day. Counting minutes is total: the loop is over numbers and
+ * the `Time` is built at the end.
+ *
+ * A step below one minute is clamped rather than refused. The caller is where
+ * a count nobody can use gets a development warning, because "nobody can use
+ * it" is about a list on a screen and not about this function.
+ */
+export function clockSteps(options: {
+  stepMinutes: number;
+  from?: Time | undefined;
+  to?: Time | undefined;
+}): Time[] {
+  const step = Math.max(1, Math.floor(options.stepMinutes));
+  const minutes = (time: Time) => time.hour * 60 + time.minute;
+
+  const start = options.from === undefined ? 0 : minutes(options.from);
+  const end = options.to === undefined ? 23 * 60 + 59 : minutes(options.to);
+
+  const found: Time[] = [];
+  for (let at = start; at <= end; at += step)
+    found.push(new Time(Math.floor(at / 60), at % 60));
+
+  return found;
+}

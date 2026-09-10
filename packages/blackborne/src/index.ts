@@ -111,6 +111,14 @@ export type {
   TimeFieldSize,
   TimePrecision
 } from './components/TimeField';
+
+/*
+ * The choosing half of a time control, where a minute step can be honoured.
+ * `TimeField` types and this chooses — decision 0015's shape, and the reason
+ * there are no segments in here.
+ */
+export { TimePicker } from './components/TimePicker';
+export type { TimePickerProps, TimePickerSize } from './components/TimePicker';
 export type { DatePickerProps, DatePickerSize } from './components/DatePicker';
 export type { DateFieldProps, DateFieldSize } from './components/DateField';
 export type { CalendarProps } from './components/Calendar';

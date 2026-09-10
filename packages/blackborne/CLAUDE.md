@@ -254,6 +254,55 @@ cannot know what level it landed at. Emphasis comes from weight and colour.
   may carry **no padding**, because a border-box height is floored at padding
   plus border and a closed panel would rest two dozen pixels tall.
 
+**A COMPONENT CAN BE ANOTHER ONE WITH ITS DATA GENERATED, and that is not a
+lesser component.** `TimePicker` is a `Select` whose rows come from a pure
+function: the trigger, the panel, the list's width, the tick, the typeahead,
+the required state and the whole keyboard are already built and already
+measured, and what the wrapper adds is which rows exist and what a row is
+called. Columns in a layer — which the catalog predicted — would have been a
+second mechanism for a job already done (doc 01 §7), with a custom trigger, a
+custom keyboard between columns and a value assembled by hand.
+
+The test it has to pass is P6's corollary: an assembly may not have a
+capability its pieces lack. This one has exactly `Select`'s, and the two
+places it could have failed are worth knowing. **A row's children must stay
+plain text**, or the typeahead dies quietly — so the row says a formatted time
+and nothing else, which also means typing follows the locale: `2` in English,
+`14` in Japanese. And **the value is not the label**: the row reads `2:00 p. m.`
+in `es-PE` and `14:00` in `ja-JP` for one value of `14:00`, which is decision
+0020's argument arriving as a list.
+
+**AND A COMPONENT THAT OWNS ITS OPTIONS OWNS RULE 5'S ROUTE.** Doc 07 §2.2 rule
+5 sends a field that opens a layer to the chevron alone, on the grounds that
+emptying has a route costing no width — "an option that returns to no value".
+Every other field with a list is handed its options by a consumer, so that
+route is one the library can only hope exists. A picker that GENERATES its rows
+can put the row in itself, and `TimePicker` does while it is not required. It
+is therefore not §2.2a's third case, which the catalog expected it to be.
+
+**A TIME OF DAY HAS NO ZONE, so its rows format against UTC** — the same
+argument the calendar's month headings use, and the same trap avoided:
+formatting `14:15` through a real zone would print `09:15` for somebody in
+Lima. The date handed to the formatter is arbitrary and invisible, because the
+only fields asked for are the hour and the minute.
+
+**A PHANTOM TICK WAS SITTING IN EVERY SELECT'S TRIGGER**, found by building on
+it. `SelectValue` renders the selected row's own children — all of them — so
+the trigger contained a copy of the row's tick glyph. The tick is
+`visibility: hidden` on purpose, so a row does not move as the selection walks;
+the consequence in the trigger was 16px of invisible width inside an element
+that truncates, which showed the ellipsis early for no reason anybody could
+see. It is `display: none` in there now, through a parent-scoped variant on the
+tick itself — and no baseline moved, because the box was invisible.
+
+**AND AN OPEN LAYER NEEDS `LayerPage` TO BE PHOTOGRAPHED AT ALL.** The visual
+suite screenshots `body`, whose box does not include an absolutely positioned
+child — so the first baseline of a picker with its list open came out as a
+trigger and the top two rows, clipped where the body ended. `catalog/layerPage`
+is also the portal container, so the layer lands inside the element being
+captured. Every open-list story in this catalog already used it; a new one that
+does not gets a picture that looks plausible and shows a third of the thing.
+
 **A `dir` ATTRIBUTE IS NOT A LOCALE, and a component that uses both mechanisms
 can disagree with itself.** A slider draws two things against one rail: the
 fill's offset is `inset-inline-start`, which the stylesheet mirrors on its own,
