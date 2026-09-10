@@ -269,6 +269,20 @@ seem convenient. The test is the premise: a field whose value can already be
 emptied by a route that costs no width keeps one control, and every field in
 this library except the date family is in that group.
 
+**And the third case did not arrive**, which is worth recording because it was
+expected to. **Date:** 2026-09-10. The catalog predicted `TimePicker` would be
+this section's third component — a field that opens a layer, holding a value
+somebody has to be able to remove. It keeps ONE control, because rule 5's
+premise holds there for a reason no other field has: **the component owns its
+own options.** Every other field with a list is handed its options by a
+consumer, so "an option that returns to no value" is a route the library can
+only hope exists; a picker that generates its rows can put that row in itself,
+and does.
+
+So the test tightened rather than loosening. A field keeps two controls only
+where emptying has no route at all AND cannot be observed — and if the field
+owns a list, it has a route by construction.
+
 ## 3. The core is controlled
 
 Every field works with a value and a change callback, depending on no form

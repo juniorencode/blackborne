@@ -198,7 +198,20 @@ export const en = {
    * 05 §2.2 rule 5), and a label glued together from a consumer's own string
    * is exactly that in the language where the word order is different.
    */
-  moreActions: 'More actions'
+  moreActions: 'More actions',
+
+  /*
+   * The row of a `TimePicker` that means no time, which is the route doc 07
+   * §2.2 rule 5 relies on: a field that opens a layer keeps the chevron and
+   * has no clear button, BECAUSE emptying has a route costing no width — "an
+   * option that returns to no value". Every other field with a list has a
+   * consumer writing its options; this one generates them, so the row has to
+   * come from here.
+   *
+   * "No time" rather than "None", which reads as an absence of anything in a
+   * list of times.
+   */
+  noTime: 'No time'
 } as const;
 
 export type DictionaryKey = keyof typeof en;

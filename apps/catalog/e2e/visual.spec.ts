@@ -317,6 +317,21 @@ const STATES: Array<[string, string]> = [
    * therefore cannot be seen by poking at the component. It is the first state
    * in `Force`'s union that is unreachable by hand.
    */
+  /*
+   * A TIME PICKER EARNS TWO, and neither is about the trigger: it is a
+   * `Select` with its rows generated, so the trigger, the panel and the tick
+   * are already photographed under that component.
+   *
+   * `time-picker-opened` is the list in both modes, with the no-time row
+   * first — the route doc 07 §2.2 rule 5 relies on, provided by the component
+   * because the component owns its options. `time-picker-locales` is the
+   * argument for decision 0020 made visible: one value, `14:00`, read three
+   * ways — `2:00 PM`, `2:00 p. m.` and `14:00`. Two of those locales are both
+   * twelve-hour and disagree about how to write the marker.
+   */
+  ['components-timepicker--opened', 'time-picker-opened'],
+  ['components-timepicker--in-every-locale', 'time-picker-locales'],
+  ['components-timepicker--states', 'time-picker-states'],
   ['components-slider--states', 'slider-states'],
   ['components-slider--interaction', 'slider-interaction'],
   ['components-buttongroup--variants', 'button-group-variants'],
@@ -621,6 +636,9 @@ const AXES: Array<[string, string]> = [
   ['components-select--brand-override', 'axis-select-brand'],
   /* And the tabs' three axes plus the brand, which has to reach the one thing
      that marks the open tab: the rule under it. */
+  /* And the time picker's RTL, where the list aligns to the other edge of the
+     trigger and the rows are read from the right. */
+  ['components-timepicker--direction', 'axis-time-picker-rtl'],
   /* And the slider's RTL, which is the axis it has a defect history on: the
      fill's offset is a logical CSS property and the handle's is a computed
      percentage the base mirrors from the LOCALE, so the two can disagree and

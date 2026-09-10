@@ -33,7 +33,7 @@ this file is out of date. Fix this file.
 assuming anything exists.
 
 At the time of writing: all ten foundations are written, the pipeline is
-complete, and **forty-seven components exist** — the ten simple fields and
+complete, and **forty-eight components exist** — the ten simple fields and
 controls, `Button` with `ButtonGroup`, `Slider`, the flat pieces around them
 (`Alert`, `Badge`, `Card`, `EmptyState`, `Progress`, `Separator`, `Skeleton`,
 `Spinner`, `Steps`, `VisuallyHidden`), seven
@@ -72,9 +72,16 @@ structural change in the library, and the four of the date family:
 `DateField`, `DatePicker`, `TimeField` and `DateRangePicker`. Everything they
 share is in `internal/Calendar` and `internal/Field`.
 
-What is left of the original plan is `TimePicker` — the list-shaped half of a
-time control, and where a minute step belongs — which was always a row of its
-own rather than part of this batch.
+**And the original plan is finished.** `TimePicker` was the last row of it —
+the choosing half of a time control, and where a minute step belongs — and it
+landed as a `Select` with its rows GENERATED rather than as the columns in a
+layer the catalog imagined. A step bounds the count, and a select already owns
+the trigger, the panel, the list's width, the tick, the typeahead and the whole
+keyboard: columns would have been a second mechanism for a job already done
+(doc 01 §7). The row records both that correction and the one about
+[doc 07](./docs/foundations/07-forms.md) §2.2a, whose third case was expected
+there and did not arrive — a component that owns its own options can provide
+rule 5's route itself, and this one does.
 
 **And the risk component paid for itself twice.** The catalog predicted that
 per-option keywords would mean `ComboBox` filtered its own rows. It cannot: the

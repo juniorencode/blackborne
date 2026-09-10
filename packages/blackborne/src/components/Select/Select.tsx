@@ -176,8 +176,25 @@ const OPTION = cx(
  * hiding).
  */
 const TICK = cx(
+  'bb-select-tick',
   'bb:h-mark bb:w-mark bb:flex-none bb:text-accent',
-  'bb:invisible bb:group-data-selected:visible'
+  'bb:invisible bb:group-data-selected:visible',
+  /*
+   * AND GONE ENTIRELY INSIDE THE TRIGGER, which is a phantom box found while
+   * building `TimePicker`.
+   *
+   * `SelectValue` renders the selected row's own children — all of them — so
+   * the trigger contains a copy of this glyph. `visibility: hidden` keeps a
+   * box, deliberately, so the row does not move as the selection walks: the
+   * consequence is 16px of invisible width inside `.bb-select-value`, which is
+   * `truncate`, so a long value shows its ellipsis 16px early for no reason
+   * anybody could see.
+   *
+   * `display: none` is right in the TRIGGER for the same reason `visibility`
+   * is right in the row: there is nothing in the trigger for it to keep a
+   * place for.
+   */
+  'bb:[.bb-select-value_&]:hidden'
 );
 
 export interface SelectProps extends Omit<

@@ -12,6 +12,55 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **`TimePicker`** — a time chosen from a list, on a step.
+
+  ```tsx
+  <TimePicker
+    label="Opens at"
+    value={opens}
+    onChange={setOpens}
+    step={15}
+    minValue="06:00"
+    maxValue="22:00"
+  />
+  ```
+
+  **The choosing half of a time control**, and `TimeField` is the typing half —
+  decision 0015's shape rather than a new argument. **There are no segments in
+  here on purpose.** A field somebody can type into cannot honour a step: the
+  restriction has no expression between the first keystroke and the second,
+  which is why a minute step on a segmented field is a **Never** in the
+  catalog. A picker offering quarter hours in its list and accepting `14:37`
+  from the keyboard would hold the rule in one half and break it in the other.
+
+  So an arbitrary time is a `TimeField`, and a time from a set is this.
+
+  **It is a `Select` with its rows generated**, not the columns in a layer the
+  catalog predicted — and the row now records why. A step bounds the count (96
+  rows at a quarter of an hour), and a select already owns the trigger, the
+  panel, the list's width, the tick, the typeahead, the required state and the
+  whole keyboard. Columns would have been a second mechanism for a job already
+  done. The rows themselves are `clockSteps`, a pure function tested without
+  rendering anything.
+
+  **Emptying is a row rather than a cross.** Doc 07 §2.2 rule 5 sends a field
+  that opens a layer to the chevron alone, because emptying has a route costing
+  no width — "an option that returns to no value". This component owns its
+  options, so it provides that row itself while the field is not required. It is
+  therefore NOT §2.2a's third case, which the catalog expected; that section now
+  records the tightened test.
+
+  **The words come from the locale and the value does not.** One value, `14:00`,
+  reads `2:00 PM` in `en-US`, `2:00 p. m.` in `es-PE` and `14:00` in `ja-JP` —
+  two of those locales are both twelve-hour and disagree about how to write the
+  marker. Rows are formatted against UTC, because a time of day has no zone.
+
+  Two things it does rather than fail quietly: a value the step cannot reach
+  gets a row of its own, because a field holding a value may not show none —
+  and it says in development that either the step or the data is wrong. And a
+  step that makes more than 288 rows says so too, being a document rather than
+  a list.
+
 - **`Slider`** — one value on a range, dragged or typed with the arrow keys.
 
   ```tsx
@@ -1795,6 +1844,16 @@ minor versions. Every break is listed here with its migration.
   `packages/blackborne`, the visual catalog in `apps/catalog`.
 
 ### Fixed
+
+- **A `Select`'s trigger no longer carries a phantom tick.** `SelectValue`
+  renders the selected row's own children — all of them — so the trigger
+  contained a copy of the row's tick glyph. The tick is `visibility: hidden` on
+  purpose, so a row does not move as the selection walks; in the trigger the
+  consequence was 16px of invisible width inside an element that truncates,
+  which showed a long value's ellipsis early for no reason anybody could see.
+  It is `display: none` in there now. **No appearance changed** — the box was
+  invisible, and every baseline came out identical. Found while building
+  `TimePicker` on top of it.
 
 - **`Progress` keeps its number at the trailing end when the label is hidden.**
   The row is `justify-between`, a hidden label is `sr-only` and therefore out
