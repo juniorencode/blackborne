@@ -12,6 +12,62 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **`FileUpload`** — a field for choosing files, with a row per file.
+
+  ```tsx
+  <FileUpload
+    label="Attachments"
+    files={files}
+    onSelect={send}
+    onRemove={forget}
+    accept={['image/*', '.pdf']}
+  />
+  ```
+
+  **It does not upload**, which is the thing everybody expects it to do and the
+  one thing it may not: hard rule 6 allows this library no request at all. So
+  it receives files and reports them, and the project sends them, measures the
+  progress and decides what a failure means — feeding all of that back through
+  `files`. The same division `Toast` has, where `useToasts` makes the queue and
+  the consumer owns it, and it was settled in writing before the component
+  existed.
+
+  A `FileUploadItem` is what a project knows about a file rather than what a
+  `File` knows about itself: an id, a name, a size, how far it has got, and why
+  it failed. A row shows the name, the size formatted through `Intl` in the
+  received locale, a `Progress` bar **named after the file** while it is going,
+  the reason it failed, and the two controls those states earn — a cross named
+  after the file it removes, and a retry that appears on a row that failed and
+  only where `onRetry` can service it.
+
+  **Three routes in, and the base supplies all three.** A pointer drops onto
+  the zone; the file dialog opens from the button inside it; and a keyboard
+  reaches the zone and pastes — the base renders a visually hidden button in
+  there and wires the clipboard to it, which is what lets a drop target pass
+  this library's entry gate at all. Its dashed border is the only one in the
+  library, and it means "an area, not a control".
+
+  What it found is an instrument rather than a defect. **A drop built in the
+  page delivers no file**: `new DataTransfer()` with a `File` added to it
+  reports `types: ['Files']` and `files.length: 1`, and
+  `items[0].webkitGetAsEntry()` answers null — Chromium gives a filesystem
+  entry only to an item from a real drag, and the base skips an item that has
+  none. Every drag event fires, the zone lights up, `onDrop` runs, and the list
+  is empty. The check drives a real drag through the DevTools protocol with
+  paths on disk instead (doc 10 §11.1), and the folder case drops a folder
+  **and** a file so that "nothing was added" cannot pass for a drop that never
+  arrived.
+
+  Two smaller measurements came with it. The base's drop zone passes
+  `filterDOMProps(props, { global: true })`, which forwards **fewer** aria
+  attributes than `{ labelable: true }` does — the two sets are disjoint — so
+  an `aria-describedby` handed to the zone never reaches the DOM and the
+  description hangs off the "Choose files" button instead. And the zone's name
+  comes out as "DropZone Attachments", the base's own word glued to ours
+  through element references; left alone, for the reason `ComboBox`'s "Show
+  suggestions Doctor" was left alone, and on doc 06 §5's list for the
+  screen-reader pass.
+
 - **`ColorPicker`** — a colour chosen from a gradient.
 
   ```tsx

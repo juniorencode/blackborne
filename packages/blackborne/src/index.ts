@@ -89,6 +89,14 @@ export type { AvatarProps, AvatarSize } from './components/Avatar';
  * format is DECLARED (decision 0024), because a value dragged out of an area
  * was never one of the inputs.
  */
+/*
+ * A field for choosing files. IT DOES NOT UPLOAD — hard rule 6 allows the
+ * library no request at all, so it reports the files and the project sends
+ * them, feeding the progress and any failure back through `files`.
+ */
+export { FileUpload } from './components/FileUpload';
+export type { FileUploadItem, FileUploadProps } from './components/FileUpload';
+
 export { ColorPicker } from './components/ColorPicker';
 export type {
   ColorPickerProps,

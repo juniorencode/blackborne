@@ -623,6 +623,48 @@ time is not one of them. Doc 03's rule is about colour and spacing coming from
 tokens; a fraction of a measured width is neither, and `Progress`'s fill is the
 only place it appears.
 
+**A DROP BUILT IN THE PAGE DELIVERS NO FILE**, which is the check for a file
+field passing while proving nothing. `new DataTransfer()` with a `File` added
+to it looks perfect from JavaScript — `types: ['Files']`, `files.length: 1`,
+`items[0].kind: 'file'` — and `webkitGetAsEntry()` answers **null**, because
+Chromium gives a filesystem entry only to an item that came from a real drag.
+The base reads a drop with `readFromDataTransfer`, which calls that method
+wherever it exists and skips the item when it is null: every drag event fires,
+`data-drop-target` appears, `onDrop` runs, and the list is empty. The real drag
+is `Input.dispatchDragEvent` over a DevTools session with paths on disk, and
+`file-upload.spec.ts` has it with the measurement
+([doc 10](../../docs/foundations/10-quality-and-verification.md) §11.1).
+
+**AND `filterDOMProps` WITH `global: true` PASSES FEWER ARIA ATTRIBUTES THAN
+WITH `labelable: true`.** Read in the function: the labelable set is
+`aria-label`, `aria-labelledby`, `aria-describedby`, `aria-details`, and
+`global` covers `dir`, `lang`, `hidden`, `inert`, `translate` plus the pointer
+and animation events — two disjoint sets, and the option that sounds more
+permissive is the one that drops a description. The base's `DropZone` passes
+`{ global: true }` and then `delete DOMProps.id`, so an `aria-describedby`
+handed to it never reaches the DOM at all. `FileUpload` hangs its description
+off the "Choose files" button, which is ours and is where a keyboard lands
+anyway. Same function as `ColorSwatchField`'s trap, opposite subset: check
+which options object a base component uses before planning an attribute onto
+it.
+
+**A DROP ZONE'S NAME IS THE BASE'S WORD PLUS OURS.** Its labelling goes on a
+visually hidden button INSIDE the zone rather than on the element — the zone's
+own div carries no aria attributes at all — as `aria-label="DropZone"` plus an
+`aria-labelledby` referencing itself and then whatever we passed. Measured:
+"DropZone Attachments", the same shape as `ComboBox`'s "Show suggestions
+Doctor", and left alone for the same reason. That hidden button is also **why a
+drop target passes this library's entry gate**: dragging cannot be done from a
+keyboard and never will be, so the base wires the clipboard to it and a person
+tabs in and pastes. It is the first stop in the field, ahead of the button that
+opens the dialog.
+
+**And a disabled drop zone has no handlers at all**, which is stronger than
+looking switched off. `useDrop` returns `{ dropProps: {} }` before it returns
+anything else, so the zone cannot light up and cannot receive a file — a target
+that highlighted and then refused the drop would be worse than one that never
+responded.
+
 ## Fields
 
 The unit of composition is **label + control + description + error**, always
