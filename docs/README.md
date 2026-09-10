@@ -65,7 +65,7 @@ The library is being rewritten from scratch. Phases, in order:
 | F5    | One day with React Aria — decided documents 02 and 08                              | Done     |
 | F6    | Full pipeline with the first component (`Button`)                                  | Done     |
 | F7    | The fields, and the browser checks that verify them                                | Done     |
-| F8    | The rest of level 0 and level 1: the pieces with no dependencies                   | One left |
+| F8    | The rest of level 0 and level 1: the pieces with no dependencies                   | Done     |
 | F9    | The layer base, and everything that depends on a portal                            | Done     |
 | F10   | Composition: the pieces that arrange other pieces, and the first structural change | One left |
 | F11   | Search, and the locale front nothing has proved yet                                | Half in  |
@@ -75,17 +75,18 @@ Which components exist and in what order is not a phase question: it lives in
 that changes weekly. The phases above only say which part of the architecture
 is being proved.
 
-**F8 is deliberately left open**, not finished and not abandoned:
-`ButtonGroup` is the one piece of level 1 still pending, and it blocks nothing.
-F9 went ahead of them because the layer base is a bottleneck that more than
-twenty components wait on, which is criterion 1 of the catalog's own ordering.
-Recorded here rather than marked Done, because a phase table that rounds up is
-a phase table nobody believes.
+**F8 was deliberately left open for a long time**, and it is closed now. F9
+went ahead of its last three pieces because the layer base is a bottleneck that
+more than twenty components wait on, which is criterion 1 of the catalog's own
+ordering — and the row stayed at "two left" rather than being rounded up,
+because a phase table that rounds up is a phase table nobody believes.
 
-`Progress` was the other one and it has landed, ahead of `ButtonGroup` because
-it stopped blocking nothing: a file uploader shows progress per file, so the
-bar was a dependency rather than a nicety. `Steps` landed beside it, from the
-same small block.
+`Progress` went first of the three: it stopped blocking nothing the moment a
+file uploader was on the list, because that shows progress per file. `Steps`
+landed beside it, and `ButtonGroup` closed the phase. What that last one found
+is worth knowing before the next set-shaped component: a variant travelling by
+context (doc 02 §3.1.1) CROSSES A PORTAL, so a layer opened from inside a group
+was inside the group.
 
 **F9 is closed.** The layer base and seven layers landed; `Menu` and `Select`
 landed in the middle of F10 rather than here, by dependency, because three of

@@ -4,6 +4,7 @@ import { Menu, MenuItem, type MenuItemProps } from '../Menu';
 import { useMessage } from '../../config';
 import { ChevronGlyph } from '../../internal/ChevronGlyph';
 import { cx } from '../../internal/cx';
+import { SEAM } from '../../internal/seam';
 import { readDeclarations } from '../../internal/readDeclarations';
 import { useDevWarning } from '../../internal/useDevWarning';
 
@@ -62,29 +63,21 @@ const ARROW = cx(
    */
   'bb:group',
   'bb:rounded-s-none bb:-ms-px',
+  /*
+   * THE SEAM, and it is now a variable this component reads rather than a
+   * colour it writes. `internal/seam` publishes `--bb-seam` on the root from
+   * the variant, because `ButtonGroup` needs the same recipe for an unknown
+   * number of children and a colour written in two places is how the cross
+   * reached four copies.
+   *
+   * Unconditional: the variable is defined for every variant, and for
+   * `secondary` it is the ordinary border colour — which is what this half
+   * already had. The proof that the extraction changed nothing is that all
+   * seven of this component's baselines came out byte-identical.
+   */
+  'bb:border-s-(color:--bb-seam)',
   'bb:px-(--bb-space-2)'
 );
-
-/*
- * The divider, and it exists for ONE variant.
- *
- * A secondary split button has a visible seam already: both halves are
- * bordered, and the negative margin above turns the two borders into one. A
- * primary one does not — its border is the same colour as its fill, so the two
- * halves read as a single blob and nothing says where the action ends and the
- * menu begins.
- *
- * So the primary variant draws its own line, mixed from the pair's OWN text
- * colour rather than from a new token: `--bb-accent-on` at a quarter strength
- * is legible on the accent and follows a brand override for free. The same
- * technique the focus halo uses, and for the same reason — a literal would be
- * one more colour nobody can name.
- */
-const VARIANT: Record<SplitButtonVariant, string> = {
-  primary:
-    'bb:border-s-[color-mix(in_oklab,var(--bb-accent-on)_25%,transparent)]',
-  secondary: ''
-};
 
 /** The mark. Down, and it turns over while the menu is open. */
 const CHEVRON = cx(
@@ -204,7 +197,7 @@ export const SplitButton = forwardRef<HTMLDivElement, SplitButtonProps>(
     return (
       <div
         ref={ref}
-        className={cx(ROOT, className)}
+        className={cx(ROOT, SEAM[variant], className)}
         {...(style === undefined ? {} : { style })}
       >
         <Button
@@ -224,7 +217,7 @@ export const SplitButton = forwardRef<HTMLDivElement, SplitButtonProps>(
               size={size}
               isDisabled={isDisabled || isPending}
               aria-label={moreActions}
-              className={cx(ARROW, VARIANT[variant])}
+              className={ARROW}
             >
               <ChevronGlyph className={CHEVRON} />
             </Button>

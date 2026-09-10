@@ -3,6 +3,7 @@ import { useMessage } from '../../config';
 import { TONE_SURFACE, ToneGlyph } from '../../internal/ToneGlyph';
 import { VisuallyHidden } from '../VisuallyHidden';
 import { cx } from '../../internal/cx';
+import { mergeRefs } from '../../internal/mergeRefs';
 import {
   CONTAINER_STEPS,
   useContainerStep
@@ -301,15 +302,3 @@ export const Steps = forwardRef<HTMLDivElement, StepsProps>(function Steps(
     </div>
   );
 });
-
-/** Two refs on one element, and neither of them optional here. */
-const mergeRefs =
-  (
-    forwarded: React.ForwardedRef<HTMLDivElement>,
-    own: React.RefObject<HTMLDivElement | null>
-  ) =>
-  (element: HTMLDivElement | null): void => {
-    own.current = element;
-    if (typeof forwarded === 'function') forwarded(element);
-    else if (forwarded !== null) forwarded.current = element;
-  };

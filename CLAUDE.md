@@ -33,9 +33,10 @@ this file is out of date. Fix this file.
 assuming anything exists.
 
 At the time of writing: all ten foundations are written, the pipeline is
-complete, and **forty-five components exist** — the ten simple fields and
-controls, `Button`, the flat pieces around them (`Alert`, `Badge`, `Card`,
-`EmptyState`, `Separator`, `Skeleton`, `Spinner`, `VisuallyHidden`), seven
+complete, and **forty-six components exist** — the ten simple fields and
+controls, `Button` with `ButtonGroup`, the flat pieces around them (`Alert`,
+`Badge`, `Card`, `EmptyState`, `Progress`, `Separator`, `Skeleton`, `Spinner`,
+`Steps`, `VisuallyHidden`), seven
 layers (`Dialog`, `Drawer`, `ConfirmDialog`, `Tooltip`, `Popover`, `Preview`,
 `Toast`), and the composition batch so far: `Accordion`, `Collapsible`, `Link`,
 `Breadcrumbs`, `Pagination`, `CursorPagination`, `Menu`, `Select`, `Tabs` and
@@ -166,18 +167,28 @@ asynchronous combo box is a hook**, because a component there would be an
 assembly with a capability its pieces lack, which is the one thing P6's
 corollary forbids outright.
 
-`ButtonGroup` is F8's last leftover. **`Steps` has landed**, and it is the
-fourth caller of doc 04 §6's hook — the first one that needed no new rule,
-which is what three levels of the hierarchy sharing one mechanism looks like
-when it is finished (§11.4).
-**`Progress` has landed**, which unblocks the file uploader: a bar per file was
-the dependency, not a nicety.
+**F8 has no leftovers left**, and its last three each left something behind.
 
-What it found is a trap for anything outside `Field` that hides a label: the
-base's own `Label` is what takes the id the bar points `aria-labelledby` at, so
-a plain span is wired to NOTHING and a hidden label leaves the control
-nameless. The first version of the component did exactly that. `Progress` no longer
-blocks nothing: a file uploader shows progress per file, so it goes first.
+**`Progress`** unblocks the file uploader — a bar per file was the dependency,
+not a nicety — and it found a trap for anything outside `Field` that hides a
+label: the base's own `Label` is what takes the id the bar points
+`aria-labelledby` at, so a plain span is wired to NOTHING and a hidden label
+leaves the control nameless. The first version of the component did exactly
+that.
+
+**`Steps`** is the fourth caller of doc 04 §6's hook and the first that needed
+no new rule, which is what three levels of the hierarchy sharing one mechanism
+looks like when it is finished (§11.4).
+
+**`ButtonGroup`** closed the phase, and what it found is a rule about every set
+that sends a variant down a context (doc 02 §3.1.1): **the context crosses a
+portal.** A layer opened from inside the group was inside the group — measured
+with a probe in a popover's footer, which read `primary/sm` inside a row of
+small primary buttons. Four of the five layers close the set at one call site
+because they share the sheet. The exposure is the MEMBER TYPE rather than the
+mechanism, which is why `RadioGroup` never met it: a radio inside a dialog
+inside a radio group is not a thing, and a button inside a dialog inside a row
+of buttons is ordinary.
 
 **Three things in it are settled and not open for reinvention:** a stepper is
 two components and only one of them is ours (decision 0015), the two pagers do
@@ -193,8 +204,8 @@ measurement; §6.1 keeps its withdrawn text struck through. `Tabs` is the second
 and the collapsed breadcrumb trail the third, and doc 04 §11.1 and §11.2 record
 what they needed on top of the hook: a wrapping row for the widths a query
 cannot judge, an observed element that outlives both structures, and — twice
-now — a rule that a control must never hide a single thing. `Steps` calls the
-same hook when it arrives, rather than inventing a second answer.
+now — a rule that a control must never hide a single thing. `Steps` is the
+fourth caller and needed nothing new, which is §11.4.
 
 **The shared glyphs are drawn once**, in `src/internal` — the cross, the tone
 marks, the chevron and the tick — and the tick is the one that is shared as a
@@ -413,6 +424,13 @@ Things that look like improvements and are not:
   how loaded the CPU was, and comparing our today against the base own mark
   asserts the runner TIME ZONE. Speed, clock and configuration are the three,
   and they are all values the test did not set and cannot see.
+- **Do not let a set's context reach a layer.** A variant that belongs to the
+  set travels by context (doc 02 §3.1.1), and a React context CROSSES A
+  PORTAL — so a popover opened from inside a `ButtonGroup` rendered its footer
+  in the group's own size and variant. Measured with a probe, which read
+  `primary/sm` where a person would have seen small primary buttons in a
+  dialog. `internal/buttonAppearance`'s `NoButtonSet` is what closes it, and
+  the shared sheet is where four of the five layers do so at once.
 - **Do not reference private projects** in code, examples or documentation. The
   library is public and its API is designed for strangers.
 

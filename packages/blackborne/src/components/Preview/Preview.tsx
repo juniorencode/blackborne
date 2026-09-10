@@ -9,6 +9,7 @@ import {
   PANEL,
   type Placement
 } from '../../internal/Layer';
+import { NoButtonSet } from '../../internal/buttonAppearance';
 import { cx } from '../../internal/cx';
 
 /*
@@ -275,7 +276,15 @@ export const Preview = forwardRef<HTMLElement, PreviewProps>(function Preview(
           <div className={PREVIEW_TITLE} id={titleId}>
             {title}
           </div>
-          <div className={PREVIEW_BODY}>{children}</div>
+          {/*
+           * The set stops here too, and this component needs saying
+           * separately: it is the one layer that cannot use the shared sheet,
+           * because the sheet is what contains a layer's focus and a preview
+           * must not (doc 08 §4).
+           */}
+          <div className={PREVIEW_BODY}>
+            <NoButtonSet>{children}</NoButtonSet>
+          </div>
         </div>
       </AriaPopover>
     </PreviewTrigger>
