@@ -254,6 +254,29 @@ cannot know what level it landed at. Emphasis comes from weight and colour.
   may carry **no padding**, because a border-box height is floored at padding
   plus border and a closed panel would rest two dozen pixels tall.
 
+**A PICTURE HAS TO WAIT FOR ITS IMAGES, and this is the fourth time a check
+has measured the machine rather than the component.** `gotoStory` waits for a
+story to mount and `toHaveScreenshot` waits for fonts; neither waits for an
+`<img>`. `Avatar` is the first component in this library to render one, and its
+baseline came back **225 pixels different on CI** — stable across both of
+Playwright's retries, so not a flake, and reproducible locally once the
+capture's timing changed.
+
+The content was identical either way: the difference was antialiasing on the
+circular borders, which is what a page rasterised at two different moments
+gives. `capture()` now polls until every `<img>` in the document is `complete`
+— loaded, failed, or removed by a component that swapped it out, all three of
+which are settled — and it is where the uploader's thumbnails will need the
+same wait.
+
+Two smaller things came with it. **A failure in a story is a data uri that
+cannot decode, not a url that 404s**: what a static server answers for an
+unknown path is not this library's business, and a fallback page returning 200
+makes the browser fail on the decode instead, later and by a different amount
+on a different machine. And **a diff is worth opening before theorising**: the
+225 pixels were assumed to be the browser's broken-image glyph, which is about
+that size, and the artefact showed rings round every circle instead.
+
 **A SLOT SIZES WHAT ARRIVES IN IT, and a slot that forgets renders nothing.**
 Doc 02 §11 says an icon arrives as children and the component sizes and colours
 it — `Badge` has `[&>svg]:size-4` for exactly this. `Avatar`'s fallback slot

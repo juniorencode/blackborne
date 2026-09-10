@@ -30,8 +30,17 @@ const PHOTO =
      </svg>`
   );
 
-/** A url that resolves to nothing, so the fallback is what shows. */
-const BROKEN = '/nothing-here.png';
+/*
+ * AN IMAGE THAT CANNOT DECODE, rather than a url that 404s.
+ *
+ * It was `/nothing-here.png`, and what a static server answers for an unknown
+ * path is not this library's business: a fallback SPA page returns 200 and the
+ * browser then fails to decode it, which takes longer than a 404 and takes a
+ * different amount of time on a different machine. A data uri holding
+ * nonsense fails without a request at all, so the fallback is reached the same
+ * way everywhere.
+ */
+const BROKEN = 'data:image/png;base64,bm90LWFuLWltYWdl';
 
 /** One scope of the theme axes, with a label. */
 function Scope({
