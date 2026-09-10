@@ -132,12 +132,26 @@ consumer could guess.
   [decision 0005](./0005-validation-stays-in-the-project.md) — the project
   decides and passes `isInvalid` with a message. The type system is what made
   it visible: its argument carries the selection mode, so forwarding it pinned
-  the generic to one value. **The other fields still forward it**, silently, and
-  that inconsistency is a row in the catalog rather than something this wave
-  fixed on its way past.
-- Doc 07 §2.2 rule 5's open question — emptying a whole set in one gesture —
+  the generic to one value. ~~**The other fields still forward it**, silently,
+  and that inconsistency is a row in the catalog rather than something this
+  wave fixed on its way past.~~
+  **Settled on 2026-09-10: they no longer forward it.** Measured before
+  removing — ten fields published `validate`, `validationBehavior` travelled
+  with it, and nothing in this repository used either. `internal/validationProps`
+  names the pair and the ten refuse it. What this decision could not see is the
+  CAUSE: those ten extend the base with an `Omit`, which is a blacklist, so the
+  surface grows whenever the base does; every field built from `Calendar`
+  onward uses `Pick` and none of them had the problem.
+- ~~Doc 07 §2.2 rule 5's open question — emptying a whole set in one gesture —
   stays open, and is now narrower: every value has its own cross, so what is
-  missing is the one gesture rather than the ability.
+  missing is the one gesture rather than the ability.~~
+  **Closed on 2026-09-10, and the narrowing above is what closed it.** If the
+  ability is there and only the gesture is missing, then rule 5's premise holds
+  — clearing has a route costing no width — and so does its conclusion. And
+  the gesture belongs to the FORM rather than to the field: somebody asking to
+  clear everything means the six fields in front of them, which only the
+  project knows. Doc 07 §2.2 rule 5 has the reasoning and what would reopen
+  it.
 
 ## Revisit when
 

@@ -13,6 +13,7 @@ import {
   useFieldValue
 } from '../../internal/Field';
 import { cx } from '../../internal/cx';
+import type { ValidationProps } from '../../internal/validationProps';
 
 export type SearchFieldSize = 'sm' | 'md' | 'lg';
 
@@ -99,7 +100,7 @@ const INPUT = cx(
  */
 export interface SearchFieldProps extends Omit<
   AriaSearchFieldProps,
-  'children' | 'className' | 'style' | 'type'
+  'children' | 'className' | 'style' | 'type' | ValidationProps
 > {
   /** Always required. It may be visually hidden, but it always exists. */
   label: React.ReactNode;

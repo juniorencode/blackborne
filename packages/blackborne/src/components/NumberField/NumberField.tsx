@@ -18,6 +18,7 @@ import {
 } from '../../internal/Field';
 import { useConfig, useMessage } from '../../config';
 import { cx } from '../../internal/cx';
+import type { ValidationProps } from '../../internal/validationProps';
 import { mergeRefs } from '../../internal/mergeRefs';
 import { useDevWarning } from '../../internal/useDevWarning';
 
@@ -80,7 +81,7 @@ const STEPPER = cx(
 
 export interface NumberFieldProps extends Omit<
   AriaNumberFieldProps,
-  'children' | 'className' | 'style'
+  'children' | 'className' | 'style' | ValidationProps
 > {
   /** Always required. It may be visually hidden, but it always exists. */
   label: React.ReactNode;

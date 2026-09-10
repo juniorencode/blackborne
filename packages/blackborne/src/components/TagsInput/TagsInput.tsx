@@ -19,6 +19,7 @@ import {
 } from '../../internal/Field';
 import { useMessage } from '../../config';
 import { cx } from '../../internal/cx';
+import type { ValidationProps } from '../../internal/validationProps';
 import { useDevWarning } from '../../internal/useDevWarning';
 import { mergeRefs } from '../../internal/mergeRefs';
 import type { Normalizer } from '../../normalize';
@@ -295,6 +296,7 @@ export interface TagsInputProps extends Omit<
   | 'minLength'
   | 'pattern'
   | 'autoComplete'
+  | ValidationProps
 > {
   /** Always required. It may be visually hidden, but it always exists. */
   label: React.ReactNode;

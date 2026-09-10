@@ -678,6 +678,45 @@ separate entry point and are optional.
 The library restricts input and presents errors. It does not decide whether a
 value is valid, and it does not write the message.
 
+**A FIELD'S PROPS ARE A `Pick`, NOT AN `Omit`** — and the ten that are an
+`Omit` are why `validate` shipped in this library's public API without anybody
+choosing it. An `Omit` is a blacklist: it publishes everything the base has
+except what is named, so the surface grows whenever the base does. A `Pick` is
+a whitelist, which is hard rule 8 in the type system: props are earned.
+
+Measured while removing it — `validate` reached exactly the ten `Omit`-shaped
+fields (`TextField`, `TextArea`, `NumberField`, `SearchField`,
+`PasswordField`, `TagsInput`, `Checkbox`, `CheckboxGroup`, `RadioGroup`,
+`Select`) and none of the components built from `Calendar` onward, which all
+use `Pick`. `internal/validationProps` names the pair it refuses,
+`validate` and `validationBehavior`, with the reason; converting the ten to
+`Pick` is a row in the catalog's §7 rather than something to do in passing.
+
+The second one is the expensive half and the reason this is not pedantry:
+`validationBehavior: 'native'` hands the whole presentation of an error to the
+BROWSER — its bubble, its wording, its language — where doc 05 says every
+string a person reads comes from the dictionary. A prop nobody chose was
+offering a second way for an error to reach a person.
+
+**A BUTTON INSIDE A COLLECTION ROW IS UNREACHABLE, and it renames the row.**
+Measured on a `ListBox` row in a combo box's popover, which is where the
+question keeps arising — a list whose load failed wants a "Retry":
+
+- The row is announced as `option "A row with a button Retry"`. The button's
+  label is glued into the option's own name.
+- `Tab` from the input CLOSES the list and lands on `body`. There is no
+  keyboard route in.
+- The arrows move `aria-activedescendant` only. Focus never leaves the input,
+  so the button is never focused.
+- A pointer does press it, and the press closes the list on the way. A control
+  only a pointer can reach is doc 06 §4 rule 5.
+
+The base's `renderEmptyState` is wrapped in a `role=option` too, so the
+"nothing found" row is no different. `FileUpload` ships a per-row retry for
+exactly the reason this cannot: its rows are a plain `<ul>` where nothing is
+chosen, so a button in one is just a button. **The test is whether the list is
+a COLLECTION**, not whether it is a list.
+
 **Not every field publishes a group context, so a frame may have to be TOLD.**
 `ControlFrame` reads `isInvalid` and `isDisabled` from the base's group context,
 which a `TextField` publishes and a **`Select` does not** — measured. Passed

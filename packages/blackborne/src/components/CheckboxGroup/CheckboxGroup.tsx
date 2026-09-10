@@ -7,6 +7,7 @@ import {
   type CheckboxGroupProps as AriaCheckboxGroupProps
 } from 'react-aria-components';
 import { cx } from '../../internal/cx';
+import type { ValidationProps } from '../../internal/validationProps';
 
 /*
  * The sibling of RadioGroup, and deliberately built the same way: the group
@@ -57,7 +58,7 @@ const ORIENTATION = {
 
 export interface CheckboxGroupProps extends Omit<
   AriaCheckboxGroupProps,
-  'children' | 'className' | 'style'
+  'children' | 'className' | 'style' | ValidationProps
 > {
   /** The group's label. Always present, even when visually hidden. */
   label: React.ReactNode;

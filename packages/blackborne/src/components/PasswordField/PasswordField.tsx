@@ -14,6 +14,7 @@ import {
 } from '../../internal/Field';
 import { useMessage } from '../../config';
 import { cx } from '../../internal/cx';
+import type { ValidationProps } from '../../internal/validationProps';
 
 /*
  * WHAT THIS FIELD DELIBERATELY DOES NOT DO.
@@ -215,7 +216,7 @@ function RevealToggle({
  */
 export interface PasswordFieldProps extends Omit<
   AriaTextFieldProps,
-  'children' | 'className' | 'style' | 'type'
+  'children' | 'className' | 'style' | 'type' | ValidationProps
 > {
   /** Always required. It may be visually hidden, but it always exists. */
   label: React.ReactNode;

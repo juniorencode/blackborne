@@ -9,6 +9,7 @@ import {
   type RadioProps as AriaRadioProps
 } from 'react-aria-components';
 import { cx } from '../../internal/cx';
+import type { ValidationProps } from '../../internal/validationProps';
 
 /*
  * Two levels of label, which is what this component adds to the field model.
@@ -347,7 +348,7 @@ export const Radio = forwardRef<HTMLLabelElement, RadioProps>(function Radio(
 
 export interface RadioGroupProps extends Omit<
   AriaRadioGroupProps,
-  'children' | 'className' | 'style'
+  'children' | 'className' | 'style' | ValidationProps
 > {
   /** The group's label. Always present, even when visually hidden. */
   label: React.ReactNode;

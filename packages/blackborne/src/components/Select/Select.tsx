@@ -22,6 +22,7 @@ import { CheckGlyph } from '../../internal/CheckGlyph';
 import { ChevronGlyph } from '../../internal/ChevronGlyph';
 import { ANCHORED, LAYER_OFFSET, PANEL } from '../../internal/Layer';
 import { cx } from '../../internal/cx';
+import type { ValidationProps } from '../../internal/validationProps';
 
 export type SelectSize = 'sm' | 'md' | 'lg';
 
@@ -205,6 +206,7 @@ export interface SelectProps extends Omit<
   | 'selectedKey'
   | 'defaultSelectedKey'
   | 'onSelectionChange'
+  | ValidationProps
 > {
   /** Always required. It may be visually hidden, but it always exists. */
   label: React.ReactNode;

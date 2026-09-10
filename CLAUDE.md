@@ -510,6 +510,20 @@ Things that look like improvements and are not:
   symptom, with 3.1GB free of 15.85 and 3.1GB of it held by nineteen orphaned
   node and browser processes. Stopped, at 5.48GB free, two runs of all 438
   passed. Reproduce in isolation first (doc 10 §11.5).
+- **Do not extend the base's props with an `Omit`.** A new field's props are a
+  `Pick`, which is hard rule 8 in the type system: an `Omit` publishes
+  everything the base has except what is named, so the public surface grows
+  whenever the base does and nobody decides. Measured — `validate` and
+  `validationBehavior` reached exactly the ten `Omit`-shaped fields and none of
+  the ones built from `Calendar` onward, which all use `Pick`.
+- **Do not put a button inside a collection row.** Measured on a `ListBox` row
+  in a combo box: the row is announced with the button's label glued into its
+  own name, `Tab` from the input closes the list and lands on `body`, and the
+  arrows move `aria-activedescendant` without focus ever leaving the input. A
+  pointer presses it and closes the list on the way, which makes it a control
+  only a pointer can reach (doc 06 §4 rule 5). `FileUpload` has a per-row
+  retry because its rows are a plain `<ul>` where nothing is chosen — the test
+  is whether the list is a COLLECTION, not whether it is a list.
 - **Do not reference private projects** in code, examples or documentation. The
   library is public and its API is designed for strangers.
 
