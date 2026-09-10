@@ -33,7 +33,7 @@ this file is out of date. Fix this file.
 assuming anything exists.
 
 At the time of writing: all ten foundations are written, the pipeline is
-complete, and **forty-three components exist** — the ten simple fields and
+complete, and **forty-four components exist** — the ten simple fields and
 controls, `Button`, the flat pieces around them (`Alert`, `Badge`, `Card`,
 `EmptyState`, `Separator`, `Skeleton`, `Spinner`, `VisuallyHidden`), seven
 layers (`Dialog`, `Drawer`, `ConfirmDialog`, `Tooltip`, `Popover`, `Preview`,
@@ -166,7 +166,14 @@ asynchronous combo box is a hook**, because a component there would be an
 assembly with a capability its pieces lack, which is the one thing P6's
 corollary forbids outright.
 
-`Progress` and `ButtonGroup` are still F8's two leftovers. `Progress` no longer
+`ButtonGroup` is F8's last leftover, and `Steps` is still pending beside it.
+**`Progress` has landed**, which unblocks the file uploader: a bar per file was
+the dependency, not a nicety.
+
+What it found is a trap for anything outside `Field` that hides a label: the
+base's own `Label` is what takes the id the bar points `aria-labelledby` at, so
+a plain span is wired to NOTHING and a hidden label leaves the control
+nameless. The first version of the component did exactly that. `Progress` no longer
 blocks nothing: a file uploader shows progress per file, so it goes first.
 
 **Three things in it are settled and not open for reinvention:** a stepper is

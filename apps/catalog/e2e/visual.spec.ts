@@ -271,6 +271,16 @@ const STATES: Array<[string, string]> = [
    * layer. And `date-range-picker-states` is doc 07 §6 on a control with two
    * halves, where an empty one has to read as one field rather than two.
    */
+  /*
+   * A BAR EARNS TWO. `progress-states` is the five values worth looking at, and
+   * the two ends are why: at 2% the fill has to be a dot rather than a sliver
+   * with square corners, and at 100% its corners have to be the track's —
+   * neither of which a width in pixels shows. `progress-together` is the fill
+   * against its track in dark mode, which is the pairing a check measures at
+   * 4.58:1 in light and which a picture is what makes anybody believe.
+   */
+  ['components-progress--states', 'progress-states'],
+  ['components-progress--together', 'progress-together'],
   ['components-timefield--in-every-locale', 'time-field-locales'],
   ['components-daterangepicker--opened', 'date-range-picker-opened'],
   ['components-daterangepicker--states', 'date-range-picker-states'],

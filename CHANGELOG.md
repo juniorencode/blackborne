@@ -12,6 +12,33 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **`Progress`** — how much of something is done.
+
+  ```tsx
+  <Progress label="Uploading" value={43} />
+  ```
+
+  Doc 09 §3 asks that past a second you show how much is left, and `Spinner`
+  stops at a second. This is that gap, and it is the dependency a file uploader
+  was waiting on rather than a nicety: a file shows progress per file.
+
+  **Determinate, and only determinate.** The base has an indeterminate mode and
+  this does not, because `Spinner` is the indeterminate indicator and two
+  components for one job is doc 01 §7 — a bar that pulses says exactly what a
+  spinner says, with more furniture and a shape that implies a measurement
+  nobody has. The absence is asserted with a `@ts-expect-error`, so adding the
+  prop fails the build rather than passing quietly.
+
+  **The number is the point rather than decoration.** A bar alone answers "is
+  it moving"; the number answers "how long", which is what somebody watching a
+  seven-file upload is actually asking. `tabular-nums` so it does not shift the
+  text beside it on every tick, and `valueLabel` for when the unit matters more
+  than the percentage — "3 of 7 files", with the announced text following the
+  visible one.
+
+  It does not decide when to appear, the same division `Spinner` has: doc 09 §3
+  says nothing under about 300ms, and whoever owns the timing owns that call.
+
 - **`TimeField`** and **`DateRangePicker`** — the two that close the date
   family, and the batch with it.
 
@@ -1585,6 +1612,38 @@ minor versions. Every break is listed here with its migration.
   `packages/blackborne`, the visual catalog in `apps/catalog`.
 
 ### Fixed
+
+- **A hidden label left the control nameless, in the first draft of
+  `Progress`.** It rendered a plain `<span>` and left it out when hidden, on
+  the reasoning that the name reached the bar anyway. It does not: the base
+  publishes a label context that its own `Label` consumes to take an id, and
+  the bar points `aria-labelledby` at that id. A span is wired to nothing.
+
+  Caught by querying BY NAME rather than by role, which is the only way it
+  fails when it is wrong — `getByRole('progressbar')` passes either way. The
+  fix is the base's `Label` always rendered and hidden with `bb:sr-only`, and
+  the trap is in the package guide because anything outside `Field` that offers
+  `isLabelHidden` will meet it.
+
+  A second thing came with it: **`empty:hidden` cannot hide a row that holds an
+  `sr-only` child.** The child is still a child, so `:empty` never matches, and
+  what has to go is the gap above the track — otherwise a bar meant to be a
+  plain line under a filename sits a few pixels below it, which no assertion
+  looks for.
+
+- **The record for what was asked of `Select` is corrected**, and it corrects
+  something said out loud rather than something in the code. Those features
+  were not accepted-and-unbuilt: every one was assessed and ruled **Never**,
+  with a reason each — typing to filter is `ComboBox`, multiple choice is a
+  `CheckboxGroup`, an `options` array is composition, and a read-only select is
+  a select that is either offered or not.
+
+  The one row that was open predicted its own case: "a long searchable list is
+  where grouping is asked for, so `ComboBox` probably arrives with it".
+  `ComboBox` arrived — with a long list, per-option keywords and a source that
+  pages — and asked for no grouping, nor did either picker. The forecast is
+  struck through rather than replaced, because one that was wrong is worth more
+  on the page than one quietly corrected.
 
 - **A new tab is found by asking the context, not by waiting for an event** —
   the third instrument these four checks have had, and the second time CI

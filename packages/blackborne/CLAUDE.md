@@ -254,6 +254,27 @@ cannot know what level it landed at. Emphasis comes from weight and colour.
   may carry **no padding**, because a border-box height is floored at padding
   plus border and a closed panel would rest two dozen pixels tall.
 
+**A hidden label is still a label, and it has to be the BASE's.** Anything
+outside `Field` that offers `isLabelHidden` has to render the base's own
+`Label` and hide it with `bb:sr-only`, never leave it out: the base publishes a
+label context that `Label` consumes to take an id, and the control points
+`aria-labelledby` at that id. A plain `<span>` is wired to nothing, so hiding it
+leaves the control with no accessible name at all — which `Progress` shipped in
+its first draft and which only a query BY NAME catches, since `getByRole` passes
+either way.
+
+**And `empty:hidden` cannot hide a row that holds an `sr-only` child.** The
+child is still a child, so `:empty` never matches; what has to go is the GAP
+above the thing below it. `Progress` collapses its own `gap` when both the label
+and the number are hidden, which is the difference between a bar that sits
+against what it belongs to and one that floats a few pixels under it.
+
+**A runtime percentage is the one inline style in this library.** Tailwind
+generates the classes it can see, and a width that arrives as a number at run
+time is not one of them. Doc 03's rule is about colour and spacing coming from
+tokens; a fraction of a measured width is neither, and `Progress`'s fill is the
+only place it appears.
+
 ## Fields
 
 The unit of composition is **label + control + description + error**, always
