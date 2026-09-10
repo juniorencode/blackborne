@@ -188,6 +188,36 @@ handles that already.
 Outside portals, no other exception is accepted without being written down in
 the component itself, with the reason.
 
+**Date:** 2026-09-10 — **and this section had no caller in JavaScript until
+now.** `Dialog` answers its viewport question in plain CSS, which is what a
+presentational change should do. `DateRangePicker` cannot: how many months its
+calendar builds is a PROP of the base's state, because paging and the range's
+arithmetic are computed from the visible duration, and CSS cannot set a prop.
+Hiding the second month would leave the state believing in a month nobody can
+see.
+
+So it reads the window, and three things bound that:
+
+- **One door.** `internal/useWindowFits` is the only place allowed to ask, and
+  the project's own lint rule now names `matchMedia` so that reaching for it
+  elsewhere is an error rather than an oversight. The rule got STRICTER on the
+  way — `matchMedia` was previously reachable without writing `window`, so a
+  component could query the viewport and pass lint while doing exactly what the
+  rule is about.
+- **The number is the component's, not the scale's.** `Dialog.css` settled the
+  wording and it is repeated in `DateRangePicker`: the container scale
+  "describes how wide a CONTAINER is, not when a window has run out of room."
+  Tying them together would make one unchangeable without the other.
+- **The first answer is the narrow one.** `matchMedia` is read in an effect,
+  so a server and a first paint both get one month — §4.1's rule arriving
+  through the same door `useContainerStep` uses.
+
+And it is the exception's own justification made concrete: a range calendar
+inside a popover CANNOT read a container, because inline-size containment
+computes an element's width as though it had no contents and the layer is
+sized by what is in it (§4.3). The catalog predicted this component would be
+the exception before either half of it existed.
+
 ## 6. Structural changes (N3)
 
 These count as structural, and only then is JavaScript permitted:

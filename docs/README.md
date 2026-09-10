@@ -129,9 +129,9 @@ context, so a filter written there cannot see what was typed
 The filter extends the base's instead, and the prediction is kept beside the
 measurement rather than quietly replaced.
 
-**Six waves of seven have landed**: one value, several, options that arrive
-from somewhere, a calendar, two months of one, and a date typed as well as
-pointed at. (Seven rather than six: wave 4 was planned as
+**THE BATCH IS FINISHED**, all seven waves: one value, several, options that
+arrive from somewhere, a calendar, two months of one, a date typed as well as
+pointed at, and a time beside a range. (Seven rather than six: wave 4 was planned as
 both calendars and `Calendar` filled it on its own — the catalog §3.2 records
 the split and why.) The third is a **hook** rather than the second component
 somebody proposed — `useAsyncOptions`, which is P6's corollary applied to a

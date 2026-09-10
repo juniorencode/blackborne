@@ -24,6 +24,7 @@ export {
   type View
 } from './classes';
 export { MonthGrid } from './MonthGrid';
+export { RangeBody } from './RangeBody';
 export { SingleBody, TODAY_ON_ACCENT } from './SingleBody';
 export {
   isMonthWithinLimits,

@@ -73,14 +73,26 @@ const SEGMENT = cx(
 );
 
 /**
- * The row of segments a date is typed into.
+ * The row of segments a date or a time is typed into.
  *
- * Works inside a `DateField` and inside a `DatePicker` without being told
- * which: the base publishes the field's props through a context and
+ * Works inside a `DateField`, a `TimeField` and a `DatePicker` without being
+ * told which: the base publishes the field's props through a context and
  * `DateInput` reads it either way.
+ *
+ * **And a range picker needs the slot**, which is the same rule the package
+ * guide already records for a shared BUTTON, arriving on a second kind of
+ * element. A `DateRangePicker` publishes a SLOTTED field context — measured:
+ * `{ slots: { start: startFieldProps, end: endFieldProps } }` — so a row
+ * inside one has to say which of the two it is, or both rows would take the
+ * same props and a range would be one date typed twice.
  */
-export const DateSegments = (): ReactElement => (
-  <DateInput className={SEGMENTS}>
+export const DateSegments = ({
+  slot
+}: {
+  /** `start` or `end` inside a range picker; nothing anywhere else. */
+  slot?: 'start' | 'end';
+} = {}): ReactElement => (
+  <DateInput className={SEGMENTS} {...(slot === undefined ? {} : { slot })}>
     {segment => <DateSegment segment={segment} className={SEGMENT} />}
   </DateInput>
 );

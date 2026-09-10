@@ -428,6 +428,23 @@ play and they answer different questions: which day it is TODAY needs the real
 one, and formatting a month's name needs none at all — a day has no zone, so
 the headings format against UTC.
 
+**A RANGE picker's two halves take NAMED SLOTS**, and this is the shared-button
+rule arriving on a second kind of element. The base publishes a slotted field
+context — measured: `{ slots: { start: startFieldProps, end: endFieldProps } }`
+— so the shared segment row has to say which half it is. Without that both rows
+take the same props and a range is one date typed twice.
+
+**And it is the one component allowed to ask the window a question.** Doc 04 §5
+reserves the viewport exception for what renders in a portal, and a range
+calendar inside a popover cannot read a container at all: inline-size
+containment computes a width as though the element had no contents, so the
+query collapses inside a content-sized layer. The count is a PROP of the base's
+state rather than a paint, so CSS cannot answer it either — and
+`visibleDuration` has to be passed explicitly, because the picker's
+`calendarProps` carry the value, the limits and the unavailable days and
+nothing about how many months are visible. `internal/useWindowFits` is the one
+door; the lint rule names `matchMedia` so reaching past it is an error.
+
 **A picker holds the calendar's BODY, not the public `Calendar`.** The base
 names the DIALOG round the layer, with an `aria-labelledby` pointing at the
 toggle and the field's label — measured, its `calendarProps` carry no
@@ -436,6 +453,22 @@ name a second time. `internal/Calendar`'s `SingleBody` is everything inside an
 `AriaCalendar` and nothing about the element, which is what lets the picker own
 the element and the label. Given no label the base names the grid by its month,
 which is better than silence and different from the dialog's name.
+
+**A twelve-hour locale renders invisible segments.** The base wraps the clock
+in bidi ISOLATE marks (U+2066 and U+2069) and renders them as zero-width
+`literal` segments, so the FIRST child of a time field's row cannot be clicked
+and its colour is the punctuation's rather than the value's. Two browser checks
+were written against it before that was measured — one timed out and one found
+read-only and disabled identical. Select segments with
+`:not([data-type=literal])`.
+
+**A time is `14:30`, and the reason is a measurement.** `en-US` and `es-PE`
+BOTH show a twelve-hour clock, and they disagree about how to write the
+marker: `PM` against `p. m.`, spacing and full stops included. `ja-JP` shows
+twenty-four hours and has no marker at all. Two locales agreeing on the clock
+and disagreeing on the writing is why a formatted time may not be the value —
+and `formatClock` trims the seconds when there are none, so a field asked for
+minutes does not report precision it never offered.
 
 **A date crosses the public boundary as an ISO string**, not as one of the
 base's calendar objects — `2026-09-09`, `14:30`,
