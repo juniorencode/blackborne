@@ -46,6 +46,52 @@ test.beforeEach(async ({ page }) => {
   await pinClock(page);
 });
 
+test('a calendar keeps its shape inside a flex container', async ({ page }) => {
+  /*
+   * A FLEX ITEM'S DISPLAY IS BLOCKIFIED, and this is the check for it.
+   *
+   * The root asks for `inline-flex` so that it is sized by the month it
+   * contains. Dropped into a `display: flex` column — which the catalog's own
+   * stack is, and so is every second consumer layout — that computes to
+   * `flex`, the element takes the cross size of the line, and a month renders
+   * as five flat rows of pills: measured at 1248px wide with cells 178 by 28.
+   *
+   * None of the three visual baselines could see it, because all three sit in
+   * a `block` parent. Which is the argument for asserting a RATIO here rather
+   * than adding a fourth picture: what went wrong is not a colour, it is that
+   * the cells stopped being square, and a number says that exactly.
+   */
+  await gotoStory(page, OVERVIEW);
+
+  const parent = await page
+    .locator('.bb-calendar')
+    .evaluate(element => getComputedStyle(element.parentElement!).display);
+  expect(parent, 'the story must put the calendar in a flex parent').toBe(
+    'flex'
+  );
+
+  const measured = await page.locator('.bb-calendar-day').evaluateAll(days =>
+    days.map(day => {
+      const box = day.getBoundingClientRect();
+      return { width: box.width, height: box.height };
+    })
+  );
+
+  expect(measured.length).toBeGreaterThan(28);
+  for (const cell of measured) {
+    /*
+     * Square to within a pixel. A cell is sized from the minimum hit area in
+     * both directions, so any stretch shows up here first — and the ratio is
+     * what a person actually sees, where a width in pixels would have to be
+     * kept in step with the tokens.
+     */
+    expect(
+      Math.abs(cell.width - cell.height),
+      `a cell measured ${cell.width} by ${cell.height}`
+    ).toBeLessThan(1);
+  }
+});
+
 test('a day cell clears the minimum target, at both densities', async ({
   page
 }) => {

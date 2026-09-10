@@ -12,6 +12,73 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **`RangeCalendar`** — two months, and the range across them.
+
+  ```tsx
+  <RangeCalendar label="Stay" value={stay} onChange={setStay} />
+  ```
+
+  A range crosses the boundary as two ISO days, `{ start, end }`, for decision
+  0020's reason. `isDateUnavailable` gets a second argument — the day the range
+  was started from, or `null` before it is — which is the base's own signature
+  and what makes "no more than fourteen nights" expressible at all.
+
+  **How many months is the container's answer**, through doc 04 §6's one hook:
+  two from the `medium` step up, one below. The boundary is measured rather
+  than picked — two months of grid are 408px and the scale's `narrow` step is
+  384 — and it is the same boundary `Tabs` and the folded breadcrumb trail
+  already use, which is §4's point about one scale rather than three. With
+  nothing declaring a query container anywhere it shows one month, which is
+  §4.1's narrow-first rule rather than a failure.
+
+  **The arrows step one month whatever the structure**, which is a decision and
+  not the base's default: `pageBehavior` advances by the whole visible duration
+  unless told otherwise, so the same press would move one month in a panel and
+  two in a page. A control whose meaning changes with the width is what rule 4
+  is about.
+
+  **The range is one shape.** The two ends are the solid accent pair, the days
+  between them are `--bb-accent-subtle` with its own paired text colour, and
+  the middle is square while the ends are rounded on their logical outside — so
+  a stay in Arabic rounds the end a reader arrives at first without the
+  component knowing which side that is. It works because the cells are edge to
+  edge, measured at a gap of exactly 0, which is now written down where a
+  `gap` would otherwise be added later.
+
+  **The half of `Calendar` it shares is now `internal/Calendar`** — the classes,
+  the month grid, the furniture above it and the two chained views — extracted
+  at the second caller, with `Calendar`'s three existing baselines coming out
+  byte-identical as the proof that the move changed nothing.
+
+- **Three defects, all found by generating a baseline and opening it**, and one
+  of them was in `Calendar` rather than in the new component.
+
+  **A calendar in a flex container stretched to 1248px**, with cells 178 wide
+  and 28 tall — a month as five flat rows of pills. A flex item's display is
+  blockified, so the `inline-flex` the root asks for quietly became `flex` and
+  the element took the cross size of the line. None of the three existing
+  baselines could see it, because all three sit in a `block` parent, and the
+  story that showed it was not photographed. `w-fit` is the fix: a declared
+  width holds whichever display value it is blockified to. This is decision
+  0010's consequence 1 and the popover's 2px arriving a third time.
+
+  **The range's start painted twice.** Two months side by side overlap by a
+  week, and the base marks `data-selection-start` on the copy of the day in the
+  neighbouring grid — with no `data-selected` on it — so a range beginning on
+  the 27th of September showed a solid pill in September AND another in
+  October's outside-month row, the second one attached to no band. The same
+  cause turned a **disabled** range into two disconnected days: disabled drops
+  `data-selected` from every cell and keeps the two end marks. A fill now
+  requires both attributes.
+
+  **And today's ring went white on the band**, at 1.12:1. The rule is that the
+  ring is the text colour of whatever is behind it, and the implementation
+  keyed on `data-selected` — which means the solid accent fill in one calendar
+  and a pale band in the other. Three backgrounds, three colours, and a browser
+  check that measures each ring against what it actually sits on rather than
+  against the page: 5.21:1 on the accent, 11.80:1 on the band in light mode,
+  7.34:1 in dark, 5.79:1 on the surface.
+
 - **`Calendar`** — a month of days, with the two views above it.
 
   ```tsx
@@ -51,7 +118,14 @@ minor versions. Every break is listed here with its migration.
   **There is no read-only calendar.** The base has one and it photographed
   identically to an ordinary one, which is the argument already accepted for a
   read-only `Select` arriving on a grid: two states nobody can tell apart are
-  worse than one. A calendar that must not be changed is disabled.
+  worse than one.
+
+  **And disabled is not the substitute this entry first named**, which the
+  range calendar's own tests turned up: measured on both calendars, controlled
+  and uncontrolled, a disabled calendar marks NO selection — the base drops
+  `data-selected` from every cell, 0 of 35 against the 1 or 8 an ordinary one
+  marks. So a calendar that must not be changed is a formatted date, and what
+  a read-only appearance ought to look like stays on the catalog's open list.
 
   Its cells are sized from the minimum hit area rather than from a chosen
   number, so compact density makes a smaller calendar rather than a cramped

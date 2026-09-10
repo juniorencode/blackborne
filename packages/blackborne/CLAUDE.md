@@ -209,6 +209,14 @@ cannot know what level it landed at. Emphasis comes from weight and colour.
   nobody drew. The same class of trap as a control not inheriting `font-size`,
   and the same lesson: with no preflight, an element the library has not styled
   before arrives with the browser's own opinion of it.
+- **An observed element must also CHANGE SIZE with the container**, which is
+  the half of the rule below that the range calendar added. A calendar is
+  sized by its contents, so its box is `fit-content` — measured at 408px in a
+  640px container and 408px in a 320px one. It outlives both structures
+  perfectly, never resizes, and the `ResizeObserver` therefore never fires: the
+  step is read on mount and never again. A structural component that
+  shrink-wraps is two elements, a full-width frame that is observed and a
+  `w-fit` body inside it. Doc 04 §11.3.
 - **An observed element must outlive every structure it chooses between.** The
   step comes from `useContainerStep`, and the element it observes cannot be the
   control that changes: that control unmounts, the observer is left watching a
@@ -347,6 +355,30 @@ with no cursor is how the loader declares the end.
 read in its source — and it is what "jose" finding "José" rests on. A filter of
 ours passes that same `contains` in rather than writing one, so a consumer who
 declares no keywords gets exactly the behaviour the base would have given them.
+
+**Two calendars share one internal, and the shared half is where the traps
+are.** `internal/Calendar` holds the classes, the month grid, the furniture
+above it and the two chained views; `Calendar` and `RangeCalendar` are the
+value, the paint on a selection and how many months. Three things about it are
+measured rather than tidy.
+
+- **The shared furniture reads EITHER state.** A `Calendar` publishes
+  `CalendarStateContext` and a `RangeCalendar` publishes
+  `RangeCalendarStateContext` and not the other one, so a header reading only
+  the first renders no title and two dead arrows inside a range. `??` between
+  them, which is exactly what the base's own `CalendarGrid`, `CalendarHeading`
+  and the two period pickers do.
+- **`data-selected` does not mean the same thing in both.** In a single
+  calendar it is the solid accent fill; in a range it is every day of the band,
+  with the two ends carrying `data-selection-start`/`-end` on top. So anything
+  keyed on it belongs to the component rather than to the shared class —
+  today's ring is drawn white on the accent and dark on the band, and a shared
+  rule painted it white on both at 1.12:1.
+- **An end is only an end while it is also selected.** The base marks
+  `data-selection-start` on the copy of a day in the neighbouring month and on
+  a disabled calendar, both times WITHOUT `data-selected` — so a fill keyed on
+  the end mark alone painted a second start pill in the next grid, and turned a
+  disabled range into two disconnected days. Stack both variants.
 
 **A ring that carries information is not a border.** Today's ring measured
 1.86:1 against the light surface in `--bb-border-strong` and 3.01:1 against the

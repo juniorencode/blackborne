@@ -325,6 +325,34 @@ test('a disabled one takes nothing at all', async () => {
   expect(onChange).not.toHaveBeenCalled();
 });
 
+test('a disabled calendar marks no chosen day at all', () => {
+  render(<Appointments isDisabled />);
+
+  /*
+   * THE SENTENCE THIS COMPONENT SHIPPED WITH WAS WRONG, and this is the
+   * measurement that says so. It read: a calendar that must not be changed is
+   * disabled, "with its chosen day still legible". The base drops
+   * `data-selected` from every cell when the calendar is disabled —
+   * controlled and uncontrolled, and in the range calendar too — so what a
+   * disabled calendar shows is a month with nothing chosen in it.
+   *
+   * Which matters because it was the whole fallback for having no read-only
+   * state. There is still no read-only state, for the reason the catalog
+   * gives; what there is no longer is the claim that disabled would do
+   * instead. A value that must not be changed is a formatted date.
+   *
+   * Queried from the DOM rather than by role: a disabled calendar has no
+   * buttons in the accessibility tree, which is the base being right about
+   * doc 06 §4 rule 5.
+   */
+  const cells = [...document.querySelectorAll('.bb-calendar-day')];
+  expect(cells.length).toBeGreaterThan(28);
+  for (const day of cells) expect(day.hasAttribute('data-disabled')).toBe(true);
+  expect(cells.filter(day => day.hasAttribute('data-selected'))).toHaveLength(
+    0
+  );
+});
+
 test("the first day of the week is the consumer's to set", () => {
   render(<Appointments firstDayOfWeek="mon" />);
 
