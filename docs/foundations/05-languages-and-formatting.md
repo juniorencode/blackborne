@@ -129,6 +129,11 @@ operates in. It receives it.
   them. `Drawer` is the worked example.
 - **Direction is derived from the language**, not passed separately: switching
   to an RTL language flips the interface on its own.
+- **And where BOTH mechanisms are in play they have to agree**, which is the
+  failure §4.1 records: a stylesheet flips a logical property on its own and
+  JavaScript flips a percentage only if it was told the locale, so a component
+  using one of each can end up internally inconsistent with nothing wrong in
+  either half.
 - **Directional icons do flip** (navigation arrows, previous/next indicators,
   indentation). **What does not flip** are icons representing real-world
   objects (clocks, logos) and data charts.
@@ -136,6 +141,45 @@ operates in. It receives it.
   is RTL.
 - Scrolling and keyboard shortcuts invert where appropriate too: the right
   arrow key advances or retreats according to direction.
+
+### 4.1 Two mechanisms, one question, and they can disagree
+
+**Date:** 2026-09-10, with `Slider`.
+
+A slider draws two things against the same rail. The fill's offset is
+`inset-inline-start`, a logical CSS property that the stylesheet mirrors on its
+own. The handle's is a computed `left` percentage, and the base mirrors it only
+when the LOCALE it was given is right-to-left — the rule above, arriving as a
+consequence rather than as advice.
+
+So a story that set `dir="rtl"` and declared no locale produced this, measured:
+
+| At value 30, out of 100 | Where it was drawn        |
+| ----------------------- | ------------------------- |
+| The fill                | the right 30% of the rail |
+| The handle              | 30% from the LEFT         |
+
+A handle at the wrong end of its own fill, with nothing wrong in the DOM,
+nothing wrong in either mechanism, and no assertion about either one failing.
+
+Three things follow.
+
+**A `dir` attribute is not a locale.** Anything whose JavaScript positions
+something needs `ConfigProvider` with a right-to-left locale, not just a
+direction on an ancestor — which is what the catalog's RTL stories must
+therefore declare, and half of them did not need to because their layout is
+pure CSS.
+
+**The assertion belongs on the AGREEMENT, not on the two halves.** "The fill
+starts at the right" and "the handle is at 70%" are both true in the broken
+case. "The handle is at the leading edge of the fill" is the invariant, and it
+fails whatever the cause.
+
+**And the keyboard confirmed the last bullet of §4** rather than needing a rule
+of its own: with the locale right, the arrow pointing right decreases the value
+AND moves the handle rightwards — the handle follows the key, the number
+follows the axis. The block axis does not mirror: up is more, in every
+language.
 
 ## 5. Text expansion
 

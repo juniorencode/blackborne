@@ -55,9 +55,16 @@ const LABEL = cx('bb-progress-label', 'bb:min-w-0 bb:truncate');
  * that 9% and 10% do not shift the text beside them on every tick — the same
  * reason a calendar's days are tabular.
  */
+/*
+ * `ms-auto`, because `justify-between` alone puts a SINGLE item at the start:
+ * a hidden label is `sr-only` and therefore out of flow, so a bar with the
+ * label hidden and the number shown would have put the number at the leading
+ * edge. Found on `Slider`, which has this row and a story that does exactly
+ * that; fixed here as well rather than left for whoever writes that story.
+ */
 const VALUE = cx(
   'bb-progress-value',
-  'bb:flex-none bb:tabular-nums bb:text-text-muted'
+  'bb:ms-auto bb:flex-none bb:tabular-nums bb:text-text-muted'
 );
 
 /*

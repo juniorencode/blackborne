@@ -33,10 +33,10 @@ this file is out of date. Fix this file.
 assuming anything exists.
 
 At the time of writing: all ten foundations are written, the pipeline is
-complete, and **forty-six components exist** — the ten simple fields and
-controls, `Button` with `ButtonGroup`, the flat pieces around them (`Alert`,
-`Badge`, `Card`, `EmptyState`, `Progress`, `Separator`, `Skeleton`, `Spinner`,
-`Steps`, `VisuallyHidden`), seven
+complete, and **forty-seven components exist** — the ten simple fields and
+controls, `Button` with `ButtonGroup`, `Slider`, the flat pieces around them
+(`Alert`, `Badge`, `Card`, `EmptyState`, `Progress`, `Separator`, `Skeleton`,
+`Spinner`, `Steps`, `VisuallyHidden`), seven
 layers (`Dialog`, `Drawer`, `ConfirmDialog`, `Tooltip`, `Popover`, `Preview`,
 `Toast`), and the composition batch so far: `Accordion`, `Collapsible`, `Link`,
 `Breadcrumbs`, `Pagination`, `CursorPagination`, `Menu`, `Select`, `Tabs` and
@@ -431,6 +431,14 @@ Things that look like improvements and are not:
   `primary/sm` where a person would have seen small primary buttons in a
   dialog. `internal/buttonAppearance`'s `NoButtonSet` is what closes it, and
   the shared sheet is where four of the five layers do so at once.
+- **Do not test RTL with a `dir` attribute alone.** Direction reaches CSS
+  through the stylesheet and reaches JavaScript through the LOCALE, and a
+  component using one of each can disagree with itself: measured on `Slider`,
+  a `dir="rtl"` story with no locale drew the fill along the right of the rail
+  and the handle at 30% from the left — a handle at the wrong end of its own
+  fill, with nothing wrong in either half. Stories declare
+  `ConfigProvider locale="ar-EG"`, and the check asserts the two AGREE rather
+  than asserting each one ([doc 05](./docs/foundations/05-languages-and-formatting.md) §4.1).
 - **Do not reference private projects** in code, examples or documentation. The
   library is public and its API is designed for strangers.
 
