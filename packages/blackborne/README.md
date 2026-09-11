@@ -160,7 +160,7 @@ at `0.2.0` with nothing reading them, and on 2026-09-10 `dist/styles.css` was
 | ----------------- | ---------------------- |
 | `dist/index.js`   | structural — see below |
 | `dist/styles.css` | 80 kB raw / 12 kB gzip |
-| Published tarball | 450 kB                 |
+| Published tarball | 220 kB                 |
 
 **There is no "now" column any more**, on purpose. It said 38.2 kB while the
 file was 66.5 kB, because a number written in prose has nobody to keep it true
@@ -168,11 +168,18 @@ file was 66.5 kB, because a number written in prose has nobody to keep it true
 thing on this page. The current figures are printed by the check; a snapshot
 with the date on it is below.
 
-Measured on 2026-09-11, at fifty-one components: `dist/index.js` 149.3 kB
-(32.5 kB gzip), `dist/styles.css` 68.0 kB (10.8 kB gzip), published tarball
-398.8 kB. Two thirds of that tarball is `dist/index.js.map`, and whether a
-library should ship a source map at all is an open question rather than a
-settled one — the ceiling above has room for it either way.
+Measured on 2026-09-11, at fifty-one components: `dist/index.js` 304.1 kB
+(85.0 kB gzip), `dist/styles.css` 68.0 kB (10.8 kB gzip), published tarball
+165.4 kB.
+
+**The tarball ceiling came down from 450 kB to 220 kB on the day it was
+written**, because the package stopped shipping a minified bundle and the
+967 kB source map that existed to undo it — two thirds of the download, for a
+file whose only job was to give back the names the line above had taken away
+([decision 0026](../../docs/decisions/0026-the-package-ships-what-a-consumer-can-read.md)).
+The tarball went from 398.8 kB to 165.4 kB, and an identifier in a stack trace
+went from `cs` to `useConfig`. A ceiling with 285 kB of slack in it is not a
+ceiling.
 
 **The CSS raw ceiling was raised from 60 kB to 80 kB, with the data doc 10 §7
 asks for.** 60 kB was set when the library had eight components and 26.3 kB of
@@ -187,6 +194,11 @@ holds is: **importing one component pulls in that component and nothing else.**
 Every module is side-effect free apart from the stylesheet, and no dependency
 is bundled — `react` and `react-aria-components` stay external so your
 bundler deduplicates them.
+
+It is also **not minified**, which is why its raw figure is larger than a
+bundle-size habit expects. A library is an input to your bundler and your
+bundler minifies your application; doing it twice saves your users nothing and
+costs them every name in a stack trace.
 
 The CSS number is a real ceiling, and the shape of its growth is the thing
 worth watching rather than the total: most of it is the token layer, a fixed

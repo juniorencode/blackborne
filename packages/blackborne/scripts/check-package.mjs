@@ -177,7 +177,7 @@ if (!entry) {
  * The exports map is the list; this walks the directory and asks the map
  * about each file. It is how a stylesheet extracted beside the bundle
  * becomes visible: `dist/blackborne.css` sat there for a month, inside
- * `files: ["dist"]`, named by no condition and imported by nobody. A sourcemap is allowed beside the file it belongs to.
+ * `files: ["dist"]`, named by no condition and imported by nobody.
  * ------------------------------------------------------------------ */
 const reachable = new Set(
   Object.values(manifest.exports)
@@ -187,7 +187,14 @@ const reachable = new Set(
     .filter(target => target.startsWith('./dist/'))
     .map(target => target.slice('./'.length))
 );
-for (const target of [...reachable]) reachable.add(`${target}.map`);
+/*
+ * A sourcemap used to be allowed here as a sibling of the file it belongs to.
+ * It is not any more, and that is the point: this package publishes neither a
+ * minified bundle nor a map (decision 0026, and the reasoning is in
+ * vite.config.ts). A `.map` reappearing in `dist` means somebody turned
+ * `sourcemap` back on, which is a decision rather than an accident — so it
+ * should stop a build and be argued, not pass as a sibling.
+ */
 
 const walk = dir =>
   readdirSync(dir).flatMap(name => {

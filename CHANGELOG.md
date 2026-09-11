@@ -10,6 +10,33 @@ minor versions. Every break is listed here with its migration.
 
 ## [Unreleased]
 
+### Changed
+
+- **The package is published unminified and with no source map**, which takes
+  the tarball from 398.8 kB to 165.4 kB and an identifier in a stack trace from
+  `cs` to `useConfig`. Two thirds of the old download was `dist/index.js.map` —
+  967 kB raw — and its whole job was to undo the minification on the line
+  above it.
+
+  All three shapes were measured, because the obvious cut is not the one taken:
+  minified without a map is the SMALLEST of the three at 113.4 kB, and the only
+  one that cannot be debugged at all. The 52 kB between that and this is what
+  names cost
+  ([decision 0026](./docs/decisions/0026-the-package-ships-what-a-consumer-can-read.md)).
+
+  A library is an input to somebody else's bundler and that bundler minifies
+  the application, so doing it here saves the end user nothing. `react-aria`
+  and `react-aria-components` publish the same shape; measured in
+  `node_modules` rather than assumed. The cost is that the intermediate file
+  doubles, 304.1 kB instead of 155.7 kB, which is a real runtime cost only to a
+  consumer who ships unminified.
+
+  `check:package` no longer allows a `.map` beside the file it belongs to, so
+  turning `sourcemap` back on fails the build naming the file rather than
+  passing as a sibling. The README's tarball ceiling came down from 450 kB to
+  220 kB in the same change: it had been written a day earlier against the
+  398.8 kB measurement, and a ceiling with 285 kB of slack is not a ceiling.
+
 ### Fixed
 
 - **Four components were built with no CSS at all.** `dist/styles.css` — the only
