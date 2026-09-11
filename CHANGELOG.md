@@ -78,6 +78,23 @@ minor versions. Every break is listed here with its migration.
 
 ### Changed
 
+- **A visual failure on CI now ships the pictures.** The workflow has uploaded
+  `playwright-report/` on failure since the visual suite existed, under a
+  comment saying the diff images are the whole point of a visual failure.
+  **That directory was never created**: no reporter was configured, so
+  Playwright used its default — `list` locally, `dot` on CI — and neither
+  writes a report. The step uploaded nothing, and an upload of a missing path
+  warns rather than fails, so it looked finished.
+
+  The config asks for the html reporter on CI now, keeping `dot` for the
+  console, and the workflow uploads the raw `test-results/` alongside it — the
+  `-actual.png` and `-diff.png` side by side, one download and no HTML to
+  navigate. Verified by running under `CI=1` and opening what came out.
+
+  It cost what the comment predicted: `avatar-states` failed at 289 pixels on a
+  branch that changed no pixel, and the artefact that would have said why did
+  not exist. Doc 10 §11.6 has the rule — verify the artefact, not the step.
+
 - **A middle click clicks the LINK, not a point where the link used to be.**
   It was the only one of the four tab checks reading `boundingBox()` and then
   clicking that coordinate, and it is the one that failed on CI: anything that

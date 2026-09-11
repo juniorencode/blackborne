@@ -98,9 +98,23 @@ jobs:
 
       # The diff images are the whole point of a visual failure: a report that
       # says "13 differ" without showing them is unactionable.
+      #
+      # This step uploaded NOTHING until 2026-09-10, and the comment above is
+      # what made it look finished. No reporter was configured, so Playwright
+      # used its default -- list locally, dot on CI -- and neither writes a
+      # report, so `playwright-report/` never existed. The config now asks for
+      # the html reporter on CI, and both paths are uploaded: the report to
+      # browse and the raw actual/diff PNGs to open directly.
+      #
+      # It cost what the comment predicted: `avatar-states` failed at 289
+      # pixels on a branch that changed no pixel, and the artefact that would
+      # have said why was not there.
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: playwright-report
-          path: apps/catalog/playwright-report/
+          path: |
+            apps/catalog/playwright-report/
+            apps/catalog/test-results/
+          if-no-files-found: warn
           retention-days: 7
