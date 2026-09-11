@@ -47,7 +47,7 @@ From there on, breaking a document stops being a matter of memory.
 | **Re-render**               | That typing in one field does not re-render its neighbours                                                        | Medium                  |
 | **Automated accessibility** | Contrast, missing labels, malformed ARIA. **Running**: axe against every story in the catalog                     | Medium                  |
 | **Visual regression**       | What changed in appearance, and where. **Running**: 19 captures, generated in Docker so the tolerance can be zero | Slow                    |
-| **Package**                 | Types resolve, exports are correct, no side effects                                                               | Fast                    |
+| **Package**                 | Types resolve, exports are correct, no side effects. **Running**: publint and attw against the packed tarball     | Fast                    |
 | **Server**                  | That everything prerenders without mismatches                                                                     | Free: the site gives it |
 | **Manual**                  | Keyboard always; screen reader on the complex ones                                                                | Minutes                 |
 

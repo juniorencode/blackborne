@@ -38,6 +38,13 @@ emit. `Checkbox.css` states the reasoning at the top; read it before adding a
 second one. A component CSS file is also imported by hand in
 `src/styles/index.css`, one line per component, so the list stays visible.
 
+**That line is the only way a stylesheet reaches a consumer, and both halves
+of it are now checked.** A JavaScript `import './X.css'` also compiles — Vite
+extracts the rules into a file beside the bundle and strips the import — so the
+rules end up published and unreachable. Three stylesheets went that way, and
+four components would have been published unstyled; lint refuses the import,
+and a test asserts the list in `index.css` is complete.
+
 This page is the operational summary. The reasoning behind every rule lives in
 the [foundations](../foundations/README.md); when the two disagree, the
 foundation wins and this page needs fixing.

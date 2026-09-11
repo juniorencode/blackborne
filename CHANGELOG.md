@@ -10,6 +10,80 @@ minor versions. Every break is listed here with its migration.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Four components were built with no CSS at all.** `dist/styles.css` — the only
+  stylesheet the package publishes — contained none of the rules for
+  `ButtonGroup`, `Steps`, `ColorPicker` or `ColorSwatchField`. Measured before
+  the fix: zero occurrences of `bb-button-group`, zero of `bb-checkerboard`,
+  and none of the `bb-step` rules. A joined row of buttons kept its individual
+  corners and seams, a step list lost its numbers and connectors, and a colour
+  swatch lost the checkerboard behind a transparent value.
+
+  The cause is that a stylesheet had two doors. `src/styles/index.css` names
+  every one by hand and the Tailwind CLI compiles that file and nothing else —
+  `@source` scans `.ts` and `.tsx` for class names and follows no import. Three
+  stylesheets arrived instead through a JavaScript `import './X.css'`, which
+  Vite's library build extracts into a file beside the bundle and strips from
+  `index.js`: the rules were compiled into `dist/blackborne.css`, inside
+  `files: ["dist"]`, named by no export condition and imported by nothing.
+
+  Nothing here caught it because **the catalog loads the built stylesheet for
+  its tokens and renders components from source**, so Storybook's own Vite
+  processed those imports and injected them. 196 baselines, 480 accessibility
+  checks and 438 browser checks all looked at a correctly styled page.
+
+  No consumer received it: the rewrite has not been released, so npm still
+  holds `0.1.1` and the old codebase. It would have gone out with the first
+  release of this one.
+
+  A `no-restricted-imports` pattern now refuses a `.css` import in shipped
+  source (verified in both directions: three violations caught, zero once they
+  moved), and `src/styles/stylesheet.test.ts` asserts the list in `index.css`
+  is complete against the filesystem in both directions.
+
+- **Every published type was `any` under Node's own module resolution.**
+  `dist/index.d.ts` re-exported 110 extensionless relative paths, which `node16`
+  and `nodenext` cannot follow. Measured from a consumer: with
+  `skipLibCheck: true`, the common default, `ButtonProps` resolved to `any` and
+  a bogus prop passed without an error; with `skipLibCheck: false`, 110 × TS2834
+  reported inside our own file. Only `moduleResolution: bundler` ever worked.
+
+  The package now ships **one** self-contained declaration file, rolled up from
+  the emitted tree, so there is no relative import for a resolver to follow
+  ([decision 0025](./docs/decisions/0025-the-package-ships-one-declaration-file.md)).
+  The public surface was verified identical across the change: 191 exported
+  names before, 191 after, none missing and none added.
+
+  `dist` now holds only what the `exports` map names, which also ends a smaller
+  problem — `tsc` never prunes, and two declarations for deleted modules were
+  on disk and being published.
+
+### Added
+
+- **Doc 10 §3's `Package` layer, which had never existed.** `pnpm verify` now
+  builds the package and runs `publint`, `@arethetypeswrong/cli`, an assertion
+  that every value in the type surface imports at run time, and an assertion
+  that nothing in `dist` is unreachable through the `exports` map. It found
+  both defects above within a minute of its first run, and neither was visible
+  to any other layer: nothing in this repository consumed the built package.
+
+  It reaches the release workflow for free, because that workflow runs
+  `pnpm verify` before publishing — so a tarball with a broken export map, an
+  unresolvable type or a missing stylesheet can no longer be pushed to npm.
+
+- **The weight budgets are asserted.** Doc 10 §7 opens with "a budget without a
+  number is not a budget: when you exceed it, you do not find out", and the
+  numbers had been published in the package README since `0.2.0` with nothing
+  reading them — so on 2026-09-10 `dist/styles.css` was 66.5 kB against a
+  published 60 kB ceiling and nobody found out. `check:budget` reads the
+  ceilings **from that README table** rather than keeping a second copy, and
+  fails with the delta.
+
+  The CSS raw ceiling is revised to 80 kB with the data doc 10 §7 asks for: 60
+  kB was set at eight components, and there are fifty-one. The gzip half is not
+  raised and is the one that binds — 10.8 kB against 12 kB.
+
 ### Removed
 
 - **`validate` and `validationBehavior`, on the ten fields that had them.**
@@ -77,6 +151,14 @@ minor versions. Every break is listed here with its migration.
   others. Converting them is bigger than this and waits.
 
 ### Changed
+
+- **The README's "now" column is gone.** It said `dist/styles.css` was 38.2 kB
+  while the file was 66.5 kB. A number written in prose has nobody to keep it
+  true (doc 10 §11.6); the current figures are printed by the check, and the
+  snapshot that remains carries its date. The duration rows moved to a table of
+  their own, recorded rather than asserted — a check that fails when a suite
+  takes too long is a check on how loaded the machine was (doc 10 §11) — and
+  they now hold the first real CI measurements this repository has had.
 
 - **A visual failure on CI now ships the pictures.** The workflow has uploaded
   `playwright-report/` on failure since the visual suite existed, under a

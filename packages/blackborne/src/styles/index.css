@@ -21,9 +21,22 @@
 @import './utilities.css';
 
 /* Layer 3: component exceptions. One import per component that needs one, so
-   the list stays visible rather than hiding in a barrel file. */
+   the list stays visible rather than hiding in a barrel file.
+
+   THIS LIST IS THE ONLY DOOR, and it is worth knowing what happens when
+   something uses the other one. A JavaScript `import './X.css'` also works:
+   Vite's library build extracts the rules into a file beside the bundle and
+   strips the import from index.js. The rules are then compiled, published, and
+   in a file the `exports` map does not name — so they reach nobody. Measured:
+   three stylesheets had gone that way and four components (ButtonGroup, Steps,
+   ColorPicker and ColorSwatchField) would have been published unstyled, while
+   the catalog looked correct because Storybook's own Vite processed those
+   imports. A lint rule now refuses the JS import and a
+   test asserts this list is complete. */
 @import '../internal/Field/controlBox.css';
 @import '../internal/Layer/arrow.css';
+@import '../internal/checkerboard.css';
+@import '../components/ButtonGroup/ButtonGroup.css';
 @import '../components/Checkbox/Checkbox.css';
 @import '../components/Dialog/Dialog.css';
 @import '../components/Drawer/Drawer.css';
@@ -33,6 +46,7 @@
 @import '../components/RadioGroup/RadioGroup.css';
 @import '../components/Skeleton/Skeleton.css';
 @import '../components/Spinner/Spinner.css';
+@import '../components/Steps/Steps.css';
 @import '../components/Switch/Switch.css';
 @import '../components/Tooltip/Tooltip.css';
 @import '../components/TextArea/TextArea.css';

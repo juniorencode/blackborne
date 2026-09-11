@@ -148,26 +148,41 @@ implementation detail and cannot collide with yours.
 ## Size
 
 Doc 10 is blunt about this: a budget without a number is not a budget,
-because when you exceed it you do not find out. Measured at `0.2.0`, with
-fifteen components:
+because when you exceed it you do not find out.
 
-| What                                   | Now                   | Budget                 |
-| -------------------------------------- | --------------------- | ---------------------- |
-| `dist/index.js`                        | 30.1 kB (6.2 kB gzip) | — see below            |
-| `dist/styles.css`                      | 38.2 kB (7.0 kB gzip) | 60 kB raw / 12 kB gzip |
-| Published tarball                      | 72.6 kB               | —                      |
-| `pnpm verify`                          | 43 s                  | 90 s                   |
-| Browser checks, accessibility included | 276 s                 | 540 s                  |
-| Visual regression                      | 58 s                  | 240 s                  |
+**These ceilings are read by `pnpm --filter blackborne check:budget`**, from
+this table and from nowhere else, and it fails with the delta. That is new, and
+it arrived the way the sentence above predicts: the numbers were published here
+at `0.2.0` with nothing reading them, and on 2026-09-10 `dist/styles.css` was
+66.5 kB against a 60 kB ceiling. Nobody found out.
 
-The browser row was two rows until the suite was split into two Playwright
-projects: behaviour and accessibility now run as one job, so one number is what
-there is to measure. The budget is the two former ceilings added together, not
-a relaxation.
+| What              | Ceiling                |
+| ----------------- | ---------------------- |
+| `dist/index.js`   | structural — see below |
+| `dist/styles.css` | 80 kB raw / 12 kB gzip |
+| Published tarball | 450 kB                 |
 
-**The JavaScript budget is deliberately structural rather than a number.** With
-one component, any total figure would be a guess that gets raised every time a
-component lands, which is a budget in name only. The commitment that actually
+**There is no "now" column any more**, on purpose. It said 38.2 kB while the
+file was 66.5 kB, because a number written in prose has nobody to keep it true
+— which is the failure doc 10 §11.6 is about, and it was the least reliable
+thing on this page. The current figures are printed by the check; a snapshot
+with the date on it is below.
+
+Measured on 2026-09-11, at fifty-one components: `dist/index.js` 149.3 kB
+(32.5 kB gzip), `dist/styles.css` 68.0 kB (10.8 kB gzip), published tarball
+398.8 kB. Two thirds of that tarball is `dist/index.js.map`, and whether a
+library should ship a source map at all is an open question rather than a
+settled one — the ceiling above has room for it either way.
+
+**The CSS raw ceiling was raised from 60 kB to 80 kB, with the data doc 10 §7
+asks for.** 60 kB was set when the library had eight components and 26.3 kB of
+CSS. There are fifty-one now, and the growth is real work rather than waste.
+The gzip half was NOT raised and is the one that binds: 10.8 kB against 12 kB,
+which is what actually crosses the wire, and it has 1.2 kB left in it.
+
+**The JavaScript budget is deliberately structural rather than a number.**
+While the component count is still growing, any total figure is a guess that
+gets raised every time one lands, which is a budget in name only. The commitment that actually
 holds is: **importing one component pulls in that component and nothing else.**
 Every module is side-effect free apart from the stylesheet, and no dependency
 is bundled — `react` and `react-aria-components` stay external so your
@@ -179,20 +194,38 @@ cost paid once. Seven components landing at once moved it by 12 kB raw and
 under 2 kB gzipped, because the scales are restricted and only what components
 actually use is emitted.
 
-**Why the slow layers get their own numbers.** Doc 10 §8 warns that a check
-which runs everything before every change ends up switched off, so the fast
-gate and the slow one are budgeted separately. `pnpm verify` runs before every
-commit and has to stay under a minute; the browser layers run in their own CI
-job and are allowed minutes.
-
-The ceilings sit at roughly one and a half times the current figures — room for
-the components still to come, tight enough that a doubling shows up. All of
-them grow with the component count, so they will be revisited; the point of
-writing them down is that the revision happens with data rather than by nobody
-noticing.
+The weight ceilings sit above the current figures with room for the components
+still to come, and tight enough that a doubling shows up. They grow with the
+component count, so they will be revisited; the point of writing them down is
+that the revision happens with data rather than by nobody noticing.
 
 Budgets are revised when exceeded, with data. They are not ignored and not
 raised quietly.
+
+### Duration, recorded rather than asserted
+
+Doc 10 §8 warns that a check which runs everything before every change ends up
+switched off, so the fast gate and the slow one are kept apart: `pnpm verify`
+runs before every commit and the browser layers run in their own CI job.
+
+The durations are **not** in the table above and `check:budget` does not read
+them, which is deliberate. A check that fails when a suite takes too long is a
+check on how loaded the machine was — doc 10 §11's whole subject, and something
+this repository has already paid for three times. So they carry a date and the
+machine instead, and a person reads them:
+
+| Layer                             | 2026-09-11, GitHub `ubuntu-latest`, 2 workers |
+| --------------------------------- | --------------------------------------------- |
+| `pnpm verify`, the whole fast job | 1 m 49 s, of which `pnpm verify` is 1 m 36 s  |
+| Behaviour checks, 438             | 3 m 18 s                                      |
+| Automated accessibility, 480      | 5 m 23 s                                      |
+| Visual regression, 196            | 2 m 17 s                                      |
+| The browser job, end to end       | 11 m 52 s                                     |
+
+Read from the workflow log rather than estimated, and the worker count is part
+of the measurement rather than a detail: Playwright resolves `workers: '50%'`
+against the runner, which is four cores there and twelve on the laptop every
+earlier figure in this repository was taken on.
 
 ## Support
 

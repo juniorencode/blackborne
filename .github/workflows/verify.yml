@@ -14,6 +14,22 @@ jobs:
   # The fast gate, and the same command a contributor runs before opening a
   # pull request. Seconds, not minutes: doc 10 §8 warns that a check which
   # runs everything before every change ends up switched off.
+  #
+  # `pnpm verify` also carries doc 10 §3's PACKAGE layer now — it builds the
+  # package and runs publint, attw and the weight budgets against it. That row
+  # of §3's table had nothing behind it until 2026-09-11, and it found two
+  # consumer-facing defects on its first run: four components published with no
+  # CSS, and a type surface that silently became `any` under Node's own module
+  # resolution (decision 0025). It belongs here rather than in the browser job
+  # because §3 prices it at "Fast", and measured, it is about fifteen seconds.
+  #
+  # DO NOT RENAME EITHER JOB. Both `name:` values are required status checks in
+  # this repository's branch protection, matched as exact strings — a rename
+  # silently stops a check from being required, and that list is not visible
+  # from any file here. It is not a hypothetical: the job below was renamed in
+  # 114cb2d, from "Browser checks against the catalog" to its present name.
+  # Add to a job rather than renaming it, or update the setting in the same
+  # change.
   verify:
     name: Format, lint, types, tests
     runs-on: ubuntu-latest
