@@ -3,6 +3,20 @@ name: Release
 # Publishing happens here and nowhere else. Never from a laptop.
 # Trigger: pushing a version tag, e.g. v0.2.0
 #
+# THIS WORKFLOW IS THE ONE NOTHING REHEARSES. Every other check here runs on
+# every pull request, so a defect in it is found within a day. This one runs a
+# few times a year, holds NPM_TOKEN, and its mistakes are discovered by their
+# only consequence — a published version, which npm refuses to unpublish after
+# 72 hours and whose number is burned either way.
+#
+# Measured on 2026-09-11: it ran `pnpm verify` and nothing else. Doc 10 §10
+# lists ten things that stop a version shipping, and automated accessibility
+# and visual regression are two of them — so a change could go through a pull
+# request that photographed it and then be published by a job that did not.
+# `scripts/check-release-gate.mjs` is what keeps that from drifting back: it
+# runs in `pnpm verify` and fails if this file stops running anything
+# `verify.yml` runs.
+#
 # EVERY ACTION IS PINNED TO A COMMIT, and this is the workflow that makes it
 # matter: it holds NPM_TOKEN and `id-token: write` for provenance. A major tag
 # such as `@v7` is a moving pointer the action's owner can repoint at any
@@ -15,15 +29,152 @@ name: Release
 # `https://api.github.com/repos/<owner>/<repo>/git/ref/tags/<version>` — or
 # the release page — and change both together. Nothing renews these
 # automatically, which is the cost of the pin and is written here so the next
-# reader knows it is manual rather than forgotten.
+# reader knows it is manual rather than forgotten. That promise is now read by
+# the same script: an unpinned action fails the gate.
 on:
   push:
     tags: ['v*']
 
 jobs:
+  # FIRST, AND IN SECONDS, because everything below is thirteen minutes and
+  # none of it is worth spending on a tag that should not publish at all.
+  #
+  # A git tag can be made from any commit on any branch by anyone who can push
+  # one, and `main`'s protection guards what LANDS on main rather than what
+  # gets published — publishing is triggered by a tag. So this job asks the
+  # three questions that protection cannot: is this commit on main, does the
+  # tag name the version the package will actually publish, and is that version
+  # already out. The script has the rest of the reasoning.
+  guard:
+    name: The tag says what it publishes
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The default is a shallow checkout of the tag alone, which has no
+          # branches in it at all — so "is this commit on main" would be
+          # unanswerable rather than false. The script says so instead of
+          # passing, and this is what stops it having to.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+
+      # `fetch-depth: 0` brings the history; it does not necessarily bring the
+      # branch POINTER for a tag build. One explicit fetch, and the ancestry
+      # question has something to compare against.
+      - name: Fetch main to compare against
+        run: git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
+
+      # No install: the script uses node's own modules and one fetch to the
+      # registry, so it runs before pnpm exists in the image.
+      - name: The tag is on main, matches the package and is not published
+        run: node scripts/check-tag.mjs
+
+  # The fast gate, unchanged from what a pull request runs.
+  verify:
+    name: Format, lint, types, tests
+    needs: guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm verify
+
+  # And the slow layer, which is the half that was missing.
+  #
+  # Doc 10 §10 will not let a version ship on automated accessibility or visual
+  # regression failing, and neither ran here. It is the same job as
+  # `verify.yml`'s, in the same container, for the same reason — a screenshot
+  # taken in this image is byte-identical to one taken locally through
+  # apps/catalog/docker-visual.sh, which is what lets the pixel tolerance stay
+  # at zero. The reasoning for each step is in verify.yml; this is the gate
+  # rather than the explanation, and check-release-gate.mjs is what keeps the
+  # two lists identical.
+  browser:
+    name: Browser checks, accessibility and visual regression
+    needs: guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    container:
+      image: mcr.microsoft.com/playwright:v1.62.1-noble
+      options: --ipc=host
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build the package and the catalog
+        run: pnpm build:catalog
+
+      - name: Behaviour checks
+        run: pnpm --filter catalog test:e2e
+
+      - name: Automated accessibility
+        run: pnpm --filter catalog test:a11y
+
+      - name: Visual regression
+        run: pnpm --filter catalog test:visual
+
+      # Doc 10 §11.6: an artefact nobody can open is a failure nobody can read,
+      # and the upload of a missing path is a warning rather than an error. So
+      # the report is checked before it is uploaded, and the log line is the
+      # copy of the evidence that survives a broken upload and a retention
+      # window. It matters more here than on a pull request: a release failing
+      # on a pixel is the moment somebody needs to see which pixel.
+      - name: The failure has pictures to ship
+        if: failure()
+        working-directory: apps/catalog
+        run: |
+          set -u
+          report=playwright-report/index.html
+          if [ ! -s "$report" ]; then
+            echo "::error::$report is missing or empty, so this failure ships no report."
+            echo "Playwright's reporter is configured in apps/catalog/playwright.config.ts;"
+            echo "on CI it must include ['html', { open: 'never' }]. Doc 10 §11.6."
+            exit 1
+          fi
+          echo "$report exists, $(wc -c < "$report") bytes"
+          echo "--- images the visual suite produced, which are the whole point of a pixel failure ---"
+          find test-results -name '*.png' -type f | sort | while read -r png; do
+            echo "$(wc -c < "$png") bytes  $png"
+          done
+          echo "--- end ---"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            apps/catalog/playwright-report/
+            apps/catalog/test-results/
+          if-no-files-found: warn
+          retention-days: 7
+
+  # Last, and only after all three.
+  #
+  # GitHub runs jobs in PARALLEL by default, so a job this one does not name in
+  # `needs` reports on a version that is already on npm rather than stopping
+  # it. check-release-gate.mjs asserts that this list holds every other job in
+  # the file, because the failure is silent: the pipeline is green, the checks
+  # all ran, and none of them gated anything.
   publish:
     name: Build and publish to npm
+    needs: [guard, verify, browser]
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read
       # Required for npm provenance.
@@ -42,12 +193,16 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
-      - name: Verify
-        run: pnpm verify
-
       - name: Build
         run: pnpm --filter blackborne build
 
+      # `--no-git-checks` switches off pnpm's own two guards: that the branch
+      # is the publishing branch, and that the tree is clean. It is not
+      # optional — a tag build is a detached HEAD, so pnpm's branch check can
+      # never pass here and the publish would simply never run. What it means
+      # is that those guarantees have to come from somewhere else, and the
+      # `guard` job above is where: the commit is on main, and the tag names
+      # the version being published.
       - name: Publish
         run: pnpm --filter blackborne publish --no-git-checks
         env:
