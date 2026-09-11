@@ -12,6 +12,48 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **The public API surface is a reviewed diff**, and it is read from the type
+  checker rather than from the declaration text — which is the whole finding.
+
+  A committed copy of `dist/index.d.ts`, or an api-extractor report, would not
+  have caught the thing this exists for. Our declaration reads
+  `interface TextFieldProps extends Omit<TextFieldProps$1, …>` whatever the
+  base contains, so a base release that adds a prop to four of this library's
+  public types is a **zero-character** change to that file. Measured by
+  patching the base's own declarations and re-reading ours.
+
+  `check:surface` builds the artefact from the checker instead: every exported
+  name, and every property of every exported type including inherited ones,
+  each marked `(own)` or `(base)`. The same simulation now reports
+  `+aBaseGrewThis? (base)` on `TextFieldProps`, `TextAreaProps`,
+  `PasswordFieldProps` and `TagsInputProps` — which is exactly how `validate`
+  and `validationBehavior` arrived in ten public APIs with nobody deciding.
+
+  191 exported names, 195 blocks, 74 kB. The property TYPES are deliberately
+  left out: including them doubles the artefact to the size of the declaration
+  file, and the interesting half is the names.
+
+- **`primitives.css` is checked against its generator.** It is the bottom of
+  the token stack — every semantic token resolves into a `--bb-x-*` declared
+  there — and it was the one source file eslint ignores by name AND prettier
+  ignores by name AND no test read. Measured: of its 192 declarations, exactly
+  **two** were asserted anywhere, as `rgb()` strings in a browser check.
+
+  It compares rendered bytes rather than running `pnpm tokens && git diff`,
+  because that form writes a source file as a side effect of checking it and
+  needs a git working tree. The generator was split so the check imports the
+  same function the writer uses: a check that reimplements what it checks
+  agrees with itself forever.
+
+### Fixed
+
+- **The generator counted 193 private tokens where 192 are declared.** Its
+  pattern was `/--bb-x-/g`, which also matched the prose in its own header —
+  "the `x` marks layer 1". A number in output that nobody can trust is doc 10
+  §11.6 at the smallest possible scale. Anchored to declaration lines now.
+
+### Added
+
 - **Four architectural guards that did not exist**, each verified in both
   directions, and two of them red on arrival.
 

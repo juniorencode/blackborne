@@ -56,6 +56,8 @@
     "build": "pnpm build:clean && pnpm build:types && pnpm build:dts && pnpm build:js && pnpm build:css",
     "check:package": "node scripts/check-package.mjs",
     "check:budget": "node scripts/check-budget.mjs",
+    "check:surface": "node scripts/check-surface.mjs",
+    "check:tokens": "node scripts/check-primitives.mjs",
     "test": "vitest run --passWithNoTests",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json"
   },
