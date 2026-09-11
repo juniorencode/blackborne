@@ -497,6 +497,48 @@ The habit that follows: after a long session of full runs, look at what is
 still resident before believing a new failure. Nineteen orphaned browsers is
 not an exotic state — it is what an interrupted run leaves.
 
+### 11.5.1 And the machine has a resource nobody counts: sockets
+
+**Added 2026-09-11**, and it is the first time this repository has NAMED one of
+these rather than inferring it.
+
+§11.5's diagnostic worked exactly as written — a different check each run, none
+repeating, every one passing in isolation — so the machine was the suspect.
+Memory was fine this time: 6.67GB free of 15.85, with no orphaned processes.
+The suspicion had nowhere to go.
+
+What closed it was §11.3 applied to the one wait that had no instrument. The
+accessibility suite fails through `gotoStory`, whose first step waits for the
+story to mount; when that ran out, the message was Playwright's own — "waiting
+for locator('#storybook-root > \*')" — which is the symptom in every case and
+the cause in none. One diagnostic later, on its first real occurrence:
+
+    the story "components-splitbutton--sizes" never mounted:
+    {"rootChildren":0,"bodyClass":"(none)","errorText":""};
+    the page said: console: Failed to load resource: net::ERR_NO_BUFFER_SPACE
+
+The HOST had run out of socket buffers, so the browser could not fetch the
+story's own chunk. Measured immediately afterwards: **1172 sockets in
+TIME_WAIT, 1117 of them to the preview server's port**, after roughly 2900
+story loads in one session.
+
+Three things are worth carrying:
+
+1. **A resource can be exhausted without being visible.** Memory and CPU are
+   the two anybody checks. Sockets in TIME_WAIT are invisible to both, they
+   accumulate across runs rather than within one, and on Windows they surface
+   as a failed fetch rather than as anything named "out of".
+2. **The worker count is not the finding.** Each test takes a fresh context and
+   reconnects, so the total churn is identical at any count; what the count
+   changes is the PEAK, which is what runs out. The record on one laptop: six
+   workers dropped a check in two runs of two, four dropped one in the second
+   of two, and two passed 480 of 480 — a curve, not a threshold.
+3. **Two waits sat side by side and only one had an instrument.** The wait for
+   the stylesheet below it had been given a full diagnostic after three
+   occurrences; the wait for the mount above it had none, and it is the one
+   that kept failing. When a helper is instrumented, instrument all of its
+   waits — the next mystery will choose the one that was skipped.
+
 ### 11.6 An artefact nobody can open is a failure nobody can read
 
 **Added 2026-09-10**, and it is §11.3's rule turned on the pipeline rather than

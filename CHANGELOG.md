@@ -12,6 +12,80 @@ minor versions. Every break is listed here with its migration.
 
 ### Changed
 
+- **A story that never mounts now says why, and the first occurrence named a
+  cause this repository had never seen.** `gotoStory` waits for the story to
+  attach, and when that ran out the message was Playwright's own — "waiting for
+  locator('#storybook-root > \*')" — which is the symptom in every case and the
+  cause in none. The wait for the stylesheet immediately below it had carried a
+  full diagnostic since its third occurrence; this one had nothing.
+
+  Within an hour of being written it fired on `SplitButton / Sizes` and
+  reported `net::ERR_NO_BUFFER_SPACE` from the page's console: the **host** had
+  run out of socket buffers, so the browser could not fetch the story's chunk.
+  Measured immediately afterwards: 1172 sockets in TIME_WAIT, 1117 of them to
+  the preview server, after roughly 2900 story loads in one session. Memory was
+  fine — 6.67 GB free, no orphaned processes — which is why §11.5's diagnostic
+  had pointed at the machine and then had nowhere to go
+  ([doc 10 §11.5.1](./docs/foundations/10-quality-and-verification.md)).
+
+  The wait is bounded at 20 seconds, and that is a budget split rather than a
+  speed limit: unbounded it consumes the whole 30-second test timeout,
+  Playwright closes the context, and the diagnostic cannot read the page at
+  all — which is exactly how the stylesheet wait's third occurrence reported
+  nothing.
+
+- **The CI worker count is written down instead of computed.**
+  `workers: '50%'` resolves to 2 on a four-core GitHub runner and to 6 on the
+  twelve-core laptop every other figure in that file was measured on. Read from
+  a real run: `Running 438 tests using 2 workers`. Local stays a fraction, with
+  the record beside it — six workers dropped a check in two runs of two, four
+  in the second of two, two passed 480 of 480 — and `--workers=2` is the remedy
+  on a machine that shows it. Not a retry: doc 10 §11 is explicit that a retry
+  turns a real failure into a coincidence, and this failure is real, it just
+  belongs to the host.
+
+- **The browser's time zone is pinned to UTC.** It was the third of doc 10
+  §11's three machine variables and the only one still unset — a value no check
+  chose and no check could see, on a suite whose calendar baseline has already
+  failed CI on a time zone once. It doubles as a test of decision 0023: this
+  library never reads the browser's zone, so pinning it must change nothing,
+  and all 196 baselines came back byte-identical in the container.
+
+- **A committed `.only` can no longer pass.** `forbidOnly` is on for CI.
+  Playwright's default is `false` and `.only` focuses the whole run rather than
+  its own file, so one left behind would take the `checks` project from 438
+  tests to 1 and report green. Measured: zero `.only`, `.skip` and `.fixme` in
+  `e2e/` today, so it changes nothing and prevents one thing.
+
+- **`cancel-in-progress` applies to pull requests only.** The group is keyed on
+  the ref, so for a push it is the whole of `main`: merging a second pull
+  request inside the browser job's twelve minutes would have cancelled the
+  first commit's verification with nothing to re-run it, leaving a commit on
+  main with no verdict and no record saying so. Measured before changing it: of
+  71 push-to-main runs, 0 were cancelled — prevention rather than a fix.
+
+- **Both jobs have a `timeout-minutes`.** The default is six hours. Measured on
+  2026-09-11, the fast job is 1 m 49 s and the browser job 11 m 52 s; the
+  bounds are 15 and 45, generous on purpose, because a bound on a hang is not a
+  budget on a duration (doc 10 §11).
+
+- **A failure now proves it has pictures before uploading them.** Doc 10 §11.6
+  is about this exact step, which uploaded nothing for months under a comment
+  explaining why it mattered. A step before the upload asserts
+  `playwright-report/index.html` exists and is not empty, and prints every PNG
+  the run produced — a log line survives a broken upload, an expired artefact
+  and the retention window, and is the only copy of the evidence that does.
+
+- **Every GitHub Action is pinned to a commit**, with the version in a trailing
+  comment, in both workflows. A major tag is a pointer its owner can repoint,
+  and `release.yml` runs three of them holding `NPM_TOKEN` and `id-token:
+write` — while CLAUDE.md promises "versions never drift" about everything
+  else in the repository. The bump also clears the Node 20 deprecation warning
+  all four were carrying, and `pnpm/action-setup` v6 is the first release that
+  declares support for pnpm v11, which is the version this repository pins.
+
+### Changed
+
 - **The package is published unminified and with no source map**, which takes
   the tarball from 398.8 kB to 165.4 kB and an identifier in a stack trace from
   `cs` to `useConfig`. Two thirds of the old download was `dist/index.js.map` —

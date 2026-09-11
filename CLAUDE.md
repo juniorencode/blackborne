@@ -515,6 +515,15 @@ Things that look like improvements and are not:
   symptom, with 3.1GB free of 15.85 and 3.1GB of it held by nineteen orphaned
   node and browser processes. Stopped, at 5.48GB free, two runs of all 438
   passed. Reproduce in isolation first (doc 10 §11.5).
+- **And do not stop at memory when the machine is the suspect.** The second
+  time this diagnostic pointed at the machine there was 6.67GB free and no
+  orphaned process, so the suspicion had nowhere to go. What closed it was an
+  instrument on the one wait that had none: a story that never mounted turned
+  out to be `net::ERR_NO_BUFFER_SPACE` in the page's console — the HOST out of
+  socket buffers, with **1172 sockets in TIME_WAIT, 1117 of them to the
+  preview server**, after about 2900 story loads in a session. Sockets
+  accumulate ACROSS runs, are invisible to a memory check, and the remedy is
+  `--workers=2` on that machine rather than a retry (doc 10 §11.5.1).
 - **Do not extend the base's props with an `Omit`.** A new field's props are a
   `Pick`, which is hard rule 8 in the type system: an `Omit` publishes
   everything the base has except what is named, so the public surface grows

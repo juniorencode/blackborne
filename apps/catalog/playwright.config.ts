@@ -13,6 +13,18 @@ export default defineConfig({
   // A failing colour or pixel assertion must not be shrugged off as flakiness.
   retries: 0,
   /*
+   * A COMMITTED `.only` MUST NOT PASS. Playwright's default is `false`, and
+   * `.only` focuses the whole RUN rather than its own file: one left behind
+   * would take the `checks` project from 438 tests to 1 and report green. That
+   * is the silent-green class this repository keeps paying for, and it is one
+   * line to close. Measured: zero `.only`, `.skip` and `.fixme` in `e2e/`
+   * today, so this changes nothing and prevents one thing.
+   *
+   * On CI only, deliberately. A person narrowing a run with `.only` while they
+   * work is using the tool correctly; the mistake is committing it.
+   */
+  forbidOnly: !!process.env.CI,
+  /*
    * WORK IS HANDED OUT PER FILE, and that is left alone here on purpose —
    * splitting a file's tests across workers is switched on for exactly one
    * project below.
@@ -54,8 +66,43 @@ export default defineConfig({
    * So: a fraction here, and `--workers=N` on the command line when a
    * particular machine disagrees. A number baked in would be wrong on both of
    * those machines and they are the same one.
+   *
+   * CI IS THE EXCEPTION AND IS NOW WRITTEN DOWN. `'50%'` resolved against a
+   * GitHub-hosted runner is 2, because that runner has four cores, and every
+   * figure above was measured on a twelve-core laptop where the same fraction
+   * is 6. Read from a real run on 2026-09-11: `Running 438 tests using 2
+   * workers`, then `480 tests using 2 workers`. Two is what CI has been
+   * running and passing at; writing it makes it a decision instead of an
+   * arithmetic coincidence, and the next person to change it sees a number
+   * somebody chose.
+   *
+   * ## WHEN A MACHINE DISAGREES, THIS IS WHAT IT LOOKS LIKE
+   *
+   * Attributed on 2026-09-11, by the diagnostic added to `e2e/story.ts` in the
+   * same change, on its first real occurrence:
+   *
+   *     the story "components-splitbutton--sizes" never mounted:
+   *     {"rootChildren":0,"bodyClass":"(none)","errorText":""};
+   *     the page said: console: Failed to load resource:
+   *     net::ERR_NO_BUFFER_SPACE
+   *
+   * Not a slow machine and not a story that throws: the HOST ran out of socket
+   * buffers, so Chromium could not fetch the story's chunk. Measured
+   * immediately afterwards on that machine: 1172 sockets in TIME_WAIT, 1117 of
+   * them to port 6007, after roughly 2900 story loads in one session. Each
+   * test takes a fresh context and reconnects, so the total churn is the same
+   * at any worker count — what the count changes is the PEAK, which is what
+   * runs out.
+   *
+   * The record, all on the same laptop and the same build: six workers dropped
+   * a check in two runs of two, four dropped one in the second of two runs, and
+   * two passed 480 of 480. The honest reading is that the number is not the
+   * finding — the socket pressure is — so the remedy is `--workers=2` on the
+   * machine showing it, and NOT a retry: doc 10 §11 is explicit that a retry
+   * turns a real failure into a coincidence, and this failure is real, it just
+   * belongs to the host rather than to the library.
    */
-  workers: '50%',
+  workers: process.env.CI ? 2 : '50%',
 
   /*
    * A REPORT WITH THE PICTURES IN IT, ON CI, AND THE REASON IS A FAILURE
@@ -101,7 +148,26 @@ export default defineConfig({
      */
     viewport: { width: 1280, height: 900 },
     // Fixed too: a different scale factor rasterises text differently.
-    deviceScaleFactor: 1
+    deviceScaleFactor: 1,
+    /*
+     * THE THIRD OF DOC 10 §11'S THREE MACHINE VARIABLES, and the only one
+     * still unpinned. §11 names speed, clock and configuration: the clock is
+     * fixed by `e2e/clock` for the suites that need it, and the browser's TIME
+     * ZONE was whatever the runner happened to be set to — a value no check
+     * sets and no check can see. The calendar's own baseline has already
+     * failed CI on a time zone once.
+     *
+     * UTC rather than a real place, because a place is a second fact to
+     * remember. Nothing here should read it at all: doc 05 §3.1 says this
+     * library never detects the zone, it receives one
+     * ([decision 0023](../../docs/decisions/0023-today-comes-from-the-configured-zone.md)),
+     * so pinning it is also a TEST of that claim — if a baseline moves when
+     * the browser's zone changes, something is reading the browser's zone.
+     *
+     * Measured on the way in: all 196 baselines came back byte-identical in
+     * the container with this line in place, which is that claim holding.
+     */
+    timezoneId: 'UTC'
   },
 
   expect: {

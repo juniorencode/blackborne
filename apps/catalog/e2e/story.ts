@@ -27,11 +27,80 @@ import type { Page } from '@playwright/test';
  * story mounts.
  */
 export async function gotoStory(page: Page, id: string): Promise<void> {
+  /*
+   * ANYTHING THE PAGE SAYS, COLLECTED BEFORE IT IS ASKED FOR.
+   *
+   * A story that throws while mounting never attaches a child to the root, so
+   * the wait below times out and the failure reads as "waiting for
+   * locator('#storybook-root > *')" — which is the symptom in every case and
+   * the cause in none. The exception itself only exists in the page's console,
+   * and by the time a diagnostic could ask for it the event is long gone.
+   *
+   * So it is recorded as it happens, and reported only if the wait fails.
+   * Listeners on a per-test page go away with it.
+   */
+  const said: string[] = [];
+  page.on('pageerror', error => said.push(`pageerror: ${error.message}`));
+  page.on('console', message => {
+    if (message.type() === 'error') said.push(`console: ${message.text()}`);
+  });
+
   await page.goto(`/iframe.html?id=${id}&viewMode=story`);
-  await page
-    .locator('#storybook-root > *')
-    .first()
-    .waitFor({ state: 'attached' });
+
+  /*
+   * WAIT FOR THE STORY TO MOUNT, BOUNDED, SO THE DIAGNOSTIC BELOW CAN RUN.
+   *
+   * Measured on 2026-09-11: this wait consumed the whole 30s test budget on
+   * `Switch / Brand Override`, inside a full 480-check accessibility run at
+   * six workers, and the same story passed in isolation. A second run dropped
+   * `ColorSwatchField / Rings` instead. The same suite at two workers — which
+   * is what CI uses — passed 480 of 480. Different check each time, none
+   * repeating: doc 10 §11.5's signature for the machine rather than the code.
+   *
+   * The number is 20 seconds and it is not a speed limit, it is a budget
+   * split. Unbounded, this wait takes the entire test timeout, Playwright
+   * closes the context, and the `catch` cannot read the page any more — which
+   * is exactly how the third occurrence of the stylesheet wait below reported
+   * nothing at all. Ten seconds is what the diagnostic needs; a story that
+   * genuinely takes twenty to mount is worth failing over, which is the same
+   * argument that keeps the wait below at its own default.
+   */
+  try {
+    await page
+      .locator('#storybook-root > *')
+      .first()
+      .waitFor({ state: 'attached', timeout: 20_000 });
+  } catch (cause) {
+    const seen = await page
+      .evaluate(() => ({
+        url: location.href,
+        readyState: document.readyState,
+        /* -1 says the root itself is missing, which is a different fault from
+           a root with no children: the first means this is not the catalog's
+           iframe, the second means the story did not render. */
+        rootChildren:
+          document.querySelector('#storybook-root')?.children.length ?? -1,
+        /* Storybook's own error display, which it puts on the body. */
+        bodyClass: document.body.className || '(none)',
+        errorText:
+          document.querySelector('#error-message')?.textContent?.trim() ??
+          '(none)',
+        title: document.title,
+        bodyChars: document.body.textContent?.trim().length ?? 0
+      }))
+      .catch(
+        (closed: unknown) =>
+          `unreadable: ${closed instanceof Error ? closed.message : String(closed)}`
+      );
+
+    throw new Error(
+      `the story "${id}" never mounted: ${JSON.stringify(seen)}; ` +
+        (said.length === 0
+          ? 'the page logged no errors'
+          : `the page said: ${said.join(' | ')}`),
+      { cause }
+    );
+  }
 
   /*
    * And wait for the library's stylesheet to be IN EFFECT, which mounting does

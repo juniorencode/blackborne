@@ -8,7 +8,19 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # ONLY FOR PULL REQUESTS, and the difference matters for one of the two
+  # groups this expression produces. A pull request run is keyed on
+  # `refs/pull/N/merge`, so a new push supersedes an older run of the same
+  # PR — which is what you want. A push to main is keyed on
+  # `refs/heads/main` for the WHOLE BRANCH, so merging a second pull request
+  # inside the browser job's twelve minutes would cancel the first commit's
+  # verification and nothing would ever re-run it: a commit on main with no
+  # verdict, and no record saying so.
+  #
+  # Measured before changing it: of 71 push-to-main runs, 0 were cancelled, so
+  # this is prevention rather than a fix for something observed. It costs one
+  # runner slot in the case it protects.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   # The fast gate, and the same command a contributor runs before opening a
@@ -33,10 +45,14 @@ jobs:
   verify:
     name: Format, lint, types, tests
     runs-on: ubuntu-latest
+    # Measured at 1m49s on 2026-09-11. The default is SIX HOURS, so a job that
+    # hangs — a wait that never resolves, a registry that never answers —
+    # occupies a runner for a working day before anybody is told.
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
           cache: pnpm
@@ -53,6 +69,11 @@ jobs:
   browser:
     name: Browser checks, accessibility and visual regression
     runs-on: ubuntu-latest
+    # Measured at 11m52s on 2026-09-11, of which 11m0s is the three suites.
+    # Generous rather than tight: this bounds a hang, it does not police a
+    # duration (doc 10 §11 — a check on how long a suite took is a check on
+    # how loaded the machine was).
+    timeout-minutes: 45
     # Runs in the same image the baselines were generated in, so a screenshot
     # taken here is byte-identical to one taken locally through
     # apps/catalog/docker-visual.sh. That is what lets the pixel tolerance stay
@@ -61,9 +82,9 @@ jobs:
       image: mcr.microsoft.com/playwright:v1.62.1-noble
       options: --ipc=host
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
           cache: pnpm
@@ -125,7 +146,37 @@ jobs:
       # It cost what the comment predicted: `avatar-states` failed at 289
       # pixels on a branch that changed no pixel, and the artefact that would
       # have said why was not there.
-      - uses: actions/upload-artifact@v4
+      # AND THE ARTEFACT IS VERIFIED, NOT THE STEP. Doc 10 §11.6 is about this
+      # exact upload: it ran on every failure for months, uploaded nothing,
+      # and said nothing, because an upload of a missing path is a warning
+      # rather than an error. The reporter was fixed on 2026-09-10 and
+      # verified once, by hand, which is the same standing the comment below
+      # had before it turned out to be false.
+      #
+      # So this runs before the upload and fails if the report is not there.
+      # It also PRINTS what the upload is about to take: a log line survives a
+      # broken upload action, an expired artefact and a retention window, and
+      # is the only copy of the evidence that does.
+      - name: The failure has pictures to ship
+        if: failure()
+        working-directory: apps/catalog
+        run: |
+          set -u
+          report=playwright-report/index.html
+          if [ ! -s "$report" ]; then
+            echo "::error::$report is missing or empty, so this failure ships no report."
+            echo "Playwright's reporter is configured in apps/catalog/playwright.config.ts;"
+            echo "on CI it must include ['html', { open: 'never' }]. Doc 10 §11.6."
+            exit 1
+          fi
+          echo "$report exists, $(wc -c < "$report") bytes"
+          echo "--- images the visual suite produced, which are the whole point of a pixel failure ---"
+          find test-results -name '*.png' -type f | sort | while read -r png; do
+            echo "$(wc -c < "$png") bytes  $png"
+          done
+          echo "--- end ---"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: failure()
         with:
           name: playwright-report
