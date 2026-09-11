@@ -65,28 +65,61 @@ export const painted = async (page: Page): Promise<void> => {
  * Every image in the document has settled.
  *
  * `gotoStory` waits for the story to mount and `toHaveScreenshot` waits for
- * fonts, and neither waits for an image. An `<img>` that resolves to something
- * is one thing; an `<img>` that FAILS is the case that caught us, because
- * failing is what makes a component fall back — so a picture is either the
- * fallback or the browser's broken-image glyph depending on whether the error
- * had happened yet.
+ * fonts, and neither waits for an `<img>`. `Avatar` is the first component in
+ * this library to render one, and its baseline came back **225 pixels
+ * different on CI** — stable across both of Playwright's retries, so not a
+ * flake.
  *
- * Measured, on CI: `avatar-states` came back 225 pixels different from the
- * reference generated locally, stable across both of Playwright's retries, and
- * 225 pixels is about the size of that glyph. The baseline held the letters the
- * component falls back to; CI held the glyph. Nothing was wrong with either
- * machine.
+ * ## The glyph was the GUESS, and it stays here as an eliminated one
  *
- * `complete` is true for a loaded image AND for a failed one, and a component
- * that swaps the image out on failure removes it from this list altogether —
- * all three of which are "settled". A lazily loaded image that is out of view
- * never completes, so a story that scrolls will time out here, and the message
- * will say which picture was not ready.
+ * 225 pixels is about the size of the browser's broken-image mark, so the diff
+ * was assumed to be the baseline holding the letters the component falls back
+ * to and CI holding the mark. **The artefact said otherwise.** The content was
+ * identical either way — the letters in both — and the difference was
+ * antialiasing on every circular border, which is what one page rasterised at
+ * two different moments gives.
+ *
+ * This docstring said the opposite until 2026-09-11, and the mistake arrived
+ * with the extraction rather than with the finding: `ffa6e44` wrote the
+ * antialiasing account and this wait together, and `f3947b2` moved the wait
+ * here with the eliminated hypothesis promoted to the cause. A guess is worth
+ * keeping when it is labelled as one; the area coincidence above is exactly
+ * the reasoning the artefact refuted.
+ *
+ * The same baseline failed CI a SECOND time, at 289 pixels, with no artefact
+ * to open at all — doc 10 §11.6 is the rule that came out of that, and that
+ * one's cause is not known and is deliberately not guessed at.
+ *
+ * ## What this buys is a page that has stopped rasterising
+ *
+ * `complete` is the state that bounds the wait — true for a loaded image AND
+ * for a failed one, and a component that swaps the image out on failure
+ * removes it from this list altogether, all three of which are "settled". A
+ * lazily loaded image out of view never completes, so a story that scrolls
+ * times out here — and the failure NAMES the picture, which is why the poll
+ * returns the list rather than a boolean (doc 10 §11.4: a value for every
+ * state, never a throw).
+ *
+ * ## And it does not prove the swap
+ *
+ * `complete` goes true when the task that fires `load` or `error` is QUEUED,
+ * so it is already true when `onError` runs, and React's re-render is a task
+ * after that. The swap is asserted where the component publishes it, in
+ * `avatar.spec.ts`: the letters present and no `img` beside them. A wait may
+ * not be the only thing claiming something happened (§11.1).
  */
 export const imagesSettled = async (page: Page): Promise<void> => {
   await expect
     .poll(() =>
-      page.evaluate(() => [...document.images].every(image => image.complete))
+      page.evaluate(() =>
+        [...document.images]
+          .map(image =>
+            image.complete
+              ? null
+              : `loading: ${image.currentSrc.slice(0, 60) || '(no src)'}`
+          )
+          .filter(state => state !== null)
+      )
     )
-    .toBe(true);
+    .toEqual([]);
 };

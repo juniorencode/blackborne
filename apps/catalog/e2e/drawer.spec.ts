@@ -10,7 +10,9 @@
  * written.
  */
 import { expect, test } from '@playwright/test';
+import { painted } from './settle';
 import { gotoStory } from './story';
+import { watchWheels, wheelsSeen } from './wheel';
 
 const SIDES = 'components-drawer--sides';
 const OVER_A_DIALOG = 'components-drawer--over-a-dialog';
@@ -265,12 +267,28 @@ test.describe('doc 08 §6, the case the document names', () => {
     // reference count matter at all.
     await expect(dialog).toBeVisible();
 
+    await watchWheels(page);
     const before = await page.evaluate(() => window.scrollY);
     await page.mouse.move(180, 500);
     await page.mouse.wheel(0, 600);
+
+    /*
+     * ONE OF EACH (doc 10 §11.1). The wheel ARRIVING is the thing that has to
+     * happen; the offset not moving is the claim. Polling the claim was
+     * worthless twice over: `expect.poll` returns on the first read that
+     * satisfies it, so this passed whether or not the event ever arrived and
+     * spent none of its budget.
+     *
+     * A count is a STATE, so polling that is honest. `painted` after it puts a
+     * scroll applied a frame late INSIDE the read below rather than after it.
+     * The sibling test — the page scrolls again once every layer has closed —
+     * is what proves a wheel moves this page at all, so it is not repeated.
+     */
     await expect
-      .poll(() => page.evaluate(() => window.scrollY), { timeout: 1000 })
-      .toBe(before);
+      .poll(() => wheelsSeen(page), { timeout: 1000 })
+      .toBeGreaterThan(0);
+    await painted(page);
+    expect(await page.evaluate(() => window.scrollY)).toBe(before);
   });
 
   test('and it scrolls again once both have closed', async ({ page }) => {

@@ -11,6 +11,7 @@
  * DESCRIBES its trigger and does not name it. That is plain DOM.
  */
 import { expect, test } from '@playwright/test';
+import { travelTo } from './pointer';
 import { gotoStory } from './story';
 
 const PLACEMENTS = 'components-tooltip--placements';
@@ -19,31 +20,19 @@ const OVERVIEW = 'components-tooltip--overview';
 /**
  * Hover a trigger and wait for the tooltip to arrive AND come to rest.
  *
- * THE MOUSE HAS TO TRAVEL. `locator.hover()` teleports the pointer, and the
- * base's `useHover` does not register that at all — measured, four ways: a
- * single `hover()` opened nothing, while `focus()`, `Tab`, and a neutral
- * `mouse.move` followed by a stepped move onto the target all opened it. The
- * base is filtering pointer events that did not arrive as movement, which is
- * the right thing for it to do and a trap for every check of a hover layer.
+ * THE MOUSE HAS TO TRAVEL, which is `travelTo` in `e2e/pointer.ts`. The
+ * measurement was taken here — a single `hover()` opened nothing, while
+ * `focus()`, `Tab`, and a neutral move followed by a stepped move all opened
+ * it — and the EXPLANATION that lived here was wrong: the base's `useHover`
+ * filters nothing about movement. The real gate is the global interaction
+ * modality, read by `useTooltipTrigger` rather than by `useHover`, and that
+ * file has the source lines.
  *
- * Two waits after that, and both are needed. The open delay is 600ms by
- * decision (doc 09 §3.1), so the visibility check has to outlast it; and the
- * tooltip scales in, so a box measured while `data-entering` is still set is a
- * box mid-animation — the same trap the drawer's geometry checks record.
+ * Two waits after the travel, and both are needed. The open delay is 600ms, so
+ * the visibility check has to outlast it; and the tooltip scales in, so a box
+ * measured while `data-entering` is still set is a box mid-animation — the
+ * same trap the drawer's geometry checks record.
  */
-/** Move the pointer ONTO an element, as movement rather than a teleport. */
-const travelTo = async (
-  page: import('@playwright/test').Page,
-  target: import('@playwright/test').Locator
-) => {
-  const box = await target.boundingBox();
-  expect(box).not.toBeNull();
-  await page.mouse.move(4, 4);
-  await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2, {
-    steps: 8
-  });
-};
-
 const openOn = async (
   page: import('@playwright/test').Page,
   testId: string
@@ -283,17 +272,40 @@ test.describe('the delays', () => {
     const tooltip = page.getByRole('tooltip');
 
     await travelTo(page, first);
-    // Not yet: the delay has not elapsed.
-    await page.waitForTimeout(200);
-    await expect(tooltip).toBeHidden();
+
+    /*
+     * NOT YET, ASKED AS A STATE RATHER THAN AFTER A SLEEP. This was
+     * `waitForTimeout(200)` then `toBeHidden()`, which is the one direction a
+     * fixed sleep cannot be: `waitForTimeout` guarantees AT LEAST its number
+     * and nothing about the maximum, so a process that stalled for 700ms
+     * anywhere in that sleep woke up to an open tooltip and a red check.
+     *
+     * Two channels, because the panel and the name are wired separately and a
+     * regression could take either: no tooltip in the tree, and no
+     * `aria-describedby` on the trigger — which is what `Tooltip.test.tsx`
+     * reads for the same claim in jsdom.
+     *
+     * It is honest to say what this does NOT fix. The margin is now the whole
+     * 600ms rather than the 400ms the sleep left, but a machine slow enough to
+     * spend 600ms between the travel and this read would still see an open
+     * tooltip. Eliminating that needs a controllable clock, and Playwright's
+     * `clock.install` does not pause on its own — measured in the pinned
+     * playwright-core, only a `pauseAt` entry makes virtual time stop tracking
+     * the real one. Wider margin, same class of dependence, one less sleep.
+     */
+    await expect(tooltip).toHaveCount(0);
+    await expect(first).not.toHaveAttribute('aria-describedby', /.*/);
 
     await expect(tooltip).toBeVisible({ timeout: 3000 });
 
     await travelTo(page, second);
     /*
-     * Immediately this time. 250ms is comfortably inside the 600ms the first
-     * one took and outside the noise of a hover event, so a tooltip visible
-     * here can only have skipped the delay.
+     * Immediately this time, and the sleep STAYS here because it is doing the
+     * opposite job: it gives the tooltip 250ms to be wrongly closed, so a
+     * longer wait makes the check stricter rather than flakier. 250ms is
+     * comfortably inside the 600ms the first one took, so a tooltip visible
+     * here can only have skipped the delay — which is the warmup the decision
+     * rests on.
      */
     await page.waitForTimeout(250);
     await expect(tooltip).toBeVisible();

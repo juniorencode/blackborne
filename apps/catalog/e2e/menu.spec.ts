@@ -14,6 +14,7 @@
  * leaving it alone is beside it.
  */
 import { expect, test } from '@playwright/test';
+import { travelTo } from './pointer';
 import { gotoStory } from './story';
 
 const OVERVIEW = 'components-menu--overview';
@@ -180,12 +181,16 @@ test('the pointer moves the same single highlight', async ({ page }) => {
   const duplicate = page.getByRole('menuitem', { name: 'Duplicate' });
   await expect(send).toHaveAttribute('data-focused', 'true');
 
-  const box = await duplicate.boundingBox();
-  expect(box).not.toBeNull();
-  await page.mouse.move(4, 4);
-  await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2, {
-    steps: 8
-  });
+  /*
+   * AND THE NEUTRAL MOVE IS WHAT MAKES THIS WORK, which is least obvious here
+   * of all places: the menu was opened with `Enter` above, and a keydown sets
+   * the base's global interaction modality to 'keyboard'. `useMenuItem` moves
+   * its highlight only while `isFocusVisible()` is false, which is only while
+   * that modality is 'pointer'. So without the neutral move this check would
+   * assert that hovering a row does nothing — and pass. `e2e/pointer.ts` has
+   * the source lines.
+   */
+  await travelTo(page, duplicate);
 
   await expect(duplicate).toHaveAttribute('data-focused', 'true');
   await expect(send).not.toHaveAttribute('data-focused', /.*/);

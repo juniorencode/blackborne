@@ -204,7 +204,30 @@ test('Escape closes it and changes nothing', async ({ page }) => {
   const trigger = page.locator('.bb-select-trigger');
   await trigger.focus();
   await page.keyboard.press('Enter');
+
+  /*
+   * ONE OF EACH (doc 10 §11.1): every assertion at the END of this test is
+   * also true of a select that never opened — no list because it was never
+   * mounted, focus still on the trigger because it never left, nothing chosen
+   * because nothing happened — and that is precisely the state this story
+   * starts in. So the two keys before Escape have to be SEEN to do something,
+   * or the test's end state is indistinguishable from its start state.
+   *
+   * The highlight is the right witness because it is the state Escape is being
+   * asked to discard.
+   */
+  await expect(page.getByRole('listbox')).toBeVisible();
+
+  const highlighted = () =>
+    page.evaluate(
+      () =>
+        document.querySelector('[role=option][data-focused]')?.textContent ??
+        'none'
+    );
+  const first = await highlighted();
   await page.keyboard.press('ArrowDown');
+  await expect.poll(highlighted).not.toBe(first);
+
   await page.keyboard.press('Escape');
 
   await expect(page.getByRole('listbox')).toHaveCount(0);

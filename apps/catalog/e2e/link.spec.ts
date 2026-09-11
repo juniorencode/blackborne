@@ -14,6 +14,7 @@
  * like that is worth exactly as much as the check under it.
  */
 import { expect, test } from '@playwright/test';
+import { travelTo } from './pointer';
 import { gotoStory } from './story';
 
 /*
@@ -182,22 +183,6 @@ const tabOpenedBy = async (
     'the context gained a page but it cannot be read'
   ).toBeDefined();
   return opened!;
-};
-
-/**
- * Move the pointer onto something, as movement rather than a teleport.
- *
- * `locator.hover()` teleports and the base's `useHover` does not register that
- * at all — measured four ways while building `Tooltip`, and copied here rather
- * than shared because a spec is a document.
- */
-const travelTo = async (page: Page, name: string) => {
-  const box = await page.getByRole('link', { name }).boundingBox();
-  expect(box).not.toBeNull();
-  await page.mouse.move(4, 4);
-  await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2, {
-    steps: 8
-  });
 };
 
 test('it is an anchor, with an address the browser has resolved', async ({
@@ -431,7 +416,10 @@ test('the rule thickens and the colour deepens under the pointer', async ({
     }));
 
   const before = await ink();
-  await travelTo(page, 'the terms of the agreement');
+  const linked = page.getByRole('link', {
+    name: 'the terms of the agreement'
+  });
+  await travelTo(page, linked);
   await expect(link).toHaveAttribute('data-hovered', 'true');
   const after = await ink();
 

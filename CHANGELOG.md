@@ -12,6 +12,98 @@ minor versions. Every break is listed here with its migration.
 
 ### Changed
 
+- **Nine checks that could not fail, or could fail for the machine's sake.**
+  A sweep of every check in `apps/catalog/e2e` whose expected result is
+  "nothing happened", every fixed sleep used as an upper bound, and every
+  polled callback that could throw. Three of the nine turned out to be
+  described wrongly rather than written wrongly, and those corrections are the
+  valuable part.
+
+  **A poll cannot give a page the chance to be wrong.** Three scroll-lock
+  checks sent a wheel event and polled that the page offset had not moved, each
+  under a comment saying the budget gave the page a thousand milliseconds to
+  prove otherwise. `expect.poll` returns on the first read that satisfies it,
+  so the assertion was satisfied by its own first read and passed whether or
+  not the event ever arrived. They now poll a window-level counter, which is a
+  state — and measured while writing it, the count still reads zero when
+  `mouse.wheel` returns, so the arrival really is asynchronous
+  ([doc 10 §11.1.1](./docs/foundations/10-quality-and-verification.md)).
+
+  **A number the base chose is not a decision a check can see.** The preview's
+  `Date.now()` stopwatch asserted `300 < waited < 2000` around a 600ms delay,
+  under a comment admitting the band was widened so it would not measure the
+  machine. It was worse than that: `PreviewTrigger` defaults `delay` to 600
+  itself, so deleting the prop would have left every assertion passing. The
+  test now asserts the order of two states and no duration.
+
+  **`useHover` does not reject a teleport.** Seven copies of a pointer helper
+  said it does. Measured in the pinned base, `triggerHoverStart` gates only on
+  `isDisabled`, a touch pointer, an already-hovered state and containment — so
+  a bare `hover()` publishes `data-hovered`. The real gate is the global
+  interaction modality, read by the CONSUMERS, and it becomes `'pointer'` on a
+  `pointermove` at the document, which fires after the boundary events of the
+  move that caused it. A single move cannot vouch for itself. The seven copies
+  are now `e2e/pointer.ts`, with the corrected mechanism and two consequences
+  none of them stated: a key press sets the modality back, which is why the
+  menu's neutral move is load-bearing after an `Enter`; and one bare `hover()`
+  the audit wanted converted was correct as written, because its assertion
+  rides on `data-hovered` itself.
+
+  The rest: a read-only field's hover check gained the ordinary field beside it
+  and now asks the ANIMATION rather than reading a colour at t≈0 of a 100ms
+  transition — measured, the colour read alone sees the old value either way; a
+  select's Escape check gained two witnesses, because all three of its
+  assertions were true of a select that never opened; `switch-direction`'s
+  polled callback returns `NaN` instead of dereferencing two `querySelector`
+  results, and `NaN` rather than `0` because `0` is where an off thumb sits; and
+  one tooltip sleep became a state, with the margin it does not close written
+  down rather than implied.
+
+- **The accessibility suite can no longer report success without running.**
+  Its story list ended in `.catch(() => [])`, and the path from there to a
+  green run is not obvious: the file is imported once for collection and once
+  per worker, so a fetch that failed during COLLECTION produced a suite of
+  exactly one test — the reachability guard — which re-fetched successfully
+  inside its worker, read every story and passed. `1 passed`, exit zero, with
+  479 checks never generated. Verified by pointing the index at a 404: it used
+  to say `1 passed` and now fails naming the URL and the cause.
+
+  The guard it carried was `stories.length > 10`, which has a passing region
+  four hundred wide. It is replaced by a comparison against the story files on
+  disk, by NAME rather than by count, so a stale `storybook-static` is named
+  rather than silently under-covered. Verified in both directions by adding a
+  story the index did not know about.
+
+  And the clock is pinned for that suite, which had none: fifty of its stories
+  are the date family, and from October nothing in the catalog would have
+  rendered a today-marked cell with nothing failing.
+
+- **Twenty of the 196 baselines were taken outside the determinism guards.**
+  `pinClock` and `imagesSettled` lived inside one of three shutters, so the
+  hover and press groups reached `gotoStory` themselves. None of those twenty
+  renders a date or holds an image, so none of them was wrong — a guard that
+  one shutter in three goes through is the kind nobody can see is missing. The
+  clock is now fixed for the whole file and both guards live in one `shoot`
+  helper that all three paths go through. Measured: all 196 references came
+  back byte-identical in the container.
+
+  The press group also gained an attribution on its failure path: a notice
+  carries its own six-second life while `toHaveScreenshot` retries a mismatch,
+  so a diff can be a dismissal rather than a change, and now it says which.
+
+- **`settle.ts` recorded an eliminated guess as the cause of a CI failure.**
+  Its docstring said the 225-pixel `avatar-states` diff was the browser's
+  broken-image mark. The artefact had said otherwise — the content was
+  identical either way and the difference was antialiasing on every circular
+  border — and the mistake arrived with an extraction rather than with the
+  finding: the commit that wrote the wait wrote the right account, and the
+  commit that moved the wait promoted the eliminated hypothesis to the cause.
+  The guess stays, labelled as one. `avatar.spec.ts` now asserts the fallback's
+  presence as well as the image's absence, because `imagesSettled` cannot prove
+  the swap: `complete` is already true when `onError` runs.
+
+### Changed
+
 - **A story that never mounts now says why, and the first occurrence named a
   cause this repository had never seen.** `gotoStory` waits for the story to
   attach, and when that ran out the message was Playwright's own — "waiting for

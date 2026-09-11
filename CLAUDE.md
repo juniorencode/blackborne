@@ -508,6 +508,33 @@ Things that look like improvements and are not:
   wearing a five-second budget, and `getComputedStyle(null)` throws. Return a
   sentinel for "not there yet"; the assertion will not match it and the poll
   ticks again (doc 10 §11.4).
+- **Do not assert a number the BASE chose.** A check on a preview's 600ms open
+  delay looked like it guarded this library's decision and guarded the
+  dependency's default: measured in the pinned source, `PreviewTrigger` does
+  `delay: props.delay ?? 600`, so deleting the prop left every assertion
+  passing. The close delay in the same component is ours — 150 against a
+  default of 200 — and that one is worth asserting. The test is whether
+  changing OUR side of the number changes the reading (doc 10 §11.1).
+- **Do not trust a poll to give a page the chance to be wrong.**
+  `expect.poll` returns on the first read that satisfies it, so "the offset did
+  not move" is satisfied by its own first read and the budget is never spent —
+  three scroll-lock checks passed whether or not the wheel event arrived.
+  Measured while fixing it: after `mouse.wheel` returns, a window-level counter
+  still reads zero, so the arrival is asynchronous and has to be polled as a
+  STATE. And the positive companion has to be in the SAME test: a select's
+  Escape check asserted three things that were all true of a select which never
+  opened, with the proof that it opens in a neighbouring test (doc 10 §11.1.1).
+- **Do not explain a hover workaround with `useHover`.** Seven copies of a
+  pointer helper said the base's `useHover` rejects a teleport. It does not —
+  measured in `react-aria@3.52.0`, `triggerHoverStart` gates only on
+  `isDisabled`, a touch pointer, an already-hovered state and containment, so a
+  bare `hover()` does publish `data-hovered`. What rejects a teleport is the
+  global interaction MODALITY, read by the consumers: a tooltip's trigger opens
+  only while it is `'pointer'`, and it becomes `'pointer'` on a `pointermove`
+  at the document — which fires AFTER the boundary events of the move that
+  caused it. A single move cannot vouch for itself; the neutral move does. And
+  a key press sets it back to `'keyboard'`, which is why the menu's neutral
+  move is load-bearing after an `Enter`. `e2e/pointer.ts` is the one copy.
 - **Do not read a failure before checking the machine.** One check failing
   repeatedly in the same place is the check or the code. SEVERAL different
   checks failing once each, none repeating, is the machine: measured, three

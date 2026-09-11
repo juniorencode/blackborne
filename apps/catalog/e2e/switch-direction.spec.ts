@@ -16,11 +16,29 @@ import { gotoStory } from './story';
 const panel = (label: string) =>
   `.catalog-panel:has(.catalog-label:text-is("${label}"))`;
 
-/** Where the thumb sits inside its track, as a 0-to-1 fraction from the left. */
+/**
+ * Where the thumb sits inside its track, as a 0-to-1 fraction from the left.
+ *
+ * `NaN` when either element is missing, and that is the whole point of the
+ * shape. This is read inside an `expect.poll`, and doc 10 §11.4's measurement
+ * is that a polled callback which THROWS is propagated on the first call and
+ * never retried — so the two `querySelector` casts below used to give a poll
+ * one attempt wearing a five-second budget, and `getBoundingClientRect` on
+ * `null` is a throw.
+ *
+ * `NaN` rather than `0`, which matters more than it looks: `0` is exactly
+ * where an off thumb sits, so a zero sentinel would satisfy the
+ * `toBeLessThan(0.4)` assertion below without having measured anything. `NaN`
+ * satisfies no numeric comparison, so the poll keeps ticking and the failure
+ * says the elements were never there.
+ */
 const thumbPosition = (locator: import('@playwright/test').Locator) =>
   locator.evaluate(label => {
-    const track = label.querySelector('[aria-hidden="true"]') as HTMLElement;
-    const thumb = label.querySelector('.bb-switch-thumb') as HTMLElement;
+    const track = label.querySelector('[aria-hidden="true"]');
+    const thumb = label.querySelector('.bb-switch-thumb');
+    if (!(track instanceof HTMLElement) || !(thumb instanceof HTMLElement)) {
+      return Number.NaN;
+    }
     const trackBox = track.getBoundingClientRect();
     const thumbBox = thumb.getBoundingClientRect();
     const travel = trackBox.width - thumbBox.width;

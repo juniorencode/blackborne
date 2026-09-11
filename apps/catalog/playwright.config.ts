@@ -118,10 +118,15 @@ export default defineConfig({
    *
    * It cost exactly what the comment predicted. `avatar-states` failed CI at
    * 289 pixels on a branch that changed no pixel, and the artefact that would
-   * have said WHY did not exist — the second time that baseline has failed
-   * only on CI, and the first time the cause was guessed wrong before the diff
-   * was opened (it was assumed to be a broken-image glyph and turned out to be
-   * antialiasing on every circular border).
+   * have said WHY did not exist. **This one's cause is not known and is
+   * deliberately not guessed at** (§11.3).
+   *
+   * It is the second time that baseline has failed only on CI. On the FIRST —
+   * 225 pixels — the cause was guessed wrong before the diff was opened:
+   * assumed to be a broken-image glyph, and it turned out to be antialiasing
+   * on every circular border. That is the whole argument for shipping the
+   * pictures, and the sentence is split in two here because the single
+   * sentence it replaces read as though the wrong guess belonged to the 289.
    *
    * `dot` stays for the console, because 480 lines of `✓` is what the log
    * looked like before it and the failures were the only thing anyone read.

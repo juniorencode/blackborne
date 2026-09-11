@@ -15,6 +15,7 @@
  *      the same way, and the reason those are two components.
  */
 import { expect, test } from '@playwright/test';
+import { travelTo } from './pointer';
 import { gotoStory } from './story';
 
 const PLACEMENTS = 'components-preview--placements';
@@ -23,23 +24,16 @@ const OVERVIEW = 'components-preview--overview';
 type Page = import('@playwright/test').Page;
 type Locator = import('@playwright/test').Locator;
 
-/**
- * Move the pointer ONTO an element, as movement rather than a teleport.
- *
- * THE MOUSE HAS TO TRAVEL. `locator.hover()` teleports it and the base's
- * `useHover` does not register that at all — measured four ways while building
- * `Tooltip`, which is the note this helper is copied from. It is copied rather
- * than shared because a spec is a document: two files, two readers, and the
- * duplication is six lines that never have to agree with each other.
+/*
+ * `travelTo` is imported rather than copied, and the sentence that used to sit
+ * here is the reason: it argued that "the duplication is six lines that never
+ * have to agree with each other". They did not agree. Seven copies carried one
+ * explanation and it was wrong about which part of the base rejects a
+ * teleport, so the thing that never had to agree was the FACT — `e2e/pointer.ts`
+ * has the corrected one. The journey matters more here than anywhere else: a
+ * preview's trigger and its card are separated by a safe area, so the
+ * intermediate positions are load-bearing rather than decorative.
  */
-const travelTo = async (page: Page, target: Locator) => {
-  const box = await target.boundingBox();
-  expect(box).not.toBeNull();
-  await page.mouse.move(4, 4);
-  await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2, {
-    steps: 8
-  });
-};
 
 /** Hover a trigger and wait for the card to arrive AND come to rest. */
 const openOn = async (page: Page, testId: string): Promise<Locator> => {
@@ -165,27 +159,44 @@ test.describe('the keyboard', () => {
     await expect(card).toHaveCount(0, { timeout: 2000 });
   });
 
-  test('focus opens it after the delay, not immediately', async ({ page }) => {
+  test('focus opens it after a delay, not immediately', async ({ page }) => {
     /*
-     * The library's own 600ms, in effect through `timing.ts` rather than the
-     * base's default. The base opens a preview on keyboard focus only after the
-     * delay — its own comment says why: tabbing quickly through a page would
-     * otherwise open cards and add their tab stops on the way past.
+     * ORDER, NOT ELAPSED TIME. The base opens a preview on keyboard focus only
+     * after a warmup delay — its own comment says why: tabbing quickly through
+     * a page would otherwise open cards and add their tab stops on the way
+     * past.
      *
-     * Measured as a band rather than a number: too tight and this becomes a
-     * check on how fast the machine is.
+     * This used to start a `Date.now()` stopwatch and assert
+     * `300 < waited < 2000`, under a comment admitting the band was widened so
+     * it would not become "a check on how fast the machine is". Doc 10 §11
+     * names elapsed milliseconds outright, and widening is the fix it forbids.
+     * The span was one-sided as well: every term in it — two protocol round
+     * trips, React's commit, the visibility poll noticing — only ever ADDED to
+     * the reading, so the ceiling failed on a slow machine and the floor
+     * passed on one.
+     *
+     * AND THE NUMBER WAS NOT OURS TO ASSERT HERE. Measured in the pinned base:
+     * `react-aria-components`, `private/PreviewTrigger.mjs`, `delay:
+     * props.delay ?? 600` — the default is the same 600 the component passes,
+     * so deleting `delay={HOVER_OPEN_DELAY}` would leave every assertion above
+     * still passing. A check that cannot tell our decision from the base's
+     * default is measuring the base (§11.1). The CLOSE delay is the one that
+     * is ours — 150 against the base's 200 — and it is asserted where it can
+     * be seen.
+     *
+     * What is left is the claim in the title, which is a sequence of states.
+     * If the delay were removed the card would be there on the first read and
+     * stay there, so the first assertion fails rather than passing vacuously.
      */
     await gotoStory(page, OVERVIEW);
+    const trigger = page.getByTestId('trigger');
     const card = page.locator('.bb-preview');
 
-    const started = Date.now();
-    await page.getByTestId('trigger').focus();
+    await trigger.focus();
     await expect(card).toHaveCount(0);
-    await expect(card).toBeVisible({ timeout: 3000 });
-    const waited = Date.now() - started;
+    await expect(trigger).not.toHaveAttribute('aria-describedby', /.*/);
 
-    expect(waited).toBeGreaterThan(300);
-    expect(waited).toBeLessThan(2000);
+    await expect(card).toBeVisible({ timeout: 3000 });
   });
 
   test('Escape closes it', async ({ page }) => {
