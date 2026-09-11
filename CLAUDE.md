@@ -583,6 +583,21 @@ Things that look like improvements and are not:
   `ButtonProps` was `any` and a bogus prop passed. The package ships one
   rolled-up declaration file
   ([decision 0025](./docs/decisions/0025-the-package-ships-one-declaration-file.md)).
+- **Do not snapshot a public API as TEXT.** The obvious guard against a
+  surprise in the public surface is a committed copy of `dist/index.d.ts`, and
+  it would not have caught the thing it is for: our declaration reads
+  `interface TextFieldProps extends Omit<TextFieldProps$1, …>` whatever the
+  base contains, so a base upgrade that adds a prop to four public types is a
+  ZERO-character change to that file. Measured by patching the base and
+  re-reading. `check:surface` builds the artefact from the type checker
+  instead, marking every property `(own)` or `(base)`, and the same simulation
+  reports `+aBaseGrewThis? (base)` on all four (doc 10 §3.1).
+- **Do not hand-edit `primitives.css`.** It is generated, and it is the one
+  source file eslint ignores BY NAME and prettier ignores BY NAME — so an edit
+  there was invisible to every other check in the project. Measured: of its 192
+  declarations exactly TWO were asserted anywhere, as `rgb()` strings in a
+  browser check. `check:tokens` renders the file from the same module the
+  writer uses and compares bytes; it names the first line that differs.
 - **Do not conclude the package works because the catalog does.** The catalog
   renders components from SOURCE and imports exactly one thing from the built
   package, its stylesheet — so 196 baselines, 480 accessibility checks and 438

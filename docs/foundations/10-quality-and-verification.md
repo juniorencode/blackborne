@@ -62,9 +62,41 @@ verified in both directions. See §2.1.
 | **Re-render**               | That typing in one field does not re-render its neighbours                                                        | Medium                  |
 | **Automated accessibility** | Contrast, missing labels, malformed ARIA. **Running**: axe against every story in the catalog                     | Medium                  |
 | **Visual regression**       | What changed in appearance, and where. **Running**: 19 captures, generated in Docker so the tolerance can be zero | Slow                    |
-| **Package**                 | Types resolve, exports are correct, no side effects. **Running**: publint and attw against the packed tarball     | Fast                    |
+| **Package**                 | Types resolve, exports are correct, no side effects, and the public surface is a reviewed diff                    | Fast                    |
 | **Server**                  | That everything prerenders without mismatches                                                                     | Free: the site gives it |
 | **Manual**                  | Keyboard always; screen reader on the complex ones                                                                | Minutes                 |
+
+### 3.1 The public surface is read structurally, not textually
+
+**Added 2026-09-11.** The `Package` row's newest half is worth its own note,
+because the obvious implementation of it does not work.
+
+`validate` and `validationBehavior` reached ten public props types and were
+documented nowhere. They did not arrive in a diff: each of those types extends
+the base's props with an `Omit`, which is a blacklist, so the base already had
+them and the day the field was written its declaration read the same either
+way.
+
+So a snapshot of the declaration TEXT — an api-extractor report, or a
+normalised `dist/index.d.ts` — cannot see it. Measured, by patching the base's
+own declarations and re-reading: our file still says
+`interface TextFieldProps extends Omit<TextFieldProps$1, …>`, character for
+character, while **four** of this library's public types gained a prop.
+
+The artefact is therefore built from the type CHECKER: every exported name,
+and every property of every exported type including the inherited ones, each
+marked `(own)` or `(base)`. The same simulation against it reports
+
+    type TextFieldProps
+      +aBaseGrewThis? (base)
+
+on all four, which is the sentence the guard exists to produce: the base grew,
+and nobody decided.
+
+What it deliberately leaves out is each property's TYPE. That doubles the
+artefact to the size of the declaration file, and the interesting half is the
+names — so `tone?: AlertTone` widening to `tone?: string` is invisible here and
+belongs to review.
 
 ## 4. What is tested and what is not
 
