@@ -904,3 +904,77 @@ gives 420 against Playwright's real 438 — loops and a second project — and a
 check that is approximately right is worse than a number that is honestly
 dated. Asking Playwright costs 3.3 seconds and an install, which the fast gate
 does not have.
+
+### 11.7 And when the instrument answers, the answer can be "stop asserting"
+
+§11.3 says a flake you cannot reproduce gets instrumentation rather than a
+guess. This is what happens next, and it is the half that is easy to get wrong:
+**an instrument that attributes a failure has done its job even when the fix
+turns out to be deleting the assertion.**
+
+Four checks on `Link` asserted that a middle or modified press opens a second
+tab. They failed six times on CI across five weeks and **never once locally** —
+eighteen runs at four workers, twice at two. Each failure added an instrument
+and the next one moved a step further in: the tab's own `location.href` rather
+than Playwright's `page.url()`, then what the context actually held, then a
+capture-phase recorder of what the page saw of the press.
+
+On 2026-09-11 the sixth failure came back with all of it:
+
+```
+the context holds 1 page(s) where 2 was expected —
+page.url()=…components-link--with-a-router  location.href=…components-link--with-a-router
+— and the page saw [{"target":"A[href=/customers/4821]","ctrlKey":true,
+                     "metaKey":false,"defaultPrevented":false}]
+```
+
+Read it against the four outcomes the instrument was built to separate. The
+press landed on an anchor carrying the right address. The modifier reached the
+DOM. `defaultPrevented` is **false**, so nothing of ours cancelled the
+browser's own job — which is correct, because the base only calls
+`preventDefault` when it is going to client-navigate and a modifier makes that
+false. And the source page had not moved, so it was not taken as an ordinary
+press.
+
+**Every fault that could have been ours was ruled out by measurement.** What
+was left is that Chromium did not open a tab.
+
+That is §11 exactly. Whether a user agent honours a modifier by opening a
+background tab is the user agent's convention: it is not declared in the
+markup, the check sets nothing that controls it, and it cannot be read back —
+the same shape as asserting a frame rate or a time zone. A check on it is a
+check on the machine, and the only honest move once that is known is to stop
+making it.
+
+**The replacement is narrower, not weaker**, and that distinction is the whole
+argument. It asserts what the component owns: the press reached an anchor with
+the right address, the modifier reached the DOM, `defaultPrevented` is false,
+and the document did not move. A regression in any of those still turns it red
+— verified by making `Link` cancel every press and watching all three go red
+with the sentence they were given:
+
+```
+Error: the browser was going to open a tab and something of ours cancelled it
+Expected: false   Received: true
+```
+
+Two things came out of exercising that, and both were assumptions.
+
+**A middle button fires `auxclick`, not `click`.** A recorder listening for
+`click` alone reports an empty list for a perfectly healthy middle press, which
+is §11.1: an instrument that cannot see the good case cannot speak about the
+bad one. It also means the first simulation — an `onClick` that cancels — left
+the middle-press check green, because that path was never reached. The
+simulation had to be `onAuxClick` as well before the third check could be
+exercised at all.
+
+**And the positive control matters more than the negative one.** `defaultPrevented: false` is only evidence if something can make it true, so it
+was read on an ordinary press through the same recorder: `true`, live, on the
+same link. Without that, "false" is indistinguishable from an instrument that
+never reads anything.
+
+**What is NOT dropped** is the one check where a new browsing context is
+declared in the markup rather than conjured by a modifier: `target="_blank"`.
+There the browser has no convention to exercise, it has an instruction. If that
+one ever fails the same way the same reasoning applies to it, and it is written
+down here so the next reader inherits the decision instead of rediscovering it.

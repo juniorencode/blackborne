@@ -6,7 +6,17 @@
  * "copy link address", the list of links a screen reader builds — and jsdom
  * has no new tab to open, so none of that can be asserted where the rest of
  * the library's behaviour is. The unit tests cover the element and the router
- * wiring; everything below needs a real browser and, twice, a second tab.
+ * wiring; everything below needs a real browser, and once a second tab.
+ *
+ * ONCE, AND IT USED TO BE FOUR TIMES. Three of those asserted that Chromium
+ * opens a background tab for a middle or modified press, which is a user-agent
+ * convention rather than anything this component declares — and they failed
+ * six times on CI without ever reproducing locally. `pressAsSeenByThePage`
+ * replaced them with what the library actually owns. The one that remains is
+ * `target="_blank"`, where the new browsing context is declared in the MARKUP
+ * and the browser has no discretion to exercise; if that one ever fails the
+ * same way, the same reasoning applies to it and the decision is written here
+ * rather than left to be rediscovered.
  *
  * The fifth thing is not about anchors at all: THE TEXT MUST NOT MOVE WHEN
  * FOCUS LANDS. That is why this is the first component in the library whose
@@ -38,6 +48,10 @@ const ROUTER = 'components-link--with-a-router';
 /**
  * Wait for a tab that has just been opened to actually be somewhere, and ASK
  * THE TAB rather than ask Playwright.
+ *
+ * ONE CALLER LEFT: the link that declares `target="_blank"`. The three that
+ * pressed with a modifier no longer assert a tab at all — see
+ * `pressAsSeenByThePage` for why, and for the measurement that settled it.
  *
  * `waitForEvent('page')` resolves when the page OBJECT exists, which is before
  * its first navigation has committed — so reading the url straight after gives
@@ -252,6 +266,120 @@ const tabOpenedBy = async (
   return opened!;
 };
 
+type Seen = {
+  type: string;
+  button: number;
+  tag: string;
+  href: string | null;
+  ctrlKey: boolean;
+  metaKey: boolean;
+  defaultPrevented: boolean;
+  settled: boolean;
+};
+
+/**
+ * WHAT THE PAGE SAW OF A PRESS — which is the half of "a new tab opens" that
+ * this library actually owns.
+ *
+ * The three checks below used to assert that a second page appeared in the
+ * context. That assertion failed SIX times on CI and never once locally —
+ * each failure adding an instrument, which is what the comments above record
+ * as the fourth and the fifth — and on 2026-09-11 the sixth was attributed. The page had seen
+ * `A[href=/customers/4821]`, `ctrlKey: true`, `defaultPrevented: false`, and
+ * the source page had not moved: **every fault it could have been on our side
+ * was ruled out, and Chromium simply did not open a tab.**
+ *
+ * That is doc 10 §11. Whether a user agent honours a modifier by opening a
+ * background tab is the user agent's convention, not a property of this
+ * component — it is not declared in the markup, the test sets nothing that
+ * controls it, and it cannot be read back. Asserting it is asserting the
+ * machine, and the only honest move once that is known is to stop.
+ *
+ * What replaces it is not weaker, it is NARROWER, and it covers every failure
+ * that would be ours:
+ *
+ *   - the press landed on an anchor carrying the right address
+ *   - the modifier reached the DOM
+ *   - `defaultPrevented` is false, so nothing of ours cancelled the browser's
+ *     own job — this is the one that would catch `handleLinkClick` deciding to
+ *     client-navigate a modified press
+ *   - the document did not move, so it was not taken as an ordinary press
+ *
+ * A regression in any of those still fails. What no longer fails is Chromium
+ * having its own opinion.
+ *
+ * TWO EVENT TYPES, and that is measured rather than assumed: a middle button
+ * fires `auxclick` and not `click`, so a recorder listening for `click` alone
+ * reports an empty list for a perfectly healthy middle press — an instrument
+ * that cannot see the good case cannot speak about the bad one (§11.1).
+ *
+ * CAPTURE PHASE, for the same reason it was before: a bubble-phase listener at
+ * the document recorded NOTHING on a ctrl-click that demonstrably opened a
+ * tab, because something stops propagation first.
+ *
+ * And `defaultPrevented` is read LATE, on a macrotask, because at capture time
+ * it is always false — the handlers that would call it have not run yet.
+ * Verified with a positive control on this same link: an ordinary press, where
+ * the base DOES prevent the default and call the router, reads false at
+ * capture and true afterwards, while the ctrl-click reads false both times.
+ * `settled` is what says the late read has happened, and it is polled as a
+ * STATE rather than waited for as a duration (§11.2).
+ */
+const pressAsSeenByThePage = async (
+  page: Page,
+  act: () => Promise<void>
+): Promise<Seen[]> => {
+  await page.evaluate(() => {
+    const seen: Seen[] = [];
+    (window as unknown as { pressesSeen: Seen[] }).pressesSeen = seen;
+    for (const type of ['click', 'auxclick']) {
+      document.addEventListener(
+        type,
+        event => {
+          const mouse = event as MouseEvent;
+          const target = mouse.target;
+          const anchor = target instanceof Element ? target.closest('a') : null;
+          const entry: Seen = {
+            type: mouse.type,
+            button: mouse.button,
+            tag: target instanceof Element ? target.tagName : String(target),
+            href: anchor?.getAttribute('href') ?? null,
+            ctrlKey: mouse.ctrlKey,
+            metaKey: mouse.metaKey,
+            defaultPrevented: false,
+            settled: false
+          };
+          seen.push(entry);
+          setTimeout(() => {
+            entry.defaultPrevented = mouse.defaultPrevented;
+            entry.settled = true;
+          }, 0);
+        },
+        true
+      );
+    }
+  });
+
+  await act();
+
+  /* A positive assertion, so the poll spends its budget waiting for the press
+     to arrive rather than being satisfied by its own first read (§11.1.1). */
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          (
+            (window as unknown as { pressesSeen?: Seen[] }).pressesSeen ?? []
+          ).filter(one => one.settled).length
+      )
+    )
+    .toBeGreaterThan(0);
+
+  return page.evaluate(
+    () => (window as unknown as { pressesSeen?: Seen[] }).pressesSeen ?? []
+  );
+};
+
 test('it is an anchor, with an address the browser has resolved', async ({
   page
 }) => {
@@ -273,7 +401,9 @@ test('it is an anchor, with an address the browser has resolved', async ({
   expect(seen.origin).toBe(new URL(page.url()).origin);
 });
 
-test('a middle click opens another tab', async ({ page }) => {
+test('a middle press reaches the anchor and nothing cancels it', async ({
+  page
+}) => {
   await gotoStory(page, AGAINST_A_BUTTON);
 
   /*
@@ -298,18 +428,27 @@ test('a middle click opens another tab', async ({ page }) => {
    * reaches for `page.mouse` elsewhere: `travelTo` moves the pointer in steps
    * because the base's `useHover` does not register a teleport.
    */
-  const opened = await tabOpenedBy(page, () =>
+  const seen = await pressAsSeenByThePage(page, () =>
     page
       .getByRole('link', { name: 'Astilleros del Sur' })
       .click({ button: 'middle' })
   );
 
-  expect(await openedAt(opened, /\/customers\/4821/)).toContain(
-    '/customers/4821'
-  );
+  expect(
+    seen,
+    'exactly one press should have reached the document'
+  ).toHaveLength(1);
+  expect(seen[0]?.type).toBe('auxclick');
+  expect(seen[0]?.button).toBe(1);
+  expect(seen[0]?.href).toBe('/customers/4821');
+  expect(
+    seen[0]?.defaultPrevented,
+    'the browser was going to open a tab and something of ours cancelled it'
+  ).toBe(false);
+
   /*
    * And the page it came from stayed where it was, which is the other half of
-   * what a middle click means. Asserted as the story it is still showing
+   * what a middle press means. Asserted as the story it is still showing
    * rather than as the address it does not have: `page.url()` is the value
    * measured to go stale above, and "does not contain" is satisfied by a stale
    * `about:blank` as happily as by the truth.
@@ -317,24 +456,32 @@ test('a middle click opens another tab', async ({ page }) => {
   expect(await page.evaluate(() => window.location.href)).toContain(
     'id=components-link--against-a-button'
   );
-  await opened.close();
 });
 
-test('a ctrl-click opens another tab', async ({ page }) => {
+test('a ctrl-press reaches the anchor and nothing cancels it', async ({
+  page
+}) => {
   await gotoStory(page, AGAINST_A_BUTTON);
 
   const link = page.getByRole('link', { name: 'Astilleros del Sur' });
-  const opened = await tabOpenedBy(page, () =>
+  const seen = await pressAsSeenByThePage(page, () =>
     link.click({ modifiers: ['ControlOrMeta'] })
   );
 
-  expect(await openedAt(opened, /\/customers\/4821/)).toContain(
-    '/customers/4821'
-  );
+  expect(seen).toHaveLength(1);
+  expect(seen[0]?.href).toBe('/customers/4821');
+  expect(
+    seen[0]?.ctrlKey || seen[0]?.metaKey,
+    'the modifier never reached the page, so nothing below means anything'
+  ).toBe(true);
+  expect(
+    seen[0]?.defaultPrevented,
+    'the browser was going to open a tab and something of ours cancelled it'
+  ).toBe(false);
+
   expect(await page.evaluate(() => window.location.href)).toContain(
     'id=components-link--against-a-button'
   );
-  await opened.close();
 });
 
 test('a target of its own opens another tab', async ({ page }) => {
@@ -383,22 +530,31 @@ test('with a router, a press is handed over and the page stays', async ({
  * pushes onto a history stack is complete — and a person who asked for a new
  * tab still gets one.
  */
-test('and a ctrl-click still opens a tab, router or no router', async ({
-  page
-}) => {
+test('and a ctrl-press is not handed to the router', async ({ page }) => {
   await gotoStory(page, ROUTER);
 
   const link = page.getByRole('link', { name: 'Astilleros del Sur' });
-  const opened = await tabOpenedBy(page, () =>
+  const seen = await pressAsSeenByThePage(page, () =>
     link.click({ modifiers: ['ControlOrMeta'] })
   );
 
-  expect(await openedAt(opened, /\/customers\/4821/)).toContain(
-    '/customers/4821'
-  );
-  // The router was not asked, because the person did not ask the application.
+  expect(seen).toHaveLength(1);
+  expect(seen[0]?.href).toBe('/customers/4821');
+  expect(seen[0]?.ctrlKey || seen[0]?.metaKey).toBe(true);
+
+  /*
+   * THE ASSERTION THIS CHECK EXISTS FOR, and the one the missing tab was only
+   * ever a proxy for. With a router installed, an ordinary press is handed
+   * over and the document stays; a MODIFIED press must not be, or the person
+   * who asked their browser for a new tab gets a client-side navigation in the
+   * one they were already looking at. Both halves are ours and both are read
+   * here: nothing cancelled the default, and the router was never called.
+   */
+  expect(
+    seen[0]?.defaultPrevented,
+    'a modified press was handed to the router, so the browser never got it'
+  ).toBe(false);
   await expect(page.getByText('The router has not been asked')).toBeVisible();
-  await opened.close();
 });
 
 /*
