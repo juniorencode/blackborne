@@ -12,6 +12,15 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **Wave 0 of the table suite: three measurements and no component.** The
+  catalog's §3.4 said three questions had to be answered before the API rather
+  than during it. They were, in a browser and in jsdom, with throwaway probes
+  and nothing left behind — a standing test asserting the base's behaviour
+  would break the rule about not testing React Aria. Seven findings came back
+  from three questions, and one of them corrects §3.4 itself. The waves are
+  written there too, along with the three capabilities the base offers that are
+  deliberately **not** waves.
+
 - **The ground the table suite stands on, written before any of it is built.**
   The catalog carried one row for a whole suite, which is exactly where a suite
   goes wrong — non-goal 4 is explicit that the functionality is first-class and
