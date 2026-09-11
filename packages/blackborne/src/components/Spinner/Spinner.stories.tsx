@@ -95,7 +95,12 @@ export const InheritsItsColour: Story = {
         </span>
       </Scope>
       <Scope label="inside a filled button">
-        <Button isPending>Saving</Button>
+        {/* `primary` explicitly: the default variant is `secondary`, which is
+            outlined rather than filled, so the panel's label was describing
+            something the picture did not show. Found by opening the baseline. */}
+        <Button variant="primary" isPending>
+          Saving
+        </Button>
       </Scope>
       <Scope label="dark" mode="dark">
         <span className="bb:flex bb:items-center bb:gap-2">

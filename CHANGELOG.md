@@ -12,6 +12,49 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **A greyscale picture that can actually show the rule.** Doc 06 §3 names
+  greyscale as the check for colour being the only channel, and the library had
+  exactly one such baseline: `confirm-greyscale`, rendering a SINGLE tone of a
+  component that can never carry a success one. A rule about telling tones
+  apart cannot be checked against one tone. `alert-greyscale` is the whole set
+  twice — four tones in colour beside the same four with the hue filtered out —
+  and it demonstrates the rule rather than asserting it: with the colour gone,
+  the glyphs still say which is which.
+
+- **A picture for `Spinner`**, which had none because it had no story. It
+  photographs `InheritsItsColour` rather than `Sizes`: the three sizes are
+  geometry against the type scale, and what only a picture shows is
+  `color: currentColor` doing its job — the same element beside body text,
+  beside muted text, inside a filled button where the surrounding colour is the
+  button's foreground, and in dark.
+
+  The rotation is not in it and cannot be: `animations: 'disabled'` CANCELS an
+  infinite animation rather than finishing it, so the arc is photographed where
+  it starts.
+
+### Removed
+
+- **`split-button-variants`**, a strict subset of `split-button-states`.
+  Verified before deleting: it renders primary beside secondary in a row, and
+  the "Default" scope of the states picture renders the same two, the component
+  defaulting to `primary`.
+
+### Fixed
+
+- **The visual suite said a time picker "earns two" with three entries below
+  it.** Corrected to three, and the third turned out to be the load-bearing
+  one: `time-picker-states` is the only one photographing the FIELD, and a time
+  picker is a field carrying the states doc 07 §6 lists — where a select's own
+  states picture is taken on different furniture.
+
+- **A story labelled a panel "inside a filled button" and showed an outlined
+  one.** `Button` defaults to `secondary`, not `primary`. Nothing could catch
+  it — the types were right, axe was green, 438 browser checks passed — and it
+  was found by opening the generated baseline, which is the one manual item
+  doc 10 §10 names.
+
+### Added
+
 - **The public API surface is a reviewed diff**, and it is read from the type
   checker rather than from the declaration text — which is the whole finding.
 
