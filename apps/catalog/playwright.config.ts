@@ -31,14 +31,21 @@ export default defineConfig({
    *
    * The reason is measured, and the two suites have opposite shapes.
    *
-   * The behaviour checks are 253 tests across 28 files, so handing out whole
-   * files already uses every worker: 7.5 minutes serial against 2.7 with six
-   * workers. Splitting the files' tests as well bought nothing on top of that
-   * — 2.7 either way — and one three-worker run dropped three checks, so it
-   * stays off where it has nothing to offer.
+   * The behaviour checks are spread across many files, so handing out whole
+   * files already uses every worker. Measured when the suite was 253 tests in
+   * 28 files: 7.5 minutes serial against 2.7 with six workers. Splitting the
+   * files' tests as well bought nothing on top of that — 2.7 either way — and
+   * one three-worker run dropped three checks, so it stays off where it has
+   * nothing to offer.
    *
-   * The accessibility suite is 357 checks in ONE file, which file-level
-   * parallelism cannot touch at all. Splitting it took 13.1 minutes to 4.6.
+   * The accessibility suite is ONE file, which file-level parallelism cannot
+   * touch at all. Measured at 357 checks: splitting it took 13.1 minutes to
+   * 4.6.
+   *
+   * THE SHAPES ARE THE ARGUMENT, not the counts, which is why the counts here
+   * are dated by the size of the suite rather than restated. Both have grown —
+   * 438 tests in 45 files and 484 checks in one, on 2026-09-11 — and neither
+   * growth changes which lever applies to which. Doc 10 §12.
    *
    * So: file-level for everything, test-level for the one file that is a suite
    * in its own right.
@@ -265,9 +272,10 @@ export default defineConfig({
       testMatch: ['**/accessibility.spec.ts'],
       /*
        * The one place tests inside a file are split across workers. It
-       * generates one check per story from Storybook's own index — 357 of them
-       * — and each one loads a page and runs axe over it, sharing nothing with
-       * its neighbours. Serial, that was 13.1 minutes; split, 4.6.
+       * generates one check per story from Storybook's own index — 484 of
+       * them on 2026-09-11, and it was 357 when this was measured — and each
+       * one loads a page and runs axe over it, sharing nothing with its
+       * neighbours. Serial, that was 13.1 minutes; split, 4.6.
        */
       fullyParallel: true
     },

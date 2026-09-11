@@ -14,8 +14,9 @@
  *
  * ---
  *
- * Not every story is captured. Sixty screenshots would be slow, and most would
- * be near-duplicates that fail together and teach nothing. What is captured:
+ * Not every story is captured. Photographing all of them would be slow, and
+ * most of the extra shots would be near-duplicates that fail together and
+ * teach nothing. What is captured:
  *
  *   - one per component showing EVERY state, which is where a token change
  *     surfaces
@@ -46,8 +47,8 @@ import { gotoStory } from './story';
  * named for that platform. They look entirely plausible. Committing them by
  * accident gives the repository two sets of baselines that can never agree.
  *
- * A refusal that says where to go is better than a red run that leaves
- * nineteen files behind.
+ * A refusal that says where to go is better than a red run that leaves a full
+ * set of plausible-looking references behind.
  */
 test.beforeAll(() => {
   if (process.platform !== 'linux') {

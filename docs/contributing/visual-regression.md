@@ -98,8 +98,16 @@ the run died with `EPIPE` from a process writing into nothing.
 
 ## What is captured, and what is not
 
-Nineteen captures, not all sixty stories. Sixty would be slow and most would be
-near-duplicates that fail together and teach nothing.
+197 captures, not all 484 stories. Photographing every story would be slow and
+most of the extra shots would be near-duplicates that fail together and teach
+nothing — a component's four sizes move as one, and a suite where one token
+change turns thirty pictures red says less than one where it turns three.
+
+Both numbers are checked rather than remembered: `scripts/check-claims.mjs`
+counts the suite's own registries and the story files, and fails if this
+sentence stops matching. It says nineteen in the version of this document that
+predates that check, against a suite that had already reached the low
+hundreds.
 
 | Group        | What                                                                                                                              |
 | ------------ | --------------------------------------------------------------------------------------------------------------------------------- |

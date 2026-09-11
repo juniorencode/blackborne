@@ -285,6 +285,7 @@ things to keep in mind anyway:
 | `pnpm verify`        | The gate: format, lint, types, tests, and the package. Before every PR |
 | `pnpm lint`          | ESLint, including this project's own rules                             |
 | `pnpm lint:rules`    | Fires and silences each of those rules, in both directions             |
+| `pnpm check:claims`  | The numbers the documents state as fact are still true                 |
 | `pnpm typecheck`     | Types across the workspace                                             |
 | `pnpm test`          | Vitest                                                                 |
 | `pnpm verify:full`   | Everything above, plus the browser and accessibility checks            |
@@ -307,11 +308,14 @@ kept apart deliberately: a dev server compiles each story on demand, which has
 timed a story out three times under a full run, and a run that reuses whatever
 server is up verifies whatever that server last compiled. `e2e/catalog.ts`
 carries the reasoning. That is also what makes the suites safe to run in
-parallel, and parallel is where the time went: 7.5 minutes of behaviour checks
-became 2.7, and the accessibility suite — 357 checks in a single file, which
-file-level parallelism cannot touch — dropped from 13.1 minutes to 4.6. **CI
-was worse than any of that**, because Playwright uses one worker there by
-default until told otherwise.
+parallel, and parallel is where the time went: measured when the behaviour
+suite was 253 tests, 7.5 minutes became 2.7, and the accessibility suite — one
+file, which file-level parallelism cannot touch — dropped from 13.1 minutes to
+4.6 at 357 checks. **CI was worse than any of that**, because Playwright uses
+one worker there by default until told otherwise. Those are measurements of a
+moment and of a machine, so they are dated by the size of the suite rather than
+restated: both have since grown, and what they argue is which lever applies to
+which shape (doc 10 §12).
 
 A browser is not optional pedantry: jsdom does not implement real tab order, so
 it cannot say where focus goes, and it does not resolve CSS variables, so it

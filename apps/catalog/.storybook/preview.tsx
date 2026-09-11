@@ -89,7 +89,7 @@ const preview: Preview = {
    *
    * `manual` rather than `test: 'off'` because it is the honest word: there IS
    * automated accessibility here, and it is `accessibility.spec.ts` walking
-   * all 480 stories in the built catalog with the rule set below. This is the
+   * every story in the built catalog with the rule set below. This is the
    * PANEL, for a person with a story open, and it is a global so anyone can
    * turn it back on from the toolbar for one session.
    */

@@ -117,6 +117,16 @@ jobs:
       # Playwright defaults to ONE worker when CI is set, so every one of those
       # serial numbers was what this job actually paid. `workers` is now
       # explicit in the config, which is where the rest of the reasoning is.
+      #
+      # AND THOSE ARE LOCAL NUMBERS, which is worth knowing before using them
+      # to plan anything about this job. Measured HERE on 2026-09-11, on the
+      # same commit: behaviour 3.3m, accessibility 5.4m, visual 2.3m, which is
+      # 11m0s of the job's 11m52s. A CI runner has fewer cores than the machine
+      # the local figures came from, so the two parallel suites are SLOWER here
+      # and the single-worker one is FASTER -- which no amount of reading the
+      # local numbers would have predicted. Doc 10 section 12: a duration is a
+      # measurement of a machine, so it carries the machine and the date or it
+      # says nothing.
       - name: Behaviour checks
         run: pnpm --filter catalog test:e2e
 
