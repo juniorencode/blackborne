@@ -127,18 +127,18 @@ written in the file.
 
 ## 3. The verification layers
 
-| Layer                       | What it checks                                                                                                    | Cost                    |
-| --------------------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------------- |
-| **Format and lint**         | Code style, the project's own rules from section 2, **and those rules themselves** (§2.1)                         | Seconds                 |
-| **Types**                   | That the public surface is properly typed                                                                         | Seconds                 |
-| **Logic**                   | Hooks and pure functions, **rendering nothing** (P6)                                                              | Fast                    |
-| **Behavior**                | The component from the perspective of someone using it, and never how fast the machine ran it (§11)               | Medium                  |
-| **Re-render**               | That typing in one field does not re-render its neighbours                                                        | Medium                  |
-| **Automated accessibility** | Contrast, missing labels, malformed ARIA. **Running**: axe against every story in the catalog                     | Medium                  |
-| **Visual regression**       | What changed in appearance, and where. **Running**: 19 captures, generated in Docker so the tolerance can be zero | Slow                    |
-| **Package**                 | Types resolve, exports are correct, no side effects, and the public surface is a reviewed diff                    | Fast                    |
-| **Server**                  | That everything prerenders without mismatches                                                                     | Free: the site gives it |
-| **Manual**                  | Keyboard always; screen reader on the complex ones                                                                | Minutes                 |
+| Layer                       | What it checks                                                                                                     | Cost                    |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------- |
+| **Format and lint**         | Code style, the project's own rules from section 2, **and those rules themselves** (§2.1)                          | Seconds                 |
+| **Types**                   | That the public surface is properly typed                                                                          | Seconds                 |
+| **Logic**                   | Hooks and pure functions, **rendering nothing** (P6)                                                               | Fast                    |
+| **Behavior**                | The component from the perspective of someone using it, and never how fast the machine ran it (§11)                | Medium                  |
+| **Re-render**               | That typing in one field does not re-render its neighbours                                                         | Medium                  |
+| **Automated accessibility** | Contrast, missing labels, malformed ARIA. **Running**: axe against every story in the catalog                      | Medium                  |
+| **Visual regression**       | What changed in appearance, and where. **Running**: 197 captures, generated in Docker so the tolerance can be zero | Slow                    |
+| **Package**                 | Types resolve, exports are correct, no side effects, and the public surface is a reviewed diff                     | Fast                    |
+| **Server**                  | That everything prerenders without mismatches                                                                      | Free: the site gives it |
+| **Manual**                  | Keyboard always; screen reader on the complex ones                                                                 | Minutes                 |
 
 ### 3.1 The public surface is read structurally, not textually
 
@@ -829,3 +829,78 @@ examples. A row went into [the catalog](../catalog-and-build-order.md) §7
 rather than an instrument written in passing, because extracting and
 type-checking prose has its own decisions in it — which snippets are meant to
 be complete, and what a fragment may leave undeclared.
+
+## 12. A number is checked, or it is dated
+
+**Added 2026-09-11**, after a sweep found five documents stating counts that had
+not been true for months.
+
+| Where                | It said                                    | It was   |
+| -------------------- | ------------------------------------------ | -------- |
+| §3's layers table    | "**Running**: 19 captures"                 | 197      |
+| visual-regression.md | "Nineteen captures, not all sixty stories" | 197, 484 |
+| playwright.config.ts | "253 tests across 28 files"                | 438, 45  |
+| playwright.config.ts | "357 checks in ONE file"                   | 484      |
+| CLAUDE.md            | "357 checks in a single file"              | 484      |
+
+Every one of them was true when it was written. Nothing rewrote them as the
+suites grew, because nothing read them — which is §1's argument arriving in the
+documentation: an unchecked claim is an untrue claim, eventually, and the only
+question is when.
+
+### The distinction the fix rests on
+
+**Most numbers here are MEASUREMENTS, and they are correct forever.** "11 of
+480 stories carried the flag", "all 196 baselines came back byte-identical",
+"twenty of the 196 were taken outside the determinism guards" — each belongs to
+an event. Updating one to today's figure does not repair it, it **falsifies the
+record**. The first draft of this sweep was going to replace every `480` with
+`484`; measured, that would have damaged nine true sentences to fix four false
+ones.
+
+**A few are CLAIMS about the present**, and those rot in silence. A claim has no
+event attached — it says what the project IS — so it is wrong the moment the
+project changes, and nothing announces it.
+
+So the rule has three branches, in order of preference.
+
+**Drop the number if it carries nothing.** The best fix is usually not a check.
+Storybook's preview said axe "walks all 480 stories in the built catalog"; the
+sentence means _every_ story, the count was decoration, and "every story in the
+built catalog" cannot go stale. The visual suite's own header lost two numbers
+the same way.
+
+**Register it if it must be stated.** `scripts/check-claims.mjs` holds the
+claims that earn a number, each rendering the sentence it expects from a fresh
+measurement — so when the measurement moves, the failure quotes the sentence to
+write. It runs in `pnpm verify`. It cannot find a claim nobody registered, and
+says so rather than implying coverage it does not have.
+
+**Date it if it cannot be measured cheaply.** A duration is the clearest case:
+§11 says a check must not measure the machine, and a stated duration is a claim
+ABOUT a machine — so it carries the machine and the moment or it says nothing.
+Where the calendar date is not known, the size of the thing measured serves
+better anyway: "measured when the suite was 253 tests in 28 files" tells the
+next reader what the number was a property of, which a date alone does not.
+
+That last one paid immediately. The parallelism figures in
+`playwright.config.ts` are local, and the same commit measured on CI reads
+behaviour 3.3m, accessibility 5.4m, visual 2.3m — **the two parallel suites
+slower and the single-worker one faster**, because a runner has fewer cores.
+Nobody reading the local numbers would have predicted the direction of either.
+
+### What is registered today
+
+Three claims, over three measurements: the captures, counted out of the visual
+suite's own five registries; the stories, counted as the exported `Story`
+constants; and the components, counted as the story FILES rather than the
+directories. That last one is not pedantry — `Accordion` and `Collapsible`
+share a folder, so the directories are 51 and the components are 52, and a
+first attempt got 52 by counting `components.test.ts` as a directory and agreed
+with the guide for the wrong reason.
+
+The count of behaviour checks is deliberately **not** registered. A text parse
+gives 420 against Playwright's real 438 — loops and a second project — and a
+check that is approximately right is worse than a number that is honestly
+dated. Asking Playwright costs 3.3 seconds and an install, which the fast gate
+does not have.

@@ -12,6 +12,14 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **The numbers the documents state as fact are checked.** Five of them had
+  not been true for months: doc 10 §3's table said 19 captures against 197,
+  `visual-regression.md` said "nineteen captures, not all sixty stories"
+  against 197 and 484, and `playwright.config.ts` and `CLAUDE.md` described
+  suites of 253 and 357 that are now 438 and 484. Each was true when written,
+  and nothing rewrote them because nothing read them — §1's argument arriving
+  in the documentation.
+
 - **The release workflow runs the checklist it is supposed to.** Doc 10 §10
   lists ten things that stop a version shipping and `release.yml` ran
   `pnpm verify` and nothing else — so automated accessibility and visual
@@ -72,6 +80,24 @@ minor versions. Every break is listed here with its migration.
   The rotation is not in it and cannot be: `animations: 'disabled'` CANCELS an
   infinite animation rather than finishing it, so the arc is photographed where
   it starts.
+
+### Changed
+
+- **A number in a document is now checked, dated, or dropped** — doc 10 §12.
+  The distinction the rule rests on is that MOST numbers here are measurements
+  attached to an event and are correct forever: rewriting "11 of 480 stories
+  carried the flag" to today's figure falsifies the record rather than
+  repairing it. Measured, a blanket sweep would have damaged nine true
+  sentences to fix four false ones. Only claims about the PRESENT are
+  registered; where the number carried nothing it was removed instead, and
+  where it cannot be measured cheaply it is dated by the size of the thing
+  measured rather than restated.
+
+- **The parallelism timings say which machine they came from.** They were
+  measured locally, and the same commit on CI reads behaviour 3.3m,
+  accessibility 5.4m, visual 2.3m — the two parallel suites slower and the
+  single-worker one faster, because a runner has fewer cores. Nobody reading
+  the local numbers would have predicted the direction of either.
 
 ### Removed
 
