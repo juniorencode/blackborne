@@ -32,9 +32,24 @@ It costs an afternoon to write.
 | No viewport breakpoint outside components in a portal          | Doc 04              |
 | No import reaching into another component's internal path      | Doc 01              |
 | No access to `document`, `localStorage` or globals             | Doc 01, P3          |
+| No request, and no window under an alias                       | Doc 01, P2 and P3   |
+| No props type extending the base with `Omit`                   | Doc 01, P5          |
 | No generic element with a click handler acting as a button     | Doc 06              |
 
 From there on, breaking a document stops being a matter of memory.
+
+**Two of those rows arrived on 2026-09-11, and the gap they close is the same
+one twice: a rule the documents state and no check reads.** P2 — no requests —
+was the oldest rule in the project with no automated form at all; `location`
+was banned and `fetch` was on trust. And P3's globals were reachable under five
+aliases that do not contain the word: measured, a shipped file holding
+`globalThis.document`, `self.matchMedia`, `top`, `parent` and `frames`
+produced zero errors.
+
+**The rules themselves are now tested.** Twenty-one of them are regexes and
+globs inside strings, and `eslint.rules.js`'s own header warns that a mangled
+one matches nothing while looking correct — yet only two recorded being
+verified in both directions. See §2.1.
 
 ## 3. The verification layers
 

@@ -85,6 +85,27 @@
   --bb-surface-selected-on: var(--bb-x-brand-11);
   --bb-surface-disabled: var(--bb-x-gray-2);
   --bb-surface-disabled-on: var(--bb-x-gray-9);
+  /*
+   * THE MOVING PART OF A CONTROL, AT REST — a switch's thumb today, and the
+   * only reader. Named for the role rather than the component, on the
+   * precedent of `surface-overlay`.
+   *
+   * It exists because the alternative was a layer-1 primitive in a component
+   * stylesheet, which is hard rule 1 and doc 03 §1 both. `Switch.css` read
+   * `var(--bb-x-gray-7)` directly, in a file no lint reached — ESLint's blocks
+   * are scoped to ts and tsx, so seventeen stylesheets were outside every rule
+   * this project has.
+   *
+   * Step 7 is the measurement that was already there, kept: the thumb began as
+   * the surface colour on a sunken track, which measured 1.03:1 in light and
+   * 1.07:1 in dark — invisible, on the one element whose POSITION is the whole
+   * state of the control. Step 7 is 1.38:1 light and 1.72:1 dark. It does not
+   * reach WCAG 1.4.11's 3:1, and step 9 does at the cost of reading far too
+   * heavy; the thumb's shadow carries the rest of the separation.
+   *
+   * No `-on` companion: nothing is ever written on it (doc 03 §4.0).
+   */
+  --bb-surface-knob: var(--bb-x-gray-7);
   /* The scrim is deliberately dark in both modes: it is a shadow, not a
      surface, so it does not follow the mode. */
   --bb-surface-overlay: rgb(0 0 0 / 0.45);
@@ -367,6 +388,12 @@
   --bb-surface: var(--bb-x-gray-1);
   --bb-surface-raised: var(--bb-x-gray-3);
   --bb-surface-sunken: var(--bb-x-gray-2);
+
+  /* Step 7 here too, and restated rather than inherited because §6 says every
+     semantic token is defined separately in each mode. The dark scale is
+     designed dark-to-light rather than inverted, so the same index is a
+     different colour and the same judgement: 1.72:1 against the track. */
+  --bb-surface-knob: var(--bb-x-gray-7);
 
   /* Softer than light, deliberately: chosen by eye. See the note on
      --bb-border above. */

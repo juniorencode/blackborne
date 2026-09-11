@@ -18,12 +18,91 @@ const HEX = 'Literal[value=/#[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]/]';
 const FUNC_COLOR = 'Literal[value=/(rgb|rgba|hsl|hsla|oklch|lab|lch)[(]/]';
 const PRIMITIVE = 'Literal[value=/--bb-x-/]';
 
+/*
+ * THE DOCUMENT THROUGH AN ELEMENT WE ALREADY HOLD, which is the route a ref
+ * makes free: `ref.current.ownerDocument` never writes the word `document`,
+ * and `defaultView` is the same door to the window.
+ *
+ * Two selectors, because the computed form is a Literal rather than a property
+ * name. Measured: the dot form also catches the optional-chained
+ * `el?.ownerDocument`, since ESTree keeps that node a MemberExpression.
+ */
+const OWNER_ROUTE =
+  'MemberExpression[property.name=/^(ownerDocument|defaultView)$/]';
+const OWNER_ROUTE_COMPUTED =
+  'MemberExpression[computed=true] > Literal[value=/^(ownerDocument|defaultView)$/]';
+
 const PHYSICAL_CLASS =
   'Literal[value=/[: ](pl|pr|ml|mr|left|right|inset-l|inset-r)-/]';
 const PHYSICAL_EDGE = 'Literal[value=/[: ](border|rounded)-[lr]([-: ]|$)/]';
 const PHYSICAL_ALIGN = 'Literal[value=/[: ](text|float|clear)-(left|right)/]';
 const PHYSICAL_STYLE =
   'Property[key.name=/^(left|right|marginLeft|marginRight|paddingLeft|paddingRight|borderLeft|borderRight|borderLeftWidth|borderRightWidth|borderLeftColor|borderRightColor|borderTopLeftRadius|borderTopRightRadius|borderBottomLeftRadius|borderBottomRightRadius)$/]';
+
+/*
+ * A PROPS TYPE IS A WHITELIST, which is doc 01 §3's P5 read through the type
+ * system.
+ *
+ * `Omit` is a blacklist: a props type extending the base with one publishes
+ * everything the base has EXCEPT what is named, so the base's next release
+ * adds props to this library's public API and nobody decides. Measured while
+ * removing `validate`: the pair reached exactly the ten `Omit`-shaped fields
+ * and none of the components built from `Calendar` onward, which all use
+ * `Pick`.
+ *
+ * Probed against this repository's own parser before landing, rather than
+ * reasoned about: it matches `Omit` anywhere in an `extends` list, and not a
+ * `Pick`, not a type alias, and not a return annotation — `ComboBox`'s
+ * `forwardable` returns `Omit<T, OwnValueProp>` and is untouched. It contains
+ * no backslash, so the mangling this file's header warns about cannot apply.
+ *
+ * ## The eighteen that predate it are exempted BY NAME, and the two obvious
+ * ## alternatives were both tried and both fail
+ *
+ * A per-LINE `eslint-disable-line` does not survive the formatter: measured,
+ * prettier moves a trailing comment off `export interface X extends Omit<` onto
+ * the next line, which disables the wrong line and leaves the rule firing plus
+ * an unused-directive warning. And `eslint-disable-next-line` cannot go above
+ * the declaration, because twelve of the eighteen carry a JSDoc block there and
+ * a comment between the two breaks the association.
+ *
+ * A per-FILE `ignores` list exempts the whole file, and `RadioGroup.tsx`
+ * already holds TWO of these, so a nineteenth added there would pass silently.
+ *
+ * By name, a nineteenth props type fires wherever it is written, including in
+ * one of these eighteen files. The list lives here rather than in eighteen
+ * places, and it may only shrink: converting one to `Pick` means deleting its
+ * name, and leaving the name behind costs nothing but reads as a claim that is
+ * no longer true.
+ *
+ * Verified in both directions before landing: eighteen reported with the list
+ * empty, zero with it full, and a nineteenth interface named anything else
+ * reported inside `RadioGroup.tsx` itself.
+ */
+const OMIT_PREDATES_P5 = [
+  'ButtonProps',
+  'CheckboxGroupProps',
+  'CheckboxProps',
+  'ComboBoxSharedProps',
+  'ConfirmDialogProps',
+  'DialogProps',
+  'DrawerProps',
+  'NumberFieldProps',
+  'PasswordFieldProps',
+  'RadioGroupProps',
+  'RadioProps',
+  'SearchFieldProps',
+  'SelectProps',
+  'SeparatorProps',
+  'SwitchProps',
+  'TagsInputProps',
+  'TextAreaProps',
+  'TextFieldProps'
+];
+
+const OMIT_HERITAGE =
+  `TSInterfaceDeclaration:not([id.name=/^(${OMIT_PREDATES_P5.join('|')})$/])` +
+  ' > TSInterfaceHeritage[expression.name="Omit"]';
 
 const VIEWPORT_CLASS = 'Literal[value=/[: ](sm|md|lg|xl|2xl):/]';
 const VIEWPORT_MEDIA = 'Literal[value=/@media[^)]*(min-width|max-width)/]';
@@ -55,7 +134,14 @@ const msg = {
     'No physical directions. Use start/end, never left/right — this is half of RTL support (doc 03 §5, rule 4).',
   viewport:
     'No viewport breakpoints. A component adapts to its own container, not the window (P4, doc 04 §2). The only exception is a component rendered in a portal, which declares its own media query in CSS with the reason written next to it.',
-  text: 'No literal user-facing strings, accessibility labels included. Take it from the dictionary or as a prop (doc 05 §2.2, rule 1). A label nobody sees is still text a person reads.'
+  text: 'No literal user-facing strings, accessibility labels included. Take it from the dictionary or as a prop (doc 05 §2.2, rule 1). A label nobody sees is still text a person reads.',
+  network:
+    'The library makes no requests and knows no URL (P2, doc 01 §3). Data arrives as a prop and an effect arrives as a function — `useAsyncOptions` is the shape: it calls a loader it was handed, and a test hands it an array.',
+  alias:
+    'That is the window under another name (P3, P4). All five resolve to it, which is why banning `window` alone was not a rule. The one exception is `internal/useWindowFits`, for a component rendered in a portal (doc 04 §5).',
+  omit: 'A props type is a whitelist: `Pick` the base props this component publishes, never `Omit` the ones it does not (P5, doc 01 §3). An `Omit` lets a base upgrade widen this library’s public API with nobody deciding — measured, `validate` and `validationBehavior` reached exactly the ten `Omit`-shaped fields and nothing built from `Calendar` onward. The eighteen that predate this rule are exempted one line at a time; a new one is not.',
+  owner:
+    'No reaching the document through an element (P3). A portal container is RECEIVED, through `ConfigProvider`, beside the locale and the time zone (doc 08 §8) — holding a ref is not a licence to take one.'
 };
 
 export const restrictedSyntax = [
@@ -69,8 +155,52 @@ export const restrictedSyntax = [
   { selector: VIEWPORT_CLASS, message: msg.viewport },
   { selector: VIEWPORT_MEDIA, message: msg.viewport },
   { selector: LITERAL_LABEL, message: msg.text },
-  { selector: LITERAL_TEXT, message: msg.text }
+  { selector: LITERAL_TEXT, message: msg.text },
+  { selector: OMIT_HERITAGE, message: msg.omit },
+  { selector: OWNER_ROUTE, message: msg.owner },
+  { selector: OWNER_ROUTE_COMPUTED, message: msg.owner }
 ];
+
+/*
+ * ADDED 2026-09-11, AND P2 IS THE OLDEST RULE HERE WITH NO CHECK AT ALL.
+ *
+ * Doc 10 §2's table carries a row for P3's globals and none for the network,
+ * while doc 01 §3's P2 is unambiguous: no component makes requests or knows a
+ * URL. `location` was banned — the URL half — and the request half was on
+ * trust for the whole life of the library.
+ *
+ * All five are zero in shipped source, and the only occurrences anywhere are
+ * COMMENTS in `useAsyncOptions`, including the example showing a CONSUMER
+ * calling `fetch` inside the loader. That is the shape: the hook calls a
+ * function it was handed, and a test hands it an array.
+ *
+ * One honest limit: `Request` in a TYPE position is silent, measured — a type
+ * annotation is not routed through the global scope's references. Listing it
+ * guards the constructor and nothing else.
+ */
+const NETWORK_GLOBALS = [
+  'fetch',
+  'XMLHttpRequest',
+  'WebSocket',
+  'EventSource',
+  'Request'
+];
+
+/*
+ * THE WINDOW UNDER THE NAMES THAT DO NOT CONTAIN "window".
+ *
+ * `no-restricted-globals` matches an UNSHADOWED identifier and nothing more,
+ * so banning `window` and `matchMedia` left four aliases and `globalThis` wide
+ * open. Measured against the config as it stood: a shipped file holding
+ * `globalThis.document`, `self.matchMedia`, `top`, `parent`, `frames` and
+ * `globalThis.localStorage.setItem` produced ZERO errors.
+ *
+ * `self`, `top` and `parent` are plausible local names, and that costs nothing
+ * — shadowing is precisely what this rule ignores. Measured: the
+ * `const parent = useContext(...)` in `ConfigProvider` is silent, a `top:` key
+ * in a style object is silent, and `bb:self-stretch` is a string.
+ */
+const WINDOW_ALIASES = ['globalThis', 'self', 'top', 'parent', 'frames'];
 
 export const restrictedGlobals = [
   {
@@ -123,7 +253,9 @@ export const restrictedGlobals = [
   {
     name: 'location',
     message: 'The library knows no URLs (P2).'
-  }
+  },
+  ...NETWORK_GLOBALS.map(name => ({ name, message: msg.network })),
+  ...WINDOW_ALIASES.map(name => ({ name, message: msg.alias }))
 ];
 
 export const restrictedImports = {

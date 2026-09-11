@@ -73,7 +73,22 @@ export default tseslint.config(
   // ---------------------------------------------------------------------
   {
     files: ['packages/*/src/internal/useWindowFits.ts'],
-    rules: { 'no-restricted-globals': 'off' }
+    rules: {
+      /*
+       * NOT `'off'`. This file is allowed TWO questions, not all of them.
+       *
+       * It was a blanket off-switch, which meant the exception grew every time
+       * the list did — and the list grew on 2026-09-11 by five network globals
+       * and five window aliases, so `fetch` would have been legal here alone.
+       * An exception that widens with the rule it excepts is not an exception.
+       */
+      'no-restricted-globals': [
+        'error',
+        ...restrictedGlobals.filter(
+          rule => rule.name !== 'window' && rule.name !== 'matchMedia'
+        )
+      ]
+    }
   },
 
   // ---------------------------------------------------------------------

@@ -119,3 +119,44 @@ test('and every line in that list points at a file that exists', () => {
     ).toBe(true);
   }
 });
+
+test('no component stylesheet reaches past layer 2 into the palette', () => {
+  /*
+   * HARD RULE 1, IN THE FILES NO LINT READS.
+   *
+   * `eslint.rules.js` has a PRIMITIVE selector — `Literal[value=/--bb-x-/]` —
+   * and `eslint.config.js` scopes every block of rules to `.ts`, `.tsx`,
+   * `.js`, `.mjs` and `.storybook`. Nothing matches `.css`. So across the
+   * seventeen shipped stylesheets the primitive rule, the four
+   * physical-direction rules and the two viewport rules were all inert, and
+   * `Switch.css` held `var(--bb-x-gray-7)` — layer 1 inside a component, which
+   * doc 03 §1 forbids outright — for as long as the file existed.
+   *
+   * Only `--bb-x-` is checked here, and that is deliberate rather than a first
+   * step. The other rules have real false positives in CSS that they do not
+   * have in a class string: `left` appears in `background-position`, and a
+   * `@media (prefers-reduced-motion)` query is a legitimate media query. A
+   * guard that fires on correct code is a guard somebody switches off.
+   *
+   * COMMENTS ARE STRIPPED FIRST, and that is not tidiness: `Switch.css` now
+   * explains in prose why it no longer uses the primitive, so a naive scan
+   * would fail on the file that documents the fix.
+   */
+  const stylesheets_ = stylesheets().filter(
+    path => !path.startsWith('styles/')
+  );
+  expect(stylesheets_.length).toBeGreaterThan(10);
+
+  const reaching = stylesheets_.filter(path =>
+    readFileSync(join(SRC, path), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .includes('--bb-x-')
+  );
+
+  expect(
+    reaching,
+    'a component stylesheet may only read layer 2 (doc 03 §1). A layer-1 ' +
+      'primitive here is invisible to every lint rule this project has, ' +
+      'because none of them reads CSS.'
+  ).toEqual([]);
+});

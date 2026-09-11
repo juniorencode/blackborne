@@ -10,6 +10,73 @@ minor versions. Every break is listed here with its migration.
 
 ## [Unreleased]
 
+### Added
+
+- **Four architectural guards that did not exist**, each verified in both
+  directions, and two of them red on arrival.
+
+  **A props type is a whitelist.** `Omit` publishes everything the base has
+  except what is named, so the base's next release widens this library's public
+  API with nobody deciding — measured, `validate` and `validationBehavior`
+  reached exactly the ten `Omit`-shaped fields and none of the components built
+  from `Calendar` onward. The rule had no home in the foundations: it lived only
+  in the catalog's §7 with the status "Pending a decision". [Doc 01](./docs/foundations/01-principles.md)
+  §3's P5 now carries it, and it covers every public props type rather than
+  only a field's — eighteen exist today and eight of them are not fields.
+
+  Those eighteen are exempted **by name**, which is not the obvious design and
+  the two obvious ones were measured first: prettier moves a trailing
+  `eslint-disable-line` onto the next line, and `eslint-disable-next-line`
+  cannot go above the declaration because twelve of the eighteen carry a JSDoc
+  block there. A per-file list was rejected too — `RadioGroup.tsx` holds two,
+  so a nineteenth added there would pass silently. Verified: eighteen reported
+  with the list empty, zero with it full, and a nineteenth interface fires
+  inside `RadioGroup.tsx` itself.
+
+  **No request, and no window under an alias.** P2 — no network — was the
+  oldest rule in the project with no automated form at all: `location` was
+  banned and `fetch` was on trust. And P3's globals were reachable under five
+  names that do not contain the word: measured, a shipped file holding
+  `globalThis.document`, `self.matchMedia`, `top`, `parent` and `frames`
+  produced **zero** errors. The document is reachable through an element too,
+  so `ownerDocument` and `defaultView` are selectors now. Zero false positives
+  across 343 files, and the one-file exception for `useWindowFits` stopped
+  being a blanket `'off'` — it was widening with every name added to the list.
+
+  **Every component has a story and a test.** It failed on arrival, naming
+  `Spinner` — the one component in the library with no axe check and no
+  picture, because both suites take their population from the catalog. The
+  population is compared against `src/index.ts` in both directions, so an
+  empty scan cannot pass.
+
+  **No component stylesheet reaches past layer 2.** ESLint reads no CSS in this
+  repository — every block is scoped to `.ts`, `.tsx`, `.js` and `.mjs` — so
+  across seventeen stylesheets the primitive rule, the four physical-direction
+  rules and the two viewport rules were inert. It failed on arrival too, naming
+  `Switch.css`, which held `var(--bb-x-gray-7)`.
+
+- **`--bb-surface-knob`**, a layer-2 token for the moving part of a control at
+  rest, defined separately in each mode as doc 03 §6 requires. It carries the
+  measurement that chose step 7 — the thumb began as the surface colour on a
+  sunken track at 1.03:1, invisible on the one element whose position is the
+  whole state of the control — and it changes no pixel: the primitive it
+  replaces is mode-aware and resolves to the same colour in both.
+
+- **A catalog for `Spinner`**, five stories. Three of the four claims that
+  component makes are invisible to a unit test, including the one nothing
+  checked at all: under reduced motion the arc stops rotating and becomes a
+  complete ring, which is a `d:` path swapped by a media query.
+
+### Fixed
+
+- **Two comments that described something else.** `Spinner.css` said its
+  duration came from a token "so the reduced-motion rule reaches it" — it is a
+  literal `700ms`, correctly, because doc 09 §2 budgets a looping indicator
+  separately, and the rule reaches it by switching the animation off. That
+  sentence was describing `Dialog.css`. And `preview.spec.ts`'s claim about the
+  600 ms delay was corrected in the previous wave for the same reason: a
+  sentence about the wrong thing reads as true until somebody measures it.
+
 ### Changed
 
 - **Nine checks that could not fail, or could fail for the machine's sake.**

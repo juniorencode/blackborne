@@ -82,6 +82,28 @@ component people do use, and removing it costs a major version. Every warning
 sign in §7 is about props; not one is about how many components exist.
 _Test:_ for a new prop, can you name the place that needs it today?
 
+**And a props type is a whitelist, which is this principle read through the
+type system.** A component built on the headless base publishes a `Pick` of
+that base's props — never an `Omit` of the ones it does not want. The
+difference is who decides: with a `Pick`, every prop in the public API was
+chosen; with an `Omit`, the base's next release adds props to this library's
+surface and nobody decides at all.
+
+Measured, and it is why this is a principle rather than a preference: the
+base's `validate` and `validationBehavior` reached **exactly** the ten
+`Omit`-shaped fields and none of the components built from `Calendar` onward,
+which all use `Pick`. Two props, undocumented, in ten public APIs, for as long
+as those fields existed — arrived, not chosen.
+
+It covers every public props type and not only a field's: the eighteen that
+predate the rule include `Button`, `Dialog`, `Drawer` and `Separator`, and
+there is nothing about a field that makes the mechanism specific to one.
+Converting those eighteen is a separate piece of work with its own row in
+[the catalog](../catalog-and-build-order.md) §7, because each one means
+enumerating every inherited prop deliberately and any one missed is a break
+for somebody. Enforced by lint, exempted one line at a time, and that list may
+only shrink.
+
 This principle was narrower before — it required **two** consumers for
 anything at all, components included. See
 [decision 0008](../decisions/0008-the-rule-of-two-splits.md) for why it

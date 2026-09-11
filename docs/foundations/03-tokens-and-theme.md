@@ -171,7 +171,17 @@ already exists — three near-identical greys is how entropy begins.
 (the resting background of a control) · `surface-raised` (raised: menu, popover,
 dialog) · `surface-sunken` (sunken: table header, background zones) ·
 `surface-overlay` (the scrim behind a dialog) · `surface-hover` ·
-`surface-active` · `surface-selected` · `surface-disabled`
+`surface-active` · `surface-selected` · `surface-disabled` ·
+`surface-knob` (the moving part of a control, at rest)
+
+**`surface-knob` was added on 2026-09-11, and §5 rule 9's check is the reason
+it is a token at all.** `Switch.css` held `var(--bb-x-gray-7)` — layer 1 inside
+a component, which §1 forbids outright — and it survived because ESLint reads
+no CSS in this repository: its blocks are scoped to `.ts` and `.tsx`, so
+seventeen shipped stylesheets were outside every rule the project has. The
+equivalent check found nothing: no layer-2 token resolves to step 7 in either
+mode. Named for the role rather than for `Switch`, on `surface-overlay`'s
+precedent, and it has one reader today.
 
 **`surface-raised` deliberately equals `surface` in light mode**, and that is
 the clearest example of §6.1's rule that a token may be restated when its role
