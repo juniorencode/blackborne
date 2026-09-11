@@ -284,6 +284,7 @@ things to keep in mind anyway:
 | `pnpm install`       | Install. Uses the committed lockfile; versions never drift             |
 | `pnpm verify`        | The gate: format, lint, types, tests, and the package. Before every PR |
 | `pnpm lint`          | ESLint, including this project's own rules                             |
+| `pnpm lint:rules`    | Fires and silences each of those rules, in both directions             |
 | `pnpm typecheck`     | Types across the workspace                                             |
 | `pnpm test`          | Vitest                                                                 |
 | `pnpm verify:full`   | Everything above, plus the browser and accessibility checks            |

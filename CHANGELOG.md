@@ -12,6 +12,25 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **The project's own lint rules are tested, in both directions.** Doc 10 §2
+  calls them the highest-return item in the whole document and they are how
+  nine written rules stop being a matter of memory — and until now **not one of
+  the thirty-four had a standing check**. Several were verified by hand on the
+  day they landed, but a verification that happened once is a verification
+  nobody can repeat. `pnpm lint:rules` fires and silences every rule against an
+  inline fixture, reading them from the RESOLVED config so the rule and its
+  `files` wiring are tested together — a perfect selector attached to the wrong
+  glob protects nothing, and that is invisible to a test importing the rule
+  objects. Doc 10 §2.1.
+
+- **And the eighteen shapes it cannot catch are recorded rather than closed.**
+  Measured with a throwaway probe against the real config: thirty-five
+  candidates linted, twenty silent, two of those twenty not holes at all. Six
+  of the eighteen are one cause — nine selectors anchor on `Literal[value=…]`
+  and not one of the fourteen names `TemplateLiteral`, so a backtick defeats
+  them all at once. None has a live exposure today, which is what makes them
+  worth writing down instead of fixing.
+
 - **A greyscale picture that can actually show the rule.** Doc 06 §3 names
   greyscale as the check for colour being the only channel, and the library had
   exactly one such baseline: `confirm-greyscale`, rendering a SINGLE tone of a
