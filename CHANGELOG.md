@@ -12,6 +12,26 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **The ground the table suite stands on, written before any of it is built.**
+  The catalog carried one row for a whole suite, which is exactly where a suite
+  goes wrong — non-goal 4 is explicit that the functionality is first-class and
+  that what is forbidden is _how_. [The catalog](./docs/catalog-and-build-order.md)
+  §3.4 now carries the piece list, the three hooks, the assembly's test, and
+  three measurements that come before the API rather than after. It was read
+  against a real hand-written data table from a management product: 145
+  capabilities inventoried, then checked against these documents and against
+  what the headless base already provides.
+
+- **Doc 01 §4.1 and [decision 0027](./docs/decisions/0027-the-library-hands-over-the-shape-the-project-performs-the-act.md):
+  the library hands over the shape, the project performs the act.** Exporting a
+  table to a file, printing, and putting the search and filters in the address
+  bar had no answer in any document. Four rules pointed at the same answer —
+  P2, P3, non-goal 1 and non-goal 3 — and pointing is not saying. The
+  distinction is not difficulty: it is that the library has no environment of
+  its own, and a component assuming a file system, a printer or a router breaks
+  in the projects that have none. Three §7 rows carry the individual answers so
+  they are not re-derived each time somebody asks for a download button.
+
 - **The numbers the documents state as fact are checked.** Five of them had
   not been true for months: doc 10 §3's table said 19 captures against 197,
   `visual-regression.md` said "nineteen captures, not all sixty stories"
@@ -82,6 +102,17 @@ minor versions. Every break is listed here with its migration.
   it starts.
 
 ### Changed
+
+- **The page-size selector row was re-asked, and half of it changed.** It was
+  answered before the table suite existed, and its own sentence handed the
+  listing to that suite. The control stays composed — its whole body would be a
+  `Select` with four options, and the noun belongs to the project, where doc 05
+  sends every word a person reads to the dictionary. What changed is one level
+  down: the number is state the suite's paging hook holds, along with the rule
+  nobody writes by hand. 200 results at 10 a page, on page 7, switching to 50 —
+  keep the page and you land past the end looking at nothing; anchor on the
+  first row that was visible and the person is still looking at what they were
+  looking at.
 
 - **Three `Link` checks stopped asserting that Chromium opens a tab.** They
   failed six times on CI across five weeks and never once locally, and the

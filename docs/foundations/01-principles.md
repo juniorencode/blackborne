@@ -173,6 +173,38 @@ What the library will never do. This list is the useful part of the document.
     no commitment to timelines or to acceptance. This is stated visibly: an
     unmet expectation does more damage than an expectation never created.
 
+### 4.1 The shape is ours; the act is not
+
+**Added 2026-09-11**, because three questions arrived at once with no answer
+anywhere in these documents: exporting the visible rows to a file, printing,
+and putting the current search and filters into the address bar.
+
+Four rules above point at the same answer for all three — P2, P3, non-goal 1
+and non-goal 3 — and pointing is not saying, so here it is said.
+
+**The library hands over the shape. The project performs the act.**
+
+Where a capability needs the library to know how the data is arranged, the
+library supplies that arrangement as state, through a hook. Where it needs
+something to leave the process — a file written, a page printed, an address
+changed, a request sent — the library supplies nothing.
+
+The distinction is not difficulty. Two of the three are easy. It is that the
+library is a set of pieces with no environment of its own: it does not know
+whether there is a file system, a printer, a router or a server, and a
+component that assumes one of them is a component that breaks in the projects
+where there is not.
+
+Note what this is NOT about. Non-goal 4 lists what a data table gets as
+first-class functionality, and every item on that list is something the table
+**is** — sorting, filtering, reordering, pinning. Export and print are things
+somebody **does with** a table. That is a different kind of noun and it is why
+the list never had to name them.
+
+The three answers are
+[decision 0027](../decisions/0027-the-library-hands-over-the-shape-the-project-performs-the-act.md),
+with the measurement that supports them.
+
 ## 5. The entry gate
 
 To enter the library, **all** of these must hold:
@@ -203,19 +235,20 @@ the project that needed it until it meets all thirteen.
 Recorded so they are not re-argued. The ones with their own record live under
 [`../decisions/`](../decisions/).
 
-| Decision           | Choice                                                                                                    | Immediate consequence                                                                                         |
-| ------------------ | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| **Distribution**   | Versioned package, no copy-paste templates                                                                | All customization goes through props → P6 and non-goal 4 are the containment                                  |
-| **Headless base**  | React Aria Components                                                                                     | Styling targets DOM state attributes, not conditional classes built in JS                                     |
-| **Styles**         | Tailwind inside, compiled prefixed CSS outside                                                            | Tokens are CSS variables; the consumer overrides variables, not classes                                       |
-| **Themes**         | Three independent axes: mode, brand color, density                                                        | None is implemented with per-component special classes: everything comes from variables                       |
-| **Palette**        | Scales where every step has a defined role, not ordered only by lightness                                 | One semantic mapping valid for every family and both modes. A dev dependency: it never reaches the consumer   |
-| **Text direction** | RTL supported from day one                                                                                | `left`/`right` forbidden in CSS: always `start`/`end`. Watched by lint, not by review                         |
-| **Languages**      | Every component is multi-language by construction; the project picks the language, the library never does | English fallback always present: a missing key never produces an empty string. The library ships English only |
-| **Validation**     | Schemas and business rules in the project; the library only restricts input and presents the error        | Fields expose "is invalid" and "error message"; no schema library becomes a dependency                        |
-| **Complex sets**   | Suite: state hooks + pieces + thin assembly                                                               | Subject to P6. The data table is first-class functionality, not an extra                                      |
-| **Publication**    | Open source, public registry, from day one                                                                | The API is designed for strangers. No references to private projects in code, examples or docs                |
-| **Stability**      | The `0.x` series while the API moves; `1.0` only once settled by real use                                 | In `0.x` it can break with notice; after that, only with a major version and a migration guide                |
+| Decision           | Choice                                                                                                    | Immediate consequence                                                                                                                                             |
+| ------------------ | --------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Distribution**   | Versioned package, no copy-paste templates                                                                | All customization goes through props → P6 and non-goal 4 are the containment                                                                                      |
+| **Headless base**  | React Aria Components                                                                                     | Styling targets DOM state attributes, not conditional classes built in JS                                                                                         |
+| **Styles**         | Tailwind inside, compiled prefixed CSS outside                                                            | Tokens are CSS variables; the consumer overrides variables, not classes                                                                                           |
+| **Themes**         | Three independent axes: mode, brand color, density                                                        | None is implemented with per-component special classes: everything comes from variables                                                                           |
+| **Palette**        | Scales where every step has a defined role, not ordered only by lightness                                 | One semantic mapping valid for every family and both modes. A dev dependency: it never reaches the consumer                                                       |
+| **Text direction** | RTL supported from day one                                                                                | `left`/`right` forbidden in CSS: always `start`/`end`. Watched by lint, not by review                                                                             |
+| **Languages**      | Every component is multi-language by construction; the project picks the language, the library never does | English fallback always present: a missing key never produces an empty string. The library ships English only                                                     |
+| **Validation**     | Schemas and business rules in the project; the library only restricts input and presents the error        | Fields expose "is invalid" and "error message"; no schema library becomes a dependency                                                                            |
+| **Complex sets**   | Suite: state hooks + pieces + thin assembly                                                               | Subject to P6. The data table is first-class functionality, not an extra                                                                                          |
+| **Shape and act**  | The library hands over the arrangement; the project performs anything that leaves the process             | Export, print and the address bar are the project's. §4.1 and [decision 0027](../decisions/0027-the-library-hands-over-the-shape-the-project-performs-the-act.md) |
+| **Publication**    | Open source, public registry, from day one                                                                | The API is designed for strangers. No references to private projects in code, examples or docs                                                                    |
+| **Stability**      | The `0.x` series while the API moves; `1.0` only once settled by real use                                 | In `0.x` it can break with notice; after that, only with a major version and a migration guide                                                                    |
 
 ## 7. Signs this document is being broken
 

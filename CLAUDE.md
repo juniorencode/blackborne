@@ -277,6 +277,25 @@ things to keep in mind anyway:
 - **The file layout of a component is settled**, by `Button`, and written down
   in [`docs/contributing/new-component.md`](./docs/contributing/new-component.md) §0.
 
+**And the table suite is next, with its ground written first.** It was read
+against a real hand-written data table from a management product — about twenty
+thousand lines, 145 capabilities inventoried — and the result is in
+[the catalog](./docs/catalog-and-build-order.md) §3.4: the piece list, the
+three hooks, and the three measurements that come before the API rather than
+after. Read it before starting a wave.
+
+Four questions that had no answer anywhere were settled at the same time, which
+is the rule about foundations changing before the code and not afterwards to
+justify it. Three of them are one line:
+[doc 01](./docs/foundations/01-principles.md) §4.1 —
+**the library hands over the shape, the project performs the act**
+([decision 0027](./docs/decisions/0027-the-library-hands-over-the-shape-the-project-performs-the-act.md)) —
+which answers export, printing and the address bar together. The fourth is the
+page-size selector, whose §7 row was re-asked now that the suite it pointed at
+exists: the CONTROL stays composed, because the noun belongs to the project,
+and the NUMBER became suite state along with the re-anchoring rule nobody
+writes by hand.
+
 ## Commands
 
 | Command              | What it does                                                           |
