@@ -8,7 +8,6 @@ import {
   CONTAINER_STEPS,
   useContainerStep
 } from '../../internal/useContainerStep';
-import './Steps.css';
 
 /**
  * Where a step is in a process something else is driving.

@@ -193,6 +193,44 @@ export const restrictedImports = {
       ],
       message:
         'Import from react-aria-components, not from its internals. Reaching past the public entry point is how a minor upgrade becomes a breaking one.'
+    },
+    {
+      // A STYLESHEET HAS ONE DOOR, and this rule exists because it had two.
+      //
+      // `docs/contributing/new-component.md` §0 says a component's CSS file
+      // "is also imported by hand in src/styles/index.css, one line per
+      // component, so the list stays visible". That list is what the Tailwind
+      // CLI compiles into `dist/styles.css`, and it is the only thing it
+      // reads: `@source` scans .ts and .tsx for class NAMES and follows no
+      // import.
+      //
+      // A JavaScript `import './X.css'` is a second door. Vite's library
+      // build accepts it, extracts the rules into a separate file next to the
+      // bundle, and strips the import from `index.js` — so the rules exist,
+      // in a file the package's `exports` map does not name and nothing
+      // imports. Measured before this rule landed: three components had gone
+      // through that door, and `dist/styles.css` shipped with zero
+      // occurrences of `bb-button-group`, zero of `bb-checkerboard` and none
+      // of the `bb-step` rules. Four components would have been published
+      // unstyled — ButtonGroup, Steps, ColorPicker and ColorSwatchField.
+      //
+      // No consumer ever received it, and that is luck rather than a guard:
+      // the rewrite has not been released, so npm still holds `0.1.1` and the
+      // old codebase. It would have gone out with the first release of this
+      // one.
+      //
+      // Nothing here could have caught it, and the catalog is why: it
+      // loads the BUILT stylesheet for the tokens but renders components from
+      // source, so Storybook's own Vite processed those three imports and
+      // injected them. Every baseline, every axe check and every browser
+      // check looked at a page that was styled correctly. That is the
+      // measurement behind doc 10 §3's Package row, and behind this rule.
+      //
+      // Verified in both directions: three real violations caught with the
+      // imports in place, zero once they moved to index.css.
+      group: ['**/*.css'],
+      message:
+        'No importing a stylesheet from TypeScript. Add one @import line to src/styles/index.css instead — that file is the only thing the CSS build reads, and a JS import produces rules that are compiled, published and unreachable (new-component.md §0).'
     }
   ]
 };

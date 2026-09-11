@@ -6,7 +6,6 @@ import {
 } from '../../internal/buttonAppearance';
 import { SEAM, type JoinedVariant } from '../../internal/seam';
 import { cx } from '../../internal/cx';
-import './ButtonGroup.css';
 
 /**
  * The appearances a joined row can be drawn in, which is not all of `Button`'s.

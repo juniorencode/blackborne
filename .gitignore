@@ -1,5 +1,8 @@
 node_modules/
 dist/
+# Declaration output on the way to the single dist/index.d.ts. See
+# packages/blackborne/rollup.dts.config.mjs for why it is bundled.
+.types/
 coverage/
 storybook-static/
 *.tsbuildinfo

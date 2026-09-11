@@ -2,13 +2,20 @@
   // What gets published. Tests and stories are typechecked by tsconfig.json
   // but must not emit declarations: a consumer has no use for Button.test.d.ts
   // and it would sit in their node_modules forever.
+  //
+  // The output is `.types/` rather than `dist/`, and it is an intermediate:
+  // `build:dts` rolls it into a single self-contained `dist/index.d.ts`,
+  // because tsc keeps every specifier as the source wrote it and this package
+  // resolves with `moduleResolution: bundler` — so the emitted tree
+  // re-exported 110 extensionless relative paths that ECMAScript resolution
+  // cannot follow (decision 0025).
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "noEmit": false,
     "emitDeclarationOnly": true,
     "declaration": true,
     "rootDir": "src",
-    "outDir": "dist",
+    "outDir": ".types",
     "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo"
   },
   "include": ["src"],

@@ -1,5 +1,3 @@
-import './checkerboard.css';
-
 /**
  * INTERNAL. The class that puts a checkerboard behind a colour which might be
  * transparent.

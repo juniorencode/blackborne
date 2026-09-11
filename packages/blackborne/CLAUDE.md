@@ -1091,6 +1091,41 @@ And after touching this file's dependencies, `pnpm verify:clean` — a local
 `pnpm install` reuses what is already in `node_modules`, so a half-applied
 change passes here and fails on CI's clean install.
 
+## The published package, and the two ways it was broken
+
+Nothing in this repository consumed the built package until 2026-09-11. The
+catalog depends on it and imports exactly one thing from it, a stylesheet;
+every other layer — the unit tests, the browser checks, the accessibility
+checks, the baselines — reads the SOURCE. Doc 10 §3 named a `Package` layer
+from the start and it was the one row of that table with nothing behind it.
+`pnpm verify` runs it now, and it found both of these within a minute.
+
+**A stylesheet reaches a consumer through `src/styles/index.css` and no other
+way.** The Tailwind CLI compiles that file and nothing else: `@source` scans
+`.ts` and `.tsx` for class NAMES and follows no import. A JavaScript
+`import './X.css'` compiles too, and that is the trap — Vite's library build
+extracts the rules into a file beside the bundle and strips the import from
+`index.js`, so they are compiled, published, named by no `exports` condition
+and imported by nothing. Three stylesheets went that way, and `ButtonGroup`,
+`Steps`, `ColorPicker` and `ColorSwatchField` would have been published with no
+CSS at all. Lint refuses the import; `src/styles/stylesheet.test.ts` asserts the
+list is complete. Both are verified in both directions.
+
+**A published `.d.ts` may not contain a relative import.** `tsc` keeps every
+specifier as the source wrote it, and this package compiles with
+`moduleResolution: bundler`, where `from './components/Button'` is legal — so
+`dist/index.d.ts` re-exported 110 extensionless paths that ECMAScript
+resolution cannot follow. The failure DEGRADES rather than erroring: with
+`skipLibCheck: true`, a consumer on `nodenext` got `ButtonProps` as `any` and a
+bogus prop passed silently. The package ships one rolled-up declaration file
+now ([decision 0025](../../docs/decisions/0025-the-package-ships-one-declaration-file.md)),
+verified by comparing the surface across the change — 191 exported names
+before, 191 after.
+
+The shape both share is worth more than either: **the catalog renders from
+source, so it cannot see a defect in the artefact.** A claim about what a
+consumer receives has to be measured against `dist`.
+
 ## Exports
 
 Expose the minimum. Opening a token or an export later is easy; closing one is

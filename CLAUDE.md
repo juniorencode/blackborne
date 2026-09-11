@@ -279,19 +279,24 @@ things to keep in mind anyway:
 
 ## Commands
 
-| Command              | What it does                                                          |
-| -------------------- | --------------------------------------------------------------------- |
-| `pnpm install`       | Install. Uses the committed lockfile; versions never drift            |
-| `pnpm verify`        | The full gate: format, lint, types, tests. Run before every PR        |
-| `pnpm lint`          | ESLint, including this project's own rules                            |
-| `pnpm typecheck`     | Types across the workspace                                            |
-| `pnpm test`          | Vitest                                                                |
-| `pnpm verify:full`   | Everything above, plus the browser and accessibility checks           |
-| `pnpm build:catalog` | The package and the catalog, which the browser checks are served from |
-| `pnpm format`        | Apply formatting                                                      |
+| Command              | What it does                                                           |
+| -------------------- | ---------------------------------------------------------------------- |
+| `pnpm install`       | Install. Uses the committed lockfile; versions never drift             |
+| `pnpm verify`        | The gate: format, lint, types, tests, and the package. Before every PR |
+| `pnpm lint`          | ESLint, including this project's own rules                             |
+| `pnpm typecheck`     | Types across the workspace                                             |
+| `pnpm test`          | Vitest                                                                 |
+| `pnpm verify:full`   | Everything above, plus the browser and accessibility checks            |
+| `pnpm build:catalog` | The package and the catalog, which the browser checks are served from  |
+| `pnpm format`        | Apply formatting                                                       |
 
 Two levels, on purpose. `pnpm verify` is the fast gate and the same thing CI
-runs first, so a green local run means a green first job. `pnpm verify:full`
+runs first, so a green local run means a green first job. It builds the package
+and checks it — doc 10 §3's `Package` layer, which prices itself at "Fast" and
+measures about fifteen seconds — because nothing here consumed the built
+artefact until that layer existed, and the first run found four components
+published with no CSS and a type surface that was `any` under Node's own module
+resolution. `pnpm verify:full`
 adds the browser checks, which need Chromium and run as a separate CI job so
 they never delay the fast one.
 
@@ -524,6 +529,31 @@ Things that look like improvements and are not:
   only a pointer can reach (doc 06 §4 rule 5). `FileUpload` has a per-row
   retry because its rows are a plain `<ul>` where nothing is chosen — the test
   is whether the list is a COLLECTION, not whether it is a list.
+- **Do not import a stylesheet from TypeScript.** A component's CSS reaches a
+  consumer through one hand-written `@import` in `src/styles/index.css`, which
+  is the only file the Tailwind CLI compiles — `@source` scans `.ts` and `.tsx`
+  for class NAMES and follows no import. `import './X.css'` also compiles,
+  which is the trap: Vite's library build extracts those rules into a file
+  beside the bundle and strips the import, so they are published, named by no
+  `exports` condition and imported by nothing. Measured — three stylesheets had
+  gone that way and `ButtonGroup`, `Steps`, `ColorPicker` and
+  `ColorSwatchField` would have been published unstyled. Nothing here caught
+  it; that no consumer received it is only because the rewrite is unreleased.
+- **Do not put a relative import in a published `.d.ts`.** `tsc` keeps every
+  specifier as written and this package compiles with
+  `moduleResolution: bundler`, so `dist/index.d.ts` re-exported 110
+  extensionless paths that `node16` and `nodenext` cannot follow. It does not
+  error, it DEGRADES: measured from a consumer with `skipLibCheck: true`,
+  `ButtonProps` was `any` and a bogus prop passed. The package ships one
+  rolled-up declaration file
+  ([decision 0025](./docs/decisions/0025-the-package-ships-one-declaration-file.md)).
+- **Do not conclude the package works because the catalog does.** The catalog
+  renders components from SOURCE and imports exactly one thing from the built
+  package, its stylesheet — so 196 baselines, 480 accessibility checks and 438
+  browser checks all passed over both defects above. A claim about what a
+  consumer receives is measured against `dist`, and `pnpm verify` now does
+  that: publint, attw, every value in the type surface importing, and nothing
+  in `dist` unreachable through `exports`.
 - **Do not reference private projects** in code, examples or documentation. The
   library is public and its API is designed for strangers.
 
