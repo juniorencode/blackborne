@@ -62,6 +62,28 @@ axes. They exist because a CSS variable bug made dark mode and brand overrides
 silently do nothing while every unit test passed — jsdom cannot resolve
 variables, and cannot answer where focus goes either.
 
+**If a full run drops one check and a re-run of that check passes, read the
+machine before the diff.** That is doc 10 §11.5's diagnostic — one check
+failing repeatedly is the code, several failing once each is the machine — and
+§11.5.1 names the resource nobody counts. On 2026-09-11 the accessibility
+suite dropped a different story in each of two runs at six workers, both
+passing in isolation, with 6.67 GB of memory free and no orphaned process. The
+diagnostic in `e2e/story.ts` reported `net::ERR_NO_BUFFER_SPACE`: the host was
+out of socket buffers, with 1172 sockets in TIME_WAIT and 1117 of them to port
+6007 after roughly 2900 story loads in one session.
+
+So after a long session of full runs, the remedy is fewer concurrent browsers
+on that machine:
+
+```sh
+pnpm --filter catalog exec playwright test --project=a11y --workers=2
+```
+
+Measured on the same laptop and the same build: six workers dropped a check in
+two runs of two, four dropped one in the second of two, and two passed 480 of 480. **Not a retry** — doc 10 §11 is explicit that a retry turns a real failure
+into a coincidence, and this failure is real. It just belongs to the host
+rather than to the library.
+
 ## What runs where
 
 | Job                                 | What it covers                                                      |
