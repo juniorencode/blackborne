@@ -518,6 +518,23 @@ Things that look like improvements and are not:
   story render, its default parameter is `test: 'todo'`, so removing our
   `test: 'error'` changed nothing — the lever is its `manual` global, and the
   panel now runs when a person asks it to (doc 10 §11.3).
+- **And when the instrument answers, be willing to delete the assertion.**
+  §11.3's rule ends with a name for the fault; this is what to do with it. Four
+  checks asserted that a middle or ctrl press on a `Link` opens a second tab,
+  and they failed six times on CI without ever reproducing locally. The sixth
+  came back fully instrumented: the press reached `A[href=/customers/4821]`,
+  `ctrlKey` was true, `defaultPrevented` was **false**, and the page had not
+  moved — every fault that could have been ours ruled out, and Chromium simply
+  did not open a tab. Whether a user agent honours a modifier that way is its
+  convention, not something this component declares, so the check was measuring
+  the machine (doc 10 §11.7). The replacement is narrower rather than weaker —
+  the anchor, the address, the modifier, `defaultPrevented`, the document not
+  moving — and it was verified by making `Link` cancel every press and watching
+  it go red. Two assumptions died in that verification: a middle button fires
+  **`auxclick`, not `click`**, so the first simulation left that check green;
+  and `defaultPrevented: false` means nothing until a positive control shows
+  the same recorder reading `true` on an ordinary press.
+
 - **Do not let a polled callback throw.** `expect.poll` is this repository's
   answer to half of the rule above, and it does **not** retry a callback that
   throws — measured: it propagates on the first call and never consults the

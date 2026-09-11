@@ -83,6 +83,19 @@ minor versions. Every break is listed here with its migration.
 
 ### Changed
 
+- **Three `Link` checks stopped asserting that Chromium opens a tab.** They
+  failed six times on CI across five weeks and never once locally, and the
+  sixth failure was fully instrumented: the press reached the anchor with the
+  right address, the modifier reached the DOM, `defaultPrevented` was false,
+  and the document had not moved — so every fault that could have been ours
+  was ruled out and the browser simply declined. Whether a user agent opens a
+  background tab for a modified press is its own convention, which doc 10 §11
+  calls measuring the machine. The replacement is narrower rather than weaker
+  and covers every regression that would be ours; verified by making `Link`
+  cancel every press and watching all three go red. The `target="_blank"`
+  check keeps its tab assertion, because there the new browsing context is
+  declared in the markup rather than conjured by a modifier.
+
 - **A number in a document is now checked, dated, or dropped** — doc 10 §12.
   The distinction the rule rests on is that MOST numbers here are measurements
   attached to an event and are correct forever: rewriting "11 of 480 stories
