@@ -17,33 +17,123 @@
  */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
+import { readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { RULES_A_FRAGMENT_IS_NOT_RESPONSIBLE_FOR } from './a11yRules';
 import { CATALOG_INDEX } from './catalog';
+import { pinClock } from './clock';
 import { imagesSettled, painted } from './settle';
 import { gotoStory } from './story';
 
-type StoryEntry = { id: string; name: string; title: string; type: string };
+type StoryEntry = {
+  id: string;
+  name: string;
+  title: string;
+  type: string;
+  importPath: string;
+  exportName: string;
+};
 
 /*
  * The story list is read at COLLECTION time, from Storybook's own index, so a
  * new story is covered the moment it exists rather than when someone
  * remembers to add it here.
  *
- * Read synchronously because Playwright needs the test names before the
- * suite runs. The catalog has to be up — which the webServer config
- * guarantees.
+ * Read synchronously because Playwright needs the test names before the suite
+ * runs. The catalog has to be up — which the webServer config guarantees.
  */
 const INDEX_URL = CATALOG_INDEX;
 
+/*
+ * AND IT THROWS RATHER THAN RETURNING AN EMPTY LIST, which is the difference
+ * between a broken instrument and nothing to measure (doc 10 §11.1).
+ *
+ * This used to end in `.catch(() => [])`. That is a fully silent green, and
+ * the path is worth spelling out because it is not obvious: this file is
+ * imported once by the collection process and once by every worker, so each
+ * one re-reads the index. A fetch that failed during COLLECTION produced a
+ * suite of exactly one test — the old reachability guard — which then
+ * re-fetched successfully inside its worker, read every story, and passed.
+ * `1 passed`, exit zero, with none of the per-story checks ever generated.
+ *
+ * The status is checked too, because it never was: a 404's HTML body throws
+ * inside `json()`, and a JSON error body parses and leaves `entries`
+ * undefined, so both arrived as "no stories" with the real cause discarded.
+ */
 const stories: StoryEntry[] = await fetch(INDEX_URL)
-  .then(
-    response =>
-      response.json() as Promise<{ entries: Record<string, StoryEntry> }>
-  )
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`${response.status} ${response.statusText}`);
+    }
+    return response.json() as Promise<{ entries: Record<string, StoryEntry> }>;
+  })
   .then(index =>
     Object.values(index.entries).filter(entry => entry.type === 'story')
   )
-  .catch(() => []);
+  .catch((cause: unknown) => {
+    throw new Error(
+      `the catalog index at ${INDEX_URL} could not be read, so this suite has ` +
+        `no story list at all: ` +
+        `${cause instanceof Error ? cause.message : String(cause)}. ` +
+        'Build and serve the catalog: `pnpm build:catalog`. This throws ' +
+        'rather than returning an empty list, because an empty list is a ' +
+        'suite of no checks that reports success.',
+      { cause }
+    );
+  });
+
+/*
+ * WHAT THIS SUITE SHOULD HAVE BEEN CHECKING, FROM A SOURCE THE SERVER CANNOT
+ * INFLUENCE.
+ *
+ * The guard that used to live here was `stories.length > 10`. A floor has a
+ * whole passing region in which the thing it asserts is false — twelve checks
+ * standing in for four hundred and seventy-nine satisfied it — and no constant
+ * can close that region, because no constant knows how many stories exist.
+ *
+ * It is reachable without any network fault. `test:a11y` does not build, and
+ * `reuseExistingServer` is on outside CI, so a `preview` left running over an
+ * older `storybook-static` serves that older index and the suite checks
+ * whatever it happens to contain.
+ *
+ * So the expectation comes from the story FILES, and it is compared by name
+ * rather than by count: two counts can agree while naming different stories,
+ * and a name says which one went missing. Measured on the way in — the set
+ * difference is empty in both directions.
+ *
+ * THE COUPLING IS DELIBERATE AND IT CAN BE WRONG. A story excluded from the
+ * index on purpose — `excludeStories`, or a tag — would be on disk and not in
+ * the index, and this would fail. There is none today (grepped), and the
+ * failure names the story, so the fix is to teach this the exclusion rather
+ * than to widen it.
+ */
+const storiesOnDisk = (): Set<string> => {
+  const root = fileURLToPath(
+    new URL('../../../packages/blackborne/src/', import.meta.url)
+  );
+  const found = new Set<string>();
+
+  for (const entry of readdirSync(root, { recursive: true })) {
+    /* The recursive paths carry the platform separator; measured on win32:
+       `components\\Button\\Button.stories.tsx`. */
+    const relative = String(entry).split('\\').join('/');
+    if (!relative.endsWith('.stories.tsx')) continue;
+
+    const source = readFileSync(join(root, String(entry)), 'utf8');
+    for (const match of source.matchAll(/^export const (\w+): Story\b/gm)) {
+      found.add(`${relative}#${match[1]}`);
+    }
+  }
+  return found;
+};
+
+/** The same identity, taken from the index's own two fields. */
+const indexed = new Set(
+  stories.map(
+    entry => `${entry.importPath.replace(/^.*\/src\//, '')}#${entry.exportName}`
+  )
+);
 
 /*
  * One test per story rather than one loop over all of them.
@@ -53,11 +143,32 @@ const stories: StoryEntry[] = await fetch(INDEX_URL)
  * tests report exactly what broke.
  */
 test.describe('automated accessibility', () => {
-  test('the catalog is reachable and has stories', () => {
+  /*
+   * THE CLOCK IS FIXED HERE TOO. This suite walks every story, which includes
+   * the whole date family, and a component that knows what day it is reads the
+   * clock — doc 10 §6.1's rule, applied to the suite that had no clock at all.
+   * The visual suite has pinned it since a calendar baseline failed CI on a
+   * time zone; this one never did.
+   */
+  test.beforeEach(async ({ page }) => {
+    await pinClock(page);
+  });
+
+  test('the index names exactly the stories that are on disk', () => {
+    const onDisk = storiesOnDisk();
+    const missing = [...onDisk].filter(story => !indexed.has(story)).sort();
+    const extra = [...indexed].filter(story => !onDisk.has(story)).sort();
+
     expect(
-      stories.length,
-      `no stories found at ${INDEX_URL}; is the catalog running?`
-    ).toBeGreaterThan(10);
+      { missing, extra },
+      `the catalog at ${INDEX_URL} and the story files disagree, so the number ` +
+        'of checks below is not the number of stories. A stale `storybook-' +
+        'static` is the usual cause: run `pnpm build:catalog`.'
+    ).toEqual({ missing: [], extra: [] });
+
+    /* And that the identity derivation itself found something, so an empty
+       comparison cannot pass by matching nothing against nothing. */
+    expect(onDisk.size).toBeGreaterThan(400);
   });
 
   for (const entry of stories) {

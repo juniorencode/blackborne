@@ -167,11 +167,20 @@ test('a picture that does not arrive falls back to the letters', async ({
   const broken = page.locator('.bb-avatar').filter({ hasText: 'BP' }).first();
 
   /*
-   * A REAL 404, which is the half jsdom cannot produce: it loads nothing, so a
-   * broken url there fires no error event at all and the unit test has to
-   * dispatch one by hand. Here the browser does it.
+   * A REAL FAILURE IN A BROWSER, which is the half jsdom cannot produce: it
+   * loads nothing, so a broken src there fires no error event at all and the
+   * unit test has to dispatch one by hand. Here the browser does it — and the
+   * story's `BROKEN` is a data uri that cannot DECODE rather than a url that
+   * 404s, so the fallback is reached without a request and at the same moment
+   * on every machine (`Avatar.stories.tsx`).
+   *
+   * The fallback's presence is asserted as well as the image's absence, which
+   * is the positive half: `imagesSettled` cannot prove the swap happened —
+   * `complete` is already true when `onError` runs — so this is the only place
+   * that does (doc 10 §11.1).
    */
   await expect(broken).toHaveCount(1);
+  await expect(broken.locator('.bb-avatar-fallback')).toHaveCount(1);
   await expect(broken.locator('img')).toHaveCount(0);
   await expect(broken).toHaveAttribute('role', 'img');
   await expect(broken).toHaveAttribute('aria-label', 'Broken picture');

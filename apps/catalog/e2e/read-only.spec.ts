@@ -83,16 +83,63 @@ for (const [story, framed] of [
   }) => {
     await gotoStory(page, story);
 
-    const readOnly = framed
-      ? fieldBox(box(page, 'Read only'))
-      : box(page, 'Read only');
-    const edge = () =>
-      readOnly.evaluate(node => getComputedStyle(node).borderTopColor);
+    const measured = (name: string) =>
+      framed ? fieldBox(box(page, name)) : box(page, name);
+    const edgeOf = (locator: import('@playwright/test').Locator) =>
+      locator.evaluate(node => getComputedStyle(node).borderTopColor);
 
-    const before = await edge();
+    /*
+     * ONE OF EACH (doc 10 §11.1), and the ordinary field is the half that
+     * proves the RULE is still there. `internal/Field/controlBox` puts
+     * `border-border-strong` on `data-hovered`, and keeping that off a
+     * read-only box is this whole test. Without this half, deleting the hover
+     * rule outright would make the check below pass.
+     *
+     * A bare `hover()` is right here, and that is measured rather than
+     * assumed: the base's `useHover` has no modality gate — it tests only
+     * `isDisabled`, a touch pointer, an already-hovered state and containment
+     * — so a teleport does publish `data-hovered`. It is a tooltip's trigger
+     * and a menu item that consult the global modality, which is why they need
+     * `e2e/pointer.ts` and this does not.
+     */
+    const ordinary = measured('With value');
+    const atRest = await edgeOf(ordinary);
+    await ordinary.hover();
+    await expect.poll(() => edgeOf(ordinary)).not.toBe(atRest);
+
+    const readOnly = measured('Read only');
+    const before = await edgeOf(readOnly);
     await readOnly.hover();
-    expect(await edge(), 'the box answered the pointer as if editable').toBe(
-      before
+
+    /*
+     * The pointer is demonstrably on THIS box. Presence rather than the value:
+     * `select.spec.ts` records that the base spells these two different ways,
+     * so pinning the string would assert the spelling.
+     */
+    await expect(readOnly).toHaveAttribute('data-hovered', /.*/);
+
+    /*
+     * And the edge is asked of the ANIMATION rather than of a clock (doc 10
+     * §11). One read of the colour lands at t≈0 of a 100ms transition, so an
+     * edge that WAS coming back reads as the old colour and the check passes
+     * over exactly the precedence regression `controlBox.css` was written to
+     * state. The two assertions cover the whole window between them: the
+     * transition names it while it runs, the colour names it once it is done.
+     */
+    const settling = await readOnly.evaluate(node =>
+      node
+        .getAnimations()
+        .map(animation =>
+          animation instanceof CSSTransition ? animation.transitionProperty : ''
+        )
     );
+    expect(settling, 'the edge started coming back on hover').not.toContain(
+      'border-top-color'
+    );
+
+    expect(
+      await edgeOf(readOnly),
+      'the box answered the pointer as if editable'
+    ).toBe(before);
   });
 }

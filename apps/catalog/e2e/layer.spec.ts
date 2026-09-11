@@ -13,7 +13,10 @@
  * it covers, so a rule that loses its check is visible.
  */
 import { expect, test } from '@playwright/test';
+import { travelTo } from './pointer';
+import { painted } from './settle';
 import { gotoStory } from './story';
+import { watchWheels, wheelsSeen } from './wheel';
 
 const OVERVIEW = 'components-dialog--overview';
 const NESTED = 'components-dialog--nested';
@@ -175,11 +178,28 @@ test.describe('scroll', () => {
     await page.getByTestId('open-outer').click();
     await expect(dialog(page)).toBeVisible();
 
+    await watchWheels(page);
     const before = await pageOffset(page);
     await page.mouse.move(180, 500);
     await page.mouse.wheel(0, 600);
-    // A wheel event is asynchronous; give the page the chance to be wrong.
-    await expect.poll(() => pageOffset(page), { timeout: 1000 }).toBe(before);
+
+    /*
+     * ONE OF EACH (doc 10 §11.1). The wheel ARRIVING is the thing that has to
+     * happen; the offset not moving is the claim. Polling the claim was
+     * worthless twice over: `expect.poll` returns on the first read that
+     * satisfies it, so this passed whether or not the event ever arrived and
+     * spent none of its budget.
+     *
+     * A count is a STATE, so polling that is honest. `painted` after it puts a
+     * scroll applied a frame late INSIDE the read below rather than after it.
+     * The sibling test — the page scrolls again once every layer has closed —
+     * is what proves a wheel moves this page at all, so it is not repeated.
+     */
+    await expect
+      .poll(() => wheelsSeen(page), { timeout: 1000 })
+      .toBeGreaterThan(0);
+    await painted(page);
+    expect(await pageOffset(page)).toBe(before);
   });
 
   test('and the lock survives a nested layer closing', async ({ page }) => {
@@ -212,10 +232,17 @@ test.describe('scroll', () => {
       page.getByRole('dialog', { name: 'The first dialog' })
     ).toBeVisible();
 
+    await watchWheels(page);
     const before = await pageOffset(page);
     await page.mouse.move(180, 500);
     await page.mouse.wheel(0, 600);
-    await expect.poll(() => pageOffset(page), { timeout: 1000 }).toBe(before);
+
+    // The same one-of-each as above: the count proves the wheel arrived.
+    await expect
+      .poll(() => wheelsSeen(page), { timeout: 1000 })
+      .toBeGreaterThan(0);
+    await painted(page);
+    expect(await pageOffset(page)).toBe(before);
   });
 
   test('the page scrolls again once every layer has closed', async ({
@@ -388,14 +415,10 @@ test.describe('the portal', () => {
     const before = await trigger.boundingBox();
     expect(before).not.toBeNull();
 
-    // The pointer has to travel; `hover()` teleports and the base's useHover
-    // does not register that at all (tooltip.spec.ts measured it four ways).
-    await page.mouse.move(4, 4);
-    await page.mouse.move(
-      before!.x + before!.width / 2,
-      before!.y + before!.height / 2,
-      { steps: 8 }
-    );
+    // The pointer travels rather than teleporting, and `e2e/pointer.ts` carries
+    // the measured reason. `before` stays because it is this test's actual
+    // subject: the box as it was before the layer arrived.
+    await travelTo(page, trigger);
     const tooltip = page.locator('[role=tooltip]');
     await expect(tooltip).toBeVisible({ timeout: 3000 });
     await expect(tooltip).not.toHaveAttribute('data-entering', /.*/);

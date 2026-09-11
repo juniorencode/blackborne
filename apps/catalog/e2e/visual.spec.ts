@@ -31,6 +31,7 @@
  */
 import { expect, test } from '@playwright/test';
 import { pinClock } from './clock';
+import { travelTo } from './pointer';
 import { imagesSettled } from './settle';
 import { gotoStory } from './story';
 
@@ -59,45 +60,53 @@ test.beforeAll(() => {
   }
 });
 
-/**
- * One screenshot of a whole story.
+/*
+ * THE CLOCK IS FIXED FOR THE WHOLE FILE, and doc 10 §6.1 says where as well as
+ * why: a component that knows what day it is reads the clock, so a reference
+ * taken on one day does not match the same page on the next.
  *
- * Fonts are awaited before capturing: text measured before its font loads is
- * laid out differently, and that is the classic source of a screenshot that
- * differs from itself (doc 10 §6).
+ * It used to be fixed inside `capture`, which is 176 of the 196 references —
+ * the hover and the press paths reach `gotoStory` themselves, so twenty were
+ * photographed at whatever instant the run happened to be at. None of those
+ * twenty renders a date, so none of them was wrong; a guard that one shutter
+ * in three goes through is the kind nobody can see is missing, which is the
+ * reason it moves rather than the reason it mattered.
  */
+test.beforeEach(async ({ page }) => {
+  await pinClock(page);
+});
+
+/**
+ * THE SHOT, and the guard that belongs to the shot rather than to one path.
+ *
+ * `imagesSettled` sat inside `capture` too, and the other two shutters did
+ * without it. An `<img>` that has not resolved photographs as the browser's
+ * broken-image mark, and `e2e/settle` carries what that cost: `avatar-states`
+ * came back 225 pixels different on CI.
+ *
+ * The story root rather than the viewport: a full-page shot would include the
+ * scrollbar, which differs between platforms even inside one container.
+ */
+const shoot = async (
+  page: import('@playwright/test').Page,
+  name: string
+): Promise<void> => {
+  await imagesSettled(page);
+  await expect(page.locator('body')).toHaveScreenshot(`${name}.png`);
+};
+
+/** One screenshot of a whole story. */
 const capture = async (
   page: import('@playwright/test').Page,
   id: string,
   name: string
 ) => {
-  /*
-   * THE CLOCK IS FIXED FIRST, which doc 10 §6.1 is the rule for: a component
-   * that knows what day it is today reads the clock, so a reference taken on
-   * one day does not match the same page on the next. `e2e/clock` carries the
-   * instant, the reasoning and both measurements — and it is shared with the
-   * behaviour checks, so a picture and the check beside it cannot disagree
-   * about what day it is.
-   */
-  await pinClock(page);
-
   // gotoStory, not page.goto: it waits for the story to MOUNT. Without that
   // this line can photograph an empty page, and --update-snapshots has nothing
   // to match against, so the empty page becomes the committed reference. See
   // the note on gotoStory.
   await gotoStory(page, id);
-
-  /*
-   * AND EVERY IMAGE HAS SETTLED, which is doc 10 §11 — a check may not depend on
-   * the machine's SPEED — arriving through a picture rather than through an
-   * assertion. The measurement and the three things "settled" means are in
-   * `e2e/settle`, which the accessibility suite is the second caller of.
-   */
-  await imagesSettled(page);
-
-  // The story root, not the viewport: a full-page shot would include the
-  // scrollbar, which differs between platforms even inside one container.
-  await expect(page.locator('body')).toHaveScreenshot(`${name}.png`);
+  await shoot(page, name);
 };
 
 /*
@@ -751,10 +760,11 @@ for (const [id, name] of AXES) {
  * So the shot is taken after an interaction, and the interaction is part of
  * what the picture is of.
  *
- * THE MOUSE HAS TO TRAVEL. `locator.hover()` teleports the pointer and the
- * base's `useHover` does not register that at all — measured four ways in
- * `tooltip.spec.ts`, where a single `hover()` opened nothing while a neutral
- * move followed by a stepped move onto the target opened it every time.
+ * THE MOUSE HAS TO TRAVEL, which is `travelTo` in `e2e/pointer.ts`. That file
+ * carries the measured reason, and it is not the one this comment used to
+ * give: the base's `useHover` filters nothing about movement — the gate is the
+ * global interaction modality, which a single move cannot set for itself
+ * because the boundary events precede the move that caused them.
  *
  * And the layer has to have STOPPED. It scales in, so a frame captured while
  * `data-entering` is set is a frame mid-animation. `animations: 'disabled'`
@@ -779,18 +789,13 @@ const captureAfterHover = async (
 ) => {
   await gotoStory(page, id);
 
-  const box = await page.getByTestId(testId).boundingBox();
-  expect(box, `no trigger with testid ${testId}`).not.toBeNull();
-  await page.mouse.move(4, 4);
-  await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2, {
-    steps: 8
-  });
+  await travelTo(page, page.getByTestId(testId));
 
   const layer = page.locator(layerSelector);
   await expect(layer).toBeVisible({ timeout: 3000 });
   await expect(layer).not.toHaveAttribute('data-entering', /.*/);
 
-  await expect(page.locator('body')).toHaveScreenshot(`${name}.png`);
+  await shoot(page, name);
 };
 
 /*
@@ -900,7 +905,30 @@ for (const [id, name, testId] of AFTER_PRESS) {
     await expect(notice).toBeVisible();
     await expect(notice).not.toHaveAttribute('data-entering', /.*/);
 
-    await expect(page.locator('body')).toHaveScreenshot(`${name}.png`);
+    try {
+      await shoot(page, name);
+    } catch (cause) {
+      /*
+       * WHICH OF THE TWO FAILURES THIS IS. A notice carries its own life —
+       * six seconds, ten with an action (`internal/Layer/timing.ts`) — and
+       * `e2e/clock` FIXES the instant rather than freezing it, deliberately,
+       * so that timer runs while `toHaveScreenshot` retries a mismatch.
+       * Retried past the dismissal, the comparison is against an empty page
+       * and the diff reads "everything moved" rather than saying what changed.
+       *
+       * Read only once the shot has already failed, and that placement is the
+       * point: the same assertion after a PASSING shot would redden a run
+       * whose only fault was being slow, and would never run on the path it
+       * was written for (doc 10 §11.3).
+       */
+      throw new Error(
+        `${name} did not match, and the notice was ` +
+          ((await notice.count()) === 0
+            ? 'already gone — read the diff as a dismissal rather than as a change'
+            : 'still on screen, so the diff is a real difference'),
+        { cause }
+      );
+    }
   });
 }
 

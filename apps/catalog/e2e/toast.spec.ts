@@ -19,6 +19,7 @@
  * actually interrupts, which is doc 06 §5's third column and still owed.
  */
 import { expect, test } from '@playwright/test';
+import { travelAway, travelTo } from './pointer';
 import { gotoStory } from './story';
 
 const OVERVIEW = 'components-toast--overview';
@@ -78,11 +79,7 @@ test.describe('the countdown', () => {
     await gotoStory(page, OVERVIEW);
     const notice = await sendFrom(page, 'send');
 
-    const box = (await notice.boundingBox())!;
-    await page.mouse.move(4, 4);
-    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, {
-      steps: 8
-    });
+    await travelTo(page, notice);
 
     const paused = await remaining(notice);
     await page.waitForTimeout(2000);
@@ -97,7 +94,7 @@ test.describe('the countdown', () => {
      * leaves.
      */
     await expect(notice).toBeVisible();
-    await page.mouse.move(4, 4, { steps: 8 });
+    await travelAway(page);
     await expect(notice).toHaveCount(0, { timeout: 8000 });
   });
 

@@ -360,6 +360,52 @@ harness. §11's version of that question is about the machine; this one is about
 the input, and both are answered the same way: by naming a thing the component
 does, and asserting that.
 
+**And "nothing in the component" includes a number the BASE chose.** Added
+2026-09-11: a check asserted that a preview opens after roughly the 600ms this
+library sets, under a comment saying the delay was "in effect through
+`timing.ts` rather than the base's default". Measured in the pinned source, the
+base's default is 600 — `delay: props.delay ?? 600` — so deleting the prop
+would have left every assertion passing. A component that passes a dependency
+its own default is not making a decision the check can see. The close delay in
+the same component IS ours, 150 against a default of 200, and that one can be
+asserted; the test is not whether a number is written down, it is whether
+changing our side of it changes the reading.
+
+### 11.1.1 Two ways a negative passes, and neither is the tolerance
+
+**Added 2026-09-11**, from a sweep of every check in this repository whose
+expected result is "nothing happened". Nine sites were examined and the two
+failure shapes turned out to be different, which matters because one of them
+looks like it was already handled.
+
+**A poll cannot give a page the chance to be wrong.** Three checks sent a wheel
+event at a page with its scroll locked and asserted the offset had not moved,
+each under a comment saying the polling budget gave the page a thousand
+milliseconds to prove otherwise. `expect.poll` returns on the first read that
+SATISFIES its expectation — so "the offset is what it was" was satisfied by its
+own first read, none of the budget was ever spent, and the check passed whether
+or not the event arrived at all. This is not §11.4's throwing callback; it is
+the same function's other edge, and the polled form reads as though it were
+more careful than a single read rather than identical to one.
+
+The fix is to poll a state that only the real event produces. A counter on the
+window, read through a poll, is honest because the count rises once and stays
+risen. And measured while writing it: after `mouse.wheel` returned, the count
+was still **zero** — the event is asynchronous, which the old comment said and
+the old code did not use.
+
+**And a companion has to be in the SAME test.** A select's Escape check
+asserted three things afterwards — no list, focus on the trigger, nothing
+chosen — and all three are equally true of a select that never opened, which is
+the state its story starts in. A neighbouring test proved the list opens, forty
+lines away. That is not the pair §11.1 asks for: the pair has to run in the
+test that needs it, because what is being established is that THIS run did the
+thing.
+
+**The cheapest way to tell.** Take the check's own end state and ask whether it
+describes the story before the test touched it. If it does, every assertion in
+it is decoration until something proves otherwise.
+
 ### 11.2 A WAIT is a check, and it can measure the machine too
 
 **Added 2026-09-10.** §11 and §11.1 are both about assertions. The same rule
@@ -555,10 +601,15 @@ an error.
 
 It cost what the comment predicted, in the one place a diff matters most: a
 baseline failed CI at 289 pixels on a branch that changed no pixel, and the
-artefact that would have said why did not exist. It was the second failure of
-that same baseline, and the first time the cause was **guessed wrong** before
-the diff was opened — assumed to be a broken-image glyph, and it was
-antialiasing on every circular border.
+artefact that would have said why did not exist. That failure has no cause on
+record and §11.3 is why it was left that way.
+
+It was the second failure of that same baseline. On the **first** — 225
+pixels — the cause was guessed wrong before the diff was opened: assumed to be
+a broken-image glyph, and it was antialiasing on every circular border. The two
+events are separated here on purpose, because one sentence carrying both read
+as though the wrong guess had been made about the 289 — and a document about
+losing evidence should not be the one misplacing it.
 
 Two things generalise beyond Playwright:
 
