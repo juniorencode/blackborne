@@ -86,10 +86,18 @@ rather than to the library.
 
 ## What runs where
 
-| Job                                 | What it covers                                                      |
-| ----------------------------------- | ------------------------------------------------------------------- |
-| `pnpm --filter catalog test:e2e`    | The behaviour checks, plus axe against **every** story              |
-| `pnpm --filter catalog test:visual` | Visual regression, in the container the baselines were generated in |
+| Command                             | Project(s)        | What it covers                                                      |
+| ----------------------------------- | ----------------- | ------------------------------------------------------------------- |
+| `pnpm --filter catalog test:e2e`    | `checks`,`narrow` | The behaviour checks, 438 of them, and the two narrow-window specs  |
+| `pnpm --filter catalog test:a11y`   | `a11y`            | axe against **every** story, 480 of them                            |
+| `pnpm --filter catalog test:visual` | `visual`          | Visual regression, in the container the baselines were generated in |
+
+**`test:e2e` no longer runs axe**, and this table said it did until 2026-09-11.
+The accessibility suite became a project of its own when it turned out to be
+running twice per pipeline — once inside the behaviour checks and once by name
+in the next CI step — for one set of results. A sentence describing what a
+command used to do is worse than no sentence: it is the reason somebody runs
+one command and believes three suites passed.
 
 The accessibility pass takes its story list from Storybook's own index, so a
 new story is covered the moment it exists rather than when somebody remembers
