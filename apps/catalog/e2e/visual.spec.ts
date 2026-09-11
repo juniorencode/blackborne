@@ -125,9 +125,42 @@ const STATES: Array<[string, string]> = [
   ['components-badge--tones', 'badge-tones'],
   ['components-badge--states', 'badge-states'],
   ['components-alert--together', 'alert-together'],
+  /*
+   * THE GREYSCALE CHECK DOC 06 §3 NAMES, and until now the library had one
+   * picture of it: `confirm-greyscale`, which renders a SINGLE tone of a
+   * component that can never carry a success one. A rule about telling tones
+   * apart cannot be checked against one tone.
+   *
+   * `Alert / Greyscale` is the whole set twice over — four tones in colour
+   * beside the same four with the hue filtered out — so what a reader looks
+   * for here is whether each glyph's SILHOUETTE still says which tone it is
+   * once the colour is gone. That is the claim: colour is never the only
+   * channel.
+   */
+  ['components-alert--greyscale', 'alert-greyscale'],
   ['components-emptystate--the-two-states', 'emptystate-two-states'],
   ['components-separator--orientations', 'separator-orientations'],
   ['components-skeleton--variants', 'skeleton-variants'],
+  /*
+   * A SPINNER EARNS ONE, and it is the colour rather than the sizes.
+   *
+   * It had none at all until its catalog was written, because it had no story
+   * — the one component in the library outside both the accessibility suite
+   * and this one.
+   *
+   * `InheritsItsColour` over `Sizes` on purpose. The three sizes are geometry
+   * against the type scale, which a resolved `size-*` already governs; what
+   * only a picture shows is `color: currentColor` doing its job — the same
+   * element beside body text, beside muted text, inside a FILLED button where
+   * the surrounding colour is the button's foreground, and in dark. That is
+   * also the only Spinner story that carries a second mode.
+   *
+   * The rotation is not in the picture and cannot be: `animations: 'disabled'`
+   * CANCELS an infinite animation rather than finishing it, so the arc is
+   * photographed where it starts. What the shot holds is the arc, the faint
+   * track behind it, and the four foregrounds.
+   */
+  ['components-spinner--inherits-its-colour', 'spinner-in-context'],
   ['components-card--containers', 'card-containers'],
   /*
    * A section that folds has two states no other component has — open and
@@ -191,7 +224,6 @@ const STATES: Array<[string, string]> = [
    * secondary one turns two borders into one line, a primary one has no
    * visible border and draws its own divider.
    */
-  ['components-splitbutton--variants', 'split-button-variants'],
   ['components-splitbutton--sizes', 'split-button-sizes'],
   ['components-splitbutton--states', 'split-button-states'],
   ['components-tabs--structures', 'tabs-structures'],
@@ -336,9 +368,17 @@ const STATES: Array<[string, string]> = [
    * in `Force`'s union that is unreachable by hand.
    */
   /*
-   * A TIME PICKER EARNS TWO, and neither is about the trigger: it is a
-   * `Select` with its rows generated, so the trigger, the panel and the tick
-   * are already photographed under that component.
+   * A TIME PICKER EARNS THREE, and this comment said two while three entries
+   * followed it — corrected rather than enforced, because the third is the one
+   * that turned out to be load-bearing.
+   *
+   * The first two are not about the trigger: it is a `Select` with its rows
+   * generated, so the trigger, the panel and the tick are already photographed
+   * under that component. `time-picker-states` IS about the trigger, and it
+   * earns its place for a reason a select cannot cover — a time picker is a
+   * FIELD, so it carries the field states doc 07 §6 lists, and a select's own
+   * states picture is taken on a select's label and help text rather than on
+   * these.
    *
    * `time-picker-opened` is the list in both modes, with the no-time row
    * first — the route doc 07 §2.2 rule 5 relies on, provided by the component
