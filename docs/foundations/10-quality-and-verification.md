@@ -759,3 +759,73 @@ A version is not published if any of these fails:
 
 The second-to-last is the only manual one on the list, and the one that finds
 the most.
+
+### 10.1 And the workflow that publishes now runs the list
+
+That checklist was a list of intentions until 2026-09-11. `release.yml` ran
+`pnpm verify` and nothing else, so four of the ten were enforced by nobody —
+including the two this document spends the most pages on. A change could go
+through a pull request that photographed it and ran axe against it, and then be
+published by a job that did neither.
+
+| The item                             | Who enforces it now                                                 |
+| ------------------------------------ | ------------------------------------------------------------------- |
+| Format, lint and the project's rules | `pnpm verify`, and §2.1 checks the rules                            |
+| Types, no gaps in the public surface | `pnpm verify`, and `check:surface` (§3.1)                           |
+| All tests, re-renders included       | `pnpm verify`                                                       |
+| Automated accessibility              | **the release job, as of now**                                      |
+| Visual regression                    | **the release job** runs it; approving a change is still a person's |
+| Package verification                 | `pnpm verify`                                                       |
+| The documentation examples compile   | **nothing** — see below                                             |
+| Budgets within their numbers         | `pnpm verify`                                                       |
+| Every component together, by eye     | a person, and §10 says so                                           |
+| Changelog up to date                 | `scripts/check-tag.mjs`, for its SHAPE                              |
+
+**Three questions protection cannot answer, and the tag guard does.** `main` is
+protected — no direct pushes, CI must pass — and every bit of that is walked
+around by tagging a branch that was never merged, because publishing is
+triggered by a TAG rather than by a merge. So `scripts/check-tag.mjs` runs
+first and in seconds: the tagged commit is an ancestor of `main`, the tag names
+the version `package.json` will actually publish, and that version is not
+already on the registry. npm publishes what the package says rather than what
+the tag says, so a mismatch republishes the wrong number under a name that
+claims otherwise.
+
+It also reads the changelog — that a section exists for this version, carries a
+date, holds something, and that `[Unreleased]` has been emptied into it.
+Whether what it holds is TRUE is the list's last item and belongs to a person.
+
+**`pnpm publish` runs with `--no-git-checks`, and that is where the need came
+from.** The flag switches off pnpm's own two guards: that the branch is the
+publishing branch, and that the tree is clean. It is not optional — a tag build
+is a detached HEAD, so the branch check can never pass and the publish would
+simply never run. What it means is that those guarantees have to come from
+somewhere else, and until the guard job they came from nowhere.
+
+**And the release gate is itself checked, because it is the one workflow
+nothing rehearses.** Every other check here runs on every pull request, so a
+defect in it surfaces within a day; this one runs a few times a year and its
+mistakes are found by their only consequence — a published version, which npm
+refuses to unpublish after 72 hours and whose number is burned either way.
+`scripts/check-release-gate.mjs` runs inside `pnpm verify` and asserts three
+things across the two workflow files:
+
+- **No drift.** Every verification command the pull-request gate runs, the
+  release gate runs too. One-way, deliberately: the release may do more and
+  never less.
+- **Every action is pinned to a commit** rather than to a tag its owner can
+  repoint. `release.yml`'s header has explained why at length since it was
+  written, and nothing read it — a comment is not a check (§2.1).
+- **Publishing waits for every other job.** This is the silent one of the
+  three: GitHub runs jobs in PARALLEL by default, so a job the publish does
+  not name in `needs` finishes after the package is already on npm. It has not
+  verified anything; it has reported.
+
+**The one item with nothing behind it is the documentation examples.**
+Measured: seventy JSX snippets in JSDoc comments across thirty-nine files, and
+nine fenced `tsx` blocks under `docs/`, none of which is compiled by anything.
+The stories are the examples that do compile, and they are not the same
+examples. A row went into [the catalog](../catalog-and-build-order.md) §7
+rather than an instrument written in passing, because extracting and
+type-checking prose has its own decisions in it — which snippets are meant to
+be complete, and what a fragment may leave undeclared.

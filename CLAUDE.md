@@ -376,6 +376,18 @@ Commit and PR format is defined in
 Two things to internalise: commits are Conventional Commits, and **commit
 messages never carry a `Co-Authored-By` trailer**.
 
+**And a version ships by pushing a tag, which is a bigger door than it looks.**
+`main`'s protection guards what LANDS on main; publishing is triggered by a
+tag, and a tag can be made from any commit on any branch. So `release.yml`
+opens with a guard job that asks what protection cannot — the tagged commit is
+an ancestor of `main`, the tag names the version `package.json` will actually
+publish, that version is not already on npm, and the changelog has a section
+for it. It then runs the full pull-request gate INCLUDING the browser,
+accessibility and visual suites, which it did not until 2026-09-11
+([doc 10](./docs/foundations/10-quality-and-verification.md) §10.1). The two
+workflows are kept in step by `pnpm check:release`, which fails if the release
+gate stops running anything the pull-request gate runs.
+
 ## Traps specific to this repository
 
 Things that look like improvements and are not:

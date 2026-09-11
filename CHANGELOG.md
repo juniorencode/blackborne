@@ -12,6 +12,28 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **The release workflow runs the checklist it is supposed to.** Doc 10 §10
+  lists ten things that stop a version shipping and `release.yml` ran
+  `pnpm verify` and nothing else — so automated accessibility and visual
+  regression, the two layers this project spends the most on, were enforced on
+  every pull request and on nothing that published. It now runs the whole
+  browser job, in the same container, before the publish step it gates.
+
+- **A tag guard, because publishing is triggered by a tag rather than by a
+  merge.** `main` is protected and all of that is walked around by tagging a
+  branch that was never merged. `scripts/check-tag.mjs` runs first and in
+  seconds: the tagged commit is an ancestor of `main`, the tag names the
+  version `package.json` will actually publish — npm publishes the package's
+  number, not the tag's — that version is not already on the registry, and the
+  changelog has a dated section for it with `[Unreleased]` emptied into it.
+
+- **And the release gate is itself checked**, because it is the one workflow
+  nothing rehearses. `pnpm check:release` asserts that it runs every command
+  the pull-request gate runs, that every action is pinned to a commit rather
+  than a movable tag, and that the publishing job waits for every other job —
+  the silent one, since GitHub runs jobs in parallel by default and a check
+  that finishes after the package is on npm has reported rather than verified.
+
 - **The project's own lint rules are tested, in both directions.** Doc 10 §2
   calls them the highest-return item in the whole document and they are how
   nine written rules stop being a matter of memory — and until now **not one of
