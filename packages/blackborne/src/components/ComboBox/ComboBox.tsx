@@ -28,6 +28,7 @@ import { CheckGlyph } from '../../internal/CheckGlyph';
 import { ChevronGlyph } from '../../internal/ChevronGlyph';
 import { ANCHORED, LAYER_OFFSET, PANEL } from '../../internal/Layer';
 import { cx } from '../../internal/cx';
+import type { ValidationProps } from '../../internal/validationProps';
 import { readDeclarations } from '../../internal/readDeclarations';
 import { useDevWarning } from '../../internal/useDevWarning';
 import { optionMatcher, type OptionTerms } from './optionMatcher';
@@ -305,25 +306,23 @@ interface ComboBoxSharedProps extends Omit<
   | 'defaultSelectedKey'
   | 'onSelectionChange'
   | 'formValue'
-  | 'validationBehavior'
   /*
-   * `validate` goes too, and it is the one omission here that is about
-   * doctrine rather than about types.
+   * AND THE VALIDATION PAIR, which this component refused first and every
+   * field now refuses through the same name. `internal/validationProps` has
+   * the reasoning: the project decides a value is wrong and passes `isInvalid`
+   * with a message, and the library presents it (decision 0005).
    *
-   * It is the base's hook for driving form validation, and this library's
-   * answer to validation is [decision 0005](../../../../../docs/decisions/0005-validation-stays-in-the-project.md):
-   * the project decides a value is wrong and passes `isInvalid` with a message,
-   * and the library presents it. A callback whose argument is
-   * `ComboBoxValidationValue` would also put a base interface in a public
-   * signature, which the catalog has refused twice.
+   * What was special here is only how it was FOUND. The type system made it
+   * visible — `Validation<…<M>>` carries the selection mode, so forwarding
+   * `validate` pinned this component's generic to one value and the plural
+   * branch would not compile. Nine other fields were forwarding it in silence,
+   * because nothing about them refused to build; that took a measurement
+   * rather than a compiler, and the count was ten.
    *
-   * The type system is what made it visible: `Validation<…<M>>` carries the
-   * selection mode, so forwarding it pinned this component's generic to one
-   * value and the plural branch would not compile. **The other fields forward
-   * it**, silently and without meaning to, and that inconsistency is now a row
-   * in catalog §7 rather than a thing this file fixed on its way past.
+   * A callback whose argument is `ComboBoxValidationValue` would also put a
+   * base interface in a public signature, which the catalog has refused twice.
    */
-  | 'validate'
+  | ValidationProps
 > {
   /** Always required. It may be visually hidden, but it always exists. */
   label: React.ReactNode;

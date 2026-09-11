@@ -497,6 +497,37 @@ The habit that follows: after a long session of full runs, look at what is
 still resident before believing a new failure. Nineteen orphaned browsers is
 not an exotic state — it is what an interrupted run leaves.
 
+### 11.6 An artefact nobody can open is a failure nobody can read
+
+**Added 2026-09-10**, and it is §11.3's rule turned on the pipeline rather than
+on a check.
+
+The workflow has uploaded `playwright-report/` on failure since the visual
+suite existed, under a comment that says exactly the right thing — "the diff
+images are the whole point of a visual failure: a report that says '13 differ'
+without showing them is unactionable". **The directory was never created.** No
+reporter was configured, so Playwright used its default, which is `list`
+locally and `dot` on CI, and neither writes a report. The step uploaded nothing
+and said nothing, because an upload of a missing path is a warning rather than
+an error.
+
+It cost what the comment predicted, in the one place a diff matters most: a
+baseline failed CI at 289 pixels on a branch that changed no pixel, and the
+artefact that would have said why did not exist. It was the second failure of
+that same baseline, and the first time the cause was **guessed wrong** before
+the diff was opened — assumed to be a broken-image glyph, and it was
+antialiasing on every circular border.
+
+Two things generalise beyond Playwright:
+
+- **A comment describing an intention is not the intention working.** This one
+  read as though somebody had checked, which is why nobody did for months. The
+  same sentence with a measurement in it — "verified: the report has
+  `index.html`" — would have been either true or obviously stale.
+- **Verify the artefact, not the step.** A green upload step means the action
+  ran, not that anything is in it. The check is to open what it produced once,
+  by hand, which took one command.
+
 ## 10. Definition of green
 
 A version is not published if any of these fails:

@@ -179,11 +179,36 @@ seven". It is an order of precedence, decided once here:
    interactive may live inside one. The two cannot take turns, so one of them
    wins permanently, and it is the one with no alternative route.
 
-   **Left open: emptying a whole set in one gesture.** A field holding several
-   values can be emptied one value at a time and not all at once, and this rule
-   does not answer that. It is not settled by putting the button back either,
-   because the width it wants is the width the values are using. It is measured
-   where it appears rather than decided here.
+   ~~**Left open: emptying a whole set in one gesture.** A field holding
+   several values can be emptied one value at a time and not all at once, and
+   this rule does not answer that. It is not settled by putting the button back
+   either, because the width it wants is the width the values are using. It is
+   measured where it appears rather than decided here.~~
+
+   **Date:** 2026-09-10 — **closed, and the answer is that it is not a field's
+   gesture at all.** Struck through rather than deleted, because the question
+   was a good one and the shape of the answer is worth keeping.
+
+   This rule's premise holds here exactly — clearing has a route costing no
+   width, and the cross on each value IS that route — so the conclusion holds
+   with it: no clear button at an edge that already carries the chevron. §2.2a
+   is not a precedent, because it was granted for the one case where emptying
+   is otherwise **unobservable**, and emptying a set of values is observable
+   one value at a time.
+
+   What settles it is a question of SCOPE rather than of width, and it is the
+   page-size selector's argument one level up: somebody asking to clear
+   everything almost never means one field. They mean the form — a "Clear
+   filters" that empties six of them at once — and only the project knows what
+   six. A gesture on one field would answer a question nobody asked while
+   looking like the answer to the one they did. The field is controlled, so the
+   project's own clear-all is a `value` and an `onChange` it already has.
+
+   **What would reopen it:** a measured case where one field routinely holds
+   enough values that removing them one at a time is unreasonable AND there is
+   no form around it to carry the gesture. The answer then is a hook or a
+   control the consumer places — never a seventh contender for the trailing
+   edge, which is what §2.2's whole ordering exists to prevent.
 
    **Date:** 2026-09-09. The first field of that shape now exists, and what it
    found narrows the question rather than answering it: every value carries its

@@ -6,6 +6,7 @@ import {
 import { FieldMessages, describedBy } from '../../internal/Field';
 import { CHECK_PATH } from '../../internal/CheckGlyph';
 import { cx } from '../../internal/cx';
+import type { ValidationProps } from '../../internal/validationProps';
 
 /*
  * The layout that made Field's shape insufficient.
@@ -91,7 +92,7 @@ const LABEL = cx(
 
 export interface CheckboxProps extends Omit<
   AriaCheckboxProps,
-  'children' | 'className' | 'style'
+  'children' | 'className' | 'style' | ValidationProps
 > {
   /** The label, beside the box. Always present — a control with no label has no name. */
   children: React.ReactNode;

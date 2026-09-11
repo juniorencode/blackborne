@@ -16,6 +16,7 @@ import {
   type ControlAlign
 } from '../../internal/Field';
 import { cx } from '../../internal/cx';
+import type { ValidationProps } from '../../internal/validationProps';
 import { useDevWarning } from '../../internal/useDevWarning';
 import { mergeRefs } from '../../internal/mergeRefs';
 import type { Normalizer } from '../../normalize';
@@ -63,7 +64,7 @@ const INPUT = cx(CONTROL_INSIDE, CONTROL_TEXT);
  */
 export interface TextFieldProps extends Omit<
   AriaTextFieldProps,
-  'children' | 'className' | 'style'
+  'children' | 'className' | 'style' | ValidationProps
 > {
   /** Always required. It may be visually hidden, but it always exists. */
   label: React.ReactNode;

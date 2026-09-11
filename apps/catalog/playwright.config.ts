@@ -56,6 +56,43 @@ export default defineConfig({
    * those machines and they are the same one.
    */
   workers: '50%',
+
+  /*
+   * A REPORT WITH THE PICTURES IN IT, ON CI, AND THE REASON IS A FAILURE
+   * NOBODY COULD READ.
+   *
+   * The workflow has uploaded `playwright-report/` on failure since the visual
+   * suite existed, with a comment saying the diff images are the whole point
+   * of a visual failure — "a report that says '13 differ' without showing them
+   * is unactionable". Measured: **that directory was never created.** No
+   * reporter was configured, so Playwright used its default, which is `list`
+   * locally and `dot` on CI, and neither writes a report. The step uploaded
+   * nothing for seven months of retention.
+   *
+   * It cost exactly what the comment predicted. `avatar-states` failed CI at
+   * 289 pixels on a branch that changed no pixel, and the artefact that would
+   * have said WHY did not exist — the second time that baseline has failed
+   * only on CI, and the first time the cause was guessed wrong before the diff
+   * was opened (it was assumed to be a broken-image glyph and turned out to be
+   * antialiasing on every circular border).
+   *
+   * `dot` stays for the console, because 480 lines of `✓` is what the log
+   * looked like before it and the failures were the only thing anyone read.
+   */
+  reporter: process.env.CI
+    ? [['dot'], ['html', { open: 'never' }]]
+    : [['list']],
+
+  /*
+   * Playwright's own default, written down because the workflow now uploads
+   * this path by name. `test-results/` is where the raw `-actual.png` and
+   * `-diff.png` land side by side, which is one download and no HTML to
+   * navigate; the html report embeds the same files, and having both is the
+   * difference between reading a failure and re-running it to get a different
+   * one.
+   */
+  outputDir: 'test-results',
+
   use: {
     baseURL: CATALOG_URL,
     /*

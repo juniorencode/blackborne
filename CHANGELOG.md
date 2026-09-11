@@ -10,7 +10,90 @@ minor versions. Every break is listed here with its migration.
 
 ## [Unreleased]
 
+### Removed
+
+- **`validate` and `validationBehavior`, on the ten fields that had them.**
+  **Breaking**, and it removes props nobody chose: they arrived with the base's
+  own props, because every one of those fields extends them with an `Omit`.
+  Measured before removing — ten fields published both, and nothing in this
+  repository used either.
+
+  [Decision 0005](./docs/decisions/0005-validation-stays-in-the-project.md)
+  settled this library's answer to "is this value valid" before any of these
+  fields existed: the project decides and passes `isInvalid` with a message it
+  wrote. `validate` is a second answer to the same question, and one question
+  gets one mechanism.
+
+  `validationBehavior` is the more expensive half and the reason this is not
+  tidying. It chooses between the base reporting a message to us and the
+  **browser** doing it natively — its own bubble, its own wording, its own
+  language — where doc 05 says every string a person reads comes from the
+  dictionary. Supporting `validate` honestly would have meant documenting and
+  testing both presentations of an error.
+
+  **Migration**, and it is one line, because the field is already controlled:
+
+  ```tsx
+  // before
+  <TextField label="Email" validate={validateEmail} />;
+
+  // after
+  const problem = validateEmail(value);
+
+  <TextField
+    label="Email"
+    value={value}
+    onChange={setValue}
+    isInvalid={problem !== null}
+    {...(problem === null ? {} : { errorMessage: problem })}
+  />;
+  ```
+
+  `internal/validationProps` names the pair once and the ten fields refuse it,
+  with a type-level test on all ten: `@ts-expect-error` fails the build if
+  either prop comes back, which is the only place a claim about a surface can
+  be made. Verified by putting one back and watching the build break.
+
+  **The refusal is in the type**, which is what the public API is. Each field
+  spreads the props it does not use onto the base, so a consumer who casts past
+  the type still reaches `validate` at run time — the same way `Progress`
+  refuses an indeterminate mode. Stripping the pair would mean destructuring
+  two names the type no longer has, in ten components, to prevent something
+  that was never documented.
+
+  `ComboBox` had refused both by hand since it shipped, for a reason worth
+  keeping: its `Validation<…<M>>` argument carries the selection mode, so
+  forwarding `validate` pinned that component's generic and the plural branch
+  would not compile. The other nine forwarded it in silence, because nothing
+  about them refused to build — which is why the count took a measurement
+  rather than a compiler. `Radio` and `Switch` never had it: the base puts
+  validation on the group, and a switch has none.
+
+  **And the shape underneath is the actual cause, which is now a row of its
+  own.** `Omit` is a blacklist, so a field extending the base with one
+  publishes whatever the base adds next, with nobody deciding — hard rule 8
+  read backwards. Every component built from `Calendar` onward uses `Pick`, and
+  `validate` reached exactly the ten `Omit`-shaped fields and none of the
+  others. Converting them is bigger than this and waits.
+
 ### Changed
+
+- **A visual failure on CI now ships the pictures.** The workflow has uploaded
+  `playwright-report/` on failure since the visual suite existed, under a
+  comment saying the diff images are the whole point of a visual failure.
+  **That directory was never created**: no reporter was configured, so
+  Playwright used its default — `list` locally, `dot` on CI — and neither
+  writes a report. The step uploaded nothing, and an upload of a missing path
+  warns rather than fails, so it looked finished.
+
+  The config asks for the html reporter on CI now, keeping `dot` for the
+  console, and the workflow uploads the raw `test-results/` alongside it — the
+  `-actual.png` and `-diff.png` side by side, one download and no HTML to
+  navigate. Verified by running under `CI=1` and opening what came out.
+
+  It cost what the comment predicted: `avatar-states` failed at 289 pixels on a
+  branch that changed no pixel, and the artefact that would have said why did
+  not exist. Doc 10 §11.6 has the rule — verify the artefact, not the step.
 
 - **A middle click clicks the LINK, not a point where the link used to be.**
   It was the only one of the four tab checks reading `boundingBox()` and then
