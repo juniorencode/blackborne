@@ -132,12 +132,71 @@ const openedAt = async (
  * count of one where two was expected names the symptom; the three outcomes it
  * could be need different fixes, and the message below separates them.
  */
+type SeenClick = {
+  target: string;
+  ctrlKey: boolean;
+  metaKey: boolean;
+  defaultPrevented: boolean;
+};
+
 const tabOpenedBy = async (
   page: Page,
   act: () => Promise<void>
 ): Promise<import('@playwright/test').Page> => {
   const context = page.context();
   const before = context.pages().length;
+
+  /*
+   * WHAT THE PAGE ITSELF SAW, recorded before the act and reported only if no
+   * tab arrives. Doc 10 §11.3 on the FIFTH failure of these four checks: each
+   * round added an instrument, the next failure moved one step, and the step
+   * this one reached was "the browser opened nothing" — a sentence that still
+   * covers four different faults.
+   *
+   * CAPTURE PHASE, AND THAT IS MEASURED RATHER THAN CHOSEN. The first version
+   * listened in the bubble phase at the document and recorded NOTHING on a
+   * ctrl-click that demonstrably opened a tab: something stops propagation
+   * before the event gets there. An instrument that reports an empty list for
+   * the healthy case cannot tell you anything about the broken one (§11.1), so
+   * it listens where the event provably arrives — window and document capture
+   * both see it.
+   *
+   * And `defaultPrevented` is read LATE, because at capture time it is always
+   * false: the handlers that would call it have not run yet. Verified with a
+   * positive control on this same link — an ordinary click, where the base DOES
+   * prevent the default and call the router, reads `false` at capture and
+   * `true` afterwards; the ctrl-click reads `false` both times.
+   *
+   * Four outcomes, four different fixes:
+   *   - no click at all        · the press never reached the element
+   *   - ctrlKey false          · the modifier did not reach the page
+   *   - defaultPrevented true  · something cancelled the browser's own job
+   *   - all correct, no tab    · Chromium declined, which is Chromium's
+   */
+  await page.evaluate(() => {
+    const seen: SeenClick[] = [];
+    (window as unknown as { clicksSeen: SeenClick[] }).clicksSeen = seen;
+    document.addEventListener(
+      'click',
+      event => {
+        const target = event.target;
+        const entry: SeenClick = {
+          target:
+            target instanceof Element
+              ? `${target.tagName}${target instanceof HTMLAnchorElement ? `[href=${target.getAttribute('href') ?? ''}]` : ''}`
+              : String(target),
+          ctrlKey: event.ctrlKey,
+          metaKey: event.metaKey,
+          defaultPrevented: false
+        };
+        seen.push(entry);
+        setTimeout(() => {
+          entry.defaultPrevented = event.defaultPrevented;
+        }, 0);
+      },
+      true
+    );
+  });
 
   await act();
 
@@ -170,9 +229,17 @@ const tabOpenedBy = async (
       })
     );
 
+    const clicks = await page
+      .evaluate(
+        () =>
+          (window as unknown as { clicksSeen?: SeenClick[] }).clicksSeen ?? []
+      )
+      .catch(() => 'unreadable' as const);
+
     throw new Error(
       `no tab appeared: the context holds ${String(context.pages().length)} ` +
-        `page(s) where ${String(before + 1)} was expected — ${held.join(' | ')}`,
+        `page(s) where ${String(before + 1)} was expected — ${held.join(' | ')}` +
+        ` — and the page saw ${JSON.stringify(clicks)}`,
       { cause }
     );
   }
