@@ -15,19 +15,16 @@
   inline-size: calc(var(--bb-control-switch-height) - 4px);
   border-radius: var(--bb-radius-full);
   /*
-   * The OFF thumb is the solid step, not the surface colour.
+   * The OFF thumb is the solid step, not the surface colour — and it reads
+   * that from layer 2 rather than from the palette.
    *
-   * It was the surface, sitting on a track set to the sunken surface — two
-   * adjacent steps, measuring 1.03:1 in light and 1.07:1 in dark. The thumb
-   * was invisible, and on a switch the thumb is the ONLY signal of position:
-   * lose it and the control says nothing about its own state.
-   *
-   * Step 7 measures 1.38:1 in light and 1.72:1 in dark. It does not reach the
-   * 3:1 of WCAG 1.4.11 — step 9 does, and reads too heavy — but it is well
-   * clear of the 1.03:1 it replaced, and the thumb's shadow carries some of
-   * the separation that the colour no longer has to.
+   * It was `var(--bb-x-gray-7)` here, a layer-1 primitive inside a component,
+   * which hard rule 1 forbids and which no lint could see: ESLint's blocks
+   * are scoped to ts and tsx, so this file was outside every rule the project
+   * has. `--bb-surface-knob` carries the same value and the measurement that
+   * chose it (doc 03 §4).
    */
-  background: var(--bb-x-gray-7);
+  background: var(--bb-surface-knob);
   box-shadow: var(--bb-shadow-sm);
   transition: inset-inline-start var(--bb-duration-fast) var(--bb-ease);
 }

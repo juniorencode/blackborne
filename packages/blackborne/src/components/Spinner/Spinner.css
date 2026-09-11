@@ -2,9 +2,16 @@
  * Layer 3: a component exception, derived from layer 2 (doc 03 §1).
  *
  * It exists as a class rather than utilities because keyframes are not
- * something a utility expresses, and the duration has to come from a token so
- * the reduced-motion rule reaches it. This is the narrow case §4.4 allows, not
- * a licence to start a second vocabulary.
+ * something a utility expresses. This is the narrow case §4.4 allows, not a
+ * licence to start a second vocabulary.
+ *
+ * The duration below is a LITERAL rather than a token, deliberately: doc 09 §2
+ * budgets a looping indicator separately from the transition scale, so there is
+ * no token that means "one turn of a spinner". This comment used to claim the
+ * opposite — that the duration came from a token "so the reduced-motion rule
+ * reaches it" — which was describing `Dialog.css` and `Drawer.css`. The
+ * reduced-motion rule reaches this one by switching the animation off
+ * outright, which needs no token at all.
  */
 .bb-spinner {
   /* Inherits its colour, so it works inside a solid button and beside plain
