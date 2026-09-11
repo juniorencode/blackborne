@@ -46,16 +46,90 @@ aliases that do not contain the word: measured, a shipped file holding
 `globalThis.document`, `self.matchMedia`, `top`, `parent` and `frames`
 produced zero errors.
 
-**The rules themselves are now tested.** Twenty-one of them are regexes and
-globs inside strings, and `eslint.rules.js`'s own header warns that a mangled
-one matches nothing while looking correct — yet only two recorded being
-verified in both directions. See §2.1.
+**The rules themselves are now tested**, and that is §2.1.
+
+### 2.1 And the rules that guard the rules are guarded too
+
+There are thirty-four of them. Seventeen are a PATTERN inside a string —
+every one of the fourteen `no-restricted-syntax` selectors embeds a regular
+expression, and the three import groups hold twelve globs between them — and
+`eslint.rules.js`'s own header warns what that costs: "a silently mangled
+backslash produces a rule that matches nothing while looking correct." The
+other seventeen are plain identifiers, which cannot be mangled and can still be
+attached to the wrong files.
+
+**Until 2026-09-11 not one of the thirty-four had a standing check.** Several
+were verified by hand on the day they landed — three import groups say so in
+their comments, and the batch added with the `Omit` and globals rules was
+probed against a throwaway file — but a verification that happened once is a
+verification nobody can repeat, and it says nothing about the rule after the
+next edit. This is the same failure this document keeps naming one layer
+down: a check that cannot fail is not a check (§11.1), and the checks
+themselves are not exempt from it.
+
+`scripts/check-lint-rules.mjs` fires and silences every rule, and four things
+about its shape are decisions rather than detail.
+
+**It reads the RESOLVED config, not `eslint.rules.js`.** A perfect selector
+attached to the wrong `files` glob protects nothing, and a test that imports
+the rule objects cannot see that. `calculateConfigForFile` hands back the rules
+as the config actually attaches them to a shipped file, so the rule and its
+wiring are tested together.
+
+**It lints inline text with a `filePath` that need not exist.** That is what
+makes the wiring checkable at all: the same fixture is resolved as
+`Button.tsx`, as `Button.test.tsx` and as `Button.stories.tsx`, and must be an
+error once and exempt twice. A fixture DIRECTORY cannot do that — it only ever
+has one path.
+
+**One rule at a time.** A fixture linted under all thirty-four could be
+reported by a neighbouring rule and read as proof of the one it was written
+for, which is §11.1's mistake at the level of the checks themselves.
+
+**And a severity is read separately from the options, because the options
+cannot tell you.** `internal/useWindowFits` is the one door doc 04 §5 grants
+the viewport question to, and the assertion that it is narrow — allowed
+`window` and `matchMedia`, refused `fetch` and `document` — was written by
+reading the names the rule still bans there. Measured against a deliberately
+reverted config, a rule switched `'off'` resolves to `[0, …all seventeen]`:
+flat config keeps the earlier block's options when the newer one supplies only
+a severity, so the list comes back IDENTICAL to the strictest possible
+configuration while enforcing nothing. The first version of that assertion
+therefore reported the exact opposite of what was true — "should be allowed
+`window` and is not", of a file where every global was legal.
+
+**What the script cannot catch is recorded in it rather than closed.**
+Eighteen shapes are silent today, measured with a throwaway probe against the
+real config: thirty-five candidates linted, twenty silent, and two of the
+twenty turned out not to be holes — one is what the rule's own message tells
+you to write, and the other is caught by a neighbouring rule. Six of the
+eighteen are one cause: nine selectors anchor on `Literal[value=…]` and not one
+of the fourteen names `TemplateLiteral`, so a backtick defeats them all at
+once. Two of those six cannot be closed by a bigger selector at all, because an
+interpolated class has no value to match until it runs — which is an argument
+for the other instruments rather than for a bigger regex, and the compiled
+stylesheet is the one that answers it.
+
+None of the eighteen has a live exposure, measured: no class string in the
+package sits in a template literal, there is no `bb:min-[` anywhere, and every
+literal `label=` was a JSDoc example. That is what makes them worth recording
+instead of fixing — they are the shape the next author might reach for, not a
+defect sitting in the tree. Closing one is a rule change, which is a decision
+rather than a chore.
+
+**And the check costs 4.3 seconds rather than 10**, because the wiring tier
+reads a resolved severity instead of linting. The real config attaches
+`projectService`, so a single `lintText` under it loads the package's
+TypeScript program — measured at 5.3s, against 5ms for a lint under the
+isolated config the other tiers use — and it bought nothing those tiers do not
+already prove. What it gives up is the end-to-end path, and that trade is
+written in the file.
 
 ## 3. The verification layers
 
 | Layer                       | What it checks                                                                                                    | Cost                    |
 | --------------------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------------- |
-| **Format and lint**         | Code style and the project's own rules from section 2                                                             | Seconds                 |
+| **Format and lint**         | Code style, the project's own rules from section 2, **and those rules themselves** (§2.1)                         | Seconds                 |
 | **Types**                   | That the public surface is properly typed                                                                         | Seconds                 |
 | **Logic**                   | Hooks and pure functions, **rendering nothing** (P6)                                                              | Fast                    |
 | **Behavior**                | The component from the perspective of someone using it, and never how fast the machine ran it (§11)               | Medium                  |
