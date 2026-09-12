@@ -12,6 +12,26 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **A `Table` becomes a list of cards in a narrow container**, and it needs no
+  new prop, no new component and no JavaScript at all.
+
+  **The DOM does not change.** Measured at both widths: the same roles, the same
+  rows and cells, the same selection, the same keyboard — the base writes its
+  ARIA roles explicitly, so a `td` that stops laying out as a table cell is
+  still a `gridcell`. Doc 04 §6 listed this as its own first example of a
+  STRUCTURAL change; §6.3 now records that it is not one, with the measurement.
+
+  **Each field carries its column's name**, read from that column's own
+  collection node rather than written a second time — one declaration, three
+  readers. The card's TITLE carries none, because a row is named by that cell
+  and a label inside it renamed the row.
+
+  **The heading band is emptied rather than hidden**: the select-all and any
+  sortable column stay, and a table that neither sorts nor selects loses the
+  band entirely. `display: none` rather than `sr-only`, which is the inverse of
+  the rule `Steps` left behind — a column header can be focused, so a clipped
+  one is focus nobody can see.
+
 - **`pinnedEdge="end"` on `Table`** — the trailing column stays put while the
   rest scroll under it, so what can be done to a row is still reachable at the
   far end of a wide one.

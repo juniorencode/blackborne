@@ -20,6 +20,7 @@ const TOO_WIDE = 'components-table--too-wide';
 const SCROLLS_DOWN = 'components-table--scrolls-down';
 const ABSENCES = 'components-table--absences';
 const PINNED = 'components-table--pinned';
+const CARDS = 'components-table--cards';
 
 test('the heading row stays put while the body scrolls', async ({ page }) => {
   await gotoStory(page, SCROLLS_DOWN);
@@ -613,4 +614,288 @@ test('a chosen row keeps its colour across the pinned cell', async ({
   expect(colours.row).not.toBe('rgba(0, 0, 0, 0)');
   expect(colours.cell).toContain(colours.row);
   expect(colours.cell).not.toBe(colours.plain);
+});
+
+/* ───────────────────── the rows a narrow panel folds ─────────────────────── */
+
+/*
+ * WHAT ONLY A BROWSER ANSWERS. jsdom implements neither container queries nor
+ * layout, so at that level the cards do not exist at all — every assertion
+ * below is about what CSS resolved to, and about what survived it.
+ *
+ * Not tested here: that a container query works. That is the engine. What is
+ * ours is which values are published at which step, and that nothing is lost
+ * crossing between them.
+ */
+
+test('the same table is a table with room and cards without', async ({
+  page
+}) => {
+  await gotoStory(page, CARDS);
+
+  const read = (i: number) =>
+    page
+      .locator('.bb-table-scroller')
+      .nth(i)
+      .evaluate(el => {
+        const at = (sel: string) => {
+          const found = el.querySelector(sel);
+          return found ? getComputedStyle(found).display : 'missing';
+        };
+        return {
+          table: at('table'),
+          body: at('tbody'),
+          row: at('tbody > tr'),
+          cell: at('tbody > tr > td')
+        };
+      });
+
+  /*
+   * BOTH READINGS IN ONE TEST, doc 10 §11.1.1. "It lays out as a grid" is also
+   * true of a stylesheet that never loaded and of a query that matched nothing,
+   * so the wide panel is the control that says the gate is a gate.
+   */
+  expect(await read(0)).toEqual({
+    table: 'table',
+    body: 'table-row-group',
+    row: 'table-row',
+    cell: 'table-cell'
+  });
+  expect(await read(1)).toEqual({
+    table: 'block',
+    body: 'flex',
+    row: 'grid',
+    cell: 'grid'
+  });
+});
+
+test('three rows stay chosen while the structure changes under them', async ({
+  page
+}) => {
+  await gotoStory(page, CARDS);
+
+  /*
+   * DOC 04 §6 RULE 4, WHICH NAMES THIS CASE IN SO MANY WORDS — "if the person
+   * had three rows selected and the table becomes cards, they stay selected.
+   * This is tested explicitly: it is what breaks most often."
+   *
+   * It cannot break here, and that is the point rather than a shortcut: there
+   * is no second structure for the state to fall out of. The check is kept
+   * anyway, because what makes it true is a property of this implementation and
+   * the next one might not have it.
+   */
+  const panel = page.locator('.catalog-panel').first();
+  const chosen = () =>
+    panel.evaluate(
+      el => el.querySelectorAll('tbody tr[aria-selected="true"]').length
+    );
+
+  const before = await chosen();
+  const wide = await panel
+    .locator('.bb-table-scroller table')
+    .evaluate(el => getComputedStyle(el).display);
+
+  await panel.evaluate(el => {
+    (el as HTMLElement).style.width = '320px';
+  });
+  await expect
+    .poll(async () =>
+      panel
+        .locator('.bb-table-scroller table')
+        .evaluate(el => getComputedStyle(el).display)
+    )
+    .toBe('block');
+
+  expect(wide, 'the panel was not a table to begin with').toBe('table');
+  expect(before).toBe(2);
+  expect(await chosen()).toBe(2);
+});
+
+test('the keyboard still walks the grid once it is a list of cards', async ({
+  page
+}) => {
+  await gotoStory(page, CARDS);
+
+  const cards = page.locator('.bb-table-scroller').nth(1);
+  await cards.locator('tbody tr').first().locator('td').nth(1).click();
+
+  const where = () =>
+    page.evaluate(() => {
+      const a = document.activeElement;
+      const row = a?.closest('[role="row"]');
+      return {
+        role: a?.getAttribute('role') ?? null,
+        row: row?.getAttribute('data-key') ?? null
+      };
+    });
+
+  const start = await where();
+  await page.keyboard.press('ArrowDown');
+  const next = await where();
+
+  expect(start.role).toBe('rowheader');
+  expect(next.role).toBe('rowheader');
+  expect(next.row, 'ArrowDown stayed inside the same card').not.toBe(start.row);
+});
+
+test('ArrowUp from a card lands on something visible, or on nothing', async ({
+  page
+}) => {
+  await gotoStory(page, CARDS);
+
+  const up = async (i: number) => {
+    const cards = page.locator('.bb-table-scroller').nth(i);
+    await cards.locator('tbody tr').first().locator('td').nth(1).click();
+    const from = await page.evaluate(
+      () => document.activeElement?.getAttribute('role') ?? null
+    );
+    await page.keyboard.press('ArrowUp');
+    return page.evaluate(before => {
+      const a = document.activeElement as HTMLElement;
+      const box = a.getBoundingClientRect();
+      return {
+        from: before,
+        role: a.getAttribute('role'),
+        seen: box.width > 0 && box.height > 0
+      };
+    }, from);
+  };
+
+  /*
+   * THE DECIDING MEASUREMENT OF THIS WAVE, asserted in both of its shapes.
+   * The base's keyboard delegate sends ArrowUp from a top-row cell to that
+   * column's header, so how the band is hidden decides where focus goes:
+   *
+   *     heading visible      → the header, visible
+   *     heading sr-only      → the header, 73×34 and CLIPPED
+   *     heading display:none → nowhere; focus stays on the cell
+   *
+   * So the band is emptied with `display`, never clipped — the inverse of the
+   * rule `Steps` left behind, and the deciding question is not which property
+   * hides better but whether the hidden thing can be focused.
+   */
+  const withBand = await up(1);
+  expect(withBand.role, 'a sortable heading is still a heading').toBe(
+    'columnheader'
+  );
+  expect(withBand.seen, 'focus landed on something with no box').toBe(true);
+
+  const withNone = await up(2);
+  expect(
+    withNone.role,
+    'focus left the card for a heading that is not there'
+  ).toBe(withNone.from);
+  expect(withNone.seen).toBe(true);
+});
+
+test('the heading band keeps what can still be used, and nothing else', async ({
+  page
+}) => {
+  await gotoStory(page, CARDS);
+
+  const shown = (i: number) =>
+    page
+      .locator('.bb-table-scroller')
+      .nth(i)
+      .evaluate(el =>
+        [...el.querySelectorAll('thead th')]
+          .filter(th => getComputedStyle(th).display !== 'none')
+          .map(th => (th.textContent ?? '').trim())
+      );
+
+  /* Sortable, or the select-all: the two things a person can do from a band. */
+  expect(await shown(1)).toEqual(['', 'Number']);
+  /* And with room, every heading is a heading again. */
+  expect((await shown(0)).length).toBeGreaterThan(2);
+
+  /*
+   * AND WITH NOTHING LEFT, THE BAND ITSELF IS GONE — asserted on the element
+   * rather than on its children, which is the half CI had to find. Hiding every
+   * heading and keeping the row left a `role="row"` with no cell in it:
+   * `aria-required-children`, critical. "No heading is displayed" was true of
+   * that defect too.
+   */
+  expect(await shown(2)).toEqual([]);
+  const band = await page
+    .locator('.bb-table-scroller')
+    .nth(2)
+    .evaluate(el => getComputedStyle(el.querySelector('thead')!).display);
+  expect(band, 'an empty heading band is still a row with no cells').toBe(
+    'none'
+  );
+});
+
+test('a field is named once at either width, and a card title never is', async ({
+  page
+}) => {
+  await gotoStory(page, CARDS);
+
+  const row = (i: number) =>
+    page.locator('.bb-table-scroller').nth(i).locator('tbody tr').first();
+
+  const wide = await row(0).ariaSnapshot();
+  const narrow = await row(1).ariaSnapshot();
+
+  /*
+   * The heading row names the column with room; the card names the field
+   * without one. Said exactly once either way — measured as a tree, because a
+   * label that is merely in the DOM says nothing about what is announced.
+   */
+  expect(wide).toContain('gridcell "Astilleros del Sur"');
+  expect(narrow).toContain('gridcell "Customer Astilleros del Sur"');
+
+  /*
+   * And the row keeps its own name at both widths. A label inside the
+   * row-header cell renamed the row to "NumberF001-000412", and the row's
+   * checkbox to "Select NumberF001-000412" with it, which is why the card's
+   * title carries none.
+   */
+  expect(wide).toContain('row "F001-000412"');
+  expect(narrow).toContain('row "F001-000412"');
+});
+
+test('typing still finds a row, which reaching the column index nearly broke', async ({
+  page
+}) => {
+  await gotoStory(page, OVERVIEW);
+
+  /*
+   * THE QUIET CASUALTY OF THIS WAVE, guarded rather than assumed. Showing a
+   * field's name in a card means reading `columnIndex`, which means handing the
+   * base a render FUNCTION — and the base derives a node's `textValue` from
+   * string children and nothing else. A row's typeahead string is built by
+   * joining its row-header cells' `textValue`, read in the pinned source:
+   *
+   *     if (rowHeaderColumnKeys.has(column.key) && cell.textValue)
+   *       text.push(cell.textValue);
+   *
+   * So emptying it would leave typing-to-find doing nothing at all, with no
+   * error anywhere — the same silent shape `Column` had been in for four waves
+   * with the sort announcement. `Cell` derives the value back.
+   *
+   * The whole number is typed rather than a letter, and that is the fixture
+   * rather than a flourish: every row here begins `F001-0004`, so no single
+   * key can tell them apart and a check written with one would pass on a table
+   * whose typeahead was dead.
+   */
+  const onRow = async () => {
+    await page.locator('.bb-table-scroller tbody tr').first().click();
+    await page.keyboard.press('ArrowLeft');
+    await page.keyboard.press('ArrowLeft');
+    return page.evaluate(
+      () => document.activeElement?.getAttribute('data-key') ?? null
+    );
+  };
+
+  const from = await onRow();
+  await page.keyboard.type('F001-000414', { delay: 40 });
+
+  await expect
+    .poll(async () =>
+      page.evaluate(
+        () => document.activeElement?.getAttribute('data-key') ?? null
+      )
+    )
+    .toBe('3');
+  expect(from, 'the walk did not start where it should').toBe('1');
 });

@@ -19,6 +19,7 @@ import {
   ColumnResizer as AriaColumnResizer,
   ResizableTableContainer,
   useTableOptions,
+  TableStateContext,
   type Selection as AriaSelection,
   type CellProps as AriaCellProps,
   type ColumnProps as AriaColumnProps,
@@ -231,7 +232,62 @@ const CLASSES = {
    * pattern had to move one element OUT. Here the shadow was already out and
    * the opaque child had to stop covering it.
    */
-  table: cx('bb:min-w-full bb:border-collapse bb:text-sm bb:text-text'),
+  /*
+   * THE ONE GATE, and everything the two layouts differ by passes through it.
+   *
+   * Doc 04 §4.1's narrow-first rule taken literally: the CARD values are the
+   * defaults and the table values are what `@medium` restores, so a first paint
+   * with no layout yet is already the structure that is safe at any width.
+   * There is no hook and no threshold in JavaScript — `@medium` resolves from
+   * the `--container-*` namespace, so the number lives in the scale and nowhere
+   * else (doc 04 §4.0).
+   *
+   * The variables are read by `Table.css`, which is where the two layouts are
+   * actually written. That split is deliberate rather than tidy: a container
+   * query cannot be written in a stylesheet without spelling its threshold, and
+   * the rules it gates need descendant selectors that a class list cannot
+   * reach — the `<tr>` inside the base's own `<thead>`, for one. So the query
+   * lives in a utility on the element that can carry it, and the declarations
+   * live beside their reasons.
+   */
+  table: cx(
+    'bb:min-w-full bb:border-collapse bb:text-sm bb:text-text',
+    /*
+     * ONLY WHAT ROOM RESTORES. The card values are `Table.css`'s own fallbacks,
+     * so nothing is published until the query matches — half the declarations,
+     * and a gate that fails to compile leaves the layout that is safe at any
+     * width rather than the one that is not.
+     */
+    'bb:@medium:[--bb-t-table:table]',
+    'bb:@medium:[--bb-t-head:table-header-group]',
+    'bb:@medium:[--bb-t-body:table-row-group]',
+    'bb:@medium:[--bb-t-row:table-row] bb:@medium:[--bb-t-cell:table-cell]',
+    'bb:@medium:[--bb-t-value:contents]',
+    'bb:@medium:[--bb-t-cell-pad:var(--bb-space-3)]',
+    'bb:@medium:[--bb-t-title-weight:inherit]',
+    'bb:@medium:[--bb-cards:0]'
+  ),
+  /*
+   * The name a field carries in a card, and nothing at all in a table. Hidden
+   * with `display` rather than `sr-only` on purpose: above the step the heading
+   * row names the column and this must leave the accessibility tree entirely,
+   * or a reader is given the field's name twice. Measured as a tree at both
+   * widths.
+   */
+  /*
+   * A HEADING WITH NOTHING TO OFFER, in a card list. It is added by `Column`
+   * rather than matched in CSS because only the component knows whether the
+   * column sorts — and `aria-sort` is the base's attribute to publish or not,
+   * which would make a stylesheet depend on an implementation detail of a
+   * dependency (doc 10 §11.1's test, applied to a selector).
+   */
+  quietColumn: 'bb-table-column-quiet',
+  cellValue: 'bb-table-value bb:min-w-0',
+  fieldLabel: cx(
+    'bb-table-field-label',
+    'bb:text-text-muted bb:@medium:hidden',
+    'bb:min-w-0 bb:truncate'
+  ),
   /*
    * THE OBSERVED ELEMENT, and it is a zero-height strip rather than the
    * scroller or the table, for two measured reasons.
@@ -253,7 +309,7 @@ const CLASSES = {
    * to be measured and there is nothing in it to read.
    */
   probe: cx('bb:h-0 bb:w-full', CONTAINER_STEPS),
-  header: 'bb:bg-surface-sunken',
+  header: 'bb-table-head bb:bg-surface-sunken',
   column: cx(
     'bb-table-column',
     'bb:box-border bb:px-(--bb-space-4) bb:py-(--bb-space-3)',
@@ -309,8 +365,6 @@ const CLASSES = {
      * two would have drifted the first time a state was added to one of them.
      */
     'bb-table-row',
-    'bb:border-b bb:border-border',
-    'bb:last:border-b-0',
     /*
      * A CHOSEN ROW IS TINTED, and the first baseline is what asked for it: the
      * picture showed a checked box beside a row indistinguishable from its
@@ -341,6 +395,7 @@ const CLASSES = {
     'bb:data-focus-visible:outline-focus-ring'
   ),
   cell: cx(
+    'bb-table-cell',
     'bb:box-border bb:px-(--bb-space-4) bb:py-(--bb-space-3)',
     'bb:align-middle',
     /*
@@ -376,6 +431,15 @@ const CLASSES = {
     'bb:border-b bb:border-border'
   ),
   pickCell: cx(
+    /*
+     * BOTH NAMES. `bb-table-cell` is what the card rules are written against
+     * and `bb-table-pick` is what puts this one on the title's line — and it
+     * needs the first as much as any other cell does. Without it the checkbox
+     * still LOOKED right, because a grid places an unplaced first child at
+     * column 1 row 1 anyway; the browser check is what said it was landing
+     * there by accident rather than by the rule.
+     */
+    'bb-table-cell bb-table-pick',
     'bb:box-border bb:w-0 bb:whitespace-nowrap',
     'bb:px-(--bb-space-4) bb:py-(--bb-space-3) bb:align-middle'
   ),
@@ -1133,7 +1197,11 @@ export const Column = forwardRef<HTMLTableCellElement, ColumnProps>(
     return (
       <AriaColumn
         ref={ref}
-        className={cx(CLASSES.column, isResizable && CLASSES.resizableColumn)}
+        className={cx(
+          CLASSES.column,
+          isResizable && CLASSES.resizableColumn,
+          columnProps.allowsSorting !== true && CLASSES.quietColumn
+        )}
         {...columnProps}
         {...(name !== undefined ? { textValue: name } : {})}
         {...(isResizable && defaultWidth !== undefined ? { defaultWidth } : {})}
@@ -1299,18 +1367,133 @@ export function Row<T extends object>({
   );
 }
 
+/* ──────────────────── the name a field carries in a card ─────────────────── */
+
+/**
+ * The column's own name, shown beside the value where there is no heading row.
+ *
+ * ## Why it is read rather than passed
+ *
+ * A card shows "Customer: Marina Quispe" where a table shows the value under a
+ * heading, so the heading's text has to reach the CELL. Every obvious route
+ * writes the string twice — a `label` prop on `Cell` repeats it once per row, a
+ * `data-label` attribute repeats it too and pollutes the accessible name
+ * through generated content — and decision 0018 already recorded what two
+ * copies of one string cost: "the two halves can drift apart, and nothing
+ * reports it when they do".
+ *
+ * So it is READ from the column's own collection node, which is the one place
+ * the consumer already wrote it. Declared once in `<Column>Customer</Column>`,
+ * read three times: the base paints it into the `<th>`, the base's sort
+ * description names it, and this shows it in a card. There is no second string
+ * to disagree with the first.
+ *
+ * Two measured pieces make the route work. `columnIndex` arrives in the base's
+ * cell render props and is the COLLECTION index, so it follows a hidden or
+ * reordered column with no correction. And `TableStateContext` is provided
+ * ABOVE the collection, which is the only place wave 4 found a context can be
+ * read from at all.
+ *
+ * ## Why the row's own column has none
+ *
+ * A card's title is not a labelled field. Measured with an aria snapshot: a
+ * label inside the row-header cell renames the ROW, because the row takes its
+ * name from that cell — `row "NumberF001-000412"` where it had been
+ * `row "F001-000412"`, and the row's checkbox came out as
+ * "Select NumberF001-000412" with it. Doc 04 §11.4 calls a name the most basic
+ * thing a component knows, and this would have changed it at one width and not
+ * the other.
+ *
+ * ## And why it is announced rather than hidden
+ *
+ * Measured: with the heading row at `display: none` the accessibility tree
+ * holds **zero** `columnheader` nodes, so nothing else is naming the field.
+ * Above the step the label is `display: none` itself and the heading does the
+ * naming, so the name is given exactly once at either width — read as a tree
+ * at both, `gridcell "Astilleros del Sur"` wide and
+ * `gridcell "Customer Astilleros del Sur"` narrow.
+ */
+function FieldLabel({
+  index
+}: {
+  /*
+   * `number | null | undefined` because the base declares it so, though it
+   * computes `cell.colIndex || cell.index` and always has one. Treated as
+   * absent rather than asserted away: with no index there is no column, and a
+   * card field without a name is the same degradation as a heading that is not
+   * a string — nothing invented, and the value still shown.
+   */
+  index: number | null | undefined;
+}): React.ReactNode {
+  const state = useContext(TableStateContext);
+  const column =
+    index === undefined || index === null
+      ? undefined
+      : state?.collection.columns[index];
+  if (!column) return null;
+  if (state?.collection.rowHeaderColumnKeys.has(column.key) === true)
+    return null;
+
+  /*
+   * RENDERED EVEN WHEN IT IS EMPTY, which is the discipline `Column`'s sort
+   * mark already states: unconditionally, hidden by a variant, never added and
+   * removed. Two reasons here. The tree is identical at both widths, so nothing
+   * mounts as a panel is resized. And the card's grid has two slots — a missing
+   * first item would slide the VALUE into the label's column, which is what the
+   * actions cell did in the first baseline: a row of dots orphaned at the left
+   * edge under a heading of `VisuallyHidden` text.
+   */
+  return <span className={CLASSES.fieldLabel}>{column.textValue}</span>;
+}
+
 export type CellProps = Pick<
   AriaCellProps,
   'id' | 'textValue' | 'colSpan' | 'children'
 >;
 
 export const Cell = forwardRef<HTMLTableCellElement, CellProps>(function Cell(
-  { children, ...cellProps },
+  { children, textValue, ...cellProps },
   ref
 ) {
+  /*
+   * THE TYPEAHEAD'S OWN STRING, AND IT IS LOAD-BEARING RATHER THAN TIDY.
+   *
+   * Reaching `columnIndex` means handing the base a render FUNCTION, and the
+   * base derives a node's `textValue` from string children and nothing else —
+   * which is the exact trap `Column` was found in, four waves late, announcing
+   * every sort with no column name in it.
+   *
+   * A cell's `textValue` feeds something different and just as quiet: a row's
+   * typeahead string is built by joining its row-header cells' text, so
+   * emptying it would leave typing-to-find doing nothing, with no error
+   * anywhere. The derivation below is what stands between this change and that,
+   * and `Cell.test.tsx`'s typeahead assertion is what would catch it going.
+   */
+  const own =
+    textValue ?? (typeof children === 'string' ? children : undefined);
+
   return (
-    <AriaCell ref={ref} className={CLASSES.cell} {...cellProps}>
-      {children}
+    <AriaCell
+      ref={ref}
+      className={CLASSES.cell}
+      {...cellProps}
+      {...(own !== undefined ? { textValue: own } : {})}
+    >
+      {values => (
+        <>
+          <FieldLabel index={values.columnIndex} />
+          {/*
+           * THE VALUE IS ONE THING, and in a card it has to be. A cell laid out
+           * as a grid makes every child a grid item, so a cell holding a badge
+           * and a note would put them in two different columns. The wrapper is
+           * `display: contents` in a table, so it is not there at all at the
+           * width where it is not needed.
+           */}
+          <span className={CLASSES.cellValue}>
+            {typeof children === 'function' ? children(values) : children}
+          </span>
+        </>
+      )}
     </AriaCell>
   );
 });

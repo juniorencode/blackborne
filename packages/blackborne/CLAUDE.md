@@ -266,6 +266,41 @@ cannot know what level it landed at. Emphasis comes from weight and colour.
   may carry **no padding**, because a border-box height is floored at padding
   plus border and a closed panel would rest two dozen pixels tall.
 
+**A STRUCTURAL CHANGE MAY NOT BE ONE, AND THE TEST IS WHETHER THE TWO LAYOUTS
+CAN SHARE A TREE.** Doc 04 §6 lists "a table that becomes a list of cards" as
+its own first example of the level where JavaScript is permitted. Measured on
+`Table`: change `display` on the table, the rows and the cells and touch
+nothing else, and the roles, the counts, the selection and the whole keyboard
+are identical at both widths — the base writes its roles explicitly rather than
+leaning on the tag. So it is N2, and §6.3 records the correction. Tabs that
+become a select still are not: the control that disappears owns which tab is
+chosen. A table's rows own nothing.
+
+Three things come with staying at N2, and all three were paid for. **A
+container query cannot name its threshold with a token**, so a stylesheet that
+gates on one has to spell the number — the gate belongs in a utility on an
+element inside the container, publishing variables the declarations read.
+**The element that declares the container cannot be gated by it**, so anything
+painted on the scroller itself applies at every width. And **a custom property
+inherits downward only**, so the gate has to sit above everything it switches.
+
+**AND `display: none` AND `sr-only` SWAP PLACES DEPENDING ON WHETHER THE THING
+CAN BE FOCUSED.** `Steps` hides its titles with `sr-only`, because
+`display: none` took them out of the accessibility tree and left a list of
+items with no names, and nothing in `Steps` is focusable. A table's column
+header IS — the base's keyboard delegate sends ArrowUp from a top-row cell
+straight to it — so the answers invert. Measured, ArrowUp from the first row:
+visible → the header; `sr-only` → the header at 73×34 and CLIPPED, which is
+focus nobody can see; `display: none` → nowhere at all, and focus stays on the
+cell. A browser will not focus what is not rendered, so the key becomes inert
+rather than a trap. The deciding question is never which property hides better.
+
+**AND jsdom AND CHROME DISAGREE ABOUT THE SEPARATOR IN A NAME BUILT FROM
+CONTENT.** jsdom joins two child elements as `"Total120.00"` and Chrome as
+`"Customer Astilleros del Sur"`. Spelling either out in an assertion is
+asserting the accessible-name implementation rather than the component, and it
+passes on one engine and fails on the other. Match loosely.
+
 **A STICKY CELL TAKES ITS BACKGROUND AND ITS PSEUDO-ELEMENTS WITH IT, AND
 LEAVES ITS COLLAPSED BORDER BEHIND.** A pinned table column is
 `position: sticky` on a `th` and a `td`, and under `border-collapse: collapse` a

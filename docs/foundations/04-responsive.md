@@ -222,7 +222,8 @@ the exception before either half of it existed.
 
 These count as structural, and only then is JavaScript permitted:
 
-- a table that becomes a list of cards when narrow
+- a table that becomes a list of cards when narrow — **and this one turned out
+  not to be; see [§6.3](#63-the-example-this-section-was-written-around-is-not-one)**
 - tabs that become a select when narrow
 - a toolbar that collapses into a menu
 
@@ -348,6 +349,67 @@ answer there is `base`, which is exactly what a real browser's first paint
 renders — so "start narrow, widen once measured" is asserted in unit tests
 that cost milliseconds, and only what happens after that first frame needs a
 browser.
+
+### 6.3 The example this section was written around is not one
+
+**Date:** 2026-09-12. §6's list of structural changes opens with "a table that
+becomes a list of cards when narrow", and the table suite's wave 5 is that
+example being built. It needs no JavaScript, no hook and no threshold outside
+the scale — it is **N2**.
+
+The section is not withdrawn. Tabs that become a select and a toolbar that
+collapses into a menu are still structural, and for a reason this case turns
+out to isolate: in both of them the control that disappears **owns something**
+— which tab is chosen, which commands the menu holds — so the two structures
+cannot share one tree. A table's rows do not. The collection, the roles, the
+selection and the keyboard belong to the table, and the row is only how they
+are laid out.
+
+**Measured on the component**, with `display` changed on the table, the rows
+and the cells and nothing else touched:
+
+|           | as a table                                   | as cards     |
+| --------- | -------------------------------------------- | ------------ |
+| roles     | `grid` / `row` / `rowheader`                 | identical    |
+| counted   | 5 rows, 20 cells                             | identical    |
+| selection | chosen                                       | still chosen |
+| keyboard  | ArrowRight, ArrowDown, ArrowUp walk the grid | identical    |
+
+The base writes its ARIA roles explicitly rather than leaning on the tag, so a
+`td` that stops laying out as a table cell is still a `gridcell`. That is what
+makes the whole change presentational.
+
+**So rule 4 is met differently, and better.** §6.1 says state survives a
+structural change by living above the structure; here it survives because there
+is no second structure for it to fall out of. The test §6 asks for — three rows
+chosen, the table becomes cards, they stay chosen — cannot fail by
+construction. It is still written, because what makes it true is a property of
+this implementation and the next one might not have it.
+
+**And rule 3 is met for free.** There is no first-paint jump to avoid, because
+CSS resolves before the first paint and no measurement is waited on. The
+narrow-first ordering §4.1 asks for is the class list's own default: the card
+values are the defaults and the table values are what the query restores, so a
+stylesheet arriving before any layout already describes the structure that is
+safe at any width.
+
+#### What the test is, for the next case
+
+Not "does it look different" — both levels do. The question is **whether the
+two layouts can share one tree**. If the thing that disappears holds state,
+holds focus, or is the only route to a capability, it is N3 and the hook
+applies. If it is the same nodes in a different arrangement, it is N2 and
+JavaScript has nothing to decide.
+
+One caution that came with it, because it is the cost of staying at N2. A
+container query cannot name its threshold with a token — §4.0 — so a
+stylesheet that gates on one has to spell the number, which is the copy that
+can disagree with the scale. The gate therefore belongs in a utility on an
+element inside the container, publishing what the declarations read. Two
+consequences follow and both were paid for: the element that declares the
+container cannot be gated by it, so anything painted on the scroller itself
+stays at every width; and a custom property inherits DOWNWARD only, so the gate
+has to sit above everything it switches.
 
 ## 7. Overflow is solved by whoever causes it
 

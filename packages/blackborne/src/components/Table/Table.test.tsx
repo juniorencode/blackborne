@@ -57,7 +57,27 @@ test('it renders the rows it was given', () => {
 
   expect(screen.getByRole('grid', { name: 'Invoices' })).toBeTruthy();
   expect(screen.getByRole('rowheader', { name: 'A-001' })).toBeTruthy();
-  expect(screen.getByRole('gridcell', { name: '80.00' })).toBeTruthy();
+  /*
+   * "Total 80.00" RATHER THAN "80.00", and the extra word is the point rather
+   * than noise. jsdom applies no stylesheet, so the component is always in the
+   * structure its class list declares by DEFAULT — which is the card one,
+   * narrow-first per doc 04 §4.1 — and a card's field is named by its column.
+   * With room, the label is `display: none` and the heading row does the
+   * naming: measured as a tree in a browser, `gridcell "Astilleros del Sur"`
+   * wide and `gridcell "Customer Astilleros del Sur"` narrow.
+   *
+   * The row header above is the other half of the same design and needs no
+   * such allowance: a card's title carries no label, because the ROW takes its
+   * name from that cell.
+   *
+   * MATCHED LOOSELY, and that is a rule rather than convenience: the two
+   * implementations disagree about the separator in a name built from content.
+   * jsdom joins it as `"Total120.00"` and Chrome as `"Customer Astilleros del
+   * Sur"`. Spelling either one out would assert the accessible-name
+   * implementation rather than this component (doc 10 §11), and it would pass
+   * on one engine and fail on the other.
+   */
+  expect(screen.getByRole('gridcell', { name: /80\.00/ })).toBeTruthy();
 });
 
 /*
@@ -552,4 +572,90 @@ test('and the consumer’s own route silences it', () => {
 
   expect(describedText()).toContain('Number');
   expect(warn).not.toHaveBeenCalled();
+});
+
+/*
+ * THE NAME A FIELD CARRIES IN A CARD, which is the half of wave 5 that is not
+ * layout. Whether the cards lay out at all is a container query and jsdom has
+ * none — that is `table.spec.ts` and the baseline. What is assertable here is
+ * where the name comes FROM: the column's own collection node, so the string is
+ * never written a second time.
+ */
+const Labelled = ({ heading }: { heading?: React.ReactNode }) => (
+  <Table aria-label="Invoices">
+    <TableHeader>
+      <Column id="number" isRowHeader>
+        Number
+      </Column>
+      <Column id="total">{heading ?? 'Total'}</Column>
+    </TableHeader>
+    <TableBody>
+      {rows.map(row => (
+        <Row key={row.id} id={row.id}>
+          <Cell>{row.number}</Cell>
+          <Cell>{row.total}</Cell>
+        </Row>
+      ))}
+    </TableBody>
+  </Table>
+);
+
+const labelIn = (cell: HTMLElement): string | null =>
+  cell.querySelector('.bb-table-field-label')?.textContent ?? null;
+
+test('a field carries its own column’s name, read rather than repeated', () => {
+  render(<Labelled />);
+
+  const cells = screen.getAllByRole('gridcell');
+  expect(labelIn(cells[0] as HTMLElement)).toBe('Total');
+});
+
+test('and the cell that names the row carries none', () => {
+  render(<Labelled />);
+
+  /*
+   * Measured with an aria snapshot in a browser: a label here renamed the row
+   * from "F001-000412" to "NumberF001-000412", and its checkbox with it. A
+   * card's title is not a labelled field.
+   */
+  const title = screen.getByRole('rowheader', { name: 'A-001' });
+  expect(labelIn(title)).toBeNull();
+});
+
+test('a heading that is not plain text names nothing, rather than something invented', () => {
+  render(<Labelled heading={<em>Total</em>} />);
+
+  /*
+   * Hard rule 3: the library writes no user-facing text. The element is still
+   * rendered — unconditionally, like the sort mark — so the card's grid keeps
+   * both of its slots and the value does not slide into the label's column.
+   */
+  const cells = screen.getAllByRole('gridcell');
+  expect(labelIn(cells[0] as HTMLElement)).toBe('');
+});
+
+test('and the consumer’s own route fills it', () => {
+  render(
+    <Table aria-label="Invoices">
+      <TableHeader>
+        <Column id="number" isRowHeader>
+          Number
+        </Column>
+        <Column id="total" textValue="Total">
+          <em>Total</em>
+        </Column>
+      </TableHeader>
+      <TableBody>
+        {rows.map(row => (
+          <Row key={row.id} id={row.id}>
+            <Cell>{row.number}</Cell>
+            <Cell>{row.total}</Cell>
+          </Row>
+        ))}
+      </TableBody>
+    </Table>
+  );
+
+  const cells = screen.getAllByRole('gridcell');
+  expect(labelIn(cells[0] as HTMLElement)).toBe('Total');
 });

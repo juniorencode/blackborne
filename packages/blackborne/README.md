@@ -159,7 +159,7 @@ at `0.2.0` with nothing reading them, and on 2026-09-10 `dist/styles.css` was
 | What              | Ceiling                |
 | ----------------- | ---------------------- |
 | `dist/index.js`   | structural — see below |
-| `dist/styles.css` | 80 kB raw / 12 kB gzip |
+| `dist/styles.css` | 80 kB raw / 13 kB gzip |
 | Published tarball | 220 kB                 |
 
 **There is no "now" column any more**, on purpose. It said 38.2 kB while the
@@ -181,11 +181,37 @@ The tarball went from 398.8 kB to 165.4 kB, and an identifier in a stack trace
 went from `cs` to `useConfig`. A ceiling with 285 kB of slack in it is not a
 ceiling.
 
+**And the gzip half was raised from 12 kB to 13 kB on 2026-09-12, with the
+same data.** The sentence below said it was the half that binds and had 1.2 kB
+left in it. It bound, which is what a budget is for, and this is what spent it —
+measured by building the stylesheet with and without the change, rather than
+estimated:
+
+|                                | raw    | gzip     |
+| ------------------------------ | ------ | -------- |
+| before `Table`'s second layout | 73,568 | 11,553   |
+| after                          | 76,017 | 12,042   |
+| the change                     | +2,449 | **+489** |
+
+489 bytes over the wire for a complete alternative presentation of the largest
+component in the library — every row of a table laid out as a card, with its
+own frame, its own field labels and its own heading band — is real work rather
+than waste, which is the test doc 10 §7 sets. It landed **42 bytes** over, and
+the reason the ceiling moved instead of the CSS is that there was nothing
+wasteful left to remove: shortening every repeated selector in the file first
+saved six gzip bytes, because gzip had already been compressing the repetition.
+Shaving the rest would have meant deleting something the component does.
+
+The new number keeps roughly the slack the old one was set with — about 1 kB at
+fifty-three components — and the raw half still has 4 kB spare, so gzip remains
+the binding one on purpose.
+
 **The CSS raw ceiling was raised from 60 kB to 80 kB, with the data doc 10 §7
 asks for.** 60 kB was set when the library had eight components and 26.3 kB of
 CSS. There are fifty-one now, and the growth is real work rather than waste.
-The gzip half was NOT raised and is the one that binds: 10.8 kB against 12 kB,
-which is what actually crosses the wire, and it has 1.2 kB left in it.
+The gzip half was not raised at the time and is the one that binds: 10.8 kB
+against 12 kB, which is what actually crosses the wire, and it had 1.2 kB left
+in it. It has since been spent and revisited — see above.
 
 **The JavaScript budget is deliberately structural rather than a number.**
 While the component count is still growing, any total figure is a guess that
