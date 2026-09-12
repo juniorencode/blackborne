@@ -12,6 +12,24 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **`RowActions` and `RowAction`** — what can be done to a row, shown as
+  buttons where there is room and folded into a menu where there is not.
+
+  **A button inside a cell is allowed here and is forbidden in a `ListBox`**,
+  and the difference is measured rather than assumed: a table row with a button
+  in it is named exactly `"Ana"`, where a listbox row came back announced as
+  `option "A row with a button Retry"`. A grid offers a keyboard route and a
+  listbox does not.
+
+  **An action is DECLARED rather than rendered** — decision 0018's shape, third
+  caller — because it lands in one of two places depending on the room, and a
+  component that rendered itself could not be both. What could not be read is
+  counted and said once, exactly as `Tabs` does.
+
+  **One action never folds** (doc 04 §11.2, fourth caller, no new argument),
+  and the rest scale with the count. The thresholds are CSS's; this only
+  decides how many are too many for a given step.
+
 - **A visual failure now says which of two things it is.** A baseline drifted
   once by 39 pixels and refused to do it again: five captures of one page load,
   five separate loads, five runs of that capture alone in the container and two

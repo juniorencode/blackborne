@@ -17,3 +17,9 @@ export type {
   TableColumns,
   UseTableColumnsOptions
 } from './useTableColumns';
+export { RowAction, RowActions } from './RowActions';
+export type {
+  RowActionProps,
+  RowActionsProps,
+  RowActionTone
+} from './RowActions';
