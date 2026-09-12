@@ -683,6 +683,93 @@ export const TooWide: Story = {
 };
 
 /**
+ * THE COLUMN THAT STAYS PUT. `pinnedEdge="end"` holds the trailing column
+ * against the trailing edge while the rest scroll under it — the actions, in
+ * the case that actually occurs, so what can be done to a row is still reachable
+ * at the far end of a wide one.
+ *
+ * It is named by the EDGE and not by a column, so nothing has to be kept in
+ * step: `:last-child` already knows where the trailing edge is, and hiding the
+ * last column pins whichever one becomes last.
+ *
+ * Two things are worth watching for here rather than reading about. The pinned
+ * cell is OPAQUE and still wears whatever its row is wearing — scroll the
+ * second table sideways with a row chosen and the tint travels with the column.
+ * And the overflow shadow has moved inward by exactly the pinned column, so it
+ * is now a shadow that column casts: it is there while something is behind it
+ * and gone at the end of the scroll, which is what it meant before it moved.
+ */
+export const Pinned: Story = {
+  render: args => {
+    const label = args['aria-label'] ?? 'Invoices';
+    const acts = (invoice: Invoice) => (
+      <RowActions label={`Invoice ${invoice.number}`}>
+        <RowAction icon={<Dot />} label="Edit" onAction={() => undefined} />
+        <RowAction
+          icon={<Dot />}
+          label="Delete"
+          onAction={() => undefined}
+          tone="danger"
+        />
+      </RowActions>
+    );
+    const body = INVOICES.map(invoice => (
+      <Row id={invoice.id} key={invoice.id}>
+        <Cell>{invoice.number}</Cell>
+        <Cell>{invoice.customer}</Cell>
+        <Cell>
+          <Badge tone={TONE[invoice.status]}>{LABEL[invoice.status]}</Badge>
+        </Cell>
+        <Cell>2026-09-01</Cell>
+        <Cell>{invoice.total}</Cell>
+        <Cell>{acts(invoice)}</Cell>
+      </Row>
+    ));
+    const head = (
+      <TableHeader>
+        <Column id="number" isRowHeader>
+          Number
+        </Column>
+        <Column id="customer">Customer</Column>
+        <Column id="status">Status</Column>
+        <Column id="issued">Issued</Column>
+        <Column id="total">Total</Column>
+        <Column id="acts">
+          <VisuallyHidden>Actions</VisuallyHidden>
+        </Column>
+      </TableHeader>
+    );
+
+    return (
+      <div className="catalog-stack">
+        <Room label="Pinned, in a 380px panel" width={380}>
+          <Table aria-label={label} pinnedEdge="end">
+            {head}
+            <TableBody>{body}</TableBody>
+          </Table>
+        </Room>
+        <Room
+          label="A chosen row, and the tint reaches the pinned cell"
+          width={380}
+        >
+          <Table
+            aria-label={label}
+            defaultSelectedKeys={INVOICES.slice(0, 1).map(
+              invoice => invoice.id
+            )}
+            pinnedEdge="end"
+            selectionMode="multiple"
+          >
+            {head}
+            <TableBody>{body}</TableBody>
+          </Table>
+        </Room>
+      </div>
+    );
+  }
+};
+
+/**
  * THE HEADING ROW STAYS PUT. A `th` is sticky against the scroller, which is
  * why the scroller is a separate element from the table — `overflow` on a
  * `table` does not make it the nearest scrolling ancestor.
@@ -815,6 +902,22 @@ export const Direction: Story = {
             sortDescriptor={{ column: 'customer', direction: 'ascending' }}
           >
             <Head sortable />
+            <Body rows={INVOICES.slice(0, 3)} />
+          </Table>
+        </Room>
+        {/*
+         * THE PINNED EDGE MIRRORS, and this panel is here so a picture says so.
+         * `inset-inline-end` puts the column against the LEFT in Arabic, and
+         * the overflow pair has to move inward from that side — which is the
+         * one place in this component where a physical direction is written
+         * down, because `background-position` has no logical form. Measured
+         * before the rule was trusted: the pinned cell moves from 357..421 to
+         * 43..107 and the pair from `calc(100% - 64px)` to `64px`, so the
+         * shadow stays immediately inward of the column in both readings.
+         */}
+        <Room label="العربية، والعمود المثبَّت" width={320}>
+          <Table aria-label="الفواتير" pinnedEdge="end">
+            <Head />
             <Body rows={INVOICES.slice(0, 3)} />
           </Table>
         </Room>

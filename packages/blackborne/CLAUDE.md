@@ -87,6 +87,18 @@ holding it. The per-side utilities need no help — Tailwind emits
 `border-solid` with the all-sides `border` is harmless, which is why every
 other component does it and nothing had found this.
 
+**And it was in `Table` as well, for four waves, in plain sight.** The
+accordion's version drew a box where there should have been a line, which is
+visible. The table's drew a line where there should have been a thinner line:
+`border-b border-solid` on the row and on the heading cell, so every row
+separator in every table in this library was **3px** and every heading grew a
+vertical separator nobody had designed. Measured in paint — `217,217,224` at -2,
+-1 and 0 across a row boundary — and found only because a pinned column's 1px
+divider had to be read against it. Eleven baselines moved when it went. The
+library was swept afterwards and the table was the only other place: every
+remaining `border-solid` is either paired with the all-sides `border` or sits
+in a comment explaining this trap.
+
 **A block of text renders as a `div`, not a `p`.** Same cause: with no reset, a
 `<p>` arrives carrying the browser's own block margins, which fight the gap the
 component already decided. Headings are a separate question and the answer is
@@ -253,6 +265,33 @@ cannot know what level it landed at. Emphasis comes from weight and colour.
   the base sees no animation and hides the content mid-flight, and the panel
   may carry **no padding**, because a border-box height is floored at padding
   plus border and a closed panel would rest two dozen pixels tall.
+
+**A STICKY CELL TAKES ITS BACKGROUND AND ITS PSEUDO-ELEMENTS WITH IT, AND
+LEAVES ITS COLLAPSED BORDER BEHIND.** A pinned table column is
+`position: sticky` on a `th` and a `td`, and under `border-collapse: collapse` a
+border belongs to the TABLE'S GRID rather than to the cell — so it is painted
+where the grid is and the divider vanishes the moment the cell is held.
+Measured one pixel outside the cell's leading edge: `217,217,224` at its natural
+place, and `200,200,202` — the overflow shadow, no border — held. The divider is
+a pseudo-element, which the cell paints and therefore carries.
+
+Two more things travel with it and both are worth knowing before pinning
+anything. **A transparent sticky cell is a window**: measured on the real
+component, a pinned cell held at the edge carried 173 pixels of another
+column's text inside it against 199 of its own, and `elementFromPoint` says
+`true` either way, because a positioned element wins the hit test whether or not
+it has a background. And **an opaque cell covers whatever the scroller was
+painting there**, which for this component is doc 04 §7's overflow indication —
+so the cover and shadow pair moves inward by the pinned column's width and the
+indication becomes a shadow that column casts.
+
+**AND A PROBE FOR A PINNED COLUMN MUST OVERFLOW AND MUST NOT BE SCROLLED TO
+THE END.** Two measurements in one wave proved nothing, in two different ways.
+One fixture never overflowed — `scrollWidth` 360 against `clientWidth` 360, with
+`scrollLeft` at zero in all three readings — so it reported sticky working on a
+table with nothing to scroll. The other was scrolled to the end, which is the
+pinned cell's NATURAL place, where being pinned changes nothing: it reported a
+divider that was only an unmoved cell keeping its border.
 
 **A COLOUR THAT MIGHT BE TRANSPARENT NEEDS SOMETHING BEHIND IT.** A
 half-transparent blue on a white surface is a paler blue, and nothing in the

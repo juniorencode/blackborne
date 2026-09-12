@@ -142,3 +142,194 @@
     transition: none;
   }
 }
+
+/* ─────────────────── the colour of a row, published once ─────────────────── */
+
+/*
+ * ONE FACT, TWO READERS. A row's colour is read by the row and by any cell
+ * that has to be opaque over it, so it is a VARIABLE rather than the same
+ * class written twice — `internal/seam` set that shape for a divider colour
+ * two components needed, and this is the same argument about a surface.
+ *
+ * The row stays TRANSPARENT at rest, and that is load-bearing rather than a
+ * default: an opaque child paints over a parent's background image, which is
+ * what the scroller's overflow indication is made of. The first baseline of
+ * this component had the surface colour on the table and no shadows at all.
+ *
+ * The order below is the order that is already shipping, and it was read out
+ * of the COMPILED stylesheet rather than guessed: `data-hovered` is emitted at
+ * line 1340 and `data-selected` at 1450, at equal specificity, so a chosen row
+ * that is pointed at stays chosen. The disabled pair carries one attribute
+ * more, so it wins over both — a disabled row does not light up, and a
+ * disabled row that is also chosen does not either, which is what shipped.
+ */
+.bb-table-row {
+  background-color: var(--bb-row-bg, transparent);
+}
+
+.bb-table-row[data-hovered] {
+  --bb-row-bg: var(--bb-surface-hover);
+}
+
+.bb-table-row[data-selected] {
+  --bb-row-bg: var(--bb-surface-selected);
+}
+
+.bb-table-row[data-disabled][data-hovered] {
+  --bb-row-bg: transparent;
+}
+
+/* ───────────────────────── the column that stays put ─────────────────────── */
+
+/*
+ * ## Why the edge, and not a column
+ *
+ * §7 settled this before any of it was built: pinning is about the two EDGES a
+ * table has, not about an arbitrary column somebody points at. That is what
+ * makes it free of the trap this wave was expected to hit — a cell does not
+ * have to learn that its column is pinned, because `:last-child` already knows
+ * where the trailing edge is, and nothing has to agree with anything.
+ *
+ * It also follows the arrangement hook for nothing: hide the last column and
+ * the one before it becomes `:last-child` and is pinned instead. A prop naming
+ * a column would have had to be kept in step with a list it does not own.
+ *
+ * `inset-inline-end` and not `right`, so the pinned edge is the trailing one
+ * in Arabic as well — the same rule every other component in this library
+ * follows, arriving somewhere it happens to do the whole job.
+ *
+ * ## Three things were measured before any of this was written
+ *
+ * **A COLLAPSED BORDER DOES NOT TRAVEL WITH THE CELL, so the divider is drawn
+ * rather than declared.** Under `border-collapse: collapse` a border belongs to
+ * the table's grid and is painted where the grid is, so a `border-inline-start`
+ * on a pinned cell is left behind the moment the cell is held. Measured on this
+ * component, one pixel outside the cell's leading edge, in the padding band
+ * where no glyph can be mistaken for a line:
+ *
+ *     at its natural place   217,217,224   the border, drawn
+ *     held at the edge       200,200,202   the shadow's dark end, and no border
+ *     held, mid-scroll       200,200,202   the same
+ *
+ * That reading cost two measurements to get right, and the first one is worth
+ * recording. A probe scrolled to the END measures the pinned cell at its
+ * NATURAL place, where being pinned changes nothing at all — so it reported the
+ * divider present and proved only that an unmoved cell keeps its border. It is
+ * the second invalid fixture of this wave and the second KIND: the one before
+ * it never overflowed, reporting `scrollWidth` 360 against `clientWidth` 360
+ * and a `scrollLeft` that stayed at zero in all three readings. A pinned column
+ * has to be measured somewhere that both overflows and is not the end.
+ *
+ * So the divider is a pseudo-element, which is painted by the cell and goes
+ * where the cell goes. `inset-inline-start` rather than a `box-shadow: inset`,
+ * because a shadow's offset is physical and would need a mirror rule that the
+ * logical property writes for itself — and because the resizer in this same
+ * component already draws its line the same way.
+ *
+ * **A transparent pinned cell is not pinned, it is a window.** Measured on the
+ * real component: held at the trailing edge, the cell carried 173 pixels of
+ * OTHER columns' text inside it, against 199 pixels of its own — nearly as
+ * much foreign ink as its own content. A pinned cell is opaque or it is
+ * nothing, which is why the variable above exists.
+ *
+ * **The corner where the two axes cross is one element and it works.** The
+ * heading is already sticky in the block axis; a pinned heading cell is sticky
+ * in both, held at Δ1 from the top and Δ1 from the trailing edge at once, and
+ * `elementFromPoint` at its centre answers the corner itself rather than a row
+ * passing beneath it. Wave 0's comment predicted the stacking would have to be
+ * stated rather than discovered, and the ladder below is that statement.
+ */
+.bb-table-pinned :is(th, td):last-child {
+  position: sticky;
+  inset-inline-end: 0;
+  /* above the body cells it passes over, below the heading that passes over it */
+  z-index: 1;
+  /*
+   * The opaque base, with the row's own colour stacked on top of it. A
+   * background IMAGE paints above a background COLOUR on the same element,
+   * which is the whole reason this is one element and not two: the cell is
+   * never transparent, and it still carries whatever the row is wearing.
+   */
+  background-color: var(--bb-surface);
+  background-image: linear-gradient(
+    var(--bb-row-bg, transparent),
+    var(--bb-row-bg, transparent)
+  );
+}
+
+/* The divider, drawn by the cell so that it travels with it. */
+.bb-table-pinned :is(th, td):last-child::before {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 1px;
+  background-color: var(--bb-border);
+}
+
+/*
+ * THE CORNER IS ABOVE BOTH. The heading is 2, a pinned body cell is 1, and
+ * where they cross has to beat the pair rather than one of them.
+ */
+.bb-table-pinned .bb-table-column:last-child {
+  z-index: 3;
+  background-color: var(--bb-surface-sunken);
+  background-image: none;
+}
+
+/*
+ * ## The overflow indication moves inward by exactly the pinned column
+ *
+ * This is the cost of pinning and the whole reason the wave took a second
+ * measurement rather than shipping. An opaque column at the trailing edge
+ * covers the trailing shadow completely — measured, the pinned cell read
+ * identically with the scroller's gradients on and off — and doc 04 §7 asks
+ * that hidden content be INDICATED. A pinned column with no shadow beside it
+ * says nothing about whether anything is behind it.
+ *
+ * So the trailing pair moves inward by the pinned column's width, and the
+ * indication becomes a shadow the pinned column casts. Both layers move by the
+ * same amount, so the `local` cover still lands on the `scroll` shadow at the
+ * end of the scroll and the pair keeps saying "only while there is more".
+ *
+ * Measured in the padding band of a body row, where no glyph can be mistaken
+ * for a shadow — the first attempt sampled through the neighbouring column's
+ * digits and read a delta of zero, which is this file's own border trap in a
+ * second costume:
+ *
+ *     control, no gradient   252 252 252 252 252 252 252
+ *     held, more to come     199 206 215 224 233 242 251   delta 53 at 1px
+ *     at the end             248 245 243 242 244 248 252   delta 10 at its peak
+ *
+ * 53 against 10 is 5.3 to 1, where the unshifted edge measures 45 against 10.
+ * The indication is not weakened by moving; it is slightly better, because it
+ * now sits in the middle of the surface rather than against the scroller's own
+ * border.
+ *
+ * The number arrives from JavaScript and the paint stays entirely CSS. That
+ * distinction is the one this file has always cared about: `--bb-table-pin` is
+ * a WIDTH, and a width cannot disagree with the scroll position because it
+ * does not know one. A scroll listener could, which is why there is none.
+ */
+.bb-table-pinned {
+  background-position:
+    0 0,
+    calc(100% - var(--bb-table-pin, 0px)) 0,
+    0 0,
+    calc(100% - var(--bb-table-pin, 0px)) 0;
+}
+
+/*
+ * And in a right-to-left reading the pinned column is against the LEFT, so it
+ * is the leading physical pair that moves. `background-position` has no
+ * logical form, which is the one place in this component where a physical
+ * direction has to be written down — and it is written as a mirror of the rule
+ * above rather than as a `left`.
+ */
+.bb-table-pinned:where(:dir(rtl), [dir='rtl'], [dir='rtl'] *) {
+  background-position:
+    var(--bb-table-pin, 0px) 0,
+    100% 0,
+    var(--bb-table-pin, 0px) 0,
+    100% 0;
+}
