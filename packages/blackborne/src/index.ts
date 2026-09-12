@@ -377,6 +377,13 @@ export type {
   TableProps,
   TableSeveralProps
 } from './components/Table';
+export { useTableColumns } from './components/Table';
+export type {
+  TableArrangement,
+  TableColumnSpec,
+  TableColumns,
+  UseTableColumnsOptions
+} from './components/Table';
 export type { SwitchProps } from './components/Switch';
 
 /*

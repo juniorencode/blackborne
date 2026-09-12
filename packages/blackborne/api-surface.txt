@@ -2433,6 +2433,9 @@ type TabProps
   textValue? (own)
   title (own)
 value Table: ForwardRefExoticComponent<TableProps & RefAttributes<HTMLTableElement>>
+type TableArrangement
+  hidden (own)
+  order (own)
 value TableBody: <T extends object>({ isLoading, error, onRetry, emptyState, children, ...rest }: TableBodyProps<T>) => Element
 type TableBodyProps
   children? (base)
@@ -2442,6 +2445,20 @@ type TableBodyProps
   isLoading? (own)
   items? (base)
   onRetry? (own)
+type TableColumnSpec
+  id (own)
+  isHiddenByDefault? (own)
+  isLocked? (own)
+type TableColumns
+  all (own)
+  arrangement (own)
+  columns (own)
+  hide (own)
+  isArranged (own)
+  move (own)
+  restore (own)
+  show (own)
+  toggle (own)
 value TableHeader: <T extends object>({ children, columns, ...rest }: TableHeaderProps<T>) => Element
 type TableHeaderProps
   children? (base)
@@ -3002,6 +3019,10 @@ type TooltipProps
   content (own)
   isDisabled? (own)
   placement? (own)
+type UseTableColumnsOptions
+  arrangement? (own)
+  defaultArrangement? (own)
+  onArrangementChange? (own)
 value VisuallyHidden: ForwardRefExoticComponent<VisuallyHiddenProps & RefAttributes<HTMLSpanElement>>
 type VisuallyHiddenProps
   children? (own)
@@ -3020,4 +3041,5 @@ value upperCase: (value: string) => string
 value useAsyncOptions: <T>({ load, debounce, minQueryLength }: AsyncOptionsConfig<T>) => AsyncOptions<T>
 value useConfig: () => Config
 value useDialog: () => DialogState
+value useTableColumns: <T extends TableColumnSpec>(specs: readonly T[], options?: UseTableColumnsOptions | undefined) => TableColumns<T>
 value useToasts: () => ToastQueue

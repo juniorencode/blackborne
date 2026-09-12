@@ -148,6 +148,15 @@ const STATES: Array<[string, string]> = [
    * above single-choice rows would offer something the mode cannot do. The
    * disabled row is in this picture too, unchoosable and not in "all".
    */
+  /*
+   * A FIFTH: the arrangement. What it photographs is not a state of the table
+   * so much as a demonstration — the manage-columns panel beside it is a
+   * `Checkbox` per column and a `Button`, built from public pieces, because
+   * non-goal 3 leaves that dialog to the consumer and P6's corollary says an
+   * assembly may have no capability its pieces lack. A picture is how anybody
+   * checks the claim without reading the story.
+   */
+  ['components-table--arranging', 'table-arranging'],
   ['components-table--selection', 'table-selection'],
   ['components-table--states', 'table-states'],
   ['components-table--absences', 'table-absences'],

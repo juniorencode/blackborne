@@ -311,15 +311,15 @@ fixed` and a pixel `width` per `th`. "The table fills its container" and
 
 #### The waves
 
-| Wave  | What                             | What it settles                                                                                                                                                                                                                                                                                            |
-| ----- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **0** | Three measurements, no component | **Done.** The findings are below, and one of them corrects this section                                                                                                                                                                                                                                    |
-| 1     | The table renders and sorts      | **Done.** The pieces with our skin, the density, the sticky header, **its own horizontal scroll** (doc 04 §7), and the three states — empty, loading, **and error with a retry**, which is the most expensive gap in the product this was read against: a failed load is indistinguishable from no results |
-| 2     | Selection                        | **Done.** The base's state, with **our** checkbox column — the base renders none, measured. One thing is new rather than skinned: the count is announced, where in the product read against it changes in silence. One row or several is a discriminated union (decision 0022), never a boolean            |
-| 3     | Columns                          | Visibility, order, width and resizing as state the PROJECT stores. Here go the **legibility floors per column kind**, **restore defaults** — which the product read against has no route to at all — and the **export shape**: visible columns, in order, with a text accessor                             |
-| 4     | Row actions                      | The trailing-edge column with its divider, and the collapse into an overflow menu driven by **one** threshold table shared by CSS and JavaScript, which is `internal/useContainerStep` and its fifth caller. Doc 04 §11.2 is inherited whole: the overflow never hides a single action                     |
-| 5     | Rows to cards                    | Doc 04 §6's own first example. Its rule 4 is a check rather than an intention: three rows selected, the structure changes, they stay selected                                                                                                                                                              |
-| 6     | Paging, and the assembly         | The hook with the re-anchoring rule, composed with the two pagers that already exist. Then the assembly, and P6's corollary applied literally at the end: rebuild it from the public pieces, losing nothing                                                                                                |
+| Wave  | What                             | What it settles                                                                                                                                                                                                                                                                                                                      |
+| ----- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **0** | Three measurements, no component | **Done.** The findings are below, and one of them corrects this section                                                                                                                                                                                                                                                              |
+| 1     | The table renders and sorts      | **Done.** The pieces with our skin, the density, the sticky header, **its own horizontal scroll** (doc 04 §7), and the three states — empty, loading, **and error with a retry**, which is the most expensive gap in the product this was read against: a failed load is indistinguishable from no results                           |
+| 2     | Selection                        | **Done.** The base's state, with **our** checkbox column — the base renders none, measured. One thing is new rather than skinned: the count is announced, where in the product read against it changes in silence. One row or several is a discriminated union (decision 0022), never a boolean                                      |
+| 3     | Columns                          | **The hook is done; the widths are its second half.** Visibility, order, width and resizing as state the PROJECT stores. Here go the **legibility floors per column kind**, **restore defaults** — which the product read against has no route to at all — and the **export shape**: visible columns, in order, with a text accessor |
+| 4     | Row actions                      | The trailing-edge column with its divider, and the collapse into an overflow menu driven by **one** threshold table shared by CSS and JavaScript, which is `internal/useContainerStep` and its fifth caller. Doc 04 §11.2 is inherited whole: the overflow never hides a single action                                               |
+| 5     | Rows to cards                    | Doc 04 §6's own first example. Its rule 4 is a check rather than an intention: three rows selected, the structure changes, they stay selected                                                                                                                                                                                        |
+| 6     | Paging, and the assembly         | The hook with the re-anchoring rule, composed with the two pagers that already exist. Then the assembly, and P6's corollary applied literally at the end: rebuild it from the public pieces, losing nothing                                                                                                                          |
 
 **Three things the base offers that are deliberately NOT waves**: expandable
 rows, grouped headers and incremental loading. Non-goal 4's list does not name
@@ -538,6 +538,57 @@ literal string, so the first press of the heading box would hand a consumer
 typed against a list of ids a string instead. It is expanded here into the rows
 that are actually there, disabled ones excluded — the same narrowing decision
 0020 does for dates and 0022 for a combo box's keys.
+
+#### What wave 3 found, in its first half
+
+The wave is two PRs rather than one, and the split is along the line P6 already
+draws: the arrangement is LOGIC, so it is a hook with tests that render
+nothing, and the widths are presentation, so they come with the resizer. Both
+land; this records the first.
+
+**There is no column KIND, and that reverses something the analysis proposed.**
+The product this suite was read against declares thirteen — `currency`, `date`,
+`tags`, `thumbnail`, `stock` — and derives a cell renderer, a skeleton and a
+minimum width from each. The analysis read the per-type minimum widths as the
+best idea in the component and they are; what was wrong was assuming the TYPE
+had to come with them. It is the prop that grows forever, which §7 names as a
+warning sign, and it was already broken: four of its own declared types had no
+renderer and rendered nothing at all, silently.
+
+So a column declares only what a column can know, and its own type parameter
+carries whatever else the project wants — a formatter, an alignment, a text
+accessor. The hook passes those through untouched, and what is painted is
+composition out of components this library already ships. The minimum width
+goes to the second half as a number the column declares, not as a consequence
+of a kind.
+
+**And `columns` IS the export shape**, which is doc 01 §4.1 in one line: the
+library hands over the visible columns in the order the person arranged them,
+and the project performs the act. Because the type parameter is theirs, the
+accessor an export needs already travels with it — there is nothing to add.
+
+**A stored arrangement outlives the code that made it, in both directions.** A
+column added in a release is in no stored order; one removed is still in an old
+one. Both are the normal case rather than an error, so a declared column
+missing from the order keeps its declared position and a stored id matching
+nothing is dropped. The product this was read from invented an order from array
+position with no note on what happens when the two disagree.
+
+**Two things the hook refuses, and both are measured failures.** A LOCKED
+column cannot be hidden or moved: it is the one carrying `isRowHeader`, and a
+table without it leaves every row named by nothing — wave 0's silent failure
+arriving through a different door. And the LAST VISIBLE column cannot go: a
+table with no columns is not a narrower table. The product this was read from
+prevented that in its dialog and had no route back afterwards, because its
+restore was unreachable — so `restore` and `isArranged` are part of the hook
+rather than something a consumer is expected to build.
+
+**And the manage-columns panel is the consumer's, demonstrated rather than
+asserted.** Non-goal 3 leaves that dialog to them and P6's corollary says an
+assembly may have no capability its pieces lack, so the story builds one out of
+a `Checkbox` per column and a `Button`. If it had needed anything the hook does
+not expose, the hook would be wrong. The baseline is how anybody checks that
+without reading the story.
 
 #### And the narrow structure is doc 04 §6's own first example
 

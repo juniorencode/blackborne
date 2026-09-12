@@ -12,6 +12,33 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **`useTableColumns`** — which columns a table shows, in what order, and a
+  route back. A hook because P6 puts logic in hooks: an order, a restore and
+  two refusals, none of which needs a DOM, and all of it tested without
+  mounting anything.
+
+  **It remembers nothing.** P3 allows it nothing, so the arrangement is two
+  lists of ids the project stores wherever it stores things — controlled or
+  uncontrolled, reported either way. That also repairs a defect measured in the
+  product this suite was read against, where preferences fell back to a
+  per-path local key whenever a provider was not mounted, so in tests and half
+  the screens they never reached the server at all.
+
+  **Two refusals, both measured.** A locked column cannot be hidden or moved,
+  because it is the one carrying `isRowHeader` and a table without it leaves
+  every row named by nothing. And the last visible column cannot go — the
+  product read against prevented that in a dialog and had no route back, since
+  its restore was unreachable.
+
+  **And `columns` is the export shape.** Doc 01 §4.1: the library hands over
+  the visible columns in the person's order and the project performs the act.
+  The column's own type parameter is the project's, so the accessor an export
+  needs already travels with it.
+
+  There is deliberately no column `type`. The product read against has thirteen
+  and four of them render nothing at all, silently; a kind that decides the
+  renderer, the skeleton and the width is the prop that grows forever.
+
 - **Rows can be chosen, one at a time or several** — wave 2 of the table
   suite. The base owns the state and the whole keyboard: shift-click and
   shift-arrow ranges, `Mod+A`, long press on touch, the indeterminate

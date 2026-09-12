@@ -13,6 +13,9 @@ import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import type { SortDescriptor } from 'react-aria-components';
 import { Cell, Column, Row, Table, TableBody, TableHeader } from './Table';
+import { useTableColumns } from './useTableColumns';
+import { Button } from '../Button';
+import { Checkbox } from '../Checkbox';
 import { Badge } from '../Badge';
 import { ConfigProvider } from '../../config';
 import { EmptyState } from '../EmptyState';
@@ -336,6 +339,110 @@ export const Selection: Story = {
       );
     };
     return <Choosing />;
+  }
+};
+
+/**
+ * WHICH COLUMNS, AND IN WHAT ORDER — and the control beside the table is built
+ * from public pieces rather than shipped.
+ *
+ * `useTableColumns` is a hook because that is what P6 asks of logic: an order,
+ * a restore, and two refusals, none of which needs a DOM. It is also the shape
+ * P3 leaves available — the library remembers nothing, so the hook holds the
+ * arrangement and hands the project two lists of ids to store wherever they
+ * store things.
+ *
+ * The panel here is a `Checkbox` per column and a `Button`, which is the whole
+ * point: non-goal 3 says the library does not solve screens, so the
+ * manage-columns dialog belongs to the consumer — and P6's corollary says an
+ * assembly may have no capability its pieces lack. If this panel needed
+ * anything the hook does not expose, the hook would be wrong.
+ *
+ * Two things it refuses, both measured failures rather than taste. The locked
+ * column cannot be hidden or moved, because it is the one carrying
+ * `isRowHeader` and a table without it leaves every row named by nothing. And
+ * the last visible column cannot go: a table with no columns is not a narrower
+ * table, and the product this suite was read against had no route back at all,
+ * because its restore was unreachable.
+ */
+export const Arranging: Story = {
+  render: args => {
+    const label = args['aria-label'] ?? 'Invoices';
+    const Arranged = () => {
+      const columns = useTableColumns([
+        { id: 'number', name: 'Number', isLocked: true },
+        { id: 'customer', name: 'Customer' },
+        { id: 'status', name: 'Status' },
+        { id: 'total', name: 'Total' },
+        { id: 'issued', name: 'Issued', isHiddenByDefault: true }
+      ]);
+
+      const value = (invoice: Invoice, id: string) => {
+        if (id === 'status') {
+          return (
+            <Badge tone={TONE[invoice.status]}>{LABEL[invoice.status]}</Badge>
+          );
+        }
+        if (id === 'issued') return '2026-09-01';
+        return invoice[id as 'number' | 'customer' | 'total'];
+      };
+
+      return (
+        <div className="catalog-stack">
+          <div className="catalog-panel" style={{ width: 640 }}>
+            <p className="catalog-label">Which columns to show</p>
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 16,
+                alignItems: 'center'
+              }}
+            >
+              {columns.all.map(column => (
+                <Checkbox
+                  isDisabled={column.isLocked === true}
+                  isSelected={column.isVisible}
+                  key={column.id}
+                  onChange={() => {
+                    columns.toggle(column.id);
+                  }}
+                >
+                  {column.name}
+                </Checkbox>
+              ))}
+              <Button
+                isDisabled={!columns.isArranged}
+                onPress={columns.restore}
+                size="sm"
+                variant="secondary"
+              >
+                Restore
+              </Button>
+            </div>
+          </div>
+          <Room label={`${String(columns.columns.length)} columns`} width={640}>
+            <Table aria-label={label}>
+              <TableHeader columns={columns.columns}>
+                {column => (
+                  <Column id={column.id} isRowHeader={column.isLocked === true}>
+                    {column.name}
+                  </Column>
+                )}
+              </TableHeader>
+              <TableBody items={INVOICES.slice(0, 3)}>
+                {invoice => (
+                  <Row columns={columns.columns} id={invoice.id}>
+                    {column => <Cell>{value(invoice, column.id)}</Cell>}
+                  </Row>
+                )}
+              </TableBody>
+            </Table>
+          </Room>
+        </div>
+      );
+    };
+    return <Arranged />;
   }
 };
 
