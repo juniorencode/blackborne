@@ -12,6 +12,30 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **Rows can be chosen, one at a time or several** — wave 2 of the table
+  suite. The base owns the state and the whole keyboard: shift-click and
+  shift-arrow ranges, `Mod+A`, long press on touch, the indeterminate
+  select-all and its name in 34 locales. Three things are ours.
+
+  **The column itself**, because the base renders none — it reports the mode
+  through `useTableOptions()` and leaves both halves to the consumer, where one
+  written without the other throws and neither written ships a selectable table
+  with no way to select anything.
+
+  **The `'all'` sentinel never reaches a consumer.** `selectAll()` stores the
+  literal string, so a signature typed against a list of ids would receive a
+  string the first time anybody pressed the heading box. It is expanded into
+  the rows that are there, disabled ones excluded.
+
+  **And the count is announced**, which the base does not do: it says a row's
+  own state as focus moves through it and never the total, so in the product
+  this suite was read against the count changed in silence. The region says
+  nothing when nothing is chosen, because "0 selected" on every clear is noise.
+
+  One row or several is a **discriminated union** rather than a boolean
+  (decision 0022): the branches share every prop but one and disagree only
+  about how many answers are allowed.
+
 - **`Table`, `TableHeader`, `Column`, `TableBody`, `Row` and `Cell`** — wave 1
   of the table suite the catalog's §3.4 lays out. The grid roles, the whole
   keyboard including typeahead, sorting with `aria-sort` and its announcement

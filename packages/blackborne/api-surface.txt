@@ -1231,10 +1231,12 @@ type Dictionary
   remove? (base)
   required? (base)
   retry? (base)
+  rowsSelected? (base)
+  selectionColumn? (base)
   showPassword? (base)
   stepCompleted? (base)
   stepFailed? (base)
-type DictionaryKey = "cancel" | "characterLimitReached" | "chooseFiles" | "clear" | "close" | "colorValue" | "decrement" | "dropFiles" | "emptyStateNoData" | "emptyStateNoResults" | "fieldLoading" | "fieldSaving" | "hidePassword" | "increment" | "keepTyping" | "loadFailed" | "loading" | "moreActions" | "moreSteps" | "nextPage" | "noTime" | "page" | "pagination" | "previousPage" | "remove" | "required" | "retry" | "showPassword" | "stepCompleted" | "stepFailed"
+type DictionaryKey = "cancel" | "characterLimitReached" | "chooseFiles" | "clear" | "close" | "colorValue" | "decrement" | "dropFiles" | "emptyStateNoData" | "emptyStateNoResults" | "fieldLoading" | "fieldSaving" | "hidePassword" | "increment" | "keepTyping" | "loadFailed" | "loading" | "moreActions" | "moreSteps" | "nextPage" | "noTime" | "page" | "pagination" | "previousPage" | "remove" | "required" | "retry" | "rowsSelected" | "selectionColumn" | "showPassword" | "stepCompleted" | "stepFailed"
 value Drawer: ForwardRefExoticComponent<DrawerProps & RefAttributes<HTMLDivElement>>
 type DrawerProps
   children? (own)
@@ -1922,7 +1924,7 @@ type RangeCalendarProps
   minValue? (own)
   onChange? (own)
   value? (own)
-value Row: <T extends object>({ children, ...rest }: RowProps<T>) => Element
+value Row: <T extends object>({ children, columns, ...rest }: RowProps<T>) => Element
 type RowProps
   children? (base)
   columns? (base)
@@ -2440,18 +2442,99 @@ type TableBodyProps
   isLoading? (own)
   items? (base)
   onRetry? (own)
-value TableHeader: <T extends object>({ children, ...rest }: TableHeaderProps<T>) => Element
+value TableHeader: <T extends object>({ children, columns, ...rest }: TableHeaderProps<T>) => Element
 type TableHeaderProps
   children? (base)
   columns? (base)
   dependencies? (base)
-type TableProps
+type TableOneProps
   aria-describedby? (base)
   aria-label? (base)
   aria-labelledby? (base)
   children? (base)
   className? (own)
+  defaultSelectedKey? (own)
+  defaultSelectedKeys? (own)
+  onSelectionChange? (own)
   onSortChange? (base)
+  selectedKey? (own)
+  selectedKeys? (own)
+  selectionMode (own)
+  sortDescriptor? (base)
+  style? (own)
+type TablePlainProps
+  aria-describedby? (base)
+  aria-label? (base)
+  aria-labelledby? (base)
+  children? (base)
+  className? (own)
+  defaultSelectedKey? (own)
+  defaultSelectedKeys? (own)
+  onSelectionChange? (own)
+  onSortChange? (base)
+  selectedKey? (own)
+  selectedKeys? (own)
+  selectionMode? (own)
+  sortDescriptor? (base)
+  style? (own)
+type TableProps (1 of 3)
+  aria-describedby? (base)
+  aria-label? (base)
+  aria-labelledby? (base)
+  children? (base)
+  className? (own)
+  defaultSelectedKey? (own)
+  defaultSelectedKeys? (own)
+  onSelectionChange? (own)
+  onSortChange? (base)
+  selectedKey? (own)
+  selectedKeys? (own)
+  selectionMode (own)
+  sortDescriptor? (base)
+  style? (own)
+type TableProps (2 of 3)
+  aria-describedby? (base)
+  aria-label? (base)
+  aria-labelledby? (base)
+  children? (base)
+  className? (own)
+  defaultSelectedKey? (own)
+  defaultSelectedKeys? (own)
+  onSelectionChange? (own)
+  onSortChange? (base)
+  selectedKey? (own)
+  selectedKeys? (own)
+  selectionMode (own)
+  sortDescriptor? (base)
+  style? (own)
+type TableProps (3 of 3)
+  aria-describedby? (base)
+  aria-label? (base)
+  aria-labelledby? (base)
+  children? (base)
+  className? (own)
+  defaultSelectedKey? (own)
+  defaultSelectedKeys? (own)
+  onSelectionChange? (own)
+  onSortChange? (base)
+  selectedKey? (own)
+  selectedKeys? (own)
+  selectionMode? (own)
+  sortDescriptor? (base)
+  style? (own)
+type TableSeveralProps
+  aria-describedby? (base)
+  aria-label? (base)
+  aria-labelledby? (base)
+  children? (base)
+  className? (own)
+  defaultSelectedKey? (own)
+  defaultSelectedKeys? (own)
+  onSelectionChange? (own)
+  onSortChange? (base)
+  selectedKey? (own)
+  selectedKeys? (own)
+  selectionMode (own)
   sortDescriptor? (base)
   style? (own)
 value Tabs: ForwardRefExoticComponent<TabsProps & RefAttributes<HTMLDivElement>>
@@ -2926,7 +3009,7 @@ type VisuallyHiddenProps
   style? (own)
 value allowOnly: (pattern: RegExp) => Normalizer
 value caretAfter: (value: string, caret: number, run: Normalizer) => number
-value defaultDictionary: { readonly loading: "Loading"; readonly fieldLoading: "Loading"; readonly fieldSaving: "Saving"; readonly increment: "Increase"; readonly decrement: "Decrease"; readonly remove: "Remove"; readonly emptyStateNoData: "Nothing here yet"; readonly emptyStateNoResults: "No results"; readonly keepTyping: "Keep typing"; readonly loadFailed: "Could not load"; readonly clear: "Clear"; readonly characterLimitReached: "Character limit reached"; readonly showPassword: "Show password"; readonly hidePassword: "Hide password"; readonly close: "Close"; readonly cancel: "Cancel"; readonly pagination: "Pagination"; readonly previousPage: "Previous page"; readonly nextPage: "Next page"; readonly page: "Page {page}"; readonly required: "required"; readonly stepCompleted: "completed"; readonly stepFailed: "failed"; readonly moreSteps: "More steps"; readonly moreActions: "More actions"; readonly noTime: "No time"; readonly colorValue: "Colour value"; readonly chooseFiles: "Choose files"; readonly dropFiles: "or drop them here"; readonly retry: "Retry"; }
+value defaultDictionary: { readonly loading: "Loading"; readonly fieldLoading: "Loading"; readonly fieldSaving: "Saving"; readonly increment: "Increase"; readonly decrement: "Decrease"; readonly remove: "Remove"; readonly emptyStateNoData: "Nothing here yet"; readonly emptyStateNoResults: "No results"; readonly keepTyping: "Keep typing"; readonly loadFailed: "Could not load"; readonly clear: "Clear"; readonly characterLimitReached: "Character limit reached"; readonly showPassword: "Show password"; readonly hidePassword: "Hide password"; readonly close: "Close"; readonly cancel: "Cancel"; readonly pagination: "Pagination"; readonly previousPage: "Previous page"; readonly nextPage: "Next page"; readonly page: "Page {page}"; readonly rowsSelected: "{count} selected"; readonly selectionColumn: "Select"; readonly required: "required"; readonly stepCompleted: "completed"; readonly stepFailed: "failed"; readonly moreSteps: "More steps"; readonly moreActions: "More actions"; readonly noTime: "No time"; readonly colorValue: "Colour value"; readonly chooseFiles: "Choose files"; readonly dropFiles: "or drop them here"; readonly retry: "Retry"; }
 value foldAccents: (value: string) => string
 value lowerCase: (value: string) => string
 value normalize: (...steps: Normalizer[]) => Normalizer

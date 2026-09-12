@@ -5,5 +5,8 @@ export type {
   RowProps,
   TableBodyProps,
   TableHeaderProps,
-  TableProps
+  TableOneProps,
+  TablePlainProps,
+  TableProps,
+  TableSeveralProps
 } from './Table';

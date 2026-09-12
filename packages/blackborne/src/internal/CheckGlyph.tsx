@@ -25,6 +25,18 @@
 /** The tick, in a 16-unit box. Shared so it cannot drift between callers. */
 export const CHECK_PATH = 'M3.5 8.5l3 3 6-7';
 
+/**
+ * The indeterminate dash, in the same box, and it joined this file at its
+ * SECOND caller rather than in advance (§8's rule).
+ *
+ * It lived as a literal inside `Checkbox` while the checkbox was the only
+ * thing that could be partly chosen. A table's heading box is the second, and
+ * it means the same thing — some of these, not all — so it has to be the same
+ * shape. The cross reached four copies at four stroke weights before anybody
+ * noticed, which is what these constants exist to prevent.
+ */
+export const DASH_PATH = 'M4 8h8';
+
 export interface CheckGlyphProps {
   /**
    * The size, as a class. Defaults to the `mark` token every other mark in the
@@ -34,8 +46,8 @@ export interface CheckGlyphProps {
 }
 
 /**
- * A tick on its own — a chosen option in a list, where there is no second path
- * to switch with.
+ * A tick on its own — a chosen option in a list, or a table row, where there is
+ * no second path to switch with.
  */
 export function CheckGlyph({
   className = 'bb:h-mark bb:w-mark'
@@ -49,6 +61,35 @@ export function CheckGlyph({
     >
       <path
         d={CHECK_PATH}
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/**
+ * The dash on its own, for a caller that decides between the two in
+ * JavaScript rather than through the CSS precedence `Checkbox` needs.
+ *
+ * A table's selection box knows which mark it wants from a render prop, so
+ * there is no precedence to arbitrate and no reason for both paths to be in
+ * the DOM at once.
+ */
+export function DashGlyph({
+  className = 'bb:h-mark bb:w-mark'
+}: CheckGlyphProps): React.ReactNode {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      className={className}
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d={DASH_PATH}
         stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"

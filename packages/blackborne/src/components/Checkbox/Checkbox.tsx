@@ -4,7 +4,7 @@ import {
   type CheckboxProps as AriaCheckboxProps
 } from 'react-aria-components';
 import { FieldMessages, describedBy } from '../../internal/Field';
-import { CHECK_PATH } from '../../internal/CheckGlyph';
+import { CHECK_PATH, DASH_PATH } from '../../internal/CheckGlyph';
 import { cx } from '../../internal/cx';
 import type { ValidationProps } from '../../internal/validationProps';
 
@@ -189,7 +189,7 @@ export const Checkbox = forwardRef<HTMLLabelElement, CheckboxProps>(
               />
               <path
                 className="bb-checkbox-dash"
-                d="M4 8h8"
+                d={DASH_PATH}
                 stroke="currentColor"
                 strokeWidth="2"
                 strokeLinecap="round"

@@ -181,3 +181,150 @@ test('and either of them outranks the rows', () => {
 
   expect(screen.queryByRole('rowheader', { name: 'A-001' })).toBeNull();
 });
+
+/* ───────────────────────────── the selection ────────────────────────────── */
+
+const Pickable = (props: React.ComponentProps<typeof Table>) => (
+  <Table aria-label="Invoices" {...props}>
+    <TableHeader>
+      <Column id="number" isRowHeader>
+        Number
+      </Column>
+      <Column id="total">Total</Column>
+    </TableHeader>
+    <TableBody>
+      {rows.map(row => (
+        <Row key={row.id} id={row.id}>
+          <Cell>{row.number}</Cell>
+          <Cell>{row.total}</Cell>
+        </Row>
+      ))}
+    </TableBody>
+  </Table>
+);
+
+test('a table nobody can choose from has no selection column', () => {
+  render(<Pickable />);
+
+  expect(screen.queryByRole('checkbox')).toBeNull();
+  expect(screen.getAllByRole('columnheader')).toHaveLength(2);
+});
+
+test('several rows get a box each, and one in the heading', () => {
+  render(<Pickable selectionMode="multiple" />);
+
+  expect(screen.getAllByRole('columnheader')).toHaveLength(3);
+  expect(screen.getAllByRole('checkbox')).toHaveLength(3);
+  expect(screen.getByRole('checkbox', { name: 'Select All' })).toBeTruthy();
+});
+
+/*
+ * ONE ROW GETS NO SELECT-ALL, which is not a detail: a box above rows that can
+ * only be chosen one at a time offers something the mode cannot do. The column
+ * still exists, so the two halves still agree about the cell count.
+ */
+test('one row at a time gets boxes and no select-all', () => {
+  render(<Pickable selectionMode="single" />);
+
+  expect(screen.getAllByRole('columnheader')).toHaveLength(3);
+  expect(screen.getAllByRole('checkbox')).toHaveLength(2);
+  expect(screen.queryByRole('checkbox', { name: 'Select All' })).toBeNull();
+});
+
+/*
+ * THE DYNAMIC FORM, which is the whole reason the selection column is
+ * prepended to the COLLECTION rather than to the children.
+ *
+ * Measured twice before this was written: a static JSX sibling before a render
+ * function makes the base ignore the function entirely and throw
+ * `Cell count must match column count. Found 3 cells and 1 columns.` A data
+ * table's columns come from data, so this is the form that matters.
+ */
+test('and columns that come from data work the same way', () => {
+  const columns = [
+    { id: 'number', name: 'Number' },
+    { id: 'total', name: 'Total' }
+  ];
+
+  render(
+    <Table aria-label="Invoices" selectionMode="multiple">
+      <TableHeader columns={columns}>
+        {column => (
+          <Column id={column.id} isRowHeader={column.id === 'number'}>
+            {column.name}
+          </Column>
+        )}
+      </TableHeader>
+      <TableBody items={rows}>
+        {row => (
+          <Row columns={columns} id={row.id}>
+            {column => <Cell>{row[column.id as 'number' | 'total']}</Cell>}
+          </Row>
+        )}
+      </TableBody>
+    </Table>
+  );
+
+  expect(screen.getAllByRole('columnheader')).toHaveLength(3);
+  expect(screen.getAllByRole('checkbox')).toHaveLength(3);
+  expect(screen.getByRole('rowheader', { name: 'A-001' })).toBeTruthy();
+});
+
+test('several are reported as a list of ids', async () => {
+  const onSelectionChange = vi.fn();
+  render(
+    <Pickable onSelectionChange={onSelectionChange} selectionMode="multiple" />
+  );
+
+  await userEvent.click(screen.getAllByRole('checkbox')[1] as HTMLElement);
+
+  expect(onSelectionChange).toHaveBeenCalledWith(['a']);
+});
+
+test('and one is reported as an id or null', async () => {
+  const onSelectionChange = vi.fn();
+  render(
+    <Pickable onSelectionChange={onSelectionChange} selectionMode="single" />
+  );
+
+  await userEvent.click(screen.getAllByRole('checkbox')[0] as HTMLElement);
+
+  expect(onSelectionChange).toHaveBeenCalledWith('a');
+});
+
+/*
+ * THE SENTINEL NEVER LEAVES. `selectAll()` stores the literal string `'all'`,
+ * so a consumer typed against a list of ids would get a string the first time
+ * anybody pressed the heading box — and every `.length` and `.map` on it is a
+ * different answer than they expected.
+ */
+test('select-all reports the rows, not the string "all"', async () => {
+  const onSelectionChange = vi.fn();
+  render(
+    <Pickable onSelectionChange={onSelectionChange} selectionMode="multiple" />
+  );
+
+  await userEvent.click(screen.getByRole('checkbox', { name: 'Select All' }));
+
+  expect(onSelectionChange).toHaveBeenCalledWith(['a', 'b']);
+});
+
+/*
+ * HOW MANY ARE CHOSEN, SAID OUT LOUD. The base announces a ROW's own state as
+ * focus moves through it and never the total, so in the product this suite was
+ * read against the count changed in silence. Asserted in both directions: the
+ * region is empty when nothing is chosen, because "0 selected" announced on
+ * every clear is noise rather than information.
+ */
+test('the count is announced, and says nothing when there is none', async () => {
+  render(<Pickable selectionMode="multiple" />);
+
+  const region = screen.getByRole('status');
+  expect(region.textContent).toBe('');
+
+  await userEvent.click(screen.getAllByRole('checkbox')[1] as HTMLElement);
+  expect(region.textContent).toBe('1 selected');
+
+  await userEvent.click(screen.getAllByRole('checkbox')[2] as HTMLElement);
+  expect(region.textContent).toBe('2 selected');
+});
