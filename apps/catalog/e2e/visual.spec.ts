@@ -93,7 +93,76 @@ const shoot = async (
   name: string
 ): Promise<void> => {
   await imagesSettled(page);
-  await expect(page.locator('body')).toHaveScreenshot(`${name}.png`);
+
+  try {
+    await expect(page.locator('body')).toHaveScreenshot(`${name}.png`);
+    return;
+  } catch (cause) {
+    /*
+     * WHAT A PIXEL DIFFERENCE IS, SAID ON THE FIRST OCCURRENCE. Doc 10 §11.3:
+     * a flake gets instrumentation rather than a guess, and the instrument has
+     * to separate answers that need different fixes.
+     *
+     * Measured on `color-swatch-field-rings`, which is what asked for this. It
+     * drifted by 39 pixels in one full run and 15 in another, deltas of one to
+     * five out of 255, and it is STABLE everywhere else: five runs of that
+     * capture alone in the container, five captures of one page load locally,
+     * and five separate loads, all byte-identical. Two full runs after that
+     * passed. So the difference is between RUNS and not inside one.
+     *
+     * That already rules out the obvious theory. `toHaveScreenshot` re-captures
+     * until it matches or the timeout expires, so a failure means the page
+     * produced the same wrong pixels over and over — not a race caught
+     * mid-render, which is where three plausible theories were heading.
+     *
+     * What is left needs telling apart, and the two answers have different
+     * fixes:
+     *
+     *   the page renders DIFFERENTLY twice  → something in the story moves,
+     *                                          and it is ours to find
+     *   the page renders the SAME twice     → the render is stable and the
+     *                                          BASELINE is from a different
+     *                                          rasterisation; ours to explain,
+     *                                          not to chase inside the story
+     *
+     * Two raw shots and a byte comparison answer that, and they cost nothing
+     * until something has already failed. The geometry goes in the same line
+     * because a sub-pixel box is the other thing that would explain deltas
+     * this small, and it is the first thing to rule out next time.
+     *
+     * It is a LOG LINE as well as a thrown error, which is doc 10 §11.6: an
+     * artefact expires and an upload can silently ship nothing, and the log is
+     * the copy of the evidence that survives both.
+     */
+    const first = await page.locator('body').screenshot();
+    const second = await page.locator('body').screenshot();
+    const steady = first.equals(second);
+
+    const box = await page.locator('body').evaluate(element => {
+      const rect = element.getBoundingClientRect();
+      const fraction = (value: number) => Math.abs(value - Math.round(value));
+      return {
+        w: rect.width,
+        h: rect.height,
+        subpixel:
+          Math.max(fraction(rect.x), fraction(rect.y), fraction(rect.width)) >
+          0.01,
+        ratio: window.devicePixelRatio
+      };
+    });
+
+    const verdict = steady
+      ? 'the page rendered IDENTICALLY twice, so this run is stable and the difference is between runs rather than inside one'
+      : 'the page rendered DIFFERENTLY twice in a row, so something in the story is still moving';
+
+    const line =
+      `visual: ${name} did not match its reference. ${verdict}. ` +
+      `body ${String(box.w)}x${String(box.h)}, ` +
+      `sub-pixel box: ${String(box.subpixel)}, devicePixelRatio ${String(box.ratio)}.`;
+
+    console.log(line);
+    throw new Error(line, { cause });
+  }
 };
 
 /** One screenshot of a whole story. */
