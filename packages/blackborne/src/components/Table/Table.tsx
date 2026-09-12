@@ -55,6 +55,13 @@ import { VisuallyHidden } from '../VisuallyHidden';
  * (doc 04 §7), the states a listing is in when it has no rows, and one
  * invariant the base declines to enforce.
  *
+ * That sentence was TRUE OF THE BASE AND FALSE OF THIS COMPONENT for four
+ * waves, which is worth leaving in rather than quietly correcting. The
+ * announcement exists and names a column, and this component was handing the
+ * base a render function for every heading — so the name it announced was the
+ * empty string. Inheriting a capability is not the same as keeping it; see
+ * `Column`.
+ *
  * ## The invariant, and why it is ours
  *
  * Measured in wave 0, in three configurations: a table with no column marked
@@ -1049,10 +1056,61 @@ const Resizable = createContext(false);
 
 export const Column = forwardRef<HTMLTableCellElement, ColumnProps>(
   function Column(
-    { children, defaultWidth, width, minWidth, maxWidth, ...columnProps },
+    {
+      children,
+      defaultWidth,
+      width,
+      minWidth,
+      maxWidth,
+      textValue,
+      ...columnProps
+    },
     ref
   ) {
     const isResizable = useContext(Resizable);
+
+    /*
+     * THE COLUMN'S NAME, RESTORED — and until this line every sortable table in
+     * this library announced its sort with no column in it.
+     *
+     * The base derives a node's `textValue` from string children and from
+     * nothing else: `textValue || (typeof props.children === 'string' ?
+     * props.children : '') || obj['aria-label'] || ''`. This component ALWAYS
+     * hands `AriaColumn` a render function, because the sort mark is drawn
+     * beside whatever the consumer wrote — so every column node in this library
+     * carried the empty string, and the base's sort description is built from
+     * exactly that field.
+     *
+     * Measured in a browser rather than reasoned from the source, and read from
+     * the element `aria-describedby` points at rather than from the live region,
+     * which the base clears after 500ms:
+     *
+     *     "sorted by column  in ascending order"
+     *
+     * Two spaces, where the column's name should be, on the description a
+     * reader is given when it enters the table. So the derivation is done here
+     * instead: the consumer's own string, untouched, and never a second string
+     * for them to keep in step with the first.
+     */
+    const name =
+      textValue ?? (typeof children === 'string' ? children : undefined);
+
+    /*
+     * AND A SORTABLE COLUMN THAT CANNOT BE NAMED SAYS SO, because the failure
+     * above was silent for four waves and nothing in the project would have
+     * caught the next one. A heading that is an element rather than a string —
+     * an icon, a `VisuallyHidden`, a formatted unit beside a word — derives
+     * nothing, and the library may not invent the text (hard rule 3). The
+     * consumer's route already exists and is the one this reads.
+     *
+     * Only when the column SORTS. A heading that is never pressed names
+     * nothing a reader is waiting for, and the actions column is deliberately
+     * an empty one.
+     */
+    useDevWarning(
+      columnProps.allowsSorting === true && name === undefined,
+      `a sortable Column has a heading that is not plain text, so the base cannot name it and the table announces “sorted by column  …” with the name missing. The base derives this from string children only. Pass \`textValue\` with the column's name.`
+    );
     const wants =
       defaultWidth !== undefined ||
       width !== undefined ||
@@ -1077,6 +1135,7 @@ export const Column = forwardRef<HTMLTableCellElement, ColumnProps>(
         ref={ref}
         className={cx(CLASSES.column, isResizable && CLASSES.resizableColumn)}
         {...columnProps}
+        {...(name !== undefined ? { textValue: name } : {})}
         {...(isResizable && defaultWidth !== undefined ? { defaultWidth } : {})}
         {...(isResizable && width !== undefined ? { width } : {})}
         {...(isResizable && minWidth !== undefined ? { minWidth } : {})}

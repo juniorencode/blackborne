@@ -461,3 +461,95 @@ test('a pinned table renders exactly what an unpinned one does', () => {
   expect(screen.getAllByRole('row').length).toBe(plain);
   expect(screen.getByRole('rowheader', { name: 'A-001' })).toBeTruthy();
 });
+
+/*
+ * THE COLUMN'S NAME, WHICH WAS EMPTY IN EVERY SORTABLE TABLE FOR FOUR WAVES.
+ *
+ * The base builds its sort description from a column node's `textValue`, and
+ * derives that from STRING children only — so a component like this one, which
+ * always hands the base a render function because it draws the sort mark beside
+ * whatever the consumer wrote, emptied it for every column it ever rendered.
+ *
+ * Asserted here rather than in a browser because the description is DOM rather
+ * than layout: `useDescription` puts the string in an element and points
+ * `aria-describedby` at it. The live region is the other channel and is the
+ * wrong one to read — the base clears it after 500ms, which is a race, and a
+ * check that waits on it would be measuring the machine (doc 10 §11.2).
+ */
+const Sorted = ({ heading }: { heading?: React.ReactNode }) => (
+  <Table
+    aria-label="Invoices"
+    sortDescriptor={{ column: 'number', direction: 'ascending' }}
+    onSortChange={() => undefined}
+  >
+    <TableHeader>
+      <Column id="number" allowsSorting isRowHeader>
+        {heading ?? 'Number'}
+      </Column>
+      <Column id="total">Total</Column>
+    </TableHeader>
+    <TableBody>
+      {rows.map(row => (
+        <Row key={row.id} id={row.id}>
+          <Cell>{row.number}</Cell>
+          <Cell>{row.total}</Cell>
+        </Row>
+      ))}
+    </TableBody>
+  </Table>
+);
+
+const describedText = (): string => {
+  const grid = screen.getByRole('grid');
+  const id =
+    (grid.getAttribute('aria-describedby') ?? '').split(/\s+/)[0] ?? '';
+  return document.getElementById(id)?.textContent ?? '';
+};
+
+test('a sorted table names the column it is sorted by', () => {
+  render(<Sorted />);
+
+  /* Both halves, because "contains Number" is also true of a string with the
+     name glued on twice, and "is not empty" is true of the broken case's
+     surrounding words. */
+  expect(describedText()).toContain('Number');
+  expect(describedText()).not.toContain('column  ');
+});
+
+test('and a heading it cannot read is said once, rather than announced empty', () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+  render(<Sorted heading={<span>Number</span>} />);
+
+  expect(describedText()).toContain('column  ');
+  expect(warn).toHaveBeenCalledTimes(1);
+  expect(warn.mock.calls[0]?.[0]).toContain('not plain text');
+});
+
+test('and the consumer’s own route silences it', () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+  render(
+    <Table
+      aria-label="Invoices"
+      sortDescriptor={{ column: 'number', direction: 'ascending' }}
+      onSortChange={() => undefined}
+    >
+      <TableHeader>
+        <Column id="number" allowsSorting isRowHeader textValue="Number">
+          <span>Number</span>
+        </Column>
+      </TableHeader>
+      <TableBody>
+        {rows.map(row => (
+          <Row key={row.id} id={row.id}>
+            <Cell>{row.number}</Cell>
+          </Row>
+        ))}
+      </TableBody>
+    </Table>
+  );
+
+  expect(describedText()).toContain('Number');
+  expect(warn).not.toHaveBeenCalled();
+});

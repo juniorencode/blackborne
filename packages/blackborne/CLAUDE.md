@@ -293,6 +293,29 @@ table with nothing to scroll. The other was scrolled to the end, which is the
 pinned cell's NATURAL place, where being pinned changes nothing: it reported a
 divider that was only an unmoved cell keeping its border.
 
+**A RENDER FUNCTION EMPTIES A COLLECTION NODE'S `textValue`, AND EVERYTHING
+DOWNSTREAM OF IT GOES QUIET.** The base derives a node's text from string
+children and nothing else — `textValue || (typeof props.children === 'string' ?
+props.children : '') || obj['aria-label'] || ''` — so the moment a component
+hands it `{values => …}` instead, that node's text is the empty string. Nothing
+throws, nothing warns, and the value is consumed by things a long way from the
+call site.
+
+Measured on `Table`, in a browser, four waves after it shipped: every sortable
+table in this library described itself as **`"sorted by column  in ascending
+order"`**, two spaces where the column's name belongs, because `Column` always
+draws the sort mark beside the consumer's heading and therefore always passes a
+function. `Column` derives `textValue` from a string child now, which is exactly
+what the base would have done had our function not been in the way.
+
+Two things about reading it. The sort description has TWO channels and only one
+of them can be asserted: the live region is cleared after 500ms, so a check that
+waits on it is racing, while `useDescription` puts the same string in an element
+that `aria-describedby` points at and leaves it there. And the consumers of
+`textValue` are not only the announcement — a row's typeahead string is built by
+joining its row-header cells' `textValue`, so the same trap applied to `Cell`
+would silently kill typing-to-find.
+
 **A COLOUR THAT MIGHT BE TRANSPARENT NEEDS SOMETHING BEHIND IT.** A
 half-transparent blue on a white surface is a paler blue, and nothing in the
 picture says which — measured on `ColorPicker`'s first transparency baseline,

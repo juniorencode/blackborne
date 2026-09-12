@@ -305,6 +305,14 @@ minor versions. Every break is listed here with its migration.
 
 ### Fixed
 
+- **Every sortable `Table` described itself as "sorted by column&nbsp;&nbsp;in
+  ascending order"** — with no column in it. The base builds that description
+  from a column node's `textValue` and derives that from string children only,
+  and this component always hands the base a render function so the sort mark
+  can be drawn beside the heading. `Column` derives the value from its own
+  string child now, and a sortable column whose heading is not plain text says
+  so in development rather than announcing nothing.
+
 - **Every row separator in every `Table` was three pixels**, and every heading
   carried a vertical separator nobody had designed. `border-b border-solid`
   gives the style utility all four sides, and with no preflight the three with
