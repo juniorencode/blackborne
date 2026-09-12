@@ -315,7 +315,7 @@ fixed` and a pixel `width` per `th`. "The table fills its container" and
 | ----- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **0** | Three measurements, no component | **Done.** The findings are below, and one of them corrects this section                                                                                                                                                                                                                                    |
 | 1     | The table renders and sorts      | **Done.** The pieces with our skin, the density, the sticky header, **its own horizontal scroll** (doc 04 §7), and the three states — empty, loading, **and error with a retry**, which is the most expensive gap in the product this was read against: a failed load is indistinguishable from no results |
-| 2     | Selection                        | The base's state, with **our** checkbox column — the base renders none, measured. One thing is new rather than skinned: the count is announced, where in the product read against it changes in silence. One row or several is a discriminated union (decision 0022), never a boolean                      |
+| 2     | Selection                        | **Done.** The base's state, with **our** checkbox column — the base renders none, measured. One thing is new rather than skinned: the count is announced, where in the product read against it changes in silence. One row or several is a discriminated union (decision 0022), never a boolean            |
 | 3     | Columns                          | Visibility, order, width and resizing as state the PROJECT stores. Here go the **legibility floors per column kind**, **restore defaults** — which the product read against has no route to at all — and the **export shape**: visible columns, in order, with a text accessor                             |
 | 4     | Row actions                      | The trailing-edge column with its divider, and the collapse into an overflow menu driven by **one** threshold table shared by CSS and JavaScript, which is `internal/useContainerStep` and its fifth caller. Doc 04 §11.2 is inherited whole: the overflow never hides a single action                     |
 | 5     | Rows to cards                    | Doc 04 §6's own first example. Its rule 4 is a check rather than an intention: three rows selected, the structure changes, they stay selected                                                                                                                                                              |
@@ -480,6 +480,64 @@ something not in the picture — the same defect as a `Spinner` panel that said
 disabled appearance to show: a state gate box 12 lists by name. The row is
 muted now and its hover stops, while the status badge beside it keeps full
 strength, because doc 06 §4 rule 7 wants the WHY legible.
+
+#### What wave 2 found
+
+**A static sibling makes the base ignore a render function entirely.** This is
+the finding the whole shape of the selection column rests on. The obvious way
+to add one is a JSX sibling before `{children}`, and it works for a static
+header and silently breaks the dynamic one — measured twice, once with a
+hand-built array and once with real JSX children:
+
+```
+<TableHeader columns={…}><Column/>{column => <Column/>}</TableHeader>
+→ Cell count must match column count. Found 3 cells and 1 columns.
+```
+
+The function is dropped and only the static column is built. A data table's
+columns come from data, so that is the form that matters, and the selection
+column is therefore prepended to the **collection** with the render function
+wrapped to recognise a sentinel object. One identity, no magic id a consumer's
+own data could collide with.
+
+It also settles why the column is ours to add at all. The base reports the mode
+through `useTableOptions()` and leaves both halves — the heading column and the
+cell in every row — to the consumer; one written without the other throws on
+the cell count, and neither written ships a selectable table with no way to
+select anything. §3.4's second measurement said to make that true by
+construction, and this is what that costs.
+
+**An empty selection heading is an axe violation.** `empty-table-header`, found
+on this component's own story. With several rows choosable the base puts its
+select-all box in that cell and names it in 34 locales; with one row at a time
+there is no box, because a select-all above single-choice rows offers something
+the mode cannot do — so the cell was empty. It carries a visually hidden name
+there instead, and the two are never both present.
+
+**A chosen row had no tint, which the baseline showed and no assertion could.**
+The checkbox said "chosen" and the row did not, so a selection was something to
+count rather than see. The box is the non-colour channel doc 06 §3 asks for, so
+the tint is a second channel rather than the only one — and it uses
+`--bb-surface-selected` with its paired text colour, because the package guide
+allows no standalone "text on a chosen row".
+
+**The union cannot be spread, and this component's stories paid it too.**
+Decision 0022 recorded the cost when `ComboBox` met it: `{...args}` plus
+`selectionMode="multiple"` has to satisfy the singular branch as well, and it
+cannot, because that branch declares the plural props `never`. The decision's
+answer is to name a branch; the story took the one arg it wanted instead.
+
+**And the indeterminate dash joined `CheckGlyph` at its second caller**, which
+is §8's rule rather than foresight. It was a literal inside `Checkbox` while a
+checkbox was the only thing that could be partly chosen; a table's heading box
+is the second and means the same thing, so it has to be the same shape. The
+cross reached four copies at four stroke weights before anybody noticed.
+
+**The `'all'` sentinel stops at the boundary.** `selectAll()` stores the
+literal string, so the first press of the heading box would hand a consumer
+typed against a list of ids a string instead. It is expanded here into the rows
+that are actually there, disabled ones excluded — the same narrowing decision
+0020 does for dates and 0022 for a combo box's keys.
 
 #### And the narrow structure is doc 04 §6's own first example
 

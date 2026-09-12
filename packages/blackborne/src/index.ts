@@ -372,7 +372,10 @@ export type {
   RowProps,
   TableBodyProps,
   TableHeaderProps,
-  TableProps
+  TableOneProps,
+  TablePlainProps,
+  TableProps,
+  TableSeveralProps
 } from './components/Table';
 export type { SwitchProps } from './components/Switch';
 

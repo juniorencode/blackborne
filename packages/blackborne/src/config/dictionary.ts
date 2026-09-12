@@ -141,6 +141,35 @@ export const en = {
    */
   page: 'Page {page}',
   /**
+   * How many rows of a table are chosen, announced when the number changes.
+   *
+   * The SECOND key with a placeholder, and it earns one for the same reason
+   * `page` does: one whole sentence with one value in it, which doc 05 §2.2
+   * rule 5 permits, rather than a sentence built from fragments, which it
+   * forbids. A translation is free to put the number wherever its grammar
+   * wants it, and one that drops `{count}` loses the number — so the
+   * placeholder is part of the contract.
+   *
+   * It exists because the base does not say this. It announces a ROW's own
+   * state as focus moves through it and never the total, so in the product
+   * this suite was read against the count changed in silence: somebody who
+   * had just pressed the heading checkbox could not tell whether it took four
+   * rows or four hundred.
+   */
+  rowsSelected: '{count} selected',
+  /**
+   * The heading of a table's selection column, when that heading holds no
+   * control of its own.
+   *
+   * With several rows choosable the base puts its own select-all box there and
+   * names it in every locale it ships; with ONE row at a time there is no such
+   * box, because a select-all above single-choice rows would offer something
+   * the mode cannot do. The cell is then empty, and an empty column heading is
+   * an axe violation — `empty-table-header`, found on this component's own
+   * story. So the column says what it is, visually hidden.
+   */
+  selectionColumn: 'Select',
+  /**
    * "Required", for a field whose control cannot say so itself.
    *
    * MEASURED, and it is the reason this key exists at all. `Field` marks a

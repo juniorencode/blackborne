@@ -140,6 +140,15 @@ const STATES: Array<[string, string]> = [
    * computed style cannot say whether an edge looks like there is more beyond
    * it; the picture can.
    */
+  /*
+   * A FOURTH FOR THE TABLE: the selection column, which is entirely ours —
+   * the base renders none. Two panels, because the two modes differ in the
+   * heading rather than in the rows: several rows get a select-all box there,
+   * one row at a time gets a visually hidden name instead, since a select-all
+   * above single-choice rows would offer something the mode cannot do. The
+   * disabled row is in this picture too, unchoosable and not in "all".
+   */
+  ['components-table--selection', 'table-selection'],
   ['components-table--states', 'table-states'],
   ['components-table--absences', 'table-absences'],
   ['components-table--too-wide', 'table-too-wide'],

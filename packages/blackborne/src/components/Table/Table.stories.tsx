@@ -247,6 +247,99 @@ export const Absences: Story = {
 };
 
 /**
+ * CHOOSING ROWS, and the two modes are a union rather than a boolean.
+ *
+ * The base owns all of it — shift-click and shift-arrow ranges, `Mod+A`, long
+ * press on touch, the indeterminate select-all and its name in 34 locales.
+ * Three things here are ours.
+ *
+ * **The column itself**, because the base renders none: it reports the mode
+ * through `useTableOptions()` and leaves both halves to the consumer, and a
+ * consumer who writes one half crashes on the cell-count check while one who
+ * writes neither ships a selectable table with no way to select anything.
+ *
+ * **The `'all'` sentinel never leaves.** `selectAll()` stores the literal
+ * string, so the first press of the heading box would hand a consumer typed
+ * against a list of ids a string instead.
+ *
+ * **And the count is announced**, which the base does not do — it says a row's
+ * own state as focus moves and never the total. The region is visually hidden
+ * and empty until something is chosen, because "0 selected" on every clear is
+ * noise.
+ *
+ * The disabled row cannot be chosen and is not in "all" either, which is the
+ * base's own rule rather than one added here.
+ */
+export const Selection: Story = {
+  render: args => {
+    /*
+     * THE ARGS ARE NOT SPREAD HERE, and that is decision 0022's recorded cost
+     * rather than an oversight: props typed as a union cannot be spread and
+     * then added to, because `{...args} selectionMode="multiple"` has to
+     * satisfy the singular branch as well — and it cannot, since that branch
+     * declares the plural props `never`. The decision's own answer is to name
+     * a branch; the label is the only arg these panels want, so taking it is
+     * simpler than naming one.
+     */
+    /* `?? ` because `exactOptionalPropertyTypes` refuses an explicit
+       `undefined` where the prop is a plain string. The meta always supplies
+       it; the fallback is for the type system rather than for a reader. */
+    const label = args['aria-label'] ?? 'Invoices';
+    const Choosing = () => {
+      const [several, setSeveral] = useState<string[]>(['2']);
+      const [one, setOne] = useState<string | null>('1');
+      return (
+        <div className="catalog-stack">
+          <Room
+            label={`Several — ${String(several.length)} chosen`}
+            width={640}
+          >
+            <Table
+              aria-label={label}
+              onSelectionChange={setSeveral}
+              selectedKeys={several}
+              selectionMode="multiple"
+            >
+              <Head />
+              <TableBody>
+                {INVOICES.map(invoice => (
+                  <Row
+                    id={invoice.id}
+                    isDisabled={invoice.status === 'void'}
+                    key={invoice.id}
+                  >
+                    <Cell>{invoice.number}</Cell>
+                    <Cell>{invoice.customer}</Cell>
+                    <Cell>
+                      <Badge tone={TONE[invoice.status]}>
+                        {LABEL[invoice.status]}
+                      </Badge>
+                    </Cell>
+                    <Cell>{invoice.total}</Cell>
+                  </Row>
+                ))}
+              </TableBody>
+            </Table>
+          </Room>
+          <Room label={`One — ${one ?? 'none'}`} width={640}>
+            <Table
+              aria-label={label}
+              onSelectionChange={setOne}
+              selectedKey={one}
+              selectionMode="single"
+            >
+              <Head />
+              <Body rows={INVOICES.slice(0, 3)} />
+            </Table>
+          </Room>
+        </div>
+      );
+    };
+    return <Choosing />;
+  }
+};
+
+/**
  * TOO WIDE FOR ITS CONTAINER, which is the state doc 04 §7 is about: the
  * component encloses its own horizontal scrolling and the page never scrolls
  * sideways because of us — and content hidden by overflow is INDICATED, because
