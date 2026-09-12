@@ -16,6 +16,8 @@ import { Cell, Column, Row, Table, TableBody, TableHeader } from './Table';
 import { useTableColumns } from './useTableColumns';
 import { RowAction, RowActions } from './RowActions';
 import { Button } from '../Button';
+import { Pagination, usePaging } from '../Pagination';
+import { Select, SelectItem } from '../Select';
 import { Checkbox } from '../Checkbox';
 import { Badge } from '../Badge';
 import { ConfigProvider } from '../../config';
@@ -94,6 +96,20 @@ const INVOICES: Invoice[] = [
     total: '75.00'
   }
 ];
+
+/*
+ * Two hundred, because the rule the paging hook owns is only visible over
+ * enough of them: page 7 at ten a page has to become page 2 at fifty, and four
+ * rows cannot show that.
+ */
+const LEDGER: Invoice[] = Array.from({ length: 200 }, (_, index) => {
+  const seed = INVOICES[index % INVOICES.length]!;
+  return {
+    ...seed,
+    id: `led-${String(index)}`,
+    number: `F001-${String(500 + index)}`
+  };
+});
 
 const TONE = {
   paid: 'success',
@@ -860,6 +876,124 @@ export const Cards: Story = {
       );
     };
     return <Choosing />;
+  }
+};
+
+/**
+ * PAGING, AND THE ASSEMBLY THAT IS NOT HERE.
+ *
+ * This story is the last wave's deliverable rather than an illustration of it.
+ * The catalog planned a thin assembly and set its own test — P6's corollary,
+ * applied literally: can it be rebuilt from the public pieces, losing nothing?
+ * It can, and this is the rebuild. §7 carries the row saying why nothing was
+ * shipped on top of it.
+ *
+ * Everything below is public. `usePaging` holds two numbers and one rule;
+ * `Table` draws the rows; `Pagination` draws the row of numbers; and the
+ * page-size control is a `Select` the PROJECT composes, because "10 rows" and
+ * "10 patients" are the same control with a word the library does not have
+ * (§7, asked twice, Never both times).
+ *
+ * Two things are worth doing rather than reading. Move to page 7 at ten a page
+ * and then switch to fifty: the page becomes 2, not 7, because page 7 of fifty
+ * would be rows 301 to 350 of two hundred — past the end, looking at nothing.
+ * And narrow the results to fewer pages than the one you are on: the pager
+ * shows the last page that exists, and widening them again puts you back where
+ * you were, because the correction happens on the way out and never overwrites
+ * what you asked for.
+ */
+export const Paged: Story = {
+  render: args => {
+    const label = args['aria-label'] ?? 'Invoices';
+    const Listing = () => {
+      const [narrowed, setNarrowed] = useState(false);
+      const all = narrowed ? LEDGER.slice(0, 12) : LEDGER;
+      /*
+       * TEN A PAGE, so the catalog's own example is what this story performs:
+       * 200 results, page 7, switching to 50. It is also the only size at which
+       * the RULE and a plain clamp give different answers — at twenty-five they
+       * both land on page 4, and a check written there cannot fail.
+       */
+      const rows = usePaging(all.length, {
+        defaultPaging: { page: 1, size: 10 }
+      });
+
+      /*
+       * THE SLICE IS THE PROJECT'S, and on a server it is the request: the
+       * hook hands over `offset` and `size` and performs nothing, which is
+       * doc 01 §4.1 and decision 0027. Here the rows are already in memory, so
+       * the act is a slice rather than a fetch.
+       */
+      const shown = all.slice(rows.offset, rows.offset + rows.size);
+
+      return (
+        <div className="catalog-stack">
+          <Room
+            label={`${String(all.length)} results — page ${String(rows.page)} of ${String(rows.pages)}, ${String(rows.size)} a page`}
+            width={720}
+          >
+            <div className="catalog-stack">
+              <div className="catalog-row">
+                {/* A field fills its container, so the PROJECT gives this one
+                    a width — the same thing it would do on a real toolbar. */}
+                <div style={{ width: 200 }}>
+                  <Select
+                    label="Invoices a page"
+                    isLabelHidden
+                    selectedKey={String(rows.size)}
+                    onSelectionChange={key => {
+                      rows.onSizeChange(Number(key));
+                    }}
+                    size="sm"
+                  >
+                    {[10, 25, 50].map(size => (
+                      <SelectItem id={String(size)} key={size}>
+                        {`${String(size)} invoices a page`}
+                      </SelectItem>
+                    ))}
+                  </Select>
+                </div>
+                <Button
+                  onPress={() => {
+                    setNarrowed(value => !value);
+                  }}
+                  size="sm"
+                  variant="secondary"
+                >
+                  {narrowed ? 'Clear the filter' : 'Narrow to 12 results'}
+                </Button>
+              </div>
+
+              <Table aria-label={label}>
+                <TableHeader>
+                  <Column id="number" isRowHeader>
+                    Number
+                  </Column>
+                  <Column id="customer">Customer</Column>
+                  <Column id="total">Total</Column>
+                </TableHeader>
+                <TableBody>
+                  {shown.map(invoice => (
+                    <Row id={invoice.id} key={invoice.id}>
+                      <Cell>{invoice.number}</Cell>
+                      <Cell>{invoice.customer}</Cell>
+                      <Cell>{invoice.total}</Cell>
+                    </Row>
+                  ))}
+                </TableBody>
+              </Table>
+
+              <Pagination
+                page={rows.page}
+                pages={rows.pages}
+                onPageChange={rows.onPageChange}
+              />
+            </div>
+          </Room>
+        </div>
+      );
+    };
+    return <Listing />;
   }
 };
 

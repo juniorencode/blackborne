@@ -1550,6 +1550,13 @@ type PageSlot (1 of 2)
 type PageSlot (2 of 2)
   kind (own)
   page (own)
+type Paged
+  offset (own)
+  onPageChange (own)
+  onSizeChange (own)
+  page (own)
+  pages (own)
+  size (own)
 value Pagination: ForwardRefExoticComponent<PaginationProps & RefAttributes<HTMLDivElement>>
 type PaginationProps
   className? (own)
@@ -1557,6 +1564,9 @@ type PaginationProps
   page (own)
   pages (own)
   style? (own)
+type Paging
+  page (own)
+  size (own)
 value PasswordField: ForwardRefExoticComponent<PasswordFieldProps & RefAttributes<HTMLInputElement>>
 type PasswordFieldProps
   aria-activedescendant? (base)
@@ -3054,6 +3064,10 @@ type TooltipProps
   content (own)
   isDisabled? (own)
   placement? (own)
+type UsePagingOptions
+  defaultPaging? (own)
+  onPagingChange? (own)
+  paging? (own)
 type UseTableColumnsOptions
   arrangement? (own)
   defaultArrangement? (own)
@@ -3076,5 +3090,6 @@ value upperCase: (value: string) => string
 value useAsyncOptions: <T>({ load, debounce, minQueryLength }: AsyncOptionsConfig<T>) => AsyncOptions<T>
 value useConfig: () => Config
 value useDialog: () => DialogState
+value usePaging: (total: number, options?: UsePagingOptions | undefined) => Paged
 value useTableColumns: <T extends TableColumnSpec>(specs: readonly T[], options?: UseTableColumnsOptions | undefined) => TableColumns<T>
 value useToasts: () => ToastQueue

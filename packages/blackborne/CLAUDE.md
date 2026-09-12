@@ -266,6 +266,34 @@ cannot know what level it landed at. Emphasis comes from weight and colour.
   may carry **no padding**, because a border-box height is floored at padding
   plus border and a closed panel would rest two dozen pixels tall.
 
+**AN ASSEMBLY THAT FORWARDS IS NOT AN ASSEMBLY, AND THE TEST HAS A SECOND
+HALF.** P6's corollary asks whether an assembly can be rebuilt from the public
+pieces losing nothing. The table suite's planned one could, in about two dozen
+lines — but the more useful question turned out to be what it was FOR. Its
+whole justification was an invariant: the base throws on a cell count that does
+not match the column count, so an API on top should make that true rather than
+hope for it. Measured, that throw is about a STATIC sibling; in the dynamic
+form, where one array drives both `TableHeader columns=` and `Row columns=`,
+the mismatch is not expressible at all. The pieces already make it true.
+
+Two things follow for the next one. Strip the invariant and what was left was
+computing `dependencies`, which an assembly **cannot** do — that prop exists
+because a cell closure captures things, and an assembly cannot know what a
+consumer's closed over. And a forwarding layer inherits the prop count of what
+it forwards: `TableProps` is 17 members and `TableBodyProps` 7, so it would
+have shipped over doc 01 §7's own warning sign on its first day. An assembly
+earns its place by having a SHAPE of its own, not by saving JSX.
+
+**AND A CHECK FOR A PAGING RULE NEEDS A SIZE AT WHICH THE RULE AND A CLAMP
+DISAGREE.** Two of this wave's browser checks passed on an implementation with
+the rule deleted. The fixture started at twenty-five a page, where re-anchoring
+from page 7 to a size of fifty gives page 4 and a plain clamp gives
+`clamp(7, 4)` — also 4. They differ at ten, which is the size the catalog's own
+example uses. The assertion was wrong too, and in the more interesting
+direction: it said the row that was first is first again, which is more than
+the rule promises. The anchor names the page that HOLDS the row; it only comes
+out first when the old offset divides by the new size, which 150 does by 50.
+
 **A STRUCTURAL CHANGE MAY NOT BE ONE, AND THE TEST IS WHETHER THE TWO LAYOUTS
 CAN SHARE A TREE.** Doc 04 §6 lists "a table that becomes a list of cards" as
 its own first example of the level where JavaScript is permitted. Measured on
