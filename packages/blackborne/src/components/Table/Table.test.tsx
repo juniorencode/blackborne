@@ -328,3 +328,92 @@ test('the count is announced, and says nothing when there is none', async () => 
   await userEvent.click(screen.getAllByRole('checkbox')[2] as HTMLElement);
   expect(region.textContent).toBe('2 selected');
 });
+
+/* ────────────────────────────── the widths ──────────────────────────────── */
+
+const Wide = (props: React.ComponentProps<typeof Table>) => (
+  <Table aria-label="Invoices" {...props}>
+    <TableHeader>
+      <Column id="number" isRowHeader minWidth={140}>
+        Number
+      </Column>
+      <Column defaultWidth={200} id="total">
+        Total
+      </Column>
+    </TableHeader>
+    <TableBody>
+      {rows.map(row => (
+        <Row key={row.id} id={row.id}>
+          <Cell>{row.number}</Cell>
+          <Cell>{row.total}</Cell>
+        </Row>
+      ))}
+    </TableBody>
+  </Table>
+);
+
+/*
+ * THE WARNING THE BASE OWES AND DOES NOT PAY. Measured in wave 0: its own
+ * guard for this reads `for (let prop in ['width', …])`, which iterates the
+ * array INDICES, so the test is never true and nothing is ever printed — the
+ * width is dropped in silence.
+ */
+test('a width outside a resizable table says so, in development', async () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+  render(<Wide />);
+
+  await vi.waitFor(() => {
+    expect(warn).toHaveBeenCalled();
+  });
+  expect(warn.mock.calls[0]?.[0]).toContain('isResizable');
+});
+
+test('and inside one it says nothing', async () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+  render(<Wide isResizable />);
+  await screen.findByRole('rowheader', { name: 'A-001' });
+
+  expect(warn).not.toHaveBeenCalled();
+});
+
+test('a resizable table gives every draggable column a grip', () => {
+  render(<Wide isResizable />);
+
+  /* Two columns, and both can move: one declares a minimum and the other a
+     starting width, and neither is fixed. */
+  expect(screen.getAllByRole('slider')).toHaveLength(2);
+});
+
+/*
+ * AND A FIXED COLUMN GETS NONE. A `width` cannot be dragged off, so a handle
+ * there would be a control that does nothing — doc 06 §4 rule 7's shape one
+ * level down.
+ */
+test('but a column with a fixed width gets none', () => {
+  render(
+    <Table aria-label="Invoices" isResizable>
+      <TableHeader>
+        <Column id="number" isRowHeader width={160}>
+          Number
+        </Column>
+        <Column id="total">Total</Column>
+      </TableHeader>
+      <TableBody>
+        <Row id="a">
+          <Cell>A-001</Cell>
+          <Cell>120.00</Cell>
+        </Row>
+      </TableBody>
+    </Table>
+  );
+
+  expect(screen.getAllByRole('slider')).toHaveLength(1);
+});
+
+test('a table that is not resizable has no grips at all', () => {
+  render(<Pickable />);
+
+  expect(screen.queryByRole('slider')).toBeNull();
+});

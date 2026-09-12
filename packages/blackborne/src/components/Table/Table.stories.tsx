@@ -447,6 +447,79 @@ export const Arranging: Story = {
 };
 
 /**
+ * COLUMNS A PERSON CAN DRAG, and the grip is a real `input[type=range]`.
+ *
+ * That is the base's, and it is why this costs so little: the keyboard works
+ * (Enter to start, arrows to step, Escape to cancel), the width is announced in
+ * localized pixels, and the handle has a name. What is ours is that anybody can
+ * SEE it, and the two things wave 0 measured.
+ *
+ * **It is opt-in, and could not be anything else.** Inside the base's
+ * resizable container the table gets `table-layout: fixed` and a pixel width
+ * per column as INLINE styles — a different layout from an ordinary table,
+ * where a column takes the width of its content and the table scrolls.
+ *
+ * **And the table still fills its container**, which took a measurement to get
+ * right: `width: min-content` left a two-column table 842px short in a 1400px
+ * one, and no class beats an inline `width`. `min-width: 100%` wins because it
+ * is a property the base does not set.
+ *
+ * The first column declares a FLOOR rather than a width, which is the best idea
+ * in the product this suite was read against: a minimum per column means a
+ * narrow screen makes the table scroll instead of crushing columns into
+ * unreadable slivers. The last declares a fixed `width` and therefore has no
+ * grip — a handle that cannot move anything is a control that does nothing.
+ */
+export const Resizing: Story = {
+  render: args => {
+    const label = args['aria-label'] ?? 'Invoices';
+    const Dragging = () => {
+      const [widths, setWidths] = useState<Record<string, number>>({});
+      const seen = Object.entries(widths)
+        .map(([id, width]) => `${id} ${String(Math.round(width))}`)
+        .join(' · ');
+      return (
+        <div className="catalog-stack">
+          <Room label={seen || 'Drag a column edge'} width={680}>
+            <Table aria-label={label} isResizable onColumnResize={setWidths}>
+              <TableHeader>
+                <Column id="number" isRowHeader minWidth={140}>
+                  Number
+                </Column>
+                <Column id="customer" minWidth={160}>
+                  Customer
+                </Column>
+                <Column id="status" minWidth={100}>
+                  Status
+                </Column>
+                <Column id="total" width={120}>
+                  Total
+                </Column>
+              </TableHeader>
+              <TableBody>
+                {INVOICES.slice(0, 3).map(invoice => (
+                  <Row id={invoice.id} key={invoice.id}>
+                    <Cell>{invoice.number}</Cell>
+                    <Cell>{invoice.customer}</Cell>
+                    <Cell>
+                      <Badge tone={TONE[invoice.status]}>
+                        {LABEL[invoice.status]}
+                      </Badge>
+                    </Cell>
+                    <Cell>{invoice.total}</Cell>
+                  </Row>
+                ))}
+              </TableBody>
+            </Table>
+          </Room>
+        </div>
+      );
+    };
+    return <Dragging />;
+  }
+};
+
+/**
  * TOO WIDE FOR ITS CONTAINER, which is the state doc 04 §7 is about: the
  * component encloses its own horizontal scrolling and the page never scrolls
  * sideways because of us — and content hidden by overflow is INDICATED, because

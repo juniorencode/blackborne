@@ -156,6 +156,14 @@ const STATES: Array<[string, string]> = [
    * assembly may have no capability its pieces lack. A picture is how anybody
    * checks the claim without reading the story.
    */
+  /*
+   * A SIXTH: the grips. Only a picture shows whether the handle can be seen at
+   * all — the first version of it compiled to nothing and came out 12 pixels
+   * wide and ZERO tall, present in the DOM and invisible on the screen. The
+   * last column declares a fixed width and therefore has no grip, which is the
+   * other half of what this frame is for.
+   */
+  ['components-table--resizing', 'table-resizing'],
   ['components-table--arranging', 'table-arranging'],
   ['components-table--selection', 'table-selection'],
   ['components-table--states', 'table-states'],
