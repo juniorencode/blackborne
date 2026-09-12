@@ -12,6 +12,41 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **`Table`, `TableHeader`, `Column`, `TableBody`, `Row` and `Cell`** — wave 1
+  of the table suite the catalog's §3.4 lays out. The grid roles, the whole
+  keyboard including typeahead, sorting with `aria-sort` and its announcement
+  in 34 locales, and the semantics of a row header are the base's. What is new
+  is the skin and the three things the base leaves undone.
+
+  **Its own horizontal scrolling, with the overflow indicated.** Doc 04 §7: the
+  component that produces wide content encloses its own scrolling and the
+  consumer's page never scrolls sideways because of it, and content hidden by
+  overflow is indicated — because invisible scrolling is lost content. The
+  indication is four background layers and no JavaScript: two painted in the
+  surface colour that scroll WITH the content and cover the shadow on whichever
+  edge you are looking at, and two shadows fixed to the box.
+
+  **The three absences a listing with no rows can be in**, which are the
+  component's and not the consumer's: nothing yet, nothing matched (doc 09 §6
+  keeps those apart and only the project can tell them apart), and **an error
+  with a retry**. The product this suite was read against showed the same
+  screen for a failed load and an empty result, with no way to try again — the
+  most expensive gap in it. An error outranks loading here, because a request
+  that failed is not still in flight.
+
+  **And one invariant that is ours rather than inherited.** A table with no
+  column marked `isRowHeader` neither throws nor warns, every row loses its
+  accessible name, and the base renders an EMPTY `aria-labelledby` rather than
+  none — so nothing else would tell you, and once selection arrives each row's
+  checkbox will be named by an id that resolves to nothing. One development
+  warning, and it has to be OBSERVED rather than checked once: the base fills
+  the table in a pass that does not re-render this component, so at the moment
+  a plain effect runs, `innerHTML` is the empty string.
+
+  No selection, no column management and no row actions yet. Those are waves 2
+  to 4, and a story that pretended otherwise would photograph something that
+  does not exist.
+
 - **Wave 0 of the table suite: three measurements and no component.** The
   catalog's §3.4 said three questions had to be answered before the API rather
   than during it. They were, in a browser and in jsdom, with throwaway probes
@@ -158,6 +193,15 @@ minor versions. Every break is listed here with its migration.
   Verified before deleting: it renders primary beside secondary in a row, and
   the "Default" scope of the states picture renders the same two, the component
   defaulting to `primary`.
+
+### Fixed
+
+- **`bb:font-medium` produced no rule at all**, in the first component to ask
+  for it. The theme names weights by ROLE — `normal` and `strong`, no numeric
+  scale — so a column heading asking for a numeric weight got nothing. It is
+  the fourth utility in this repository found to compile to nothing while
+  looking right, after `w-control-md`, `size-box` and `min-w-hit`, and it was
+  found the only way any of them can be: by grepping the compiled stylesheet.
 
 ### Fixed
 

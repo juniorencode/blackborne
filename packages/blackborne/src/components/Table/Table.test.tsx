@@ -1,0 +1,183 @@
+/*
+ * Behaviour, from the perspective of someone using the table.
+ *
+ * Deliberately absent: anything that tests React Aria. The grid roles, the
+ * keyboard, the sort descriptor and the announcement are the base's and are
+ * tested by the people who maintain it. What is asserted here is the four
+ * things this component adds — the three states a listing with no rows can be
+ * in, and the invariant the base declines to enforce.
+ *
+ * Also absent: class assertions. That a header carries `bb:text-start` proves
+ * nothing about how it looks (doc 10 §4); the sticky heading, the overflow
+ * shadows and the sort mark are the visual catalog's job and the browser
+ * checks'.
+ */
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { afterEach, expect, test, vi } from 'vitest';
+import { Cell, Column, Row, Table, TableBody, TableHeader } from './Table';
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
+const rows = [
+  { id: 'a', number: 'A-001', total: '120.00' },
+  { id: 'b', number: 'A-002', total: '80.00' }
+];
+
+const Invoices = ({
+  named = true,
+  ...body
+}: { named?: boolean } & React.ComponentProps<typeof TableBody>) => (
+  <Table aria-label="Invoices">
+    <TableHeader>
+      <Column id="number" isRowHeader={named}>
+        Number
+      </Column>
+      <Column id="total">Total</Column>
+    </TableHeader>
+    <TableBody {...body}>
+      {rows.map(row => (
+        <Row key={row.id} id={row.id}>
+          <Cell>{row.number}</Cell>
+          <Cell>{row.total}</Cell>
+        </Row>
+      ))}
+    </TableBody>
+  </Table>
+);
+
+test('it renders the rows it was given', () => {
+  render(<Invoices />);
+
+  expect(screen.getByRole('grid', { name: 'Invoices' })).toBeTruthy();
+  expect(screen.getByRole('rowheader', { name: 'A-001' })).toBeTruthy();
+  expect(screen.getByRole('gridcell', { name: '80.00' })).toBeTruthy();
+});
+
+/*
+ * THE INVARIANT THE BASE DOES NOT ENFORCE. Measured in wave 0: with no column
+ * marked `isRowHeader` nothing throws and nothing warns, and every row loses
+ * its accessible name. Asserted in both directions, because a warning that
+ * cannot stay silent is not a warning.
+ */
+test('a table with no row header says so, once, in development', async () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+  render(<Invoices named={false} />);
+
+  await vi.waitFor(() => {
+    expect(warn).toHaveBeenCalledTimes(1);
+  });
+  expect(warn.mock.calls[0]?.[0]).toContain('isRowHeader');
+});
+
+/*
+ * AND THE SILENT CASES WAIT FOR THE SAME MOMENT. The check answers when the
+ * rows reach the DOM, which is after this component renders — so asserting
+ * "not called" straight after `render` passes because nothing has looked yet,
+ * not because there was nothing to say. Doc 10 §11.1.1 is about exactly this.
+ * Each of these waits for the state the check reads, and only then asserts
+ * silence.
+ */
+test('and a table with one says nothing', async () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+  render(<Invoices />);
+  await screen.findByRole('rowheader', { name: 'A-001' });
+
+  expect(warn).not.toHaveBeenCalled();
+});
+
+test('and an empty table says nothing either, because it has no rows to name', async () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+  render(
+    <Table aria-label="Invoices">
+      <TableHeader>
+        <Column id="number">Number</Column>
+      </TableHeader>
+      <TableBody>{[]}</TableBody>
+    </Table>
+  );
+  await screen.findByText('Nothing here yet');
+
+  expect(warn).not.toHaveBeenCalled();
+});
+
+/* ─────────────────────────────── the states ─────────────────────────────── */
+
+test('with nothing to show, the fallback empty state appears', () => {
+  render(
+    <Table aria-label="Invoices">
+      <TableHeader>
+        <Column id="number" isRowHeader>
+          Number
+        </Column>
+      </TableHeader>
+      <TableBody>{[]}</TableBody>
+    </Table>
+  );
+
+  expect(screen.getByText('Nothing here yet')).toBeTruthy();
+});
+
+test('and the project can say it better', () => {
+  render(
+    <Table aria-label="Invoices">
+      <TableHeader>
+        <Column id="number" isRowHeader>
+          Number
+        </Column>
+      </TableHeader>
+      <TableBody emptyState={<p>No invoices for this customer</p>}>
+        {[]}
+      </TableBody>
+    </Table>
+  );
+
+  expect(screen.getByText('No invoices for this customer')).toBeTruthy();
+});
+
+test('loading replaces the rows rather than sitting beside them', () => {
+  render(<Invoices isLoading />);
+
+  expect(screen.getByRole('status', { name: 'Loading' })).toBeTruthy();
+  expect(screen.queryByRole('rowheader', { name: 'A-001' })).toBeNull();
+});
+
+test('an error shows what the project wrote, and offers the retry', async () => {
+  const onRetry = vi.fn();
+  render(<Invoices error="The request timed out" onRetry={onRetry} />);
+
+  expect(screen.getByText('The request timed out')).toBeTruthy();
+  await userEvent.click(screen.getByRole('button', { name: 'Retry' }));
+
+  expect(onRetry).toHaveBeenCalledTimes(1);
+});
+
+test('an error with nothing to try again offers no button', () => {
+  render(<Invoices error="Not allowed" />);
+
+  expect(screen.getByText('Not allowed')).toBeTruthy();
+  expect(screen.queryByRole('button')).toBeNull();
+});
+
+/*
+ * THE STATES ARE EXCLUSIVE AND THE ORDER IS DECIDED. A failed request is not
+ * still in flight, so an error outranks loading — asserted rather than left to
+ * whichever branch happens to come first.
+ */
+test('an error outranks loading', () => {
+  render(<Invoices error="It broke" isLoading />);
+
+  expect(screen.getByText('It broke')).toBeTruthy();
+  expect(screen.queryByRole('status')).toBeNull();
+});
+
+test('and either of them outranks the rows', () => {
+  render(<Invoices error="It broke" />);
+
+  expect(screen.queryByRole('rowheader', { name: 'A-001' })).toBeNull();
+});

@@ -227,7 +227,10 @@ export const en = {
    * a label a project would plausibly want in its own words is ours.
    *
    * `retry` is the one that settles an old question: a retry belongs to the
-   * row that failed, so the word has to exist somewhere.
+   * row that failed, so the word has to exist somewhere. **The table's error
+   * state is its second caller**, and it wanted the same word — which is the
+   * argument for a dictionary rather than a label prop: two components, one
+   * translation, and no project asked twice.
    */
   chooseFiles: 'Choose files',
   dropFiles: 'or drop them here',

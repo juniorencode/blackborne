@@ -206,6 +206,12 @@ type CardProps
   children? (own)
   className? (own)
   style? (own)
+value Cell: ForwardRefExoticComponent<CellProps & RefAttributes<HTMLTableCellElement>>
+type CellProps
+  children? (base)
+  colSpan? (base)
+  id? (base)
+  textValue? (base)
 value Checkbox: ForwardRefExoticComponent<CheckboxProps & RefAttributes<HTMLLabelElement>>
 value CheckboxGroup: ForwardRefExoticComponent<CheckboxGroupProps & RefAttributes<HTMLDivElement>>
 type CheckboxGroupProps
@@ -455,6 +461,13 @@ type ColorSwatchFieldProps
   label (own)
   onChange? (own)
   value? (own)
+value Column: ForwardRefExoticComponent<ColumnProps & RefAttributes<HTMLTableCellElement>>
+type ColumnProps
+  allowsSorting? (base)
+  children? (base)
+  id? (base)
+  isRowHeader? (base)
+  textValue? (base)
 value ComboBox: ForwardRefExoticComponent<ComboBoxProps & RefAttributes<HTMLInputElement>>
 value ComboBoxItem: (props: ComboBoxItemProps) => ReactNode
 type ComboBoxItemProps
@@ -1909,6 +1922,14 @@ type RangeCalendarProps
   minValue? (own)
   onChange? (own)
   value? (own)
+value Row: <T extends object>({ children, ...rest }: RowProps<T>) => Element
+type RowProps
+  children? (base)
+  columns? (base)
+  dependencies? (base)
+  id? (base)
+  isDisabled? (base)
+  textValue? (base)
 value SearchField: ForwardRefExoticComponent<SearchFieldProps & RefAttributes<HTMLInputElement>>
 type SearchFieldProps
   aria-activedescendant? (base)
@@ -2409,6 +2430,30 @@ type TabProps
   isDisabled? (own)
   textValue? (own)
   title (own)
+value Table: ForwardRefExoticComponent<TableProps & RefAttributes<HTMLTableElement>>
+value TableBody: <T extends object>({ isLoading, error, onRetry, emptyState, children, ...rest }: TableBodyProps<T>) => Element
+type TableBodyProps
+  children? (base)
+  dependencies? (base)
+  emptyState? (own)
+  error? (own)
+  isLoading? (own)
+  items? (base)
+  onRetry? (own)
+value TableHeader: <T extends object>({ children, ...rest }: TableHeaderProps<T>) => Element
+type TableHeaderProps
+  children? (base)
+  columns? (base)
+  dependencies? (base)
+type TableProps
+  aria-describedby? (base)
+  aria-label? (base)
+  aria-labelledby? (base)
+  children? (base)
+  className? (own)
+  onSortChange? (base)
+  sortDescriptor? (base)
+  style? (own)
 value Tabs: ForwardRefExoticComponent<TabsProps & RefAttributes<HTMLDivElement>>
 type TabsProps
   children (own)

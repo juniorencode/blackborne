@@ -135,7 +135,7 @@ written in the file.
 | **Behavior**                | The component from the perspective of someone using it, and never how fast the machine ran it (§11)                | Medium                  |
 | **Re-render**               | That typing in one field does not re-render its neighbours                                                         | Medium                  |
 | **Automated accessibility** | Contrast, missing labels, malformed ARIA. **Running**: axe against every story in the catalog                      | Medium                  |
-| **Visual regression**       | What changed in appearance, and where. **Running**: 197 captures, generated in Docker so the tolerance can be zero | Slow                    |
+| **Visual regression**       | What changed in appearance, and where. **Running**: 204 captures, generated in Docker so the tolerance can be zero | Slow                    |
 | **Package**                 | Types resolve, exports are correct, no side effects, and the public surface is a reviewed diff                     | Fast                    |
 | **Server**                  | That everything prerenders without mismatches                                                                      | Free: the site gives it |
 | **Manual**                  | Keyboard always; screen reader on the complex ones                                                                 | Minutes                 |

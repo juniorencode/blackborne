@@ -122,6 +122,27 @@ const STATES: Array<[string, string]> = [
   ['components-checkbox--states', 'checkbox-states'],
   ['components-radiogroup--states', 'radiogroup-states'],
   ['components-switch--states', 'switch-states'],
+  /*
+   * THE TABLE EARNS THREE, and none of them is the ordinary table.
+   *
+   * `table-states` is the row doc 10 §6 asks of every component: a disabled
+   * row beside a 320px container, so a token change lands somewhere visible.
+   *
+   * `table-absences` is the one that pays. A listing with no rows is in one of
+   * THREE states, and the product this suite was read against showed the same
+   * screen for two of them — a failed load was indistinguishable from an empty
+   * result, with no way to try again. Five panels here, and what a reader
+   * checks is that no two of them look alike.
+   *
+   * `table-too-wide` is the only way to see the overflow indication at all.
+   * Doc 04 §7 requires that content hidden by overflow be INDICATED, and the
+   * indication is four background layers with no JavaScript behind them. A
+   * computed style cannot say whether an edge looks like there is more beyond
+   * it; the picture can.
+   */
+  ['components-table--states', 'table-states'],
+  ['components-table--absences', 'table-absences'],
+  ['components-table--too-wide', 'table-too-wide'],
   ['components-checkbox--marks', 'checkbox-marks'],
   ['components-badge--tones', 'badge-tones'],
   ['components-badge--states', 'badge-states'],
@@ -784,7 +805,22 @@ const AXES: Array<[string, string]> = [
   ['components-tabs--dark', 'axis-tabs-dark'],
   ['components-tabs--compact', 'axis-tabs-compact'],
   ['components-tabs--direction', 'axis-tabs-rtl'],
-  ['components-tabs--brand-override', 'axis-tabs-brand']
+  ['components-tabs--brand-override', 'axis-tabs-brand'],
+  /*
+   * The right-to-left capture is for the LAYOUT, and the first version of this
+   * comment said it was for the sort mark — which is wrong twice. The mark is
+   * invisible until a column is sorted, and it is a chevron on the block axis,
+   * so it does not mirror at all. What the panel checks is the column order,
+   * the alignment `text-start` resolves to, and the inline padding.
+   *
+   * The story it photographs also had to be corrected: set the locale alone
+   * and the table renders left to right, because `I18nProvider` tells
+   * JAVASCRIPT and puts no `dir` in the DOM.
+   */
+  ['components-table--dark', 'axis-table-dark'],
+  ['components-table--compact', 'axis-table-compact'],
+  ['components-table--direction', 'axis-table-rtl'],
+  ['components-table--brand-override', 'axis-table-brand']
 ];
 
 for (const [id, name] of AXES) {
