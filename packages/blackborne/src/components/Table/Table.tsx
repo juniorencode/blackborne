@@ -95,6 +95,94 @@ import { VisuallyHidden } from '../VisuallyHidden';
  * declaration is already correct for the wave that adds the resizer.
  */
 
+/* ──────────────────── where the pinned column's edge is ─────────────────── */
+
+/**
+ * Publishes the pinned column's width on the scroller, as `--bb-table-pin`.
+ *
+ * ## Why a number has to cross at all
+ *
+ * The scroller's overflow indication is four background layers and no
+ * JavaScript — two covers that scroll WITH the content and two shadows that
+ * stay against the box, so a shadow shows exactly while its edge has something
+ * behind it. A pinned column is opaque and sits on the trailing edge, so it
+ * covers that pair completely: measured, the pinned cell read identically with
+ * the gradients on and off. The pair has to move inward by the column's width,
+ * and CSS cannot ask an element how wide it is on behalf of an ancestor.
+ *
+ * What crosses is a WIDTH and never a scroll position, which is the line this
+ * component has held since wave 0. A width cannot disagree with the paint,
+ * because it does not know where the paint is — the covering and uncovering is
+ * still done entirely by `background-attachment`, on a frame the browser
+ * chooses. A scroll listener would be a second opinion about something the
+ * compositor already knows.
+ *
+ * ## Why it is re-queried rather than remembered
+ *
+ * The pinned column is `:last-child` rather than a column somebody named, so
+ * its identity changes on its own: hide the last column through the
+ * arrangement hook and the one before it becomes the pinned one. Two observers
+ * cover the two ways that can happen — sizes for when the same cell grows, and
+ * mutations for when a different cell becomes last — and the size observer is
+ * re-pointed at whatever the query answers rather than being set up once.
+ *
+ * Waiting on a MUTATION rather than on a timeout is the same choice the
+ * row-header warning above makes, and for the same measured reason: the base
+ * fills this table in a pass of its own that does not re-render us, so at the
+ * time an effect runs there is no `thead` to measure yet.
+ *
+ * Where there is no `ResizeObserver` the width is never published and the
+ * fallback `0px` leaves the pair where it already was. That is the floor doc 04
+ * §4.1 asks for rather than a gap: in jsdom nothing is painted, and on a first
+ * paint it is one frame of an indication that has not arrived.
+ */
+function usePinnedWidth(
+  box: React.RefObject<HTMLElement | null>,
+  table: React.RefObject<HTMLTableElement | null>,
+  isPinned: boolean
+): void {
+  useEffect(() => {
+    const scroller = box.current;
+    const el = table.current;
+    if (!scroller || !el || !isPinned) return undefined;
+    if (typeof ResizeObserver === 'undefined') return undefined;
+
+    const write = (cell: Element): void => {
+      scroller.style.setProperty(
+        '--bb-table-pin',
+        `${String(cell.getBoundingClientRect().width)}px`
+      );
+    };
+
+    let watched: Element | null = null;
+    const sizes = new ResizeObserver(entries => {
+      const target = entries[0]?.target;
+      if (target) write(target);
+    });
+
+    const point = (): void => {
+      const cell = el.querySelector('thead > tr > *:last-child');
+      if (!cell) return;
+      if (cell !== watched) {
+        if (watched) sizes.unobserve(watched);
+        sizes.observe(cell);
+        watched = cell;
+      }
+      write(cell);
+    };
+
+    const structure = new MutationObserver(point);
+    structure.observe(el, { childList: true, subtree: true });
+    point();
+
+    return () => {
+      structure.disconnect();
+      sizes.disconnect();
+      scroller.style.removeProperty('--bb-table-pin');
+    };
+  }, [box, table, isPinned]);
+}
+
 /* ───────────────────────────────── classes ──────────────────────────────── */
 
 /**
@@ -170,7 +258,22 @@ const CLASSES = {
        that answers. */
     'bb:text-start bb:align-middle bb:font-strong bb:text-text-muted',
     'bb:whitespace-nowrap',
-    'bb:border-b bb:border-solid bb:border-border',
+    /*
+     * `border-b` AND NOT `border-b border-solid`, which is the package guide's
+     * accordion trap and which this component had shipped since wave 1. With
+     * no preflight there is no `border-width: 0` anywhere, so the style utility
+     * sets all four sides SOLID and the three with no declared width keep the
+     * browser's initial `medium`. Measured in paint, sampling across a row
+     * boundary and across two heading cells: `217,217,224` at -2, -1 and 0 —
+     * a THREE pixel line, in a library whose every other border is one. The
+     * heading's vertical separators were not designed either; they were the
+     * same accident seen from the side.
+     *
+     * The per-side utility needs no help: Tailwind emits
+     * `border-bottom-style: var(--tw-border-style)` with that variable
+     * registered at `solid`.
+     */
+    'bb:border-b bb:border-border',
     /* NO `outline-hidden`. That utility sets `outline-style: none` and beats
        an `outline-2` beside it, so the ring never draws — measured on
        `ColorSwatchField`, whose first baseline showed three identical swatches
@@ -191,7 +294,15 @@ const CLASSES = {
     'bb:align-middle'
   ),
   row: cx(
-    'bb:border-b bb:border-solid bb:border-border',
+    /*
+     * THE COLOUR IS A VARIABLE THE ROW PUBLISHES, not a class per state, and
+     * `Table.css` carries the rules and the reason. Two things read it: the
+     * row itself, and any cell that has to be opaque over the row it belongs
+     * to — which is what a pinned column is. Written twice as utilities, the
+     * two would have drifted the first time a state was added to one of them.
+     */
+    'bb-table-row',
+    'bb:border-b bb:border-border',
     'bb:last:border-b-0',
     /*
      * A CHOSEN ROW IS TINTED, and the first baseline is what asked for it: the
@@ -205,9 +316,7 @@ const CLASSES = {
      * that goes on it. It is what keeps this readable when a project's brand
      * is amber or lime.
      */
-    'bb:data-selected:bg-surface-selected',
     'bb:data-selected:text-surface-selected-on',
-    'bb:data-hovered:bg-surface-hover',
     /*
      * A DISABLED ROW SAYS SO, which is gate box 12 and doc 06 §4 rule 7's
      * other half — the WHY belongs to the project, and in a listing it is
@@ -221,7 +330,6 @@ const CLASSES = {
      * value disappeared instead of looking inactive.
      */
     'bb:data-disabled:text-text-disabled',
-    'bb:data-disabled:data-hovered:bg-transparent',
     'bb:outline-2 bb:outline-offset-[-2px] bb:outline-transparent',
     'bb:data-focus-visible:outline-focus-ring'
   ),
@@ -258,7 +366,7 @@ const CLASSES = {
     'bb-table-column',
     'bb:box-border bb:w-0 bb:whitespace-nowrap',
     'bb:px-(--bb-space-4) bb:py-(--bb-space-3)',
-    'bb:border-b bb:border-solid bb:border-border'
+    'bb:border-b bb:border-border'
   ),
   pickCell: cx(
     'bb:box-border bb:w-0 bb:whitespace-nowrap',
@@ -357,6 +465,29 @@ interface TableSharedProps extends Pick<
    * the storing is theirs.
    */
   onColumnResize?: (widths: Record<string, number>) => void;
+  /**
+   * The column at the trailing edge stays put while the rest scroll under it.
+   *
+   * NAMED BY THE EDGE, not by a column, and §7 settled that before any of this
+   * was built. A table has two edges and they are the case that actually
+   * occurs — the actions at the end, the thing that identifies a row at the
+   * start — where "whichever column a person points at" is a different and
+   * much larger feature. Naming the edge is also what keeps one fact in one
+   * place: `:last-child` already knows where the trailing edge is, so a cell
+   * never has to be told that its column is pinned, and hiding the last column
+   * pins the one that becomes last with nothing to keep in step.
+   *
+   * A union of one member on purpose. `'start'` is not here because it is not
+   * one column: a table with selection carries a checkbox column in front of
+   * the column that names the row, and pinning the leading edge would pin the
+   * checkboxes and leave the names to scroll away. That is a decision rather
+   * than an omission, and §7 holds it with the case attached.
+   *
+   * What it costs is written down: the trailing overflow shadow moves inward
+   * by the pinned column's width, so the indication becomes a shadow the
+   * pinned column casts. `Table.css` has the measurement.
+   */
+  pinnedEdge?: 'end';
   /** Only on the root, and never on an internal node (doc 02 §6). */
   className?: string;
   style?: CSSProperties;
@@ -459,6 +590,7 @@ export const Table = forwardRef<HTMLTableElement, TableProps>(function Table(
     onSelectionChange,
     isResizable,
     onColumnResize,
+    pinnedEdge,
     ...tableProps
   },
   ref
@@ -478,6 +610,8 @@ export const Table = forwardRef<HTMLTableElement, TableProps>(function Table(
    */
   const frame = useRef<HTMLDivElement>(null);
   const step = useContainerStep(frame);
+  const box = useRef<HTMLDivElement>(null);
+  usePinnedWidth(box, own, pinnedEdge === 'end');
   const { locale } = useConfig();
   const selectedLabel = useMessage('rowsSelected');
   const [announced, setAnnounced] = useState(0);
@@ -643,7 +777,12 @@ export const Table = forwardRef<HTMLTableElement, TableProps>(function Table(
     <Resizable.Provider value={isResizable === true}>
       <TableStep.Provider value={step}>
         <Frame
-          className={cx(CLASSES.scroller, className)}
+          ref={box}
+          className={cx(
+            CLASSES.scroller,
+            pinnedEdge === 'end' && 'bb-table-pinned',
+            className
+          )}
           {...(style ? { style } : {})}
           {...(isResizable && onColumnResize
             ? {

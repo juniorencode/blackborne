@@ -19,6 +19,7 @@ const SORTABLE = 'components-table--sortable';
 const TOO_WIDE = 'components-table--too-wide';
 const SCROLLS_DOWN = 'components-table--scrolls-down';
 const ABSENCES = 'components-table--absences';
+const PINNED = 'components-table--pinned';
 
 test('the heading row stays put while the body scrolls', async ({ page }) => {
   await gotoStory(page, SCROLLS_DOWN);
@@ -249,7 +250,17 @@ test('a resizable table still fills its container', async ({ page }) => {
   await gotoStory(page, 'components-table--resizing');
 
   const measured = await page.locator('.bb-table-scroller').evaluate(el => ({
-    container: el.getBoundingClientRect().width,
+    /*
+     * THE CONTENT BOX, and the change from `getBoundingClientRect().width - 2`
+     * is a tightening rather than a loosening. `min-width: 100%` resolves
+     * against the scroller's content box, so that is what the table has to
+     * match; the old threshold subtracted an approximation of the scroller's
+     * own border and then demanded STRICTLY more, which only ever passed
+     * because the rows carried a three-pixel border nobody had declared. Fix
+     * that accident and a table filling its container exactly is a failure —
+     * which is what happened, and what the number below is calibrated on now.
+     */
+    container: el.clientWidth,
     table: (el.querySelector('table') as HTMLElement).getBoundingClientRect()
       .width,
     inline: el.querySelector('table')?.getAttribute('style') ?? ''
@@ -262,7 +273,7 @@ test('a resizable table still fills its container', async ({ page }) => {
   expect(
     measured.table,
     'the table shrink-wrapped inside its container instead of filling it'
-  ).toBeGreaterThan(measured.container - 2);
+  ).toBeGreaterThanOrEqual(measured.container);
 });
 
 test('and the grip is visible, reachable, and moves the column', async ({
@@ -392,4 +403,214 @@ test('and the folded menu still offers every action', async ({ page }) => {
   await expect(menu).toBeVisible();
   await expect(menu.getByRole('menuitem')).toHaveCount(3);
   await expect(menu.getByRole('menuitem', { name: /Delete/ })).toBeVisible();
+});
+
+/* ─────────────────────── the column that stays put ──────────────────────── */
+
+/*
+ * WHAT ONLY A BROWSER ANSWERS HERE. Whether a sticky cell is actually held
+ * while its neighbours pass beneath it, whether it is OPAQUE to them, whether
+ * the corner where two sticky axes cross is on top of both, and whether the
+ * overflow indication survives being covered by the column that now sits on
+ * it. None of that exists in jsdom, which has no layout, no sticky positioning
+ * and no scroll.
+ *
+ * Not tested here: that `position: sticky` works. That is the engine.
+ */
+
+test('the pinned column is held while the rest pass beneath it', async ({
+  page
+}) => {
+  await gotoStory(page, PINNED);
+
+  const scroller = page.locator('.bb-table-scroller').first();
+  const before = await scroller.evaluate(el => {
+    const pinned = el.querySelector('tbody tr td:last-child')!;
+    const first = el.querySelector('tbody tr td')!;
+    return {
+      pinnedEnd: Math.round(
+        el.getBoundingClientRect().right - pinned.getBoundingClientRect().right
+      ),
+      firstLeft: Math.round(first.getBoundingClientRect().left)
+    };
+  });
+
+  await scroller.evaluate(el => {
+    el.scrollLeft = 60;
+  });
+
+  const after = await scroller.evaluate(el => {
+    const pinned = el.querySelector('tbody tr td:last-child')!;
+    const first = el.querySelector('tbody tr td')!;
+    return {
+      pinnedEnd: Math.round(
+        el.getBoundingClientRect().right - pinned.getBoundingClientRect().right
+      ),
+      firstLeft: Math.round(first.getBoundingClientRect().left),
+      scrolled: Math.round(el.scrollLeft)
+    };
+  });
+
+  /*
+   * BOTH HALVES IN ONE TEST, which is doc 10 §11.1.1's rule. "The pinned cell
+   * did not move" is true of a table that never scrolled, so the companion
+   * assertion — an ordinary cell DID move, by the amount asked for — has to be
+   * beside it rather than in a neighbouring test.
+   */
+  expect(after.scrolled).toBe(60);
+  expect(before.firstLeft - after.firstLeft).toBe(60);
+  expect(after.pinnedEnd).toBe(before.pinnedEnd);
+});
+
+test('and it is opaque and on top, so nothing passes through it', async ({
+  page
+}) => {
+  await gotoStory(page, PINNED);
+
+  const scroller = page.locator('.bb-table-scroller').first();
+  await scroller.evaluate(el => {
+    el.scrollLeft = 60;
+  });
+
+  /*
+   * TWO MECHANISMS, because each one passes on the defect the other catches,
+   * and that was measured rather than assumed while exercising this check.
+   *
+   * `elementFromPoint` answers about STACKING. A sticky cell is positioned, so
+   * it wins the hit test whether or not it has a background — the check read
+   * `true` with the background forced to `transparent`, which is the exact
+   * defect it was written for. On its own it would have been a check passing
+   * for the wrong reason.
+   *
+   * The alpha answers about PAINT, and it is read as a used value rather than
+   * as a declaration: a background whose `var()` resolved to nothing computes
+   * to `rgba(0, 0, 0, 0)` and is caught here too. The first version of this
+   * component had no background at all and looked pinned — measured in pixels,
+   * it carried 173 of another column's inked pixels against 199 of its own.
+   */
+  const read = await scroller.evaluate(el => {
+    const pinned = el.querySelector('tbody tr td:last-child')!;
+    const box = pinned.getBoundingClientRect();
+    const at = document.elementFromPoint(
+      box.left + 3,
+      box.top + box.height / 2
+    );
+    const colour = getComputedStyle(pinned).backgroundColor;
+    const alpha = /rgba?\(([^)]*)\)/.exec(colour)?.[1]?.split(',')[3];
+    return {
+      onTop: at === pinned || pinned.contains(at),
+      colour,
+      alpha: alpha === undefined ? 1 : Number(alpha.trim())
+    };
+  });
+
+  expect(read.onTop, 'the pinned cell is not the thing on top').toBe(true);
+  expect(read.alpha, `the pinned cell is see-through: ${read.colour}`).toBe(1);
+});
+
+test('the corner where the two sticky axes cross is above both', async ({
+  page
+}) => {
+  await gotoStory(page, PINNED);
+
+  const held = await page
+    .locator('.bb-table-scroller')
+    .first()
+    .evaluate(el => {
+      el.style.maxHeight = '150px';
+      el.scrollLeft = 60;
+      el.scrollTop = 120;
+      const corner = el.querySelector('thead tr > *:last-child')!;
+      const box = corner.getBoundingClientRect();
+      const own = el.getBoundingClientRect();
+      const at = document.elementFromPoint(
+        box.left + box.width / 2,
+        box.top + box.height / 2
+      );
+      return {
+        fromTop: Math.round(box.top - own.top),
+        fromEnd: Math.round(own.right - box.right),
+        isTheCorner: at === corner || corner.contains(at)
+      };
+    });
+
+  /*
+   * One element, two axes. The heading is already sticky in the block axis and
+   * the pinned column in the inline one, so the cell where they meet is stuck
+   * in both — and it has to be painted OVER the heading beside it and the
+   * pinned cells beneath it, which is a z-index the stylesheet states rather
+   * than leaves to source order.
+   */
+  expect(held.fromTop).toBeLessThanOrEqual(2);
+  expect(held.fromEnd).toBeLessThanOrEqual(2);
+  expect(held.isTheCorner).toBe(true);
+});
+
+test('the overflow indication moves inward by the pinned column', async ({
+  page
+}) => {
+  await gotoStory(page, PINNED);
+
+  const read = await page
+    .locator('.bb-table-scroller')
+    .first()
+    .evaluate(el => {
+      const pinned = el.querySelector('thead tr > *:last-child')!;
+      return {
+        published: el.style.getPropertyValue('--bb-table-pin'),
+        measured: `${String(Math.round(pinned.getBoundingClientRect().width))}px`,
+        positions: getComputedStyle(el).backgroundPosition
+      };
+    });
+
+  /*
+   * OUR SIDE OF THE NUMBER, which is doc 10 §11.1's test: change what this
+   * library decides and the reading changes. The width is published by us and
+   * the four layers are ours; that `background-attachment` covers and uncovers
+   * them is the engine's and is not asserted.
+   *
+   * A pinned column that published nothing would leave the pair at the edge,
+   * underneath itself, and doc 04 §7's indication would be gone with nothing
+   * in the console — so the assertion is that the published number IS the
+   * column's width rather than merely present.
+   */
+  expect(read.published).toBe(read.measured);
+  expect(read.published).not.toBe('0px');
+  expect(read.positions.split(', ')).toEqual([
+    '0px 0px',
+    `calc(100% - ${read.measured}) 0px`,
+    '0px 0px',
+    `calc(100% - ${read.measured}) 0px`
+  ]);
+});
+
+test('a chosen row keeps its colour across the pinned cell', async ({
+  page
+}) => {
+  await gotoStory(page, PINNED);
+
+  /*
+   * The row publishes its colour and the pinned cell stacks it over an opaque
+   * base, so the two cannot drift. Asserted as an OUTCOME — the same resolved
+   * colour in both places — rather than by reading the variable, because a
+   * variable that resolved to nothing would still be equal to itself.
+   */
+  const colours = await page
+    .locator('.bb-table-scroller')
+    .nth(1)
+    .evaluate(el => {
+      const row = el.querySelector('tbody tr[data-selected]')!;
+      const pinned = row.querySelector('td:last-child')!;
+      return {
+        row: getComputedStyle(row).backgroundColor,
+        cell: getComputedStyle(pinned).backgroundImage,
+        plain: getComputedStyle(
+          el.querySelector('tbody tr:not([data-selected]) td:last-child')!
+        ).backgroundImage
+      };
+    });
+
+  expect(colours.row).not.toBe('rgba(0, 0, 0, 0)');
+  expect(colours.cell).toContain(colours.row);
+  expect(colours.cell).not.toBe(colours.plain);
 });

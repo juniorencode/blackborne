@@ -12,6 +12,28 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **`pinnedEdge="end"` on `Table`** — the trailing column stays put while the
+  rest scroll under it, so what can be done to a row is still reachable at the
+  far end of a wide one.
+
+  **Named by the EDGE rather than by a column**, which is what keeps one fact
+  in one place: `:last-child` already knows where the trailing edge is, so a
+  cell is never told that its column is pinned, and hiding the last column pins
+  whichever one becomes last. `inset-inline-end`, so the pinned edge is the
+  trailing one in Arabic too — measured, the column moves to the opposite side
+  and the overflow shadow moves with it.
+
+  **The pinned cell is opaque and still wears its row's colour.** A transparent
+  one carried 173 pixels of another column's text inside it, measured; the row
+  publishes `--bb-row-bg` and both it and the cell read it, so a chosen row
+  stays chosen across the column that is holding still.
+
+  **The overflow indication moves inward by the pinned column's width**, so it
+  becomes a shadow that column casts rather than one it covers — 53 levels held
+  against 10 at the end of the scroll, where the unshifted edge measures 45
+  against 10. A width crosses from JavaScript and nothing else does; the
+  covering and uncovering is still `background-attachment`.
+
 - **`RowActions` and `RowAction`** — what can be done to a row, shown as
   buttons where there is room and folded into a menu where there is not.
 
@@ -282,6 +304,14 @@ minor versions. Every break is listed here with its migration.
   defaulting to `primary`.
 
 ### Fixed
+
+- **Every row separator in every `Table` was three pixels**, and every heading
+  carried a vertical separator nobody had designed. `border-b border-solid`
+  gives the style utility all four sides, and with no preflight the three with
+  no declared width keep the browser's initial `medium` — the package guide's
+  accordion trap, in the one other place in this library a per-side border was
+  written without an all-sides width. Found while reading a pinned column's 1px
+  divider against it.
 
 - **`bb:font-medium` produced no rule at all**, in the first component to ask
   for it. The theme names weights by ROLE — `normal` and `strong`, no numeric

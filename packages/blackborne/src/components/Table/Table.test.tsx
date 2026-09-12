@@ -28,9 +28,13 @@ const rows = [
 
 const Invoices = ({
   named = true,
+  pinnedEdge,
   ...body
-}: { named?: boolean } & React.ComponentProps<typeof TableBody>) => (
-  <Table aria-label="Invoices">
+}: {
+  named?: boolean;
+  pinnedEdge?: 'end';
+} & React.ComponentProps<typeof TableBody>) => (
+  <Table aria-label="Invoices" {...(pinnedEdge ? { pinnedEdge } : {})}>
     <TableHeader>
       <Column id="number" isRowHeader={named}>
         Number
@@ -416,4 +420,44 @@ test('a table that is not resizable has no grips at all', () => {
   render(<Pickable />);
 
   expect(screen.queryByRole('slider')).toBeNull();
+});
+
+/*
+ * THE PINNED EDGE IS ALMOST ENTIRELY A BROWSER QUESTION, and the interesting
+ * half of this comment is the assertion that is NOT here.
+ *
+ * Whether a cell is held while its neighbours pass beneath it, whether it is
+ * opaque to them, where the corner of two sticky axes lands and whether the
+ * overflow indication survives being covered are all layout, and jsdom has
+ * none of it. They are in `table.spec.ts` and in the baseline.
+ *
+ * A second test was written and then deleted, because it could not fail.
+ * `Table` consumes `pinnedEdge` and spreads the rest of its props onto the
+ * base, so the obvious guard is "the prop we consume must not also reach the
+ * DOM". Both shapes of that mistake were measured:
+ *
+ *   - Leaving it out of the destructuring is a `ReferenceError` — the value is
+ *     USED two lines later — and it failed all twenty-six tests in this file,
+ *     not one.
+ *   - Spreading it onto the base anyway leaks NOTHING. Measured with a control
+ *     beside it, so the reading is not a guess about whether the spread
+ *     happened at all: `data-leak=yes  pinnededge=null`. The base runs its
+ *     props through `filterDOMProps`, which passes `data-*` and drops an
+ *     unknown name — the same function `ColorSwatchField` met from the other
+ *     side, where it dropped an `aria-invalid` that was wanted.
+ *
+ * So the assertion had no failing case to guard, which doc 10 §11.7 says is an
+ * answer rather than a gap. What is left below is the one contract jsdom can
+ * hold this prop to: pinning is a presentational change, so a pinned table
+ * contains exactly what an unpinned one contains.
+ */
+test('a pinned table renders exactly what an unpinned one does', () => {
+  const { unmount } = render(<Invoices />);
+  const plain = screen.getAllByRole('row').length;
+  unmount();
+
+  render(<Invoices pinnedEdge="end" />);
+
+  expect(screen.getAllByRole('row').length).toBe(plain);
+  expect(screen.getByRole('rowheader', { name: 'A-001' })).toBeTruthy();
 });
