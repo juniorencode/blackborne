@@ -311,15 +311,15 @@ fixed` and a pixel `width` per `th`. "The table fills its container" and
 
 #### The waves
 
-| Wave  | What                             | What it settles                                                                                                                                                                                                                                                                                  |
-| ----- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **0** | Three measurements, no component | **Done.** The findings are below, and one of them corrects this section                                                                                                                                                                                                                          |
-| 1     | The table renders and sorts      | The pieces with our skin, the density, the sticky header, **its own horizontal scroll** (doc 04 §7), and the three states — empty, loading, **and error with a retry**, which is the most expensive gap in the product this was read against: a failed load is indistinguishable from no results |
-| 2     | Selection                        | The base's state, with **our** checkbox column — the base renders none, measured. One thing is new rather than skinned: the count is announced, where in the product read against it changes in silence. One row or several is a discriminated union (decision 0022), never a boolean            |
-| 3     | Columns                          | Visibility, order, width and resizing as state the PROJECT stores. Here go the **legibility floors per column kind**, **restore defaults** — which the product read against has no route to at all — and the **export shape**: visible columns, in order, with a text accessor                   |
-| 4     | Row actions                      | The trailing-edge column with its divider, and the collapse into an overflow menu driven by **one** threshold table shared by CSS and JavaScript, which is `internal/useContainerStep` and its fifth caller. Doc 04 §11.2 is inherited whole: the overflow never hides a single action           |
-| 5     | Rows to cards                    | Doc 04 §6's own first example. Its rule 4 is a check rather than an intention: three rows selected, the structure changes, they stay selected                                                                                                                                                    |
-| 6     | Paging, and the assembly         | The hook with the re-anchoring rule, composed with the two pagers that already exist. Then the assembly, and P6's corollary applied literally at the end: rebuild it from the public pieces, losing nothing                                                                                      |
+| Wave  | What                             | What it settles                                                                                                                                                                                                                                                                                            |
+| ----- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **0** | Three measurements, no component | **Done.** The findings are below, and one of them corrects this section                                                                                                                                                                                                                                    |
+| 1     | The table renders and sorts      | **Done.** The pieces with our skin, the density, the sticky header, **its own horizontal scroll** (doc 04 §7), and the three states — empty, loading, **and error with a retry**, which is the most expensive gap in the product this was read against: a failed load is indistinguishable from no results |
+| 2     | Selection                        | The base's state, with **our** checkbox column — the base renders none, measured. One thing is new rather than skinned: the count is announced, where in the product read against it changes in silence. One row or several is a discriminated union (decision 0022), never a boolean                      |
+| 3     | Columns                          | Visibility, order, width and resizing as state the PROJECT stores. Here go the **legibility floors per column kind**, **restore defaults** — which the product read against has no route to at all — and the **export shape**: visible columns, in order, with a text accessor                             |
+| 4     | Row actions                      | The trailing-edge column with its divider, and the collapse into an overflow menu driven by **one** threshold table shared by CSS and JavaScript, which is `internal/useContainerStep` and its fifth caller. Doc 04 §11.2 is inherited whole: the overflow never hides a single action                     |
+| 5     | Rows to cards                    | Doc 04 §6's own first example. Its rule 4 is a check rather than an intention: three rows selected, the structure changes, they stay selected                                                                                                                                                              |
+| 6     | Paging, and the assembly         | The hook with the re-anchoring rule, composed with the two pagers that already exist. Then the assembly, and P6's corollary applied literally at the end: rebuild it from the public pieces, losing nothing                                                                                                |
 
 **Three things the base offers that are deliberately NOT waves**: expandable
 rows, grouped headers and incremental loading. Non-goal 4's list does not name
@@ -344,7 +344,10 @@ where a listbox does not.** Row actions are legitimate here.
 **The missing row header does not throw. It goes silent, which is worse.**
 Measured in three configurations — plain, with `selectionMode="multiple"`, and
 with a sort descriptor — nothing is thrown. What happens instead: a row without
-`isRowHeader` has **no `aria-labelledby` at all**, and with selection on, its
+`isRowHeader` carries `aria-labelledby=""` — **the attribute present and
+empty**, which wave 1 refined: the first probe read it with a falsy test and
+reported it absent, and a warning written with `hasAttribute` therefore passes
+on exactly the table it exists to catch. With selection on, its
 checkbox points `aria-labelledby` at an id that **resolves to no element**. So a
 table with no row header compiles, renders, types, and hands a screen reader a
 column of nameless checkboxes. **That makes it OUR invariant to enforce rather
@@ -376,6 +379,107 @@ takes the same table to exactly 1400px. It works precisely because the base sets
 `width` and not `min-width`, so our rule wins without an `!important` and
 without depending on order. That is the shape to reach for wherever the base
 writes an inline style: **beat it with a property it did not set.**
+
+#### What wave 1 found
+
+Six things, and two of them are traps this repository had already written down
+and walked into anyway.
+
+**`font-medium` compiles to nothing.** The theme names weights by ROLE, so it
+declares `normal` and `strong` and no numeric scale — and a column heading
+asking for `font-medium` got no rule at all. That is the **fourth** utility
+found this way, after `w-control-md`, `size-box` and `min-w-hit`, and the
+lesson is the one already in the package guide: grep the COMPILED stylesheet,
+because it is the only place that answers. Every class the component writes is
+now checked that way; 44 of 44 produce a rule.
+
+**`outline-hidden` cancelled the focus ring, again.** `ColorSwatchField`
+records this in its own source — the utility sets `outline-style: none` and
+beats an `outline-2` beside it — and the ring was written that way here
+regardless, with the measurement quoted in the comment above it. A browser
+check caught it. The answer was already written too: a declared TRANSPARENT
+outline is a real outline with a width, a style and a colour, so one
+declaration suppresses the browser's default and carries the state where two
+cancel.
+
+**The row-header warning cannot be a one-shot effect.** The base renders the
+`<table>` element during our render and fills it in a later pass that does not
+re-render this component, so when a plain `useEffect` runs, `table.innerHTML`
+is the empty string — measured, `tbody=0 tr=0`. A check written that way reads
+zero rows and stays silent on exactly the table it exists to catch. A timeout
+would "fix" it by measuring the machine (doc 10 §11.2), so what it waits on is
+a STATE: a `MutationObserver`, dev-only, answering when rows exist and
+disconnecting once it has.
+
+**And `aria-labelledby` is present and EMPTY rather than absent**, which
+refines wave 0's finding: that probe read the attribute with a falsy test and
+reported it missing. A warning written with `hasAttribute` is satisfied by the
+broken case.
+
+**The component's own scroller is a scroll container in both axes.**
+`overflow-x: auto` makes `overflow-y` compute to `auto` too, so a
+height-constrained table is constrained ON THE ROOT — `className` or `style`,
+which doc 02 §6 already sends there. A wrapper with its own `overflow-y`
+scrolls the wrapper and leaves the heading stuck to a scroller that never
+moved, which looks exactly like sticky being broken and is not. Found by the
+sticky check failing on a story that was wrong.
+
+**And a browser check asserted the document does not scroll sideways, which
+measured the fixture.** Doc 04 §7's promise is that the page never scrolls
+because of US; the catalog's own `.catalog-resizable` decorator is 1274px
+inside a 1280px viewport at a 16px offset, so the document overflows by 10px on
+every story in the suite. The assertion is now that the component does not
+widen the element it was given, which is the half that is ours (doc 10 §11).
+
+#### And then the baselines were opened, which found six more
+
+Every one of these was green: 11 unit tests, 7 browser checks and 7 axe checks.
+The pictures found six things anyway, which is the fifth time this layer has
+paid for itself in this repository.
+
+**The overflow indication was not visible at all.** The table carried
+`bg-surface`, and an opaque child paints over a parent's background image — so
+the shadows on the scroller were covered completely and the first baseline
+showed a clipped column with nothing marking it. It is the `ColorPicker` lesson
+inverted: there a `background-image` painted over its own `background-color`
+and the pattern had to move one element OUT; here the shadow was already out
+and the opaque child had to stop covering it.
+
+**The cells wrapped instead of scrolling.** Without `whitespace-nowrap` the
+browser shrinks columns toward their min-content width, so "Astilleros del Sur"
+broke onto two lines in a table that was ALSO scrolling — the crushed-columns
+failure, in the component whose whole narrow-screen story is meant to be the
+opposite.
+
+**And the shadow, once visible, was too faint to be an indication.** Doc 04 §7
+asks that hidden content be INDICATED, and 14% over 12px darkened a body row by
+30 levels out of 255, which nobody reads as a shadow. Two things were measured
+separately: WHERE the layers land, by painting them in solid lime and red, and
+HOW MUCH, by sampling the rendered pixels. The ladder is in `Table.css` with
+the value it chose, 24% at 24px, and the cover is a step wider than the shadow
+because equal widths leave the leading edge darkened where it should be flat.
+
+**A sample two pixels from the edge measured the BORDER.** With the gradients
+removed entirely that column still reads 219 against a mid-row 252, because the
+scroller has a border and a radius. Read as a shadow, it said the indication
+was present on both edges at all times — a false alarm that cost two rounds
+before the control run said otherwise.
+
+**The right-to-left story set the locale and rendered left to right.** Doc 05
+§4.1's rule was read as "prefer the locale over `dir`", and what it says is
+that the two mechanisms must AGREE: `I18nProvider` tells JAVASCRIPT, and the
+stylesheet hears nothing without a `dir`. `Slider`'s own story sets both, which
+is what it was measuring. The capture's comment was wrong twice over as well —
+it claimed the panel was for the sort mark, which is invisible until a column
+is sorted and is a chevron on the block axis, so it does not mirror at all.
+
+**And the panel labelled "A disabled row" had none in it.** The disabled
+invoice was the fourth and the story rendered three, so the label described
+something not in the picture — the same defect as a `Spinner` panel that said
+"inside a filled button" over an outlined one. Worse, the component had no
+disabled appearance to show: a state gate box 12 lists by name. The row is
+muted now and its hover stops, while the status badge beside it keeps full
+strength, because doc 06 §4 rule 7 wants the WHY legible.
 
 #### And the narrow structure is doc 04 §6's own first example
 

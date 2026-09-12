@@ -13,6 +13,8 @@ export default tseslint.config(
   {
     ignores: [
       '**/dist/**',
+      // The dts rollup's intermediate output, and a build artefact like dist.
+      '**/.types/**',
       '**/node_modules/**',
       '**/coverage/**',
       '**/storybook-static/**',

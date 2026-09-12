@@ -33,7 +33,7 @@ this file is out of date. Fix this file.
 assuming anything exists.
 
 At the time of writing: all ten foundations are written, the pipeline is
-complete, and **fifty-two components exist** — the ten simple fields and
+complete, and **fifty-three components exist** — the ten simple fields and
 controls, `Button` with `ButtonGroup`, `Slider`, the flat pieces around them
 (`Alert`, `Avatar`, `Badge`, `Card`, `EmptyState`, `Progress`, `Separator`,
 `Skeleton`, `Spinner`, `Steps`, `VisuallyHidden`), seven
@@ -277,7 +277,22 @@ things to keep in mind anyway:
 - **The file layout of a component is settled**, by `Button`, and written down
   in [`docs/contributing/new-component.md`](./docs/contributing/new-component.md) §0.
 
-**And the table suite is next, with its ground written first.** It was read
+**And the table suite has started.** Wave 0 measured three things before the
+API and wave 1 is the table that renders and sorts — the pieces with our skin,
+its own horizontal scrolling with the overflow indicated (doc 04 §7), the
+sticky heading row, and the three absences a listing with no rows can be in,
+including an error with a retry. There is no selection, no column management
+and no row actions yet; those are waves 2 to 4.
+
+**One invariant in it is OURS rather than inherited**, and it is the reason to
+read §3.4 before touching the suite: a table with no column marked
+`isRowHeader` neither throws nor warns, every row loses its accessible name,
+and the base renders an EMPTY `aria-labelledby` rather than none — so nothing
+else would tell you. The component says so in one development warning, and that
+warning has to be OBSERVED rather than checked once, because the base fills the
+table in a pass that does not re-render us.
+
+**And the table suite's ground was written first.** It was read
 against a real hand-written data table from a management product — about twenty
 thousand lines, 145 capabilities inventoried — and the result is in
 [the catalog](./docs/catalog-and-build-order.md) §3.4: the piece list, the

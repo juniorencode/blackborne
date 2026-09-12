@@ -1,0 +1,144 @@
+/*
+ * Layer 3: two component exceptions, and both are things utilities cannot say.
+ *
+ * ## The sticky heading row
+ *
+ * `position: sticky` on a `th` needs the scroller to be its nearest scrolling
+ * ancestor, which it is, and it needs a background of its own or the rows show
+ * through as they pass under it. Utilities could express that much. What they
+ * cannot express is the stacking: a sticky heading and a future pinned column
+ * both want to be on top, and the corner where they cross has to be on top of
+ * both. Stated here once rather than discovered later as a z-index race.
+ *
+ * Measured in wave 0: sticky SURVIVES the inline `table-layout: fixed` and
+ * `width: min-content` the base merges in for a resizable table. 562px of
+ * horizontal scroll moved a pinned cell 2px.
+ *
+ * ## The overflow shadows
+ *
+ * Doc 04 §7: when content is hidden by overflow it is indicated visually,
+ * because invisible scrolling is lost content. This is the two-layer trick and
+ * it is entirely CSS — no scroll listener, no observer, nothing to get out of
+ * sync with the paint.
+ *
+ * Four backgrounds. Two are `local`, so they scroll WITH the content: they are
+ * painted in the surface colour at the content's two edges, and they cover the
+ * shadow underneath whenever that edge is the one you are looking at. Two are
+ * `scroll`, so they stay against the box: they are the shadows themselves. At
+ * rest both covers sit over both shadows and nothing shows; scroll, and the
+ * cover moves off the shadow it was hiding.
+ *
+ * The shadow colour is a `color-mix` of `--bb-surface-on` rather than a token
+ * of its own, which is what layer 3 is for — a local exception derived from
+ * layer 2. It is also the only honest answer in both modes: doc 03 §5 rule 5
+ * says a shadow is barely visible on a dark ground, so in dark mode this
+ * resolves to a faint LIGHT edge, which reads as "there is more over there"
+ * exactly as the dark edge does on a light ground.
+ *
+ * ## 24% at 24px, and the number is measured
+ *
+ * The first version was 14% at 12px, and the first baseline showed a column
+ * clipped at the edge with nothing marking it. Doc 04 §7 asks that hidden
+ * content be INDICATED, and an indication nobody can see is not one.
+ *
+ * Two things had to be told apart, so they were measured separately. First,
+ * WHERE the layers land: painted in solid lime and red, the cover sat on the
+ * leading edge and the shadow on the trailing one, which is exactly right at
+ * `scrollLeft: 0`. Then HOW MUCH, by sampling the rendered pixels across a
+ * body row — the mid-row grey against the grey two pixels from the edge:
+ *
+ *     14% at 12px   252 → 222   delta 30   (shipped, and invisible)
+ *     20% at 24px   252 → 209   delta 43
+ *     24% at 24px   252 → 200   delta 52   ← this
+ *     28% at 24px   252 → 191   delta 61
+ *
+ * With the gradient removed entirely the same row reads 252 flat, which is the
+ * control that says the measurement is sensitive at all.
+ *
+ * One consequence to know: the heading row has an opaque background of its
+ * own, so the shadow runs from under the heading to the bottom rather than the
+ * full height. The heading is a band of its own and reads that way.
+ */
+
+.bb-table-scroller {
+  /*
+   * The surface colour lives HERE rather than on the table, and that is the
+   * whole reason the shadows below are visible at all: a child with an opaque
+   * background paints over a parent's background image. Measured on the first
+   * baseline, where the table covered the indication completely.
+   */
+  background-color: var(--bb-surface);
+  background-image:
+    linear-gradient(to right, var(--bb-surface), transparent),
+    linear-gradient(to left, var(--bb-surface), transparent),
+    linear-gradient(
+      to right,
+      color-mix(in oklab, var(--bb-surface-on) 24%, transparent),
+      transparent
+    ),
+    linear-gradient(
+      to left,
+      color-mix(in oklab, var(--bb-surface-on) 24%, transparent),
+      transparent
+    );
+  background-position:
+    0 0,
+    100% 0,
+    0 0,
+    100% 0;
+  background-repeat: no-repeat;
+  /*
+   * THE COVER IS WIDER THAN THE SHADOW, and that asymmetry is the point rather
+   * than an oversight: at equal widths the cover's own fade runs out at the
+   * same rate as the shadow it is hiding, so the leading edge is darkened
+   * where it should be flat.
+   *
+   * Measured across a body row, inward from each edge at 4, 8, 16, 24 and 32
+   * pixels, against a mid-row 252:
+   *
+   *     leading, equal widths     245 240 239 251 252   (about 13 too dark)
+   *     leading, cover a step up  247 243 242 251 252   (about 10)
+   *     trailing                  207 216 234 251 252   (about 45)
+   *
+   * So the residual does not go to nothing, and the comment that said it did
+   * was wrong. What the asymmetry buys is the RATIO: roughly 4.5 to 1 between
+   * "there is more this way" and "there is not", where 10 levels out of 255 is
+   * below what anybody reads as a shadow and 45 is not.
+   *
+   * And one thing to know before sampling this again: the outermost three
+   * pixels are the SCROLLER'S BORDER, which reads 219 with the gradients
+   * removed entirely. A sample taken two pixels from the edge measures the
+   * border and says the shadow is present on both sides at all times. That
+   * happened, and it is why the numbers above start at four.
+   */
+  background-size:
+    var(--bb-space-7) 100%,
+    var(--bb-space-7) 100%,
+    var(--bb-space-6) 100%,
+    var(--bb-space-6) 100%;
+  background-attachment: local, local, scroll, scroll;
+}
+
+/*
+ * The heading row stays put while the body scrolls vertically. `top: 0` and
+ * not an inset property: this is the block axis, which does not mirror.
+ */
+.bb-table-column {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background-color: var(--bb-surface-sunken);
+}
+
+/* The mark turns rather than being swapped, so the heading never reflows. */
+.bb-table-sort {
+  transition:
+    opacity 120ms ease-out,
+    transform 120ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bb-table-sort {
+    transition: none;
+  }
+}

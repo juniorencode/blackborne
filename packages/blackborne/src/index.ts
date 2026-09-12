@@ -358,6 +358,22 @@ export type {
 } from './components/SplitButton';
 
 export { Switch } from './components/Switch';
+export {
+  Cell,
+  Column,
+  Row,
+  Table,
+  TableBody,
+  TableHeader
+} from './components/Table';
+export type {
+  CellProps,
+  ColumnProps,
+  RowProps,
+  TableBodyProps,
+  TableHeaderProps,
+  TableProps
+} from './components/Table';
 export type { SwitchProps } from './components/Switch';
 
 /*
