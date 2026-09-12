@@ -232,6 +232,14 @@ const STATES: Array<[string, string]> = [
    * last column declares a fixed width and therefore has no grip, which is the
    * other half of what this frame is for.
    */
+  /*
+   * A SEVENTH: the fold. Three panels in one frame, and the third is the
+   * CONTROL rather than a third example — one action at the same width as the
+   * folded three, so "it folded" and "it was narrow" cannot be confused for
+   * each other. Doc 04 §11.2's rule is the claim: the overflow never hides a
+   * single thing.
+   */
+  ['components-table--actions', 'table-actions'],
   ['components-table--resizing', 'table-resizing'],
   ['components-table--arranging', 'table-arranging'],
   ['components-table--selection', 'table-selection'],

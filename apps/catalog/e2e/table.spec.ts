@@ -338,3 +338,58 @@ test('and the grip is visible, reachable, and moves the column', async ({
     -1
   );
 });
+
+/*
+ * THE FOLD, which only a browser can answer: the step comes from a container
+ * query, and jsdom has neither those nor a `ResizeObserver`. The unit tests
+ * assert the pure half — a step and a count decide — and this asserts that the
+ * step is the right one.
+ */
+test('a row folds its actions when the room runs out, and not before', async ({
+  page
+}) => {
+  await gotoStory(page, 'components-table--actions');
+
+  const panels = page.locator('.bb-table-scroller');
+  await expect(panels).toHaveCount(3);
+
+  /* Wide enough: every action is its own button, named by what it does. */
+  const roomy = panels.nth(0);
+  await expect(
+    roomy.getByRole('button', { name: 'Edit' }).first()
+  ).toBeVisible();
+  await expect(roomy.locator('tbody button')).toHaveCount(6);
+
+  /* Narrow: one trigger per row, named by the ROW rather than by "More" —
+     forty rows of buttons all called the same thing is a list of forty
+     identical things. */
+  const tight = panels.nth(1);
+  await expect(tight.locator('tbody button')).toHaveCount(2);
+  await expect(
+    tight.getByRole('button', { name: /Invoice F001-000412/ })
+  ).toBeVisible();
+
+  /*
+   * AND ONE ACTION NEVER FOLDS, at the same width. Doc 04 §11.2: hiding a
+   * single thing replaces something you can read with something you have to
+   * open. This panel is the control that makes the one above it mean
+   * something — without it, "there is one button" is true of both.
+   */
+  const single = panels.nth(2);
+  await expect(single.locator('tbody button')).toHaveCount(2);
+  await expect(
+    single.getByRole('button', { name: 'Edit' }).first()
+  ).toBeVisible();
+});
+
+test('and the folded menu still offers every action', async ({ page }) => {
+  await gotoStory(page, 'components-table--actions');
+
+  const tight = page.locator('.bb-table-scroller').nth(1);
+  await tight.getByRole('button', { name: /Invoice F001-000412/ }).click();
+
+  const menu = page.getByRole('menu');
+  await expect(menu).toBeVisible();
+  await expect(menu.getByRole('menuitem')).toHaveCount(3);
+  await expect(menu.getByRole('menuitem', { name: /Delete/ })).toBeVisible();
+});

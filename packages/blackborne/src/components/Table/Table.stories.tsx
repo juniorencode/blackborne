@@ -14,11 +14,13 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import type { SortDescriptor } from 'react-aria-components';
 import { Cell, Column, Row, Table, TableBody, TableHeader } from './Table';
 import { useTableColumns } from './useTableColumns';
+import { RowAction, RowActions } from './RowActions';
 import { Button } from '../Button';
 import { Checkbox } from '../Checkbox';
 import { Badge } from '../Badge';
 import { ConfigProvider } from '../../config';
 import { EmptyState } from '../EmptyState';
+import { VisuallyHidden } from '../VisuallyHidden';
 
 const meta = {
   title: 'Components/Table',
@@ -100,6 +102,14 @@ const TONE = {
 } as const;
 
 const LABEL = { paid: 'Paid', due: 'Due', void: 'Void' } as const;
+
+/* A stand-in glyph. The library distributes no icons (hard rule 9); a project
+   brings its own, and the slot sizes and colours whatever arrives. */
+const Dot = () => (
+  <svg aria-hidden="true" className="bb:h-mark bb:w-mark" viewBox="0 0 16 16">
+    <circle cx="8" cy="8" fill="currentColor" r="5" />
+  </svg>
+);
 
 const Body = ({ rows = INVOICES }: { rows?: Invoice[] }) => (
   <TableBody>
@@ -516,6 +526,113 @@ export const Resizing: Story = {
       );
     };
     return <Dragging />;
+  }
+};
+
+/**
+ * WHAT CAN BE DONE TO A ROW, and the fold when there is no room for it.
+ *
+ * A button inside a cell is allowed here and is forbidden in a `ListBox`, and
+ * the difference is measured rather than assumed: wave 0 found a row named
+ * exactly `"Ana"` with a button in it, where a listbox row came back announced
+ * as `option "A row with a button Retry"`. A grid offers a keyboard route and a
+ * listbox does not.
+ *
+ * Each action is DECLARED — a label and a glyph — because it lands in one of
+ * two places depending on the room: a button in the row, or a row in a menu.
+ * A component that rendered itself could not be both, which is decision 0018's
+ * shape arriving for the third time.
+ *
+ * The fold scales with the count, and ONE ACTION NEVER FOLDS: doc 04 §11.2,
+ * because hiding a single thing replaces something you can read with something
+ * you have to open. Narrow the middle panel and watch three become a menu
+ * while the one above it stays put.
+ */
+export const Actions: Story = {
+  render: args => {
+    const label = args['aria-label'] ?? 'Invoices';
+    const Doing = () => {
+      const [last, setLast] = useState('nothing yet');
+      const actions = (invoice: Invoice) => (
+        <RowActions label={`Invoice ${invoice.number}`}>
+          <RowAction
+            icon={<Dot />}
+            label="Edit"
+            onAction={() => {
+              setLast(`Edit ${invoice.number}`);
+            }}
+          />
+          <RowAction
+            icon={<Dot />}
+            label="Duplicate"
+            onAction={() => {
+              setLast(`Duplicate ${invoice.number}`);
+            }}
+          />
+          <RowAction
+            icon={<Dot />}
+            label="Delete"
+            onAction={() => {
+              setLast(`Delete ${invoice.number}`);
+            }}
+            tone="danger"
+          />
+        </RowActions>
+      );
+
+      const table = (width: number, only?: boolean) => (
+        <Room
+          label={
+            only ? 'One action, at 380px — it never folds' : `Last: ${last}`
+          }
+          width={width}
+        >
+          <Table aria-label={label}>
+            <TableHeader>
+              <Column id="number" isRowHeader>
+                Number
+              </Column>
+              <Column id="customer">Customer</Column>
+              <Column id="actions">
+                <VisuallyHidden>Actions</VisuallyHidden>
+              </Column>
+            </TableHeader>
+            <TableBody>
+              {INVOICES.slice(0, 2).map(invoice => (
+                <Row id={invoice.id} key={invoice.id}>
+                  <Cell>{invoice.number}</Cell>
+                  <Cell>{invoice.customer}</Cell>
+                  <Cell>
+                    {only ? (
+                      <RowActions label={`Invoice ${invoice.number}`}>
+                        <RowAction
+                          icon={<Dot />}
+                          label="Edit"
+                          onAction={() => {
+                            setLast(`Edit ${invoice.number}`);
+                          }}
+                        />
+                      </RowActions>
+                    ) : (
+                      actions(invoice)
+                    )}
+                  </Cell>
+                </Row>
+              ))}
+            </TableBody>
+          </Table>
+        </Room>
+      );
+
+      return (
+        <div className="catalog-stack">
+          {table(760)}
+          {table(380)}
+          {table(380, true)}
+        </div>
+      );
+    };
+    return <Doing />;
   }
 };
 

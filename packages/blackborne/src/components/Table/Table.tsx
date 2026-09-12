@@ -34,6 +34,11 @@ import { cx } from '../../internal/cx';
 import { isDev } from '../../internal/isDev';
 import { mergeRefs } from '../../internal/mergeRefs';
 import { useDevWarning } from '../../internal/useDevWarning';
+import {
+  CONTAINER_STEPS,
+  useContainerStep
+} from '../../internal/useContainerStep';
+import { TableStep } from './RowActions';
 import { Button } from '../Button';
 import { EmptyState } from '../EmptyState';
 import { Skeleton } from '../Skeleton';
@@ -102,6 +107,19 @@ import { VisuallyHidden } from '../VisuallyHidden';
 const CLASSES = {
   scroller: cx(
     'bb-table-scroller',
+    /*
+     * A QUERY CONTAINER, and doc 04 §4.3's law is why `w-full` is beside it
+     * rather than somewhere else: inline-size containment computes an
+     * element's width as though it had no contents, so a container that is
+     * sized BY its contents collapses — which is how every popover in this
+     * catalog once came to be 2px wide. This one declares its width, so it may
+     * declare the container too.
+     *
+     * The four step classes are the scale's own container variants, so no
+     * threshold is written in JavaScript anywhere (doc 04 §6.2). The table
+     * reads the resolved value and publishes it to every row.
+     */
+    'bb:@container',
     'bb:relative bb:w-full bb:overflow-x-auto bb:box-border',
     'bb:rounded-md bb:border bb:border-solid bb:border-border'
   ),
@@ -119,6 +137,27 @@ const CLASSES = {
    * the opaque child had to stop covering it.
    */
   table: cx('bb:min-w-full bb:border-collapse bb:text-sm bb:text-text'),
+  /*
+   * THE OBSERVED ELEMENT, and it is a zero-height strip rather than the
+   * scroller or the table, for two measured reasons.
+   *
+   * Not the scroller: a container query resolves against the nearest ANCESTOR
+   * container, never against the element that declares one. With the four step
+   * classes on the same element as `@container`, `--bb-step` read `base` at
+   * every width — so a 760px table folded its actions into a menu with room to
+   * spare, which is what the first browser probe found.
+   *
+   * Not the table either: doc 04 §11.3. An observed element has to CHANGE SIZE
+   * with the container, and a table inside a scroller is as wide as its
+   * content — 408px in a 640px box and 408px in a 320px one was what
+   * `RangeCalendar` measured, and an observer that never fires reads the step
+   * once and never again.
+   *
+   * So it is §11.3's own prescription: a full-width strip that is observed,
+   * beside the content that is not. `h-0` and `aria-hidden`, because it exists
+   * to be measured and there is nothing in it to read.
+   */
+  probe: cx('bb:h-0 bb:w-full', CONTAINER_STEPS),
   header: 'bb:bg-surface-sunken',
   column: cx(
     'bb-table-column',
@@ -425,6 +464,20 @@ export const Table = forwardRef<HTMLTableElement, TableProps>(function Table(
   ref
 ) {
   const own = useRef<HTMLTableElement>(null);
+  /*
+   * THE SCROLLER IS THE OBSERVED ELEMENT, and doc 04 §11.1 and §11.3 both say
+   * why it has to be. It outlives every structure a row chooses between — the
+   * rows come and go, it does not — and it CHANGES SIZE with the container,
+   * which is the half `RangeCalendar` paid for: a box that shrink-wraps is
+   * 408px in a 640px container and 408px in a 320px one, so its observer never
+   * fires and the step is read once and never again.
+   *
+   * One observation for the whole table, published downward. A row that
+   * observed its own actions cell would be both wrong and expensive: the cell
+   * is sized by its contents, and there would be one observer per row.
+   */
+  const frame = useRef<HTMLDivElement>(null);
+  const step = useContainerStep(frame);
   const { locale } = useConfig();
   const selectedLabel = useMessage('rowsSelected');
   const [announced, setAnnounced] = useState(0);
@@ -566,73 +619,100 @@ export const Table = forwardRef<HTMLTableElement, TableProps>(function Table(
    */
   const Frame = isResizable ? ResizableTableContainer : 'div';
 
+  /*
+   * BOTH PROVIDERS SIT ABOVE THE TABLE, and that is measured rather than tidy.
+   * A provider written INSIDE `AriaTable`, wrapping its children, reaches
+   * neither a `Column` nor a `Cell` -- they read the default -- because the
+   * base re-renders those children in a collection pass of its own, detached
+   * from where they were written. Placed above the table it reaches both,
+   * because the pass still runs under the ancestors.
+   *
+   * It is decision 0021's wall in a second shape. There, a filter written
+   * inside the collection could not see the surrounding context and kept every
+   * option; here, a step written inside it left every row folded at every
+   * width. The rule that covers both: anything a collection's children need to
+   * read is provided from OUTSIDE the collection.
+   *
+   * And this comment sits HERE rather than among the JSX below, which is the
+   * other thing this wave found. A bare block comment among JSX children is a
+   * TEXT NODE. It rendered as a paragraph of prose above every table in the
+   * catalog, and types, lint, the unit tests and axe all passed -- the
+   * baseline is what saw it.
+   */
   return (
-    <Frame
-      className={cx(CLASSES.scroller, className)}
-      {...(style ? { style } : {})}
-      {...(isResizable && onColumnResize
-        ? {
-            /* Typed structurally rather than with the base's `ColumnSize`
+    <Resizable.Provider value={isResizable === true}>
+      <TableStep.Provider value={step}>
+        <Frame
+          className={cx(CLASSES.scroller, className)}
+          {...(style ? { style } : {})}
+          {...(isResizable && onColumnResize
+            ? {
+                /* Typed structurally rather than with the base's `ColumnSize`
                and `Key`, which the root does not export anyway — and which
                would be its types in our file for no gain, since all this
                reads out is the numbers. */
-            onResizeEnd: (widths: Map<string | number, number | string>) => {
-              /*
-               * Pixels, and the base's `Map<Key, ColumnSize>` stops here. What
-               * a project does with these is store them and hand them back as
-               * `defaultWidth`, so what it needs is a plain object it can
-               * serialise — not a Map keyed by a type it never named.
-               */
-              const out: Record<string, number> = {};
-              for (const [key, size] of widths) {
-                if (typeof size === 'number') out[String(key)] = size;
+                onResizeEnd: (
+                  widths: Map<string | number, number | string>
+                ) => {
+                  /*
+                   * Pixels, and the base's `Map<Key, ColumnSize>` stops here. What
+                   * a project does with these is store them and hand them back as
+                   * `defaultWidth`, so what it needs is a plain object it can
+                   * serialise — not a Map keyed by a type it never named.
+                   */
+                  const out: Record<string, number> = {};
+                  for (const [key, size] of widths) {
+                    if (typeof size === 'number') out[String(key)] = size;
+                  }
+                  onColumnResize(out);
+                }
               }
-              onColumnResize(out);
-            }
-          }
-        : {})}
-    >
-      <AriaTable
-        ref={mergeRefs(ref, own)}
-        className={CLASSES.table}
-        {...tableProps}
-        {...(selectionMode ? { selectionMode } : {})}
-        {...(chosen ? { selectedKeys: chosen } : {})}
-        {...(chosenByDefault ? { defaultSelectedKeys: chosenByDefault } : {})}
-        {...(selectionMode && selectionMode !== 'none'
-          ? { onSelectionChange: report }
-          : {})}
-      >
-        <Resizable.Provider value={isResizable === true}>
-          {children}
-        </Resizable.Provider>
-      </AriaTable>
-      {/*
-       * HOW MANY ARE CHOSEN, SAID OUT LOUD. The base announces a row's own
-       * state as focus moves through it and says nothing about the total, so
-       * in the product this suite was read against the count changed in
-       * silence — a person who had just pressed the heading checkbox had no
-       * way to know whether it took four rows or four hundred.
-       *
-       * `role="status"` rather than `aria-live="assertive"`: choosing a row is
-       * not an interruption. The number goes through `Intl` for the reason
-       * doc 05 §3 gives — Arabic-Indic digits are the default for `ar-EG`, and
-       * a row of Latin digits in an otherwise Arabic interface is the tell
-       * that something was concatenated rather than formatted.
-       */}
-      {selectionMode && selectionMode !== 'none' ? (
-        <VisuallyHidden>
-          <div role="status">
-            {announced === 0
-              ? ''
-              : selectedLabel.replace(
-                  '{count}',
-                  new Intl.NumberFormat(locale).format(announced)
-                )}
-          </div>
-        </VisuallyHidden>
-      ) : null}
-    </Frame>
+            : {})}
+        >
+          <div aria-hidden="true" className={CLASSES.probe} ref={frame} />
+          <AriaTable
+            ref={mergeRefs(ref, own)}
+            className={CLASSES.table}
+            {...tableProps}
+            {...(selectionMode ? { selectionMode } : {})}
+            {...(chosen ? { selectedKeys: chosen } : {})}
+            {...(chosenByDefault
+              ? { defaultSelectedKeys: chosenByDefault }
+              : {})}
+            {...(selectionMode && selectionMode !== 'none'
+              ? { onSelectionChange: report }
+              : {})}
+          >
+            {children}
+          </AriaTable>
+          {/*
+           * HOW MANY ARE CHOSEN, SAID OUT LOUD. The base announces a row's own
+           * state as focus moves through it and says nothing about the total, so
+           * in the product this suite was read against the count changed in
+           * silence — a person who had just pressed the heading checkbox had no
+           * way to know whether it took four rows or four hundred.
+           *
+           * `role="status"` rather than `aria-live="assertive"`: choosing a row is
+           * not an interruption. The number goes through `Intl` for the reason
+           * doc 05 §3 gives — Arabic-Indic digits are the default for `ar-EG`, and
+           * a row of Latin digits in an otherwise Arabic interface is the tell
+           * that something was concatenated rather than formatted.
+           */}
+          {selectionMode && selectionMode !== 'none' ? (
+            <VisuallyHidden>
+              <div role="status">
+                {announced === 0
+                  ? ''
+                  : selectedLabel.replace(
+                      '{count}',
+                      new Intl.NumberFormat(locale).format(announced)
+                    )}
+              </div>
+            </VisuallyHidden>
+          ) : null}
+        </Frame>
+      </TableStep.Provider>
+    </Resizable.Provider>
   );
 });
 

@@ -410,3 +410,9 @@ export type { TooltipProps } from './components/Tooltip';
 
 export { VisuallyHidden } from './components/VisuallyHidden';
 export type { VisuallyHiddenProps } from './components/VisuallyHidden';
+export { RowAction, RowActions } from './components/Table';
+export type {
+  RowActionProps,
+  RowActionsProps,
+  RowActionTone
+} from './components/Table';

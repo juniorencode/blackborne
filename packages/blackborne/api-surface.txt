@@ -1929,6 +1929,19 @@ type RangeCalendarProps
   onChange? (own)
   value? (own)
 value Row: <T extends object>({ children, columns, ...rest }: RowProps<T>) => Element
+value RowAction: (props: RowActionProps) => ReactNode
+type RowActionProps
+  icon (own)
+  id? (own)
+  isDisabled? (own)
+  label (own)
+  onAction (own)
+  tone? (own)
+type RowActionTone = "danger" | "neutral"
+value RowActions: ({ label, children }: RowActionsProps) => Element
+type RowActionsProps
+  children (own)
+  label (own)
 type RowProps
   children? (base)
   columns? (base)
