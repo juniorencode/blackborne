@@ -673,6 +673,15 @@ Things that look like improvements and are not:
   consumer receives is measured against `dist`, and `pnpm verify` now does
   that: publint, attw, every value in the type surface importing, and nothing
   in `dist` unreachable through `exports`.
+- **Do not chain another suite behind `pnpm visual`.** It builds the catalog
+  INSIDE Docker, so it does not refresh the local `storybook-static` that the
+  browser and accessibility suites are served from — and those two then read
+  whatever the last local `pnpm build:catalog` left. Measured the expensive way:
+  an accessibility run chained after it reported **497 checks green** against
+  CI's 501, on a build two hours old, and CI failed three of them with a
+  critical `aria-required-children`. Rebuilt locally, it reproduced on the first
+  try. A count that disagrees with CI's is the tell; `pnpm verify:full` is the
+  command that builds first.
 - **Do not reference private projects** in code, examples or documentation. The
   library is public and its API is designed for strangers.
 

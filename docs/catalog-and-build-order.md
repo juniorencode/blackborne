@@ -786,6 +786,20 @@ the label's column — orphaned at the left under a heading of `VisuallyHidden`
 text. The value is wrapped in one element now, `display: contents` at the width
 where it is not needed.
 
+**And an empty heading band was still a row.** The band is emptied rather than
+hidden, and emptying it by hiding every child left a `role="row"` with no cell
+in it — `aria-required-children`, critical, on the three stories with a narrow
+panel and nothing to sort or choose. The band itself goes now, matched with
+`:has()` so a column hidden through the arrangement hook takes it in the same
+frame.
+
+CI found it and a local run had not, which is the part worth keeping. `pnpm
+visual` builds the catalog inside Docker and does not refresh the local build
+the other suites are served from, so an accessibility run chained behind it read
+a catalog two hours old: **497 checks green against CI's 501**. The count
+disagreeing with CI's is the tell, and it reproduced on the first try once the
+build was current.
+
 **And the wave invalidated four of its own suite's fixtures**, which is the
 cost of a boundary at 480px. `TooWide` was a 360px panel and became a card list
 with nothing to scroll — the story whose entire purpose is to photograph

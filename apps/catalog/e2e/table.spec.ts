@@ -805,10 +805,24 @@ test('the heading band keeps what can still be used, and nothing else', async ({
 
   /* Sortable, or the select-all: the two things a person can do from a band. */
   expect(await shown(1)).toEqual(['', 'Number']);
-  /* Nothing to sort and nothing to choose, so no band is left at all. */
-  expect(await shown(2)).toEqual([]);
   /* And with room, every heading is a heading again. */
-  expect(await shown(0)).toEqual(['', 'Number', 'Customer', 'Status', 'Total']);
+  expect((await shown(0)).length).toBeGreaterThan(2);
+
+  /*
+   * AND WITH NOTHING LEFT, THE BAND ITSELF IS GONE — asserted on the element
+   * rather than on its children, which is the half CI had to find. Hiding every
+   * heading and keeping the row left a `role="row"` with no cell in it:
+   * `aria-required-children`, critical. "No heading is displayed" was true of
+   * that defect too.
+   */
+  expect(await shown(2)).toEqual([]);
+  const band = await page
+    .locator('.bb-table-scroller')
+    .nth(2)
+    .evaluate(el => getComputedStyle(el.querySelector('thead')!).display);
+  expect(band, 'an empty heading band is still a row with no cells').toBe(
+    'none'
+  );
 });
 
 test('a field is named once at either width, and a card title never is', async ({

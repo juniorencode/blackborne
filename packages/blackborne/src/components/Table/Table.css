@@ -512,6 +512,26 @@
 }
 
 /*
+ * AND WHEN NOTHING IS LEFT, THE BAND ITSELF GOES — not just its children.
+ *
+ * Hiding every heading and keeping the row was a `role="row"` with no cell in
+ * it, which is `aria-required-children`, critical. CI found it and a local run
+ * did not, for a reason worth writing down rather than shrugging at: `pnpm
+ * visual` builds the catalog INSIDE Docker, so it does not refresh the local
+ * build the other suites are served from. The accessibility run chained after
+ * it read a catalog two hours old — 497 checks against CI's 501 — and once the
+ * build was current it reproduced on the first try.
+ *
+ * `:has()` rather than counting in JavaScript, for the reason `Steps` gives
+ * about its own numbering: CSS re-evaluates on its own, so a table whose only
+ * sortable column is hidden through the arrangement hook loses its band in the
+ * same frame, with nothing to keep in step.
+ */
+.bb-table-head:not(:has(th:not(.bb-table-column-quiet))) {
+  display: var(--bb-t-head, none);
+}
+
+/*
  * THE RULE UNDER THE BAND IS A RULE, NOT AN UNDERLINE. In a table the heading
  * cells' bottom border is the line under the whole band; laid out as chips, the
  * same border came out as a stray underline beneath the one sortable column,
