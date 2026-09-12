@@ -239,3 +239,102 @@ test('the three absences fill the table rather than sitting beside it', async ({
 
   await expect(page.getByRole('button', { name: 'Retry' })).toBeVisible();
 });
+
+/*
+ * THE TWO THINGS WAVE 0 MEASURED IN THE ABSTRACT, asserted on the component
+ * that now depends on them. That wave built a page by hand to answer a CSS
+ * question; this is the same question asked of the real thing.
+ */
+test('a resizable table still fills its container', async ({ page }) => {
+  await gotoStory(page, 'components-table--resizing');
+
+  const measured = await page.locator('.bb-table-scroller').evaluate(el => ({
+    container: el.getBoundingClientRect().width,
+    table: (el.querySelector('table') as HTMLElement).getBoundingClientRect()
+      .width,
+    inline: el.querySelector('table')?.getAttribute('style') ?? ''
+  }));
+
+  /* The inline style the base merges in is what makes this worth asserting:
+     without `min-width: 100%` the table shrink-wraps and leaves the container
+     part-empty, and no class beats an inline `width`. */
+  expect(measured.inline).toContain('min-content');
+  expect(
+    measured.table,
+    'the table shrink-wrapped inside its container instead of filling it'
+  ).toBeGreaterThan(measured.container - 2);
+});
+
+test('and the grip is visible, reachable, and moves the column', async ({
+  page
+}) => {
+  await gotoStory(page, 'components-table--resizing');
+
+  /*
+   * THE GRIP HAS A BOX, which is the defect this check exists for. The base's
+   * resizer is a visually hidden `input[type=range]` — 1×1, clipped — and the
+   * handle a person sees is ours. The first version of it asked for
+   * `inset-block-0`, which is a CSS property name rather than a Tailwind
+   * utility, so it compiled to nothing and the grip came out 12 pixels wide
+   * and ZERO tall: present in the DOM, reachable by keyboard, and invisible.
+   */
+  const grip = page
+    .locator('.bb-table-scroller th div[class*="absolute"]')
+    .first();
+  const box = await grip.boundingBox();
+  expect(box?.width ?? 0).toBeGreaterThan(4);
+  expect(
+    box?.height ?? 0,
+    'the grip has no height, so nobody can see or grab it'
+  ).toBeGreaterThan(8);
+
+  /*
+   * And it is not a control only a pointer can reach, which doc 06 §4 rule 5
+   * forbids outright. Whether the ARROWS then resize is the base's business
+   * and is not asserted here — this repository does not test React Aria.
+   */
+  const slider = page.getByRole('slider').first();
+  await expect(slider).toHaveCount(1);
+  expect(await slider.getAttribute('tabindex')).not.toBe('-1');
+  expect(await slider.getAttribute('aria-valuetext')).toMatch(/pixel/i);
+
+  /*
+   * HOW the keyboard reaches it is the base's, through the grid's own
+   * navigation, and measured here rather than assumed: a direct `.focus()` on
+   * the input lands on the ROW instead, because the table manages focus and
+   * `keyboardNavigationBehavior` decides how a control inside a cell is
+   * reached. Asserting the arrows then resize would be testing React Aria,
+   * which this repository does not do.
+   */
+
+  /* And a drag moves the column, with its neighbours closing up. */
+  const widths = async () =>
+    page.evaluate(() =>
+      [...document.querySelectorAll('.bb-table-scroller th')].map(cell =>
+        Math.round(cell.getBoundingClientRect().width)
+      )
+    );
+  const before = await widths();
+
+  await page.mouse.move(
+    (box?.x ?? 0) + (box?.width ?? 0) / 2,
+    (box?.y ?? 0) + (box?.height ?? 0) / 2
+  );
+  await page.mouse.down();
+  await page.mouse.move(
+    (box?.x ?? 0) + (box?.width ?? 0) / 2 + 80,
+    (box?.y ?? 0) + (box?.height ?? 0) / 2,
+    { steps: 10 }
+  );
+  await page.mouse.up();
+
+  const after = await widths();
+  expect(after[0] ?? 0).toBeGreaterThan(before[0] ?? 0);
+  expect(
+    after.reduce((sum, width) => sum + width, 0),
+    'the table changed width instead of redistributing inside it'
+  ).toBeCloseTo(
+    before.reduce((sum, width) => sum + width, 0),
+    -1
+  );
+});

@@ -1,5 +1,7 @@
 import {
+  createContext,
   forwardRef,
+  useContext,
   useEffect,
   useRef,
   useState,
@@ -14,6 +16,8 @@ import {
   Table as AriaTable,
   TableBody as AriaTableBody,
   TableHeader as AriaTableHeader,
+  ColumnResizer as AriaColumnResizer,
+  ResizableTableContainer,
   useTableOptions,
   type Selection as AriaSelection,
   type CellProps as AriaCellProps,
@@ -29,6 +33,7 @@ import { ChevronGlyph } from '../../internal/ChevronGlyph';
 import { cx } from '../../internal/cx';
 import { isDev } from '../../internal/isDev';
 import { mergeRefs } from '../../internal/mergeRefs';
+import { useDevWarning } from '../../internal/useDevWarning';
 import { Button } from '../Button';
 import { EmptyState } from '../EmptyState';
 import { Skeleton } from '../Skeleton';
@@ -225,6 +230,53 @@ const CLASSES = {
    * the mark's own frame, and it reads the same tokens `Checkbox` does so the
    * two are one control in two places.
    */
+  /*
+   * The grip. The base renders a real `input[type=range]`, so the keyboard,
+   * the announcement in localized pixels and its own name all come free — what
+   * is missing is that anybody can SEE it, which is this.
+   *
+   * `cursor-col-resize` and not `cursor-ew-resize`: the first says what the
+   * thing does and the second says which way it moves, and a column is resized
+   * along its own axis whatever the reading direction.
+   *
+   * The line is a `::before` rather than a border on the input, because the
+   * input is the whole grab area — comfortably wider than the line a person
+   * sees — and a border would draw the wrong thing at the wrong width.
+   */
+  /*
+   * `inset-y-0` and `end-0`, and the first version of this line wrote
+   * `inset-block-0` and `inset-inline-end-0` — which are CSS PROPERTY names
+   * rather than Tailwind utilities, so all four compiled to nothing and the
+   * grip came out 12 pixels wide and ZERO tall. Measured: the whole stylesheet
+   * contains no `inset-*` utility at all.
+   *
+   * `inset-y` is the block axis, which does not mirror, so it is not what
+   * hard rule 2 is about; `end` is the logical one and is why the grip lands
+   * on the trailing edge in Arabic without a second rule.
+   *
+   * That is the FIFTH utility in this repository found to produce no rule
+   * while looking right, after `w-control-md`, `size-box`, `min-w-hit` and
+   * `font-medium` — and the only thing that ever answers is the compiled
+   * stylesheet.
+   */
+  resizer: cx(
+    'bb:absolute bb:inset-y-0 bb:end-0 bb:box-border bb:z-3',
+    'bb:w-(--bb-space-4) bb:cursor-col-resize bb:touch-none',
+    'bb:appearance-none bb:bg-transparent bb:p-0',
+    'bb:before:absolute bb:before:inset-y-(--bb-space-2)',
+    'bb:before:end-(--bb-space-2) bb:before:w-px',
+    "bb:before:bg-border bb:before:content-['']",
+    'bb:hover:before:inset-y-0 bb:hover:before:bg-border-strong',
+    /* `w-(--bb-space-1)` and not `w-0.5`: this theme names its spacing steps and
+       declares no numeric scale, so the fractional utility produced no rule.
+       Sixth of its kind, and caught the same way as the other five. */
+    'bb:data-resizing:before:inset-y-0',
+    'bb:data-resizing:before:w-(--bb-space-1)',
+    'bb:data-resizing:before:bg-accent',
+    'bb:outline-2 bb:outline-offset-[-2px] bb:outline-transparent',
+    'bb:data-focus-visible:outline-focus-ring'
+  ),
+  resizableColumn: 'bb:relative',
   pick: cx(
     'bb:flex bb:size-4 bb:shrink-0 bb:items-center bb:justify-center',
     'bb:box-border bb:rounded-sm bb:border bb:border-solid',
@@ -250,6 +302,22 @@ interface TableSharedProps extends Pick<
   | 'onSortChange'
   | 'children'
 > {
+  /**
+   * Columns can be dragged wider and narrower.
+   *
+   * Opt-in, and it has to be: inside the base's resizable container the table
+   * gets `table-layout: fixed` and a pixel width per column, which is a
+   * different layout from the one an ordinary table has.
+   */
+  isResizable?: boolean;
+  /**
+   * Called when a drag finishes, with every column's width in pixels.
+   *
+   * A plain object rather than the base's `Map`, because what a project does
+   * with these is store them and hand them back as `defaultWidth`. P3 means
+   * the storing is theirs.
+   */
+  onColumnResize?: (widths: Record<string, number>) => void;
   /** Only on the root, and never on an internal node (doc 02 §6). */
   className?: string;
   style?: CSSProperties;
@@ -350,6 +418,8 @@ export const Table = forwardRef<HTMLTableElement, TableProps>(function Table(
     selectedKeys,
     defaultSelectedKeys,
     onSelectionChange,
+    isResizable,
+    onColumnResize,
     ...tableProps
   },
   ref
@@ -474,10 +544,53 @@ export const Table = forwardRef<HTMLTableElement, TableProps>(function Table(
   const chosen = asSet();
   const chosenByDefault = asDefaultSet();
 
+  /*
+   * THE SCROLLER IS THE RESIZABLE CONTAINER, rather than a second element
+   * inside it. The base's container walks up to the first scrollable ancestor
+   * and measures its `clientWidth` on a `ResizeObserver`, so putting it
+   * anywhere else would have it measure something that is not the box the
+   * columns actually live in.
+   *
+   * Resizing is opt-in and could not be anything else. Measured: inside that
+   * container the base merges `table-layout: fixed; width: min-content` into
+   * the table's INLINE style and gives every `th` a pixel width — which is a
+   * different layout from the one an ordinary table has, where columns take
+   * the width of their content and the table scrolls. Turning that on for
+   * every table would change how every existing one looks.
+   *
+   * `min-w-full` on the table is what keeps it filling its container anyway,
+   * and it is wave 0's measurement rather than a guess: `width: min-content`
+   * left a two-column table 842px short in a 1400px container, and no class
+   * beats an inline `width`. A `min-width` wins because it is a property the
+   * base does not set.
+   */
+  const Frame = isResizable ? ResizableTableContainer : 'div';
+
   return (
-    <div
+    <Frame
       className={cx(CLASSES.scroller, className)}
       {...(style ? { style } : {})}
+      {...(isResizable && onColumnResize
+        ? {
+            /* Typed structurally rather than with the base's `ColumnSize`
+               and `Key`, which the root does not export anyway — and which
+               would be its types in our file for no gain, since all this
+               reads out is the numbers. */
+            onResizeEnd: (widths: Map<string | number, number | string>) => {
+              /*
+               * Pixels, and the base's `Map<Key, ColumnSize>` stops here. What
+               * a project does with these is store them and hand them back as
+               * `defaultWidth`, so what it needs is a plain object it can
+               * serialise — not a Map keyed by a type it never named.
+               */
+              const out: Record<string, number> = {};
+              for (const [key, size] of widths) {
+                if (typeof size === 'number') out[String(key)] = size;
+              }
+              onColumnResize(out);
+            }
+          }
+        : {})}
     >
       <AriaTable
         ref={mergeRefs(ref, own)}
@@ -490,7 +603,9 @@ export const Table = forwardRef<HTMLTableElement, TableProps>(function Table(
           ? { onSelectionChange: report }
           : {})}
       >
-        {children}
+        <Resizable.Provider value={isResizable === true}>
+          {children}
+        </Resizable.Provider>
       </AriaTable>
       {/*
        * HOW MANY ARE CHOSEN, SAID OUT LOUD. The base announces a row's own
@@ -517,7 +632,7 @@ export const Table = forwardRef<HTMLTableElement, TableProps>(function Table(
           </div>
         </VisuallyHidden>
       ) : null}
-    </div>
+    </Frame>
   );
 });
 
@@ -657,10 +772,37 @@ export function TableHeader<T extends object>({
   return <AriaTableHeader className={CLASSES.header} {...rest} {...composed} />;
 }
 
-export type ColumnProps = Pick<
+/**
+ * A width a column can be given, without the base's own type in the signature.
+ *
+ * The same four shapes the base accepts, spelled so a consumer's code never
+ * names `ColumnSize`: pixels as a number, or a string ending in `%` or `fr`.
+ * A template literal type says exactly that and nothing more.
+ */
+export type ColumnWidth = number | `${number}%` | `${number}fr`;
+
+export interface ColumnProps extends Pick<
   AriaColumnProps,
   'id' | 'allowsSorting' | 'isRowHeader' | 'textValue' | 'children'
->;
+> {
+  /** How wide, until somebody drags it. */
+  defaultWidth?: ColumnWidth;
+  /** How wide, and it cannot be dragged off that. */
+  width?: ColumnWidth;
+  /**
+   * THE FLOOR, and it is the best idea in the product this suite was read
+   * against.
+   *
+   * That table gives every column a minimum by KIND — dates 100, tags 150, a
+   * name 180 — so a narrow screen makes the table scroll instead of crushing
+   * the columns into unreadable slivers. The floor is right and the kind is
+   * not (§3.4), so it is declared here per column, by the only party that
+   * knows what the column holds.
+   */
+  minWidth?: number;
+  /** A ceiling, for a column whose content has no natural end. */
+  maxWidth?: number;
+}
 
 /**
  * One column heading.
@@ -670,10 +812,57 @@ export type ColumnProps = Pick<
  * heading's width, so the whole row of headings shifts the first time anybody
  * sorts. Same reason a select's tick is drawn on every row.
  */
+/**
+ * Whether this table's columns can be dragged, published by the table that
+ * declared it.
+ *
+ * A context because it is a property of the SET (doc 02 §3.1.1) and a column
+ * cannot be told twice — a prop on every `Column` would be the same fact in as
+ * many places as there are columns, free to disagree. It carries one primitive,
+ * which is the same section's constraint.
+ *
+ * The measured trap that section records does not reach here: a context crosses
+ * a portal, and a `Column` cannot appear inside one. What CAN appear in a
+ * portal from a table is a menu opened from a cell, and that is wave 4's to
+ * close.
+ */
+const Resizable = createContext(false);
+
 export const Column = forwardRef<HTMLTableCellElement, ColumnProps>(
-  function Column({ children, ...columnProps }, ref) {
+  function Column(
+    { children, defaultWidth, width, minWidth, maxWidth, ...columnProps },
+    ref
+  ) {
+    const isResizable = useContext(Resizable);
+    const wants =
+      defaultWidth !== undefined ||
+      width !== undefined ||
+      minWidth !== undefined ||
+      maxWidth !== undefined;
+
+    /*
+     * A WIDTH OUTSIDE A RESIZABLE TABLE DOES NOTHING, SILENTLY, and this
+     * warning is ours because the base's is dead code. Measured in wave 0: its
+     * guard reads `for (let prop in ['width', …])`, which iterates the ARRAY
+     * INDICES, so the membership test is never true and the warning never
+     * fires — and would print "The 0 prop" if it did. The width is simply
+     * dropped and nothing says so.
+     */
+    useDevWarning(
+      wants && !isResizable,
+      `a Column declares a width and its Table is not resizable, so the width does nothing. The base drops it without a word — its own warning for this is dead code. Pass \`isResizable\` to the Table, or take the width off.`
+    );
+
     return (
-      <AriaColumn ref={ref} className={CLASSES.column} {...columnProps}>
+      <AriaColumn
+        ref={ref}
+        className={cx(CLASSES.column, isResizable && CLASSES.resizableColumn)}
+        {...columnProps}
+        {...(isResizable && defaultWidth !== undefined ? { defaultWidth } : {})}
+        {...(isResizable && width !== undefined ? { width } : {})}
+        {...(isResizable && minWidth !== undefined ? { minWidth } : {})}
+        {...(isResizable && maxWidth !== undefined ? { maxWidth } : {})}
+      >
         {values => (
           <>
             {typeof children === 'function' ? children(values) : children}
@@ -692,6 +881,15 @@ export const Column = forwardRef<HTMLTableCellElement, ColumnProps>(
               >
                 <ChevronGlyph />
               </span>
+            ) : null}
+            {/*
+             * The grip, and only where a width can actually move. A column
+             * with a fixed `width` cannot be dragged off it, so offering a
+             * handle there would be a control that does nothing — doc 06 §4
+             * rule 7's shape, one level down.
+             */}
+            {isResizable && width === undefined ? (
+              <AriaColumnResizer className={CLASSES.resizer} />
             ) : null}
           </>
         )}
