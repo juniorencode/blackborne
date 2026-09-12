@@ -978,3 +978,74 @@ declared in the markup rather than conjured by a modifier: `target="_blank"`.
 There the browser has no convention to exercise, it has an instruction. If that
 one ever fails the same way the same reasoning applies to it, and it is written
 down here so the next reader inherits the decision instead of rediscovering it.
+
+### 11.8 A visual failure is never a race, and what that leaves
+
+**Added 2026-09-11**, after a baseline drifted once and then refused to do it
+again.
+
+`color-swatch-field-rings` came back 39 pixels different from its committed
+reference in one run, and a comparison against that new reference failed by 15
+in the next. The deltas were one to five out of 255, clustered along one
+horizontal band — invisible to look at, and entirely enough to turn CI red,
+because this suite's tolerance is zero on purpose (§6).
+
+### The fact that kills a whole class of theories
+
+**`toHaveScreenshot` re-captures until it matches or the timeout expires.** So a
+failure does not mean a screenshot caught the page mid-render: it means the
+page produced the same wrong pixels over and over for the whole budget. A
+visual difference is a STABLE difference, and every theory that begins "it was
+captured too early" is already dead before it is investigated.
+
+That is worth knowing before the next one, because three of the theories below
+were about timing and none of them could have been true.
+
+### What was measured, and what it ruled out
+
+| Asked                                                   | Answer                                                     |
+| ------------------------------------------------------- | ---------------------------------------------------------- |
+| Does the story render differently within one page load? | **No.** Five captures of one load, 0 differing pixels      |
+| Between separate loads?                                 | **No.** Five loads, 0 differing pixels                     |
+| Is the capture unstable in the container on its own?    | **No.** Five runs, all passing                             |
+| Is a box landing on a sub-pixel?                        | **No.** Every measured box on a whole pixel                |
+| Did a cold Docker engine render it differently?         | **No.** Restarted deliberately; the first run after passed |
+| Does it recur in a full run?                            | **Not since.** Two full runs, 207 of 207 both times        |
+
+The one anomalous render was produced by a `visual:update` taken minutes after
+Docker Desktop had been wedged — its engine had been answering 500 to
+everything and was force-restarted. That is a correlation and not a mechanism,
+and the deliberate cold-start test above is what stops it being written down as
+one.
+
+### So the answer is an instrument, not a fix
+
+§11.3's rule, applied to a flake that is now demonstrably hard to reproduce:
+ship the assertion that will attribute the next occurrence. `shoot()` takes two
+more raw captures when a reference does not match, compares them byte for byte,
+and says which of the two remaining answers it is:
+
+```
+visual: color-swatch-field-rings did not match its reference. the page
+rendered IDENTICALLY twice, so this run is stable and the difference is
+between runs rather than inside one. body 1280x301, sub-pixel box: false,
+devicePixelRatio 1.
+```
+
+The two verdicts need different fixes, which is the whole reason to separate
+them: **rendered differently twice** means something in the story is still
+moving and it is ours to find; **rendered identically twice** means the story
+is fine and the reference came from a different rasterisation, which is not
+something to chase inside the component.
+
+It costs nothing until something has already failed, and it is a log line as
+well as a thrown error — §11.6, because an artefact expires and an upload can
+silently ship nothing, while a log line survives both.
+
+**Both branches were exercised before it landed**, which is §11.1: a baseline
+swapped for a different picture produced "IDENTICALLY twice", and a page
+deliberately nudged between the two captures produced "DIFFERENTLY twice in a
+row". An instrument that can only ever say one thing is not an instrument.
+
+What was NOT done is widen the tolerance. §11 forbids it by name, and it would
+turn the next real difference into a coincidence.

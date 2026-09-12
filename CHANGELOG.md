@@ -12,6 +12,24 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **A visual failure now says which of two things it is.** A baseline drifted
+  once by 39 pixels and refused to do it again: five captures of one page load,
+  five separate loads, five runs of that capture alone in the container and two
+  full runs of all 207 are all byte-identical, and a deliberately cold Docker
+  engine rendered it correctly too. Five theories, five measured false.
+
+  So the answer is §11.3's rather than a guess. When a reference does not
+  match, `shoot()` takes two more raw captures and compares them: **rendered
+  differently twice** means something in the story is still moving, and
+  **rendered identically twice** means the story is fine and the reference came
+  from a different rasterisation. The two need different fixes. Both branches
+  were exercised before it landed.
+
+  It also records the fact that kills a whole class of theories:
+  `toHaveScreenshot` re-captures until it matches, so a visual failure is never
+  a screenshot taken mid-render — it is a stable wrong render. Three of the
+  five theories were about timing and none of them could have been true.
+
 - **`useTableColumns`** — which columns a table shows, in what order, and a
   route back. A hook because P6 puts logic in hooks: an order, a restore and
   two refusals, none of which needs a DOM, and all of it tested without
