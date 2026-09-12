@@ -10,3 +10,10 @@ export type {
   TableProps,
   TableSeveralProps
 } from './Table';
+export { useTableColumns } from './useTableColumns';
+export type {
+  TableArrangement,
+  TableColumnSpec,
+  TableColumns,
+  UseTableColumnsOptions
+} from './useTableColumns';
