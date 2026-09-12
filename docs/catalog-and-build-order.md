@@ -311,15 +311,15 @@ fixed` and a pixel `width` per `th`. "The table fills its container" and
 
 #### The waves
 
-| Wave  | What                             | What it settles                                                                                                                                                                                                                                                                                                                                   |
-| ----- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **0** | Three measurements, no component | **Done.** The findings are below, and one of them corrects this section                                                                                                                                                                                                                                                                           |
-| 1     | The table renders and sorts      | **Done.** The pieces with our skin, the density, the sticky header, **its own horizontal scroll** (doc 04 §7), and the three states — empty, loading, **and error with a retry**, which is the most expensive gap in the product this was read against: a failed load is indistinguishable from no results                                        |
-| 2     | Selection                        | **Done.** The base's state, with **our** checkbox column — the base renders none, measured. One thing is new rather than skinned: the count is announced, where in the product read against it changes in silence. One row or several is a discriminated union (decision 0022), never a boolean                                                   |
-| 3     | Columns                          | **The hook is done; the widths are its second half.** Visibility, order, width and resizing as state the PROJECT stores. Here go the **legibility floors per column kind**, **restore defaults** — which the product read against has no route to at all — and the **export shape**: visible columns, in order, with a text accessor              |
-| 4     | Row actions                      | **Done.** The actions and their fold, then the trailing-edge column that stays put, with its divider, and the collapse into an overflow menu driven by **one** threshold table shared by CSS and JavaScript, which is `internal/useContainerStep` and its fifth caller. Doc 04 §11.2 is inherited whole: the overflow never hides a single action |
-| 5     | Rows to cards                    | Doc 04 §6's own first example. Its rule 4 is a check rather than an intention: three rows selected, the structure changes, they stay selected                                                                                                                                                                                                     |
-| 6     | Paging, and the assembly         | The hook with the re-anchoring rule, composed with the two pagers that already exist. Then the assembly, and P6's corollary applied literally at the end: rebuild it from the public pieces, losing nothing                                                                                                                                       |
+| Wave  | What                             | What it settles                                                                                                                                                                                                                                                                                                                                                                   |
+| ----- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **0** | Three measurements, no component | **Done.** The findings are below, and one of them corrects this section                                                                                                                                                                                                                                                                                                           |
+| 1     | The table renders and sorts      | **Done.** The pieces with our skin, the density, the sticky header, **its own horizontal scroll** (doc 04 §7), and the three states — empty, loading, **and error with a retry**, which is the most expensive gap in the product this was read against: a failed load is indistinguishable from no results                                                                        |
+| 2     | Selection                        | **Done.** The base's state, with **our** checkbox column — the base renders none, measured. One thing is new rather than skinned: the count is announced, where in the product read against it changes in silence. One row or several is a discriminated union (decision 0022), never a boolean                                                                                   |
+| 3     | Columns                          | **The hook is done; the widths are its second half.** Visibility, order, width and resizing as state the PROJECT stores. Here go the **legibility floors per column kind**, **restore defaults** — which the product read against has no route to at all — and the **export shape**: visible columns, in order, with a text accessor                                              |
+| 4     | Row actions                      | **Done.** The actions and their fold, then the trailing-edge column that stays put, with its divider, and the collapse into an overflow menu driven by **one** threshold table shared by CSS and JavaScript, which is `internal/useContainerStep` and its fifth caller. Doc 04 §11.2 is inherited whole: the overflow never hides a single action                                 |
+| 5     | Rows to cards                    | **Done, and it changed a foundation rather than calling its hook.** Rows becoming cards is N2 — the same DOM, the same collection, the same roles, re-laid-out by CSS — so doc 04 §6.3 now records that its own first example of a structural change is not one. §6 rule 4 cannot fail here for the reason it usually does: there is no second structure for state to fall out of |
+| 6     | Paging, and the assembly         | The hook with the re-anchoring rule, composed with the two pagers that already exist. Then the assembly, and P6's corollary applied literally at the end: rebuild it from the public pieces, losing nothing                                                                                                                                                                       |
 
 **Three things the base offers that are deliberately NOT waves**: expandable
 rows, grouped headers and incremental loading. Non-goal 4's list does not name
@@ -705,6 +705,95 @@ either. It is the package guide's accordion trap, in the one other place a
 per-side border is written without an all-sides width; the library was swept and
 the table was the only one. Eleven baselines moved and nothing outside the table
 did.
+
+#### What wave 5 found, and the foundation it changed
+
+The wave was supposed to be this suite's first caller of doc 04 §6's hook. It
+has none. **Rows becoming cards is N2** — a presentational change CSS expresses
+completely — and doc 04 §6.3 now says so, with the measurement, because a
+foundation is changed before the code that contradicts it rather than
+afterwards to justify it.
+
+The whole argument is one reading. With `display` changed on the table, the
+rows and the cells and nothing else touched, the roles are identical at both
+widths (`grid` / `row` / `rowheader`), the counts are identical (5 rows, 20
+cells), the selection survives and the keyboard walks the grid exactly as
+before. The base writes its roles explicitly rather than leaning on the tag, so
+a `td` that stops laying out as a table cell is still a `gridcell`. §6 rule 4 —
+"three rows selected, the table becomes cards, they stay selected" — cannot
+fail here, because there is no second structure for state to fall out of.
+
+The test §6.3 leaves behind for the next case is not "does it look different"
+but **whether the two layouts can share one tree**. Tabs that become a select
+still cannot: the control that disappears owns which tab is chosen. A table's
+rows own nothing.
+
+**The label was the wave's real question, and the answer was to read it.** A
+card shows "Customer: Marina Quispe", so a heading's text has to reach the
+CELL. Every obvious route writes the string twice — a `label` prop repeats it
+once per row, a `data-label` attribute repeats it and pollutes the accessible
+name through generated content — and decision 0018 already recorded the cost.
+So it is read from the column's own collection node, through `columnIndex` in
+the base's cell render props and `TableStateContext` above the collection.
+Declared once, read three times: the `<th>`, the sort description, the card.
+
+That route is why **the sort-announcement defect had to be fixed first**, in
+its own commit. The field it reads was the empty string on every column in this
+library.
+
+**A card's title carries no label**, and that is measured rather than tidy. A
+row is named by its row-header cell, so a label inside it renamed the row from
+`"F001-000412"` to `"NumberF001-000412"` and the row's checkbox to
+`"Select NumberF001-000412"` with it. Doc 04 §11.4 calls a name the most basic
+thing a component knows.
+
+**And the label is ANNOUNCED rather than hidden**, which is the opposite of
+what it looks like it should be. With the heading row gone the accessibility
+tree holds **zero** `columnheader` nodes — measured — so nothing else is naming
+the field. Above the step the label is `display: none` and the heading does the
+naming. Said exactly once either way: `gridcell "Astilleros del Sur"` wide,
+`gridcell "Customer Astilleros del Sur"` narrow.
+
+**`display: none` and `sr-only` swap places here**, and the rule that decides
+between them is not which hides better. `Steps` uses `sr-only` because
+`display: none` took its titles out of the tree and left a list of items with
+no names; nothing in `Steps` can be focused. A column header **can** be — the
+base's keyboard delegate sends ArrowUp from a top-row cell straight to it — so
+a clipped heading is focus nobody can see. Measured, ArrowUp from the first
+row: visible → the header; `sr-only` → the header, 73×34 and clipped;
+`display: none` → nowhere at all, focus stays on the cell. The deciding
+question is whether the hidden thing can be focused.
+
+So the band is EMPTIED rather than hidden: the select-all and any sortable
+column stay, because they are things a person can still do, and a table that
+neither sorts nor selects loses the band entirely.
+
+**One capability was nearly lost in silence.** Reaching `columnIndex` means
+handing the base a render function, which empties that node's `textValue` — the
+same trap `Column` had been in for four waves. A row's typeahead string is
+built by joining its row-header cells' `textValue`, so typing-to-find would
+simply have stopped working with nothing in the console. `Cell` derives the
+value back, and the check that guards it types a WHOLE invoice number, because
+every row in the fixture begins `F001-0004` and a check written with one
+keystroke would pass on a table whose typeahead was dead.
+
+**What the pictures found, which assertions had not.** A grid item stretches,
+so a `Badge` in a status field came out as a 180px bar of colour across the
+value column. A heading's bottom border, laid out as a chip, came out as a
+stray underline stopping partway across the band. And a cell laid out as a grid
+makes EVERY child a grid item, so the actions cell put its row of buttons in
+the label's column — orphaned at the left under a heading of `VisuallyHidden`
+text. The value is wrapped in one element now, `display: contents` at the width
+where it is not needed.
+
+**And the wave invalidated four of its own suite's fixtures**, which is the
+cost of a boundary at 480px. `TooWide` was a 360px panel and became a card list
+with nothing to scroll — the story whose entire purpose is to photograph
+horizontal overflow. Two pinned panels and the right-to-left one went the same
+way. Widened to 520, and the right-to-left one needed two more columns as well:
+at 520 with four it read `518/518`, which is a pinned column at its natural
+place, where being pinned changes nothing and the picture proves nothing. That
+is the third invalid fixture of this suite and the same one twice.
 
 #### And the narrow structure is doc 04 §6's own first example
 

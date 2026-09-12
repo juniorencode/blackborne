@@ -649,7 +649,7 @@ export const Actions: Story = {
  */
 export const TooWide: Story = {
   render: args => (
-    <Room label="A 360px panel holding a six-column table" width={360}>
+    <Room label="A 520px panel holding a six-column table" width={520}>
       <Table {...args}>
         <TableHeader>
           <Column id="number" isRowHeader>
@@ -742,7 +742,7 @@ export const Pinned: Story = {
 
     return (
       <div className="catalog-stack">
-        <Room label="Pinned, in a 380px panel" width={380}>
+        <Room label="Pinned, in a 520px panel" width={520}>
           <Table aria-label={label} pinnedEdge="end">
             {head}
             <TableBody>{body}</TableBody>
@@ -750,7 +750,7 @@ export const Pinned: Story = {
         </Room>
         <Room
           label="A chosen row, and the tint reaches the pinned cell"
-          width={380}
+          width={520}
         >
           <Table
             aria-label={label}
@@ -766,6 +766,100 @@ export const Pinned: Story = {
         </Room>
       </div>
     );
+  }
+};
+
+/**
+ * ROWS BECOME CARDS when the panel is too narrow to be a table — doc 04 §6's
+ * own first example, and it turns out to need no JavaScript at all.
+ *
+ * The DOM does not change. Measured: the same roles, the same 5 rows and 20
+ * cells, the same selection and the same keyboard at both widths — the base
+ * writes its roles explicitly, so a `td` that stops laying out as a table cell
+ * is still a `gridcell`. §6 rule 4 is met because there is no second structure
+ * for state to fall out of.
+ *
+ * Two things to look for. Each field carries its column's NAME, read from that
+ * column's own collection node rather than written a second time — and the
+ * card's TITLE carries none, because a row is named by that cell and a label
+ * inside it would rename the row. And the heading band is emptied rather than
+ * hidden: the select-all checkbox and any sortable column stay, because they
+ * are things a person can still do; the rest goes, and a table that neither
+ * sorts nor selects loses the band entirely.
+ */
+export const Cards: Story = {
+  render: args => {
+    const label = args['aria-label'] ?? 'Invoices';
+    const Choosing = () => {
+      const [chosen, setChosen] = useState<string[]>(['1', '3']);
+      const head = (sortable: boolean) => (
+        <TableHeader>
+          <Column id="number" allowsSorting={sortable} isRowHeader>
+            Number
+          </Column>
+          <Column id="customer">Customer</Column>
+          <Column id="status">Status</Column>
+          <Column id="total">Total</Column>
+        </TableHeader>
+      );
+      const body = (
+        <TableBody>
+          {INVOICES.map(invoice => (
+            <Row id={invoice.id} key={invoice.id}>
+              <Cell>{invoice.number}</Cell>
+              <Cell>{invoice.customer}</Cell>
+              <Cell>
+                <Badge tone={TONE[invoice.status]}>
+                  {LABEL[invoice.status]}
+                </Badge>
+              </Cell>
+              <Cell>{invoice.total}</Cell>
+            </Row>
+          ))}
+        </TableBody>
+      );
+
+      return (
+        <div className="catalog-stack">
+          <Room label="720px — a table, and three rows are chosen" width={720}>
+            <Table
+              aria-label={label}
+              onSelectionChange={setChosen}
+              selectedKeys={chosen}
+              selectionMode="multiple"
+              sortDescriptor={{ column: 'number', direction: 'ascending' }}
+              onSortChange={() => undefined}
+            >
+              {head(true)}
+              {body}
+            </Table>
+          </Room>
+          <Room label="360px — the same three, as cards" width={360}>
+            <Table
+              aria-label={label}
+              onSelectionChange={setChosen}
+              selectedKeys={chosen}
+              selectionMode="multiple"
+              sortDescriptor={{ column: 'number', direction: 'ascending' }}
+              onSortChange={() => undefined}
+            >
+              {head(true)}
+              {body}
+            </Table>
+          </Room>
+          <Room
+            label="360px, nothing to sort and nothing to choose — no band at all"
+            width={360}
+          >
+            <Table aria-label={label}>
+              {head(false)}
+              {body}
+            </Table>
+          </Room>
+        </div>
+      );
+    };
+    return <Choosing />;
   }
 };
 
@@ -834,10 +928,38 @@ export const States: Story = {
           </TableBody>
         </Table>
       </Room>
-      <Room label="320px, which P4 asks of everything" width={320}>
+      {/*
+       * The same states as cards, and the disabled one is here on purpose: a
+       * row that must read as inactive does it with muted text, and a CARD has
+       * a frame of its own that a row does not. Nothing in the suite had
+       * photographed that until this panel existed.
+       */}
+      <Room
+        label="320px, which P4 asks of everything — and the same row, disabled"
+        width={320}
+      >
         <Table {...args}>
           <Head />
-          <Body rows={INVOICES.slice(0, 2)} />
+          <TableBody>
+            {INVOICES.slice(0, 2)
+              .concat(INVOICES.filter(invoice => invoice.status === 'void'))
+              .map(invoice => (
+                <Row
+                  id={invoice.id}
+                  isDisabled={invoice.status === 'void'}
+                  key={invoice.id}
+                >
+                  <Cell>{invoice.number}</Cell>
+                  <Cell>{invoice.customer}</Cell>
+                  <Cell>
+                    <Badge tone={TONE[invoice.status]}>
+                      {LABEL[invoice.status]}
+                    </Badge>
+                  </Cell>
+                  <Cell>{invoice.total}</Cell>
+                </Row>
+              ))}
+          </TableBody>
         </Table>
       </Room>
     </div>
@@ -915,10 +1037,41 @@ export const Direction: Story = {
          * 43..107 and the pair from `calc(100% - 64px)` to `64px`, so the
          * shadow stays immediately inward of the column in both readings.
          */}
-        <Room label="العربية، والعمود المثبَّت" width={320}>
+        <Room label="العربية، والعمود المثبَّت" width={520}>
+          {/*
+           * SIX COLUMNS, so the panel actually overflows at 520. Four of them
+           * fit, and a pinned column in a table with nothing to scroll sits at
+           * its natural place — where being pinned changes nothing and the
+           * picture proves nothing. Measured before this was written:
+           * `518/518`.
+           */}
           <Table aria-label="الفواتير" pinnedEdge="end">
-            <Head />
-            <Body rows={INVOICES.slice(0, 3)} />
+            <TableHeader>
+              <Column id="number" isRowHeader>
+                Number
+              </Column>
+              <Column id="customer">Customer</Column>
+              <Column id="status">Status</Column>
+              <Column id="issued">Issued</Column>
+              <Column id="due">Due</Column>
+              <Column id="total">Total</Column>
+            </TableHeader>
+            <TableBody>
+              {INVOICES.slice(0, 3).map(invoice => (
+                <Row id={invoice.id} key={invoice.id}>
+                  <Cell>{invoice.number}</Cell>
+                  <Cell>{invoice.customer}</Cell>
+                  <Cell>
+                    <Badge tone={TONE[invoice.status]}>
+                      {LABEL[invoice.status]}
+                    </Badge>
+                  </Cell>
+                  <Cell>2026-09-01</Cell>
+                  <Cell>2026-09-30</Cell>
+                  <Cell>{invoice.total}</Cell>
+                </Row>
+              ))}
+            </TableBody>
           </Table>
         </Room>
       </ConfigProvider>

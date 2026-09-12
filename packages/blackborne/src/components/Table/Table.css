@@ -333,3 +333,190 @@
     var(--bb-table-pin, 0px) 0,
     100% 0;
 }
+
+/* ──────────────────────── the rows a narrow panel folds ─────────────────── */
+
+/*
+ * ## The cards are a paint, not a second tree
+ *
+ * Doc 04 §6 lists "a table that becomes a list of cards when narrow" as its own
+ * first example of a STRUCTURAL change — the level at which JavaScript is
+ * permitted. Measured on this component, it does not have to be one, and that
+ * measurement is what this block rests on. With `display` changed on the table,
+ * the rows and the cells, and nothing else touched at all:
+ *
+ *     roles      grid / row / rowheader      identical at both widths
+ *     counted    5 rows, 20 cells            identical at both widths
+ *     selection  chosen → still chosen       §6 rule 4, by construction
+ *     keyboard   ArrowRight ArrowDown ArrowUp  all walk the grid as before
+ *
+ * The base writes its roles explicitly rather than leaning on the tag, so a
+ * `td` that stops laying out as a table cell is still a `gridcell`. One DOM,
+ * one collection, one set of state. §6 rule 4 is not met here by remembering to
+ * lift state; it is met because there is no second structure for state to fall
+ * out of — which is §6.1's "state lives above the structure" with the second
+ * structure removed. Doc 04 §6.3 records it.
+ *
+ * ## So the switch is one gate and a handful of fallbacks
+ *
+ * The table publishes what each level should be and this reads it — and every
+ * fallback is the CARD value, so the query only has to say what changes when
+ * there is ROOM. That halves the declarations, and it puts the failure on the
+ * right side: a gate that never compiles leaves a card list at every width,
+ * which §4.1 establishes is the layout that is safe at any of them. Table
+ * fallbacks would have failed into the one that is not.
+ *
+ * There is one variable per VALUE rather than one per element, which is why
+ * three rules read `--bb-t-cell` with three different fallbacks: they want
+ * different things without room and the same `table-cell` with it. Grid
+ * placement is not gated at all, because `grid-column` and `grid-row` are inert
+ * on a table cell. And every length that differs — a gap, a padding, a radius,
+ * a border width — is multiplied by `--bb-cards`, which is 1 until the query
+ * sets it to 0, so eight declarations carry the whole switch.
+ *
+ * The gate is a utility rather than an `@container` written here, because a
+ * container query cannot name its threshold with a token: its condition may not
+ * contain `var()` (doc 04 §4.0). Written here it would spell `30rem` a second
+ * time, in the one place where the copy could disagree with the scale.
+ */
+.bb-table-scroller table {
+  display: var(--bb-t-table, block);
+}
+
+.bb-table-scroller thead {
+  display: var(--bb-t-head, block);
+}
+
+.bb-table-scroller tbody {
+  display: var(--bb-t-body, flex);
+  flex-direction: column;
+  gap: calc(var(--bb-space-2) * var(--bb-cards, 1));
+}
+
+/*
+ * ## The card
+ *
+ * Two columns — the checkbox, then everything else — with the row-header cell
+ * as the title on the first line and every other field on a line of its own.
+ *
+ * THE TITLE TAKES NO LABEL, and that is measured rather than tidy: a row is
+ * named by its row-header cell, so a label inside it renamed the row from
+ * `"F001-000412"` to `"NumberF001-000412"`, and the row's checkbox came out as
+ * "Select NumberF001-000412" with it. Doc 04 §11.4 calls a name the most basic
+ * thing a component knows; this would have changed it at one width and not the
+ * other.
+ *
+ * The row's rule lives here rather than in a utility because the two layouts
+ * want different edges of it — a line between rows, a frame around a card — and
+ * a `border-b` class plus a frame here would be two sources for one border.
+ */
+.bb-table-row {
+  display: var(--bb-t-row, grid);
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: calc(var(--bb-space-1) * var(--bb-cards, 1));
+  padding: calc(var(--bb-space-3) * var(--bb-cards, 1));
+  border: calc(1px * var(--bb-cards, 1)) solid var(--bb-border);
+  border-block-end-width: 1px;
+  border-radius: calc(var(--bb-radius-md) * var(--bb-cards, 1));
+}
+
+/* A table's last row draws no rule; a card is a frame and keeps all four. */
+.bb-table-row:last-child {
+  border-block-end-width: calc(1px * var(--bb-cards, 1));
+}
+
+.bb-table-cell {
+  display: var(--bb-t-cell, grid);
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(0, 40%) minmax(0, 1fr);
+  column-gap: var(--bb-space-3);
+  align-items: baseline;
+  /*
+   * THE VALUE TAKES ITS OWN WIDTH. A grid item stretches by default, and the
+   * first card baseline is what said so: a `Badge` in a status field came out
+   * as a 180px bar of colour across the whole value column, which reads as a
+   * filled row rather than as a tag. Inert in a table, where the cell is not a
+   * grid at all.
+   */
+  justify-items: start;
+  /*
+   * A VARIABLE RATHER THAN A MULTIPLIER, because this one is not zero in a
+   * table — it is the padding the cell already had. These rules are unlayered
+   * so they beat the utility unconditionally, and `calc(… * --bb-cards)` beat
+   * it down to nothing: every row in every wide table lost its vertical
+   * padding and came out 33px tall against 45. Found by a baseline moving and
+   * then measured; the multiplier is only safe for a length a table wants to
+   * be zero.
+   */
+  padding-block: var(--bb-t-cell-pad, var(--bb-space-1));
+}
+
+/*
+ * The title is one thing, so it is a block rather than a two-slot grid — a
+ * card's heading indented by the width of a label column it does not have was
+ * the other half of what the first actions baseline showed.
+ */
+.bb-table-cell[role='rowheader'] {
+  display: var(--bb-t-cell, block);
+  grid-column: 2;
+  grid-row: 1;
+  font-weight: var(--bb-t-title-weight, var(--bb-weight-strong));
+}
+
+.bb-table-cell > .bb-table-value {
+  display: var(--bb-t-value, block);
+}
+
+.bb-table-cell.bb-table-pick {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+/*
+ * ## What the heading row keeps
+ *
+ * Not `sr-only`, and this is the inverse of the rule `Steps` left behind. There
+ * `display: none` was wrong, because it took the titles out of the
+ * accessibility tree and left a list of items with no names, and `sr-only` was
+ * right because nothing in `Steps` can be focused. Here a column header CAN be
+ * focused — the base's keyboard delegate sends ArrowUp from a top-row cell
+ * straight to it — so the two options swap places. Measured, ArrowUp from the
+ * first row:
+ *
+ *     heading visible      → th "Number", visible
+ *     heading sr-only      → th "Number", 73×34, CLIPPED: focus nobody can see
+ *     heading display:none → nowhere at all; focus stays on the cell
+ *
+ * A browser will not focus what is not rendered, so the key becomes inert
+ * rather than a trap — which is what ArrowUp at the top of a list should do.
+ * The deciding question is not which property hides better; it is whether the
+ * hidden thing can be focused.
+ *
+ * So the band is EMPTIED rather than hidden. What can still be used stays: the
+ * select-all checkbox, and any column a person can sort by. The rest goes,
+ * because a strip of column names above cards that do not line up with them is
+ * noise, and because a name every card already carries would be said twice.
+ * A table that neither sorts nor selects loses every child and the band
+ * collapses to nothing.
+ */
+.bb-table-head > tr {
+  display: var(--bb-t-row, flex);
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--bb-space-2);
+  padding: calc(var(--bb-space-2) * var(--bb-cards, 1));
+}
+
+.bb-table-head > tr > th.bb-table-column-quiet {
+  display: var(--bb-t-cell, none);
+}
+
+/*
+ * THE RULE UNDER THE BAND IS A RULE, NOT AN UNDERLINE. In a table the heading
+ * cells' bottom border is the line under the whole band; laid out as chips, the
+ * same border came out as a stray underline beneath the one sortable column,
+ * stopping partway across the band. Found by looking at the first baseline.
+ */
+.bb-table-head > tr > th {
+  border-block-end-width: calc(1px * (1 - var(--bb-cards, 1)));
+}
