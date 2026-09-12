@@ -12,7 +12,7 @@
  *
  * What can only be asserted here is everything after that first frame.
  */
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page as Browser } from '@playwright/test';
 import { gotoStory } from './story';
 
 type Page = import('@playwright/test').Page;
@@ -241,4 +241,119 @@ test('a cursor pager turns its chevrons round too', async ({ page }) => {
 
   expect(await rotationIn('Light')).toBe('90deg');
   expect(await rotationIn('RTL · العربية')).toBe('-90deg');
+});
+
+/* ──────────── the rule, driven through the pieces that compose it ────────── */
+
+/*
+ * WHAT ONLY A BROWSER ANSWERS HERE. `usePaging`'s own tests render nothing and
+ * assert the arithmetic; what they cannot say is that the three values it
+ * returns ARE what `Pagination` wants, that a real press walks the pages, and
+ * that the rule holds when a person performs it rather than when a test calls
+ * it.
+ *
+ * This is also the wave's deliverable. The catalog planned a thin assembly and
+ * set its own test — P6's corollary, applied literally: can it be rebuilt from
+ * the public pieces, losing nothing? The story this drives is that rebuild, so
+ * the check is what keeps it honest.
+ */
+
+const PAGED = 'components-table--paged';
+
+const nextPage = (page: Browser) =>
+  page
+    .getByRole('list', { name: /Pagination/i })
+    .getByRole('button')
+    .last()
+    .click();
+
+test('a bigger page still holds the row a person was looking at', async ({
+  page
+}) => {
+  await gotoStory(page, PAGED);
+
+  const keys = () =>
+    page
+      .locator('.bb-table-scroller tbody tr')
+      .evaluateAll(rows => rows.map(row => row.getAttribute('data-key')));
+
+  /*
+   * Walked rather than set, because the rule is about where a PERSON is. Six
+   * presses from page 1 at ten a page is page 7, whose first row is index 60.
+   */
+  for (let i = 0; i < 6; i += 1) await nextPage(page);
+  const before = await keys();
+
+  await page.getByRole('button', { name: /invoices a page/i }).click();
+  await page.getByRole('option', { name: '50 invoices a page' }).click();
+
+  const after = await keys();
+
+  /*
+   * THE ASSERTION IS THAT THE ROW IS STILL THERE, and getting it right took two
+   * goes. The first version asserted the row was still FIRST, which is more
+   * than the rule promises — the anchor names the page that HOLDS the row, and
+   * it only comes out first when the old offset happens to divide by the new
+   * size. It passed anyway, because the fixture was twenty-five a page, where
+   * 150 does divide by 50.
+   *
+   * Worse, that fixture could not fail: at twenty-five, re-anchoring and a
+   * plain clamp both land on page 4. Ten a page is the size at which they
+   * differ — the rule gives page 2, holding rows 51 to 100; a clamp gives page
+   * 4, holding 151 to 200, and the row is gone.
+   */
+  expect(before.length, 'the walk never left the first page').toBe(10);
+  expect(after.length).toBe(50);
+  expect(after, 'the row that was on screen is not on the new page').toContain(
+    before[0]
+  );
+});
+
+test('and the pager always marks a page that exists', async ({ page }) => {
+  await gotoStory(page, PAGED);
+
+  const marked = () => page.locator('[aria-current="page"]').count();
+
+  for (let i = 0; i < 6; i += 1) await nextPage(page);
+  expect(await marked()).toBe(1);
+
+  await page.getByRole('button', { name: /invoices a page/i }).click();
+  await page.getByRole('option', { name: '50 invoices a page' }).click();
+
+  /*
+   * A PAGE PAST THE END IS NOT MERELY EMPTY, which is why the hook publishes a
+   * page rather than storing one. Measured on this library's own pager:
+   * handed page 7 of 3, `pageWindow` returns the slots 1, 2, 3 — none equal to
+   * 7 — so the render's `slot.page === page` never matches and nothing carries
+   * `aria-current="page"`, while `atStart` stays false so previous is live and
+   * reports 6. A row of unmarked numbers over an empty table.
+   */
+  expect(await marked()).toBe(1);
+});
+
+test('narrowing the results moves nobody past the end, and widening them returns', async ({
+  page
+}) => {
+  await gotoStory(page, PAGED);
+
+  for (let i = 0; i < 6; i += 1) await nextPage(page);
+  const label = () => page.locator('.catalog-label').first().textContent();
+  const far = await label();
+
+  await page.getByRole('button', { name: /Narrow to 12 results/i }).click();
+  const narrowed = await label();
+
+  await page.getByRole('button', { name: /Clear the filter/i }).click();
+  const back = await label();
+
+  expect(far).toContain('page 7 of 20');
+  /* The last page that exists, rather than an empty one. */
+  expect(narrowed).toContain('page 2 of 2');
+  /*
+   * AND THE INTENT SURVIVED. Only possible because the correction is made on
+   * the way out rather than written back — a repair that reported itself would
+   * have overwritten the stored page, and in a controlled project its address
+   * bar with it.
+   */
+  expect(back).toContain('page 7 of 20');
 });

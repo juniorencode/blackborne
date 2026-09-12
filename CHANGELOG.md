@@ -12,6 +12,28 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **`usePaging`** — which page of a listing, how big a page is, and the one
+  rule nobody writes by hand.
+
+  **The rule**: when the page size changes, the page is re-anchored on the
+  first row that was visible. 200 results at ten a page, on page 7, switching
+  to fifty — keeping the page puts you on rows 301 to 350 of 200, past the end,
+  looking at nothing; anchoring gives page 2, which still holds row 61.
+
+  **One value, not two numbers.** `{ page, size }` through one triple, because
+  re-anchoring moves both at once and two callbacks would report a state that
+  cannot exist.
+
+  **The page it publishes is one that exists**, and the correction never writes
+  back. A total that shrinks under a stored page shows the last page there is,
+  and clearing the filter returns the person to where they were. A page past
+  the end is not merely empty: measured on this library's own pager, nothing
+  carries `aria-current="page"` and the previous button stays live.
+
+  It sits beside `Pagination` rather than with the table, because there is no
+  table in it — its first three members are `Pagination`'s three props, by name
+  and by type.
+
 - **A `Table` becomes a list of cards in a narrow container**, and it needs no
   new prop, no new component and no JavaScript at all.
 

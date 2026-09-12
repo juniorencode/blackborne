@@ -248,6 +248,7 @@ const STATES: Array<[string, string]> = [
   ['components-table--too-wide', 'table-too-wide'],
   ['components-table--pinned', 'table-pinned'],
   ['components-table--cards', 'table-cards'],
+  ['components-table--paged', 'table-paged'],
   ['components-checkbox--marks', 'checkbox-marks'],
   ['components-badge--tones', 'badge-tones'],
   ['components-badge--states', 'badge-states'],

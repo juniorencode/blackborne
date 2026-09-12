@@ -286,8 +286,14 @@ export type {
  * numbers — inside a table's own footer, say — should not have to rewrite the
  * arithmetic to get the same shape.
  */
-export { Pagination, pageWindow } from './components/Pagination';
-export type { PageSlot, PaginationProps } from './components/Pagination';
+export { Pagination, pageWindow, usePaging } from './components/Pagination';
+export type {
+  Paged,
+  PageSlot,
+  PaginationProps,
+  Paging,
+  UsePagingOptions
+} from './components/Pagination';
 export { CursorPagination } from './components/CursorPagination';
 export type { CursorPaginationProps } from './components/CursorPagination';
 

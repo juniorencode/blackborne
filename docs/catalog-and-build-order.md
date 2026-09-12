@@ -255,7 +255,7 @@ and persistence of anything.
 | ------------ | --------------------------------------------------------------------------------------------- |
 | **Hooks**    | the column state — visibility, order, width — and the paging state, which owns the rule below |
 | **Pieces**   | our skin on the base's set, plus the resizer                                                  |
-| **Assembly** | one, thin, adding **nothing**                                                                 |
+| **Assembly** | **none** — the test below was applied and it answered no (§7)                                 |
 
 Three things about that table are decisions rather than shape.
 
@@ -311,15 +311,15 @@ fixed` and a pixel `width` per `th`. "The table fills its container" and
 
 #### The waves
 
-| Wave  | What                             | What it settles                                                                                                                                                                                                                                                                                                                                                                   |
-| ----- | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **0** | Three measurements, no component | **Done.** The findings are below, and one of them corrects this section                                                                                                                                                                                                                                                                                                           |
-| 1     | The table renders and sorts      | **Done.** The pieces with our skin, the density, the sticky header, **its own horizontal scroll** (doc 04 §7), and the three states — empty, loading, **and error with a retry**, which is the most expensive gap in the product this was read against: a failed load is indistinguishable from no results                                                                        |
-| 2     | Selection                        | **Done.** The base's state, with **our** checkbox column — the base renders none, measured. One thing is new rather than skinned: the count is announced, where in the product read against it changes in silence. One row or several is a discriminated union (decision 0022), never a boolean                                                                                   |
-| 3     | Columns                          | **The hook is done; the widths are its second half.** Visibility, order, width and resizing as state the PROJECT stores. Here go the **legibility floors per column kind**, **restore defaults** — which the product read against has no route to at all — and the **export shape**: visible columns, in order, with a text accessor                                              |
-| 4     | Row actions                      | **Done.** The actions and their fold, then the trailing-edge column that stays put, with its divider, and the collapse into an overflow menu driven by **one** threshold table shared by CSS and JavaScript, which is `internal/useContainerStep` and its fifth caller. Doc 04 §11.2 is inherited whole: the overflow never hides a single action                                 |
-| 5     | Rows to cards                    | **Done, and it changed a foundation rather than calling its hook.** Rows becoming cards is N2 — the same DOM, the same collection, the same roles, re-laid-out by CSS — so doc 04 §6.3 now records that its own first example of a structural change is not one. §6 rule 4 cannot fail here for the reason it usually does: there is no second structure for state to fall out of |
-| 6     | Paging, and the assembly         | The hook with the re-anchoring rule, composed with the two pagers that already exist. Then the assembly, and P6's corollary applied literally at the end: rebuild it from the public pieces, losing nothing                                                                                                                                                                       |
+| Wave  | What                             | What it settles                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ----- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **0** | Three measurements, no component | **Done.** The findings are below, and one of them corrects this section                                                                                                                                                                                                                                                                                                                                                                            |
+| 1     | The table renders and sorts      | **Done.** The pieces with our skin, the density, the sticky header, **its own horizontal scroll** (doc 04 §7), and the three states — empty, loading, **and error with a retry**, which is the most expensive gap in the product this was read against: a failed load is indistinguishable from no results                                                                                                                                         |
+| 2     | Selection                        | **Done.** The base's state, with **our** checkbox column — the base renders none, measured. One thing is new rather than skinned: the count is announced, where in the product read against it changes in silence. One row or several is a discriminated union (decision 0022), never a boolean                                                                                                                                                    |
+| 3     | Columns                          | **The hook is done; the widths are its second half.** Visibility, order, width and resizing as state the PROJECT stores. Here go the **legibility floors per column kind**, **restore defaults** — which the product read against has no route to at all — and the **export shape**: visible columns, in order, with a text accessor                                                                                                               |
+| 4     | Row actions                      | **Done.** The actions and their fold, then the trailing-edge column that stays put, with its divider, and the collapse into an overflow menu driven by **one** threshold table shared by CSS and JavaScript, which is `internal/useContainerStep` and its fifth caller. Doc 04 §11.2 is inherited whole: the overflow never hides a single action                                                                                                  |
+| 5     | Rows to cards                    | **Done, and it changed a foundation rather than calling its hook.** Rows becoming cards is N2 — the same DOM, the same collection, the same roles, re-laid-out by CSS — so doc 04 §6.3 now records that its own first example of a structural change is not one. §6 rule 4 cannot fail here for the reason it usually does: there is no second structure for state to fall out of                                                                  |
+| 6     | Paging, and the assembly         | **Done, and the assembly is not shipped.** `usePaging` holds the page, the size and the rule; it sits beside `Pagination` rather than in this suite, because there is no table in it. P6's corollary was applied literally and it answered: the rebuild is two dozen lines, the invariant an assembly was for is already true by construction in the dynamic form, and the one job left — computing `dependencies` — is the one thing it cannot do |
 
 **Three things the base offers that are deliberately NOT waves**: expandable
 rows, grouped headers and incremental loading. Non-goal 4's list does not name
@@ -809,6 +809,93 @@ at 520 with four it read `518/518`, which is a pinned column at its natural
 place, where being pinned changes nothing and the picture proves nothing. That
 is the third invalid fixture of this suite and the same one twice.
 
+#### What wave 6 found, and the component it did not ship
+
+The wave is a hook and a decision. `usePaging` holds two numbers and the one
+rule nobody writes by hand; the assembly the piece list promised is **not
+shipped**, and the reason is the test this section set for it.
+
+**The hook does not live with the table.** It takes a total and returns
+numbers, and there is no table in it — a card grid, a list of invoices and a
+table page the same way. It sits beside `Pagination`, which is what says so,
+and the piece list above is corrected rather than followed.
+
+**One value, not two numbers.** `{ page, size }` through one triple —
+`paging`, `defaultPaging`, `onPagingChange` — because re-anchoring changes both
+at once. Two callbacks would report a state that cannot exist: a controlled
+project storing each in its own state holds `{ page: 7, size: 50 }` between
+them, which is rows 301 to 350 of 200 — the exact state the rule exists to
+prevent, reintroduced at the callback boundary.
+
+**The page is published, never stored.** What comes out is the intent brought
+into range, so a total that shrinks under a stored page shows the last page
+that exists, and clearing the filter afterwards returns the person to where
+they were. A repair that reported itself would rewrite a controlled project's
+stored page — and its address bar — on a render rather than on an act.
+
+That correction is not the "clamp to the last page" the page-size rule rejects:
+there the anchor row still exists and re-anchoring is available, here it does
+not. And a page past the end is not merely empty. Measured on this library's
+own pager: handed page 7 of 3, `pageWindow` returns the slots `1,2,3` — none
+equal to 7 — so the render's `slot.page === page` never matches and **nothing
+carries `aria-current="page"`**, while `atStart` stays false so the previous
+button is live and reports page 6. A row of unmarked numbers over an empty
+table, and four more empty tables to walk back through.
+
+#### The assembly, and why there is none
+
+§3.4's piece list said "one, thin, adding **nothing**", and set the test: can it
+be rebuilt from the public pieces, losing nothing? It can. The rebuild is the
+`Paged` story, and what it costs is two dozen lines of ordinary composition.
+
+Three things decided it, and the first is the one that matters:
+
+**The invariant it was for is already true by construction.** The argument for
+an assembly was wave 0's measurement — the base THROWS rather than warns on a
+cell count that does not match the column count, so an API on top has to make
+that true rather than hope for it. But that measurement is about a **static
+sibling**: a `TableHeader` holding both a written `Column` and a render
+function drops the function and throws. In the dynamic form — one array driving
+`TableHeader columns=` and `Row columns=`, which is the documented idiom — a
+mismatch is not expressible at all: one `Column` per entry and one `Cell` per
+entry, from the same array. The pieces already make it true, and the one static
+case in this library, the selection column, `Table` handles itself by
+prepending to the collection.
+
+**Its last candidate value inverts into a defect.** Strip that invariant and
+the assembly holds one job: computing `dependencies` for `TableBody` and `Row`.
+It cannot. That prop exists because a cell closure captures things, and an
+assembly cannot know that a consumer's cell closed over a formatter, a locale
+or a chosen id. It would either forward the prop — saving nothing and adding
+one — or compute it and serve stale cells while having hidden the prop that
+would have fixed them.
+
+**And the ledger is one-sided.** `TableProps` is 17 members and `TableBodyProps`
+is 7, every one already public. An assembly forwarding them ships over doc 01
+§7's own warning sign — "a component accumulates more than ~15 props" — on the
+day it lands, against about a dozen lines of JSX saved, and it has a cliff at
+the first `colSpan`, the first heading that is not a string, the first second
+header row, at which point the consumer writes the pieces anyway.
+
+So P6's corollary was applied and it answered. §7 carries the row.
+
+#### And two of this wave's own checks could not fail
+
+Both were written from a fixture that could not tell the rule from a plain
+clamp, and both passed on an implementation with the rule deleted.
+
+The story started at twenty-five a page. From page 7, switching to fifty:
+re-anchoring gives page 4 and a clamp gives `clamp(7, 4)` — also 4. The
+implementations agree at that size and disagree at ten, which is the size the
+catalog's own example uses and the size the story starts at now.
+
+The assertion was wrong as well, and in the more interesting direction: it said
+the row that was first is first again. The rule does not promise that. It names
+the page that HOLDS the row, and the row only comes out first when the old
+offset happens to divide by the new size — which 150 does by 50, which is why
+it passed. It asserts the row is still on the page now, which is what the rule
+actually promises and what a clamp actually breaks.
+
 #### And the narrow structure is doc 04 §6's own first example
 
 That section opens with "a table that becomes a list of cards when narrow", so
@@ -996,6 +1083,7 @@ someone proposes the same thing again.
 | A page-size selector                                    | **Never**                                                        | It read "deferred, blocked by `Select`, and worth asking afterwards whether it belongs here at all". `Select` arrived, the question was asked, and the answer is no: how many rows to fetch is a property of the LISTING, not of the thing that moves between pages, and the listing is the table suite's (non-goal 4). A consumer who wants one puts a `Select` beside a `Pagination` — two components doing what each is for, needing nothing from us. **Re-asked on 2026-09-11, when the table suite arrived and the sentence above handed it the listing.** The answer to the row as written is unchanged — the CONTROL stays composed — and there are two reasons. Its whole body would be a `Select` with four options, which is an assembly adding nothing. And the noun belongs to the project: "rows", "records", "results", "patients", where doc 05 sends every word a person reads to the dictionary. A component would either impose one noun or take a `label`, and a component that takes a `label` and renders a `Select` **is** the `Select`. What DID change is one level down. The NUMBER is state the suite's paging hook holds, together with the rule nobody writes by hand: 200 results at 10 a page, on page 7 — rows 61 to 70 — switching to 50 a page. Keep the page and you land on rows 301 to 350, past the end, looking at nothing. Reset to the first and the place is lost. Clamp to the last and you arrive somewhere unrelated. Anchor on the first row that was visible and page 2 of 50 holds row 61, so the person is still looking at what they were looking at. That is logic, so P6 puts it in a hook and the consumer can no longer get the hard half wrong |
 | Pinning the LEADING edge of a table                     | Deferred, with the obstacle named                                | `pinnedEdge` is a union of one member for a reason rather than by omission. The trailing edge is one column and `:last-child` finds it; the leading edge is NOT one column as soon as selection is on, because the checkbox column sits in front of the column that names the row — so `:first-child` would pin the checkboxes and let the names scroll away, which is the opposite of what a frozen first column is for. Two columns is a different mechanism: the second has to be offset by the width of the first, which means publishing a second width and an `inset-inline-start` that is not zero. What decides it is a screen that needs it, and the union grows by one member when that arrives, which is additive                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | Separators between heading cells                        | Pending a decision                                               | Every table in this library had them until wave 4b, at **three pixels**, and nobody designed them: `border-solid` reached three sides with no declared width, and they went when the cause did. The question left behind is whether a heading wants column separators at all. The body has none, so the heading having them was inconsistent in the direction nobody chose; a dense listing of ten columns might want them at 1px and a table of four plainly does not. A real question about the skin rather than a regression, which is why it is here instead of being reinvented in passing                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| A thin assembly over the table pieces                   | **Decided: no**                                                  | §3.4's piece list promised "one, thin, adding nothing" and set its own test — P6's corollary, applied literally: can it be rebuilt from the public pieces, losing nothing? It can, in about two dozen lines, and the `Paged` story is that rebuild. Three things decided it. The invariant it was for — the base THROWS on a cell count that does not match the column count — is **already true by construction** in the dynamic form, where one array drives both `TableHeader columns=` and `Row columns=` and a mismatch is not expressible; wave 0's measurement was of a STATIC sibling. Its one remaining job, computing `dependencies`, is the one thing it cannot do, because it cannot know what a consumer's cell closure captured. And `TableProps` is 17 members with `TableBodyProps` 7, so an assembly forwarding them ships over doc 01 §7's own warning sign on the day it lands, with a cliff at the first `colSpan` or the first heading that is not a string. What would reopen it is a SHAPE rather than a convenience: a listing pattern this library decides to own end to end, at which point it is a component with a name rather than a forwarding layer                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | A ghost button that is destructive                      | Pending a decision                                               | Wave 4 is the real place hard rule 8 asks for, so this is a case rather than an idea. A row's actions are small ghost buttons and one of them deletes; `Button`'s destructive variant is FILLED, which in that row is the loudest thing on the screen and reads as the row's primary action rather than its dangerous one. Meanwhile `RowAction`'s `tone` colours the menu row and not the button, and the asymmetry is written in the prop's own documentation rather than hidden. What decides it is whether a ghost variant can carry danger at doc 03 §5's contrast floor without becoming a second `danger` — `--bb-danger-text` is the token, and the package guide already records that reaching for `--bb-danger` as text passes in light mode by coincidence and fails in dark                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | Exporting a table to a file                             | **Never**                                                        | [Doc 01](./foundations/01-principles.md) §4.1 and [decision 0027](./decisions/0027-the-library-hands-over-the-shape-the-project-performs-the-act.md): the library hands over the SHAPE and the project performs the ACT. What the suite supplies is the visible columns, in the order the person arranged them, with a text accessor per cell; building the file and handing it to the browser is the project's. Two reasons, and the second is the better one. Weight: the product this was read against pulls `jspdf`, `jspdf-autotable` and `xlsx`, about 1.5 MB, which doc 10 §7's budgets would not survive shipping to every consumer — including the ones who never export anything. And **what the table shows and what gets exported have to be one decision**, which this shape makes one by construction: both read the same column state, so a hidden column cannot come back in the file. One measured caution travels with the accessor: a date column is flattened to TEXT on the way out, or the flattener re-reads it in the browser's own zone, which is doc 05 §3.1's bug arriving through the export instead of through the formatter                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | Expandable rows in a table                              | Pending a case                                                   | The base has it in full — `expandedKeys`, a `treeColumn`, an expand button through a `slot="chevron"` context, `data-level`, and a `--table-row-level` for the indentation — and it switches the table's role to `treegrid`. Non-goal 4's list does not name it, and a suite that absorbs everything its engine can do is the suite §7 warns about. The screen that needs a row to open in place decides it, and the question it has to answer first is whether the detail is a row or a destination: in the product this was read against, detail is reached by navigating, and nothing there wanted an expander                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
