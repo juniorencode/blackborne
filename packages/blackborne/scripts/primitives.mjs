@@ -1,14 +1,14 @@
 /*
- * Bakes the layer-1 primitives from @radix-ui/colors into a CSS file.
+ * Bakes the layer-1 primitives from this library's own palette into a CSS file.
  *
  * Why generated and not hand-written: copying 12 steps across 6 families and
- * 2 modes by hand is 144 hex values, and a single typo is invisible.
+ * 2 modes by hand is 144 values, and a single typo is invisible.
  *
- * Why baked and not imported at runtime: @radix-ui/colors is a DEVELOPMENT
- * dependency (decision in doc 03 §1.1). Importing its CSS would leak
- * unprefixed --slate-1 style variables into the consumer's page and put the
- * package in their dependency tree. The values end up in our compiled CSS and
- * nobody downstream knows the palette exists.
+ * Why baked and not imported at runtime: the palette is data in this
+ * repository (`scripts/palette.mjs`), and the values end up in our compiled CSS
+ * with nothing leaking into a consumer's page. Until 2026-09-12 the source was
+ * `@radix-ui/colors`, a development dependency, for the same reason — that
+ * package is gone now and nothing replaced it.
  *
  * The private naming convention is `--bb-x-*`: the `x` marks layer 1, which no
  * component may reference (doc 03 §4.5). Only semantic.css reads these.
@@ -25,54 +25,70 @@
  * silently stops running is worse than no check at all.
  */
 import { fileURLToPath } from 'node:url';
-import * as radix from '@radix-ui/colors';
+import { PALETTE } from './palette.mjs';
 
-/** Semantic family -> [light scale, dark scale] in @radix-ui/colors. */
+/**
+ * Semantic family -> the palette family it is made of.
+ *
+ * Six, and they are the same six roles this library has always had. What
+ * changed is where the numbers come from.
+ *
+ * `brand` is `blue` where it used to be `indigo`. Those are separate families
+ * in this palette, so it is a choice of default rather than a rename.
+ *
+ * THE FOUR TONE FAMILIES DO NOT FOLLOW A PROJECT THAT CHANGES ITS ACCENT. A
+ * listing whose accent is red still marks an error in `danger`, and two reds
+ * beside each other is avoided by not choosing red — which is the project's
+ * call rather than this library's. Decided rather than discovered, so it is
+ * written here and not left to be rediscovered by whoever meets it.
+ */
 const FAMILIES = {
-  gray: ['slate', 'slateDark'],
-  brand: ['indigo', 'indigoDark'],
-  danger: ['red', 'redDark'],
-  warning: ['amber', 'amberDark'],
-  success: ['green', 'greenDark'],
-  info: ['blue', 'blueDark']
+  gray: 'slate',
+  brand: 'blue',
+  danger: 'red',
+  warning: 'amber',
+  success: 'green',
+  info: 'blue'
 };
 
 /**
- * Translucent scales, for anything drawn OVER a background we do not control.
+ * The twelve steps of one family in one mode, as `oklch`.
  *
- * The focus ring is the reason brand is here: a halo has to sit on whatever
- * surface the control happens to be on — a white panel, a grey table row, a
- * dark dialog — and a solid colour cannot do that without knowing what is
- * underneath. A translucent one does not need to know.
+ * The palette carries every colour twice — `oklch` and the same colour clipped
+ * to sRGB as a hex. This emits the `oklch`, because a screen that can show more
+ * than sRGB should show the colour that was chosen rather than the nearest
+ * thing a hex could name, and a screen that cannot will clip it itself.
+ *
+ * The hex half is not dead weight: it is what a contrast has to be measured
+ * against, because it is what an ordinary screen actually paints. Measuring the
+ * ideal value would report ratios nobody ever sees.
  */
-const ALPHA = {
-  gray: ['slateA', 'slateDarkA'],
-  brand: ['indigoA', 'indigoDarkA']
+const stepsOf = (familyName, mode) => {
+  const family = PALETTE[familyName];
+  if (!family) throw new Error(`unknown palette family: ${familyName}`);
+
+  const scale = mode === 'light' ? family.lightOklch : family.darkOklch;
+  if (scale.length !== 12) {
+    throw new Error(
+      `${familyName} ${mode} has ${String(scale.length)} steps, not 12`
+    );
+  }
+  return scale.map((value, index) => [index + 1, value]);
 };
 
-const stepsOf = scaleName => {
-  const scale = radix[scaleName];
-  if (!scale) throw new Error(`unknown radix scale: ${scaleName}`);
-  // Keys look like `slate1` ... `slate12`, or `slateA1` ... for alpha.
-  return Object.entries(scale)
-    .map(([key, value]) => [Number(key.replace(/^\D+/, '')), value])
-    .sort((a, b) => a[0] - b[0]);
-};
-
-const block = (families, suffix, mode) =>
-  Object.entries(families)
-    .map(([name, scales]) => {
-      const scaleName = mode === 'light' ? scales[0] : scales[1];
-      const lines = stepsOf(scaleName).map(
-        ([step, value]) => `    --bb-x-${name}${suffix}-${step}: ${value};`
+const block = mode =>
+  Object.entries(FAMILIES)
+    .map(([name, familyName]) => {
+      const lines = stepsOf(familyName, mode).map(
+        ([step, value]) => `    --bb-x-${name}-${step}: ${value};`
       );
-      return `    /* ${name}${suffix} — ${scaleName} */\n${lines.join('\n')}`;
+      return `    /* ${name} — ${familyName} */\n${lines.join('\n')}`;
     })
     .join('\n\n');
 
 const header = `/*
  * GENERATED FILE — do not edit.
- * Source: @radix-ui/colors (a development dependency, never shipped).
+ * Source: scripts/palette.mjs, this library's own palette.
  * Regenerate: pnpm --filter blackborne tokens
  *
  * Layer 1: primitives. Values with no meaning. NO COMPONENT MAY USE THESE.
@@ -88,6 +104,10 @@ const header = `/*
  *   5     pressed / selected   10   solid hovered
  *   6     subtle border        11   low-contrast text
  *                              12   high-contrast text
+ *
+ * Step 9 is the one value that is the same in both modes, by construction: it
+ * is the solid the brand is recognised by, and a brand that changed shade with
+ * the lights would not be one.
  */
 `;
 
@@ -96,15 +116,11 @@ export const render = () =>
   [
     header,
     ':root {',
-    block(FAMILIES, '', 'light'),
-    '',
-    block(ALPHA, '-a', 'light'),
+    block('light'),
     '}',
     '',
     "[data-bb-mode='dark'] {",
-    block(FAMILIES, '', 'dark'),
-    '',
-    block(ALPHA, '-a', 'dark'),
+    block('dark'),
     '}',
     ''
   ].join('\n');

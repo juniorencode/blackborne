@@ -9,6 +9,7 @@
  * COME FROM A COUNTER, which exists only where a stylesheet does.
  */
 import { expect, test } from '@playwright/test';
+import { toSrgb } from './colour';
 import { gotoStory } from './story';
 
 const STATES = 'components-steps--states';
@@ -140,36 +141,44 @@ test('the connectors are one length, and the first step has none', async ({
   expect(seen[0]!.drawn).toBe(false);
 });
 
+/** WCAG relative luminance of an already-clipped sRGB triple. */
+const luminanceOf = ([r, g, b]: [number, number, number]) => {
+  const channel = (n: number) => {
+    const s = n / 255;
+    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+};
+
 test('the four states differ before their colour does', async ({ page }) => {
   await gotoStory(page, STATES);
 
-  const seen = await page.locator('.bb-step').evaluateAll(steps =>
+  const shapes = await page.locator('.bb-step').evaluateAll(steps =>
     steps.map(step => {
       const indicator = step.querySelector('.bb-step-indicator')!;
-      const styles = getComputedStyle(indicator);
-      const luminance = (value: string) => {
-        const parts = (/rgba?\(([^)]+)\)/.exec(value)?.[1] ?? '0,0,0')
-          .split(',')
-          .map(part => Number.parseFloat(part));
-        const channel = (n: number) => {
-          const s = n / 255;
-          return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
-        };
-        return (
-          Math.round(
-            (0.2126 * channel(parts[0]!) +
-              0.7152 * channel(parts[1]!) +
-              0.0722 * channel(parts[2]!)) *
-              1000
-          ) / 1000
-        );
-      };
       return {
         status: step.getAttribute('data-status'),
         hasGlyph: indicator.querySelector('svg') !== null,
-        fill: luminance(styles.backgroundColor)
+        background: getComputedStyle(indicator).backgroundColor
       };
     })
+  );
+
+  /*
+   * The fill is compared as a LUMINANCE taken through `e2e/colour`, which
+   * paints the colour and reads it back. A regex over the computed value with
+   * a fallback to black used to do it, and since the palette is published in
+   * `oklch` that regex matches nothing — so the check would have compared two
+   * confident zeroes and passed on a component with no difference in it at
+   * all.
+   */
+  const seen = await Promise.all(
+    shapes.map(async one => ({
+      ...one,
+      fill:
+        Math.round(luminanceOf(await toSrgb(page, one.background)) * 1000) /
+        1000
+    }))
   );
 
   const byStatus = new Map(seen.map(one => [one.status, one]));

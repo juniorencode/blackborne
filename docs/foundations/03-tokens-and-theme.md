@@ -33,8 +33,14 @@ a handful of variables.
 ### 1.1 Where primitives come from: scales by role
 
 **Decision: primitives come from a system of scales where every step has a
-defined role** (of the kind Radix Colors provides), not from a palette ordered
-only by lightness.
+defined role**, not from a palette ordered only by lightness.
+
+Until 2026-09-12 that system was Radix Colors, kept as a development dependency
+so none of it reached a consumer. It is now this library's own palette —
+`scripts/palette.mjs`, twelve steps with the same twelve roles, published in
+`oklch` ([decision 0028](../decisions/0028-the-palette-is-ours-and-what-it-guarantees.md)).
+The decision below did not change; what changed is that a project is no longer
+limited to the families somebody else drew.
 
 **The problem this avoids.** In an ordinary palette, steps are numbered by
 lightness and nothing else. That means the same step does not do the same job

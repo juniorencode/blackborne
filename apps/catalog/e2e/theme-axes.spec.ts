@@ -12,6 +12,8 @@
  * test failure rather than something spotted in a screenshot weeks later.
  */
 import { expect, test } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
+import { toSrgb } from './colour';
 import { gotoStory } from './story';
 
 /**
@@ -23,10 +25,36 @@ import { gotoStory } from './story';
  * Radix violet — five red tests naming the token, rather than a difference
  * somebody might or might not notice in a screenshot.
  */
-const CONTROL_LIGHT = 'rgb(249, 249, 251)';
-const CONTROL_DARK = 'rgb(24, 25, 27)';
-/** Radix violet step 9 — the alternate brand, defined once in catalog.css. */
-const BRAND_ALT = 'rgb(110, 86, 207)';
+const CONTROL_LIGHT = '247,249,251';
+const CONTROL_DARK = '12,25,44';
+/** The alternate brand, still a hand-written hex in catalog.css. */
+const BRAND_ALT = '110,86,207';
+
+/*
+ * COMPARED AS A PAINTED COLOUR, NOT AS A STRING, and that is the palette's
+ * doing rather than a preference. The palette ships in `oklch`, so a computed
+ * background comes back as `oklch(0.238 0.043 259.4)` — `toHaveCSS` against an
+ * `rgb(...)` literal then fails on the spelling rather than on the colour, and
+ * would go on failing after any correct remap.
+ *
+ * `e2e/colour` paints it and reads the bytes, which is the same colour an
+ * ordinary screen shows and compares equal whatever space it was declared in.
+ * The pinning below is unchanged in spirit: these three constants exist so a
+ * token remap arrives as a named failure rather than as a difference somebody
+ * might or might not notice in a screenshot — which is exactly what they did
+ * when the palette replaced Radix.
+ */
+const painted = (page: Page, locator: Locator) =>
+  expect.poll(async () =>
+    (
+      await toSrgb(
+        page,
+        await locator.evaluate(
+          (node: Element) => getComputedStyle(node).backgroundColor
+        )
+      )
+    ).join(',')
+  );
 
 /** A panel inside a story, found by the label it prints. */
 const panel = (label: string) =>
@@ -41,14 +69,14 @@ test.describe('mode', () => {
     const button = page
       .locator(panel('Light'))
       .getByRole('button', { name: 'secondary' });
-    await expect(button).toHaveCSS('background-color', CONTROL_LIGHT);
+    await painted(page, button).toBe(CONTROL_LIGHT);
   });
 
   test('dark mode actually reaches the control', async ({ page }) => {
     const button = page
       .locator(panel('Dark'))
       .getByRole('button', { name: 'secondary' });
-    await expect(button).toHaveCSS('background-color', CONTROL_DARK);
+    await painted(page, button).toBe(CONTROL_DARK);
   });
 
   test('the control is lighter than its panel in dark mode', async ({
@@ -100,7 +128,7 @@ test.describe('brand', () => {
     const button = page
       .locator(panel('Overridden brand · light'))
       .getByRole('button', { name: 'primary' });
-    await expect(button).toHaveCSS('background-color', BRAND_ALT);
+    await painted(page, button).toBe(BRAND_ALT);
   });
 
   test('an override does not leak into a scope that did not ask', async ({
@@ -109,14 +137,14 @@ test.describe('brand', () => {
     const button = page
       .locator(panel('Default brand'))
       .getByRole('button', { name: 'primary' });
-    await expect(button).not.toHaveCSS('background-color', BRAND_ALT);
+    await painted(page, button).not.toBe(BRAND_ALT);
   });
 
   test('the override survives dark mode', async ({ page }) => {
     const button = page
       .locator(panel('Overridden brand · dark'))
       .getByRole('button', { name: 'primary' });
-    await expect(button).toHaveCSS('background-color', BRAND_ALT);
+    await painted(page, button).toBe(BRAND_ALT);
   });
 });
 
@@ -132,6 +160,6 @@ test.describe('density', () => {
 
     expect(await height('Normal')).toBeGreaterThan(await height('Compact'));
     // Doc 03 §3: density moves spacing and heights, and no colour.
-    await expect(at('Compact')).toHaveCSS('background-color', CONTROL_LIGHT);
+    await painted(page, at('Compact')).toBe(CONTROL_LIGHT);
   });
 });

@@ -1,6 +1,6 @@
 /*
  * GENERATED FILE — do not edit.
- * Source: @radix-ui/colors (a development dependency, never shipped).
+ * Source: scripts/palette.mjs, this library's own palette.
  * Regenerate: pnpm --filter blackborne tokens
  *
  * Layer 1: primitives. Values with no meaning. NO COMPONENT MAY USE THESE.
@@ -16,232 +16,180 @@
  *   5     pressed / selected   10   solid hovered
  *   6     subtle border        11   low-contrast text
  *                              12   high-contrast text
+ *
+ * Step 9 is the one value that is the same in both modes, by construction: it
+ * is the solid the brand is recognised by, and a brand that changed shade with
+ * the lights would not be one.
  */
 
 :root {
     /* gray — slate */
-    --bb-x-gray-1: #fcfcfd;
-    --bb-x-gray-2: #f9f9fb;
-    --bb-x-gray-3: #f0f0f3;
-    --bb-x-gray-4: #e8e8ec;
-    --bb-x-gray-5: #e0e1e6;
-    --bb-x-gray-6: #d9d9e0;
-    --bb-x-gray-7: #cdced6;
-    --bb-x-gray-8: #b9bbc6;
-    --bb-x-gray-9: #8b8d98;
-    --bb-x-gray-10: #80838d;
-    --bb-x-gray-11: #60646c;
-    --bb-x-gray-12: #1c2024;
+    --bb-x-gray-1: oklch(99.1% 0.003 257.4);
+    --bb-x-gray-2: oklch(98.1% 0.004 257.4);
+    --bb-x-gray-3: oklch(95.5% 0.009 257.4);
+    --bb-x-gray-4: oklch(93.2% 0.013 257.4);
+    --bb-x-gray-5: oklch(91.1% 0.016 257.4);
+    --bb-x-gray-6: oklch(88.6% 0.019 257.4);
+    --bb-x-gray-7: oklch(85.2% 0.024 257.4);
+    --bb-x-gray-8: oklch(79.3% 0.030 257.4);
+    --bb-x-gray-9: oklch(64.4% 0.042 257.4);
+    --bb-x-gray-10: oklch(61.0% 0.044 257.4);
+    --bb-x-gray-11: oklch(50.2% 0.045 257.4);
+    --bb-x-gray-12: oklch(24.1% 0.042 257.4);
 
-    /* brand — indigo */
-    --bb-x-brand-1: #fdfdfe;
-    --bb-x-brand-2: #f7f9ff;
-    --bb-x-brand-3: #edf2fe;
-    --bb-x-brand-4: #e1e9ff;
-    --bb-x-brand-5: #d2deff;
-    --bb-x-brand-6: #c1d0ff;
-    --bb-x-brand-7: #abbdf9;
-    --bb-x-brand-8: #8da4ef;
-    --bb-x-brand-9: #3e63dd;
-    --bb-x-brand-10: #3358d4;
-    --bb-x-brand-11: #3a5bc7;
-    --bb-x-brand-12: #1f2d5c;
+    /* brand — blue */
+    --bb-x-brand-1: oklch(99.1% 0.004 259.6);
+    --bb-x-brand-2: oklch(98.1% 0.009 259.7);
+    --bb-x-brand-3: oklch(95.5% 0.021 259.8);
+    --bb-x-brand-4: oklch(93.2% 0.032 259.8);
+    --bb-x-brand-5: oklch(91.1% 0.043 259.8);
+    --bb-x-brand-6: oklch(88.6% 0.055 259.8);
+    --bb-x-brand-7: oklch(85.2% 0.073 259.8);
+    --bb-x-brand-8: oklch(79.4% 0.104 259.8);
+    --bb-x-brand-9: oklch(54.6% 0.220 259.8);
+    --bb-x-brand-10: oklch(51.6% 0.208 259.8);
+    --bb-x-brand-11: oklch(51.2% 0.207 259.8);
+    --bb-x-brand-12: oklch(24.5% 0.091 259.8);
 
     /* danger — red */
-    --bb-x-danger-1: #fffcfc;
-    --bb-x-danger-2: #fff7f7;
-    --bb-x-danger-3: #feebec;
-    --bb-x-danger-4: #ffdbdc;
-    --bb-x-danger-5: #ffcdce;
-    --bb-x-danger-6: #fdbdbe;
-    --bb-x-danger-7: #f4a9aa;
-    --bb-x-danger-8: #eb8e90;
-    --bb-x-danger-9: #e5484d;
-    --bb-x-danger-10: #dc3e42;
-    --bb-x-danger-11: #ce2c31;
-    --bb-x-danger-12: #641723;
+    --bb-x-danger-1: oklch(99.1% 0.004 25.4);
+    --bb-x-danger-2: oklch(98.1% 0.009 25.3);
+    --bb-x-danger-3: oklch(95.7% 0.021 25.3);
+    --bb-x-danger-4: oklch(93.5% 0.032 25.3);
+    --bb-x-danger-5: oklch(91.5% 0.043 25.3);
+    --bb-x-danger-6: oklch(89.2% 0.056 25.3);
+    --bb-x-danger-7: oklch(86.0% 0.075 25.3);
+    --bb-x-danger-8: oklch(80.6% 0.110 25.3);
+    --bb-x-danger-9: oklch(57.7% 0.234 25.3);
+    --bb-x-danger-10: oklch(54.7% 0.222 25.3);
+    --bb-x-danger-11: oklch(52.8% 0.214 25.3);
+    --bb-x-danger-12: oklch(25.2% 0.092 25.3);
 
     /* warning — amber */
-    --bb-x-warning-1: #fefdfb;
-    --bb-x-warning-2: #fefbe9;
-    --bb-x-warning-3: #fff7c2;
-    --bb-x-warning-4: #ffee9c;
-    --bb-x-warning-5: #fbe577;
-    --bb-x-warning-6: #f3d673;
-    --bb-x-warning-7: #e9c162;
-    --bb-x-warning-8: #e2a336;
-    --bb-x-warning-9: #ffc53d;
-    --bb-x-warning-10: #ffba18;
-    --bb-x-warning-11: #ab6400;
-    --bb-x-warning-12: #4f3422;
+    --bb-x-warning-1: oklch(99.1% 0.006 70.3);
+    --bb-x-warning-2: oklch(98.1% 0.014 70.2);
+    --bb-x-warning-3: oklch(95.6% 0.032 70.1);
+    --bb-x-warning-4: oklch(93.4% 0.049 70.1);
+    --bb-x-warning-5: oklch(91.3% 0.065 70.1);
+    --bb-x-warning-6: oklch(89.0% 0.084 70.1);
+    --bb-x-warning-7: oklch(85.7% 0.112 70.1);
+    --bb-x-warning-8: oklch(80.2% 0.161 70.1);
+    --bb-x-warning-9: oklch(66.6% 0.144 70.1);
+    --bb-x-warning-10: oklch(63.6% 0.138 70.1);
+    --bb-x-warning-11: oklch(50.8% 0.110 70.1);
+    --bb-x-warning-12: oklch(24.4% 0.053 70.1);
 
     /* success — green */
-    --bb-x-success-1: #fbfefc;
-    --bb-x-success-2: #f4fbf6;
-    --bb-x-success-3: #e6f6eb;
-    --bb-x-success-4: #d6f1df;
-    --bb-x-success-5: #c4e8d1;
-    --bb-x-success-6: #adddc0;
-    --bb-x-success-7: #8eceaa;
-    --bb-x-success-8: #5bb98b;
-    --bb-x-success-9: #30a46c;
-    --bb-x-success-10: #2b9a66;
-    --bb-x-success-11: #218358;
-    --bb-x-success-12: #193b2d;
+    --bb-x-success-1: oklch(99.1% 0.014 149.6);
+    --bb-x-success-2: oklch(98.0% 0.021 149.6);
+    --bb-x-success-3: oklch(95.0% 0.057 149.6);
+    --bb-x-success-4: oklch(92.4% 0.085 149.6);
+    --bb-x-success-5: oklch(89.9% 0.115 149.6);
+    --bb-x-success-6: oklch(87.2% 0.149 149.6);
+    --bb-x-success-7: oklch(83.4% 0.177 149.6);
+    --bb-x-success-8: oklch(77.2% 0.212 149.6);
+    --bb-x-success-9: oklch(62.7% 0.174 149.6);
+    --bb-x-success-10: oklch(59.7% 0.166 149.6);
+    --bb-x-success-11: oklch(48.9% 0.136 149.6);
+    --bb-x-success-12: oklch(23.6% 0.065 149.6);
 
     /* info — blue */
-    --bb-x-info-1: #fbfdff;
-    --bb-x-info-2: #f4faff;
-    --bb-x-info-3: #e6f4fe;
-    --bb-x-info-4: #d5efff;
-    --bb-x-info-5: #c2e5ff;
-    --bb-x-info-6: #acd8fc;
-    --bb-x-info-7: #8ec8f6;
-    --bb-x-info-8: #5eb1ef;
-    --bb-x-info-9: #0090ff;
-    --bb-x-info-10: #0588f0;
-    --bb-x-info-11: #0d74ce;
-    --bb-x-info-12: #113264;
-
-    /* gray-a — slateA */
-    --bb-x-gray-a-1: #00005503;
-    --bb-x-gray-a-2: #00005506;
-    --bb-x-gray-a-3: #0000330f;
-    --bb-x-gray-a-4: #00002d17;
-    --bb-x-gray-a-5: #0009321f;
-    --bb-x-gray-a-6: #00002f26;
-    --bb-x-gray-a-7: #00062e32;
-    --bb-x-gray-a-8: #00083046;
-    --bb-x-gray-a-9: #00051d74;
-    --bb-x-gray-a-10: #00071b7f;
-    --bb-x-gray-a-11: #0007149f;
-    --bb-x-gray-a-12: #000509e3;
-
-    /* brand-a — indigoA */
-    --bb-x-brand-a-1: #00008002;
-    --bb-x-brand-a-2: #0040ff08;
-    --bb-x-brand-a-3: #0047f112;
-    --bb-x-brand-a-4: #0044ff1e;
-    --bb-x-brand-a-5: #0044ff2d;
-    --bb-x-brand-a-6: #003eff3e;
-    --bb-x-brand-a-7: #0037ed54;
-    --bb-x-brand-a-8: #0034dc72;
-    --bb-x-brand-a-9: #0031d2c1;
-    --bb-x-brand-a-10: #002ec9cc;
-    --bb-x-brand-a-11: #002bb7c5;
-    --bb-x-brand-a-12: #001046e0;
+    --bb-x-info-1: oklch(99.1% 0.004 259.6);
+    --bb-x-info-2: oklch(98.1% 0.009 259.7);
+    --bb-x-info-3: oklch(95.5% 0.021 259.8);
+    --bb-x-info-4: oklch(93.2% 0.032 259.8);
+    --bb-x-info-5: oklch(91.1% 0.043 259.8);
+    --bb-x-info-6: oklch(88.6% 0.055 259.8);
+    --bb-x-info-7: oklch(85.2% 0.073 259.8);
+    --bb-x-info-8: oklch(79.4% 0.104 259.8);
+    --bb-x-info-9: oklch(54.6% 0.220 259.8);
+    --bb-x-info-10: oklch(51.6% 0.208 259.8);
+    --bb-x-info-11: oklch(51.2% 0.207 259.8);
+    --bb-x-info-12: oklch(24.5% 0.091 259.8);
 }
 
 [data-bb-mode='dark'] {
-    /* gray — slateDark */
-    --bb-x-gray-1: #111113;
-    --bb-x-gray-2: #18191b;
-    --bb-x-gray-3: #212225;
-    --bb-x-gray-4: #272a2d;
-    --bb-x-gray-5: #2e3135;
-    --bb-x-gray-6: #363a3f;
-    --bb-x-gray-7: #43484e;
-    --bb-x-gray-8: #5a6169;
-    --bb-x-gray-9: #696e77;
-    --bb-x-gray-10: #777b84;
-    --bb-x-gray-11: #b0b4ba;
-    --bb-x-gray-12: #edeef0;
+    /* gray — slate */
+    --bb-x-gray-1: oklch(17.9% 0.042 257.4);
+    --bb-x-gray-2: oklch(21.3% 0.042 257.4);
+    --bb-x-gray-3: oklch(25.4% 0.041 257.4);
+    --bb-x-gray-4: oklch(28.4% 0.041 257.4);
+    --bb-x-gray-5: oklch(31.1% 0.042 257.4);
+    --bb-x-gray-6: oklch(34.7% 0.043 257.4);
+    --bb-x-gray-7: oklch(39.9% 0.044 257.4);
+    --bb-x-gray-8: oklch(49.0% 0.044 257.4);
+    --bb-x-gray-9: oklch(53.7% 0.046 257.4);
+    --bb-x-gray-10: oklch(58.2% 0.045 257.4);
+    --bb-x-gray-11: oklch(76.8% 0.033 257.4);
+    --bb-x-gray-12: oklch(94.9% 0.010 257.4);
 
-    /* brand — indigoDark */
-    --bb-x-brand-1: #11131f;
-    --bb-x-brand-2: #141726;
-    --bb-x-brand-3: #182449;
-    --bb-x-brand-4: #1d2e62;
-    --bb-x-brand-5: #253974;
-    --bb-x-brand-6: #304384;
-    --bb-x-brand-7: #3a4f97;
-    --bb-x-brand-8: #435db1;
-    --bb-x-brand-9: #3e63dd;
-    --bb-x-brand-10: #5472e4;
-    --bb-x-brand-11: #9eb1ff;
-    --bb-x-brand-12: #d6e1ff;
+    /* brand — blue */
+    --bb-x-brand-1: oklch(17.9% 0.072 259.8);
+    --bb-x-brand-2: oklch(21.4% 0.087 259.8);
+    --bb-x-brand-3: oklch(25.5% 0.091 259.8);
+    --bb-x-brand-4: oklch(28.6% 0.093 259.8);
+    --bb-x-brand-5: oklch(31.4% 0.109 259.8);
+    --bb-x-brand-6: oklch(35.1% 0.130 259.8);
+    --bb-x-brand-7: oklch(40.5% 0.164 259.8);
+    --bb-x-brand-8: oklch(49.8% 0.201 259.8);
+    --bb-x-brand-9: oklch(54.6% 0.220 259.8);
+    --bb-x-brand-10: oklch(58.6% 0.227 259.8);
+    --bb-x-brand-11: oklch(76.9% 0.118 259.8);
+    --bb-x-brand-12: oklch(94.7% 0.025 259.8);
 
-    /* danger — redDark */
-    --bb-x-danger-1: #191111;
-    --bb-x-danger-2: #201314;
-    --bb-x-danger-3: #3b1219;
-    --bb-x-danger-4: #500f1c;
-    --bb-x-danger-5: #611623;
-    --bb-x-danger-6: #72232d;
-    --bb-x-danger-7: #8c333a;
-    --bb-x-danger-8: #b54548;
-    --bb-x-danger-9: #e5484d;
-    --bb-x-danger-10: #ec5d5e;
-    --bb-x-danger-11: #ff9592;
-    --bb-x-danger-12: #ffd1d9;
+    /* danger — red */
+    --bb-x-danger-1: oklch(17.9% 0.073 25.3);
+    --bb-x-danger-2: oklch(21.7% 0.088 25.3);
+    --bb-x-danger-3: oklch(26.0% 0.093 25.3);
+    --bb-x-danger-4: oklch(29.3% 0.104 25.3);
+    --bb-x-danger-5: oklch(32.1% 0.115 25.3);
+    --bb-x-danger-6: oklch(35.9% 0.128 25.3);
+    --bb-x-danger-7: oklch(41.5% 0.155 25.3);
+    --bb-x-danger-8: oklch(51.2% 0.208 25.3);
+    --bb-x-danger-9: oklch(57.7% 0.234 25.3);
+    --bb-x-danger-10: oklch(61.7% 0.250 25.3);
+    --bb-x-danger-11: oklch(78.0% 0.129 25.3);
+    --bb-x-danger-12: oklch(94.7% 0.026 25.3);
 
-    /* warning — amberDark */
-    --bb-x-warning-1: #16120c;
-    --bb-x-warning-2: #1d180f;
-    --bb-x-warning-3: #302008;
-    --bb-x-warning-4: #3f2700;
-    --bb-x-warning-5: #4d3000;
-    --bb-x-warning-6: #5c3d05;
-    --bb-x-warning-7: #714f19;
-    --bb-x-warning-8: #8f6424;
-    --bb-x-warning-9: #ffc53d;
-    --bb-x-warning-10: #ffd60a;
-    --bb-x-warning-11: #ffca16;
-    --bb-x-warning-12: #ffe7b3;
+    /* warning — amber */
+    --bb-x-warning-1: oklch(17.9% 0.039 70.0);
+    --bb-x-warning-2: oklch(21.4% 0.046 70.1);
+    --bb-x-warning-3: oklch(25.5% 0.055 70.1);
+    --bb-x-warning-4: oklch(28.7% 0.062 70.1);
+    --bb-x-warning-5: oklch(31.4% 0.068 70.1);
+    --bb-x-warning-6: oklch(35.1% 0.076 70.1);
+    --bb-x-warning-7: oklch(40.3% 0.087 70.1);
+    --bb-x-warning-8: oklch(49.5% 0.107 70.1);
+    --bb-x-warning-9: oklch(66.6% 0.144 70.1);
+    --bb-x-warning-10: oklch(70.6% 0.153 70.1);
+    --bb-x-warning-11: oklch(77.7% 0.168 70.1);
+    --bb-x-warning-12: oklch(95.0% 0.037 70.1);
 
-    /* success — greenDark */
-    --bb-x-success-1: #0e1512;
-    --bb-x-success-2: #121b17;
-    --bb-x-success-3: #132d21;
-    --bb-x-success-4: #113b29;
-    --bb-x-success-5: #174933;
-    --bb-x-success-6: #20573e;
-    --bb-x-success-7: #28684a;
-    --bb-x-success-8: #2f7c57;
-    --bb-x-success-9: #30a46c;
-    --bb-x-success-10: #33b074;
-    --bb-x-success-11: #3dd68c;
-    --bb-x-success-12: #b1f1cb;
+    /* success — green */
+    --bb-x-success-1: oklch(17.9% 0.050 149.6);
+    --bb-x-success-2: oklch(21.1% 0.059 149.6);
+    --bb-x-success-3: oklch(25.0% 0.065 149.6);
+    --bb-x-success-4: oklch(28.0% 0.068 149.6);
+    --bb-x-success-5: oklch(30.6% 0.074 149.6);
+    --bb-x-success-6: oklch(34.1% 0.083 149.6);
+    --bb-x-success-7: oklch(39.1% 0.095 149.6);
+    --bb-x-success-8: oklch(47.8% 0.132 149.6);
+    --bb-x-success-9: oklch(62.7% 0.174 149.6);
+    --bb-x-success-10: oklch(66.7% 0.185 149.6);
+    --bb-x-success-11: oklch(74.9% 0.208 149.6);
+    --bb-x-success-12: oklch(94.6% 0.062 149.6);
 
-    /* info — blueDark */
-    --bb-x-info-1: #0d1520;
-    --bb-x-info-2: #111927;
-    --bb-x-info-3: #0d2847;
-    --bb-x-info-4: #003362;
-    --bb-x-info-5: #004074;
-    --bb-x-info-6: #104d87;
-    --bb-x-info-7: #205d9e;
-    --bb-x-info-8: #2870bd;
-    --bb-x-info-9: #0090ff;
-    --bb-x-info-10: #3b9eff;
-    --bb-x-info-11: #70b8ff;
-    --bb-x-info-12: #c2e6ff;
-
-    /* gray-a — slateDarkA */
-    --bb-x-gray-a-1: #00000000;
-    --bb-x-gray-a-2: #d8f4f609;
-    --bb-x-gray-a-3: #ddeaf814;
-    --bb-x-gray-a-4: #d3edf81d;
-    --bb-x-gray-a-5: #d9edfe25;
-    --bb-x-gray-a-6: #d6ebfd30;
-    --bb-x-gray-a-7: #d9edff40;
-    --bb-x-gray-a-8: #d9edff5d;
-    --bb-x-gray-a-9: #dfebfd6d;
-    --bb-x-gray-a-10: #e5edfd7b;
-    --bb-x-gray-a-11: #f1f7feb5;
-    --bb-x-gray-a-12: #fcfdffef;
-
-    /* brand-a — indigoDarkA */
-    --bb-x-brand-a-1: #1133ff0f;
-    --bb-x-brand-a-2: #3354fa17;
-    --bb-x-brand-a-3: #2f62ff3c;
-    --bb-x-brand-a-4: #3566ff57;
-    --bb-x-brand-a-5: #4171fd6b;
-    --bb-x-brand-a-6: #5178fd7c;
-    --bb-x-brand-a-7: #5a7fff90;
-    --bb-x-brand-a-8: #5b81feac;
-    --bb-x-brand-a-9: #4671ffdb;
-    --bb-x-brand-a-10: #5c7efee3;
-    --bb-x-brand-a-11: #9eb1ff;
-    --bb-x-brand-a-12: #d6e1ff;
+    /* info — blue */
+    --bb-x-info-1: oklch(17.9% 0.072 259.8);
+    --bb-x-info-2: oklch(21.4% 0.087 259.8);
+    --bb-x-info-3: oklch(25.5% 0.091 259.8);
+    --bb-x-info-4: oklch(28.6% 0.093 259.8);
+    --bb-x-info-5: oklch(31.4% 0.109 259.8);
+    --bb-x-info-6: oklch(35.1% 0.130 259.8);
+    --bb-x-info-7: oklch(40.5% 0.164 259.8);
+    --bb-x-info-8: oklch(49.8% 0.201 259.8);
+    --bb-x-info-9: oklch(54.6% 0.220 259.8);
+    --bb-x-info-10: oklch(58.6% 0.227 259.8);
+    --bb-x-info-11: oklch(76.9% 0.118 259.8);
+    --bb-x-info-12: oklch(94.7% 0.025 259.8);
 }
