@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "description": "Monorepo for the Blackborne UI component library",
-  "author": "Carlos Junior Ramos Vásquez",
+  "author": "Carlos Junior Ramos V\u00e1squez",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -29,7 +29,8 @@
     "build:catalog": "pnpm --filter blackborne build && pnpm --filter catalog build",
     "verify:clean": "node scripts/clean-install.mjs && pnpm verify",
     "visual": "bash apps/catalog/docker-visual.sh",
-    "visual:update": "bash apps/catalog/docker-visual.sh --update-snapshots"
+    "visual:update": "bash apps/catalog/docker-visual.sh --update-snapshots",
+    "check:catalog": "node scripts/check-catalog.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

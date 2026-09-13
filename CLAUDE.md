@@ -43,7 +43,9 @@ layers (`Dialog`, `Drawer`, `ConfirmDialog`, `Tooltip`, `Popover`, `Preview`,
 `SplitButton`. `ComboBox` is the thirty-seventh and the first of the batch
 that follows; `Calendar` and `RangeCalendar` are the thirty-eighth and
 thirty-ninth, and `DateField`, `DatePicker`, `TimeField` and
-`DateRangePicker` are the date family.
+`DateRangePicker` are the date family, with `TimePicker` after them. The rest
+are the colour controls (`ColorSwatchField`, `ColorPicker`), `FileUpload`, and
+`Table` with its pieces and its two hooks.
 
 **The layer batch is finished.** It landed in that order, with `Toast` last by
 decision (doc 08 §7.1). `Menu` was deliberately not in it.
@@ -267,9 +269,12 @@ The package guide has all three and doc 08 §4 has the second in full.
 So the rules are settled and you should follow them rather than invent. Two
 things to keep in mind anyway:
 
-- **Some rules are openly open.** Document 08 §5.1 leaves it undecided whether
-  a popover holding a small form may be dismissed by a click outside, and
-  document 07 §4.1 leaves the space an error message occupies open. Where a
+- **Some rules are openly open.** Document 07 §4.1 leaves the space an error
+  message occupies open. Document 08 §5.1 used to be on this list and was
+  decided on 2026-09-08 when `Popover` was built — dismissable by clicking
+  outside by default, with `isDismissable={false}` to turn it off — which is
+  the other half of this bullet: a settled rule left standing as open is as
+  misleading as an unverified one promoted. Where a
   document says something is unverified, treat it as unverified — do not
   quietly promote it. Document 08 §6's nested scroll lock used to be on this
   list and is now verified; the prediction written before the measurement is
@@ -277,12 +282,30 @@ things to keep in mind anyway:
 - **The file layout of a component is settled**, by `Button`, and written down
   in [`docs/contributing/new-component.md`](./docs/contributing/new-component.md) §0.
 
-**And the table suite has started.** Wave 0 measured three things before the
-API and wave 1 is the table that renders and sorts — the pieces with our skin,
-its own horizontal scrolling with the overflow indicated (doc 04 §7), the
-sticky heading row, and the three absences a listing with no rows can be in,
-including an error with a retry. There is no selection, no column management
-and no row actions yet; those are waves 2 to 4.
+**And the table suite is finished.** All six waves have landed. Wave 0 measured
+three things before the API; wave 1 is the table that renders and sorts — our
+skin on the base's set, its own horizontal scrolling with the overflow
+indicated (doc 04 §7), the sticky heading row, and the three absences a listing
+with no rows can be in, including an error with a retry. Then selection with
+**our** checkbox column, the columns a person arranges and resizes as state the
+PROJECT stores, the actions a row carries with their fold, the trailing column
+that stays put, rows becoming cards, and `usePaging`.
+
+**Two of those waves ended somewhere the plan did not.** Rows becoming cards is
+doc 04 §6's own first example of a STRUCTURAL change and it turned out not to
+be one — the same DOM, the same collection, the same roles, re-laid-out by CSS
+— so §6.3 records the correction rather than the code working around it. And
+the thin assembly §3.4 promised is **not shipped**: P6's corollary was applied
+literally, the rebuild came to two dozen lines, and the invariant the assembly
+existed for is already true by construction in the dynamic form. §7 carries the
+row.
+
+**And one defect had been shipping since wave 1**, found while building the
+last wave on top of it: every sortable table described itself as "sorted by
+column&nbsp;&nbsp;in ascending order", because the base derives a column's
+`textValue` from string children and this component always hands it a render
+function, so the sort mark can be drawn. Inheriting a capability is not the
+same as keeping it.
 
 **One invariant in it is OURS rather than inherited**, and it is the reason to
 read §3.4 before touching the suite: a table with no column marked
@@ -296,7 +319,7 @@ table in a pass that does not re-render us.
 against a real hand-written data table from a management product — about twenty
 thousand lines, 145 capabilities inventoried — and the result is in
 [the catalog](./docs/catalog-and-build-order.md) §3.4: the piece list, the
-three hooks, and the three measurements that come before the API rather than
+two hooks, and the three measurements that come before the API rather than
 after. Read it before starting a wave.
 
 Four questions that had no answer anywhere were settled at the same time, which
@@ -308,8 +331,9 @@ justify it. Three of them are one line:
 which answers export, printing and the address bar together. The fourth is the
 page-size selector, whose §7 row was re-asked now that the suite it pointed at
 exists: the CONTROL stays composed, because the noun belongs to the project,
-and the NUMBER became suite state along with the re-anchoring rule nobody
-writes by hand.
+and the NUMBER became `usePaging`, which sits beside `Pagination` rather than
+in the table suite because there is no table in it, along with the re-anchoring
+rule nobody writes by hand.
 
 ## Commands
 
@@ -631,8 +655,13 @@ Things that look like improvements and are not:
   arrows move `aria-activedescendant` without focus ever leaving the input. A
   pointer presses it and closes the list on the way, which makes it a control
   only a pointer can reach (doc 06 §4 rule 5). `FileUpload` has a per-row
-  retry because its rows are a plain `<ul>` where nothing is chosen — the test
-  is whether the list is a COLLECTION, not whether it is a list.
+  retry because its rows are a plain `<ul>` where nothing is chosen. **The test
+  is whether the collection offers a KEYBOARD ROUTE into the row**, and a grid
+  does where a listbox does not — measured in wave 0, where a button in a table
+  cell left the row named exactly `"Ana"`. That is why `Table` ships
+  `RowActions` and a `ListBox` row still may not hold a button. Written as
+  "whether it is a collection", this trap forbade a component the library
+  already ships.
 - **Do not import a stylesheet from TypeScript.** A component's CSS reaches a
   consumer through one hand-written `@import` in `src/styles/index.css`, which
   is the only file the Tailwind CLI compiles — `@source` scans `.ts` and `.tsx`
@@ -673,15 +702,24 @@ Things that look like improvements and are not:
   consumer receives is measured against `dist`, and `pnpm verify` now does
   that: publint, attw, every value in the type surface importing, and nothing
   in `dist` unreachable through `exports`.
-- **Do not chain another suite behind `pnpm visual`.** It builds the catalog
-  INSIDE Docker, so it does not refresh the local `storybook-static` that the
-  browser and accessibility suites are served from — and those two then read
-  whatever the last local `pnpm build:catalog` left. Measured the expensive way:
-  an accessibility run chained after it reported **497 checks green** against
-  CI's 501, on a build two hours old, and CI failed three of them with a
-  critical `aria-required-children`. Rebuilt locally, it reproduced on the first
-  try. A count that disagrees with CI's is the tell; `pnpm verify:full` is the
-  command that builds first.
+- **Do not run a browser suite without knowing the catalog is current.** The
+  browser, accessibility and visual suites are served from the BUILT catalog,
+  and nothing used to stop one being run on its own against a stale one. It
+  happened: an accessibility run reported **497 checks green** where CI ran 501
+  and failed three of them on a critical `aria-required-children`. A local
+  rebuild reproduced all three on the first try.
+
+  **The cause was never isolated**, and the first explanation written here —
+  that `pnpm visual` builds inside Docker and does not refresh the local build
+  — is withdrawn: measured afterwards, a Docker visual run rewrites
+  `storybook-static/index.json` and `index.html` on the host, so it does
+  refresh it. What the incident is, is doc 10 §11.3's rule arriving again:
+  ship the instrument that attributes the next occurrence rather than a third
+  guess. `pnpm check:catalog` is that instrument, and the three suite scripts
+  refuse to start without it. It reads the number that actually disagreed —
+  the built catalog names its own stories — plus the modification times, which
+  the count alone cannot see.
+
 - **Do not reference private projects** in code, examples or documentation. The
   library is public and its API is designed for strangers.
 

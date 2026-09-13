@@ -49,26 +49,26 @@ The full index, with what each one settles, is in
 Documents 02 and 08 were written last on purpose: they describe the things only
 building can decide, and writing them from imagination would have produced
 rules the first real component contradicted. Both mark what was verified in a
-browser and what was not — 08 §6 leaves one check openly pending rather than
-claiming it.
+browser and what was not — 08 §6 was written with one check openly pending
+rather than claimed, and §6.1 carries the measurement that closed it.
 
 ## Where the project stands
 
 The library is being rewritten from scratch. Phases, in order:
 
-| Phase | What                                                                               | State    |
-| ----- | ---------------------------------------------------------------------------------- | -------- |
-| F1    | Close the past: tag, prune branches, empty the repo, deprecate on npm              | Done     |
-| F2    | Skeleton: workspace, root files, CI, templates                                     | Done     |
-| F3    | Documentation for AI agents                                                        | Done     |
-| F4    | Foundations, written in English                                                    | Done     |
-| F5    | One day with React Aria — decided documents 02 and 08                              | Done     |
-| F6    | Full pipeline with the first component (`Button`)                                  | Done     |
-| F7    | The fields, and the browser checks that verify them                                | Done     |
-| F8    | The rest of level 0 and level 1: the pieces with no dependencies                   | Done     |
-| F9    | The layer base, and everything that depends on a portal                            | Done     |
-| F10   | Composition: the pieces that arrange other pieces, and the first structural change | One left |
-| F11   | Search, and the locale front nothing has proved yet                                | Half in  |
+| Phase | What                                                                               | State |
+| ----- | ---------------------------------------------------------------------------------- | ----- |
+| F1    | Close the past: tag, prune branches, empty the repo, deprecate on npm              | Done  |
+| F2    | Skeleton: workspace, root files, CI, templates                                     | Done  |
+| F3    | Documentation for AI agents                                                        | Done  |
+| F4    | Foundations, written in English                                                    | Done  |
+| F5    | One day with React Aria — decided documents 02 and 08                              | Done  |
+| F6    | Full pipeline with the first component (`Button`)                                  | Done  |
+| F7    | The fields, and the browser checks that verify them                                | Done  |
+| F8    | The rest of level 0 and level 1: the pieces with no dependencies                   | Done  |
+| F9    | The layer base, and everything that depends on a portal                            | Done  |
+| F10   | Composition: the pieces that arrange other pieces, and the first structural change | Done  |
+| F11   | Search, and the locale front nothing has proved yet                                | Done  |
 
 Which components exist and in what order is not a phase question: it lives in
 [catalog-and-build-order.md](./catalog-and-build-order.md), which is the list
@@ -94,14 +94,16 @@ its features were waiting on exactly those two (catalog §3.1); and
 `SplitButton`, which had been waiting on `Menu` since the batch began, landed
 last. Nine layers and everything that depends on a portal.
 
-**F10 has one thing left, and it is a batch rather than a leftover.** The
+**F10 is closed, and the thing that was left was a batch rather than a
+leftover.** The
 composition batch is finished — `Accordion`, `Collapsible`, `Link`,
 `Breadcrumbs` with its collapse, both pagers, `Menu`, `Select`, `Tabs` and
 `SplitButton` — and the page-size selector that was in the plan is now a
 **Never**: the question the catalog said to ask once `Select` existed was
-asked, and how many rows to fetch belongs to the listing. What remains under
-this heading is the table pieces, which are hooks plus presentational parts and
-their own piece of work, the same shape F8's leftover has.
+asked, and how many rows to fetch belongs to the listing. What was left under
+this heading was the table pieces — hooks plus presentational parts, the same
+shape F8's leftover had — and every wave of catalog §3.4 has landed, with no
+assembly.
 
 **What F10 proves** is the one level of doc 04 that had never run: N3, a
 structural change in JavaScript. Everything before it was N0, N1, N2 or the one

@@ -9,9 +9,9 @@
     "build": "storybook build -o storybook-static",
     "preview": "vite preview --outDir storybook-static --host 127.0.0.1 --port 6007 --strictPort",
     "typecheck": "tsc -p tsconfig.json",
-    "test:e2e": "playwright test --project=checks --project=narrow",
-    "test:a11y": "playwright test --project=a11y",
-    "test:visual": "playwright test --project=visual --workers=1"
+    "test:e2e": "node ../../scripts/check-catalog.mjs && playwright test --project=checks --project=narrow",
+    "test:a11y": "node ../../scripts/check-catalog.mjs && playwright test --project=a11y",
+    "test:visual": "node ../../scripts/check-catalog.mjs && playwright test --project=visual --workers=1"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",

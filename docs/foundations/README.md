@@ -30,8 +30,8 @@ building a dialog with a select inside it and a field with a label, description
 and error — the same day that validates the two bottlenecks of the build order.
 
 Both mark explicitly what was **verified in a browser** and what is still
-believed on faith. Document 08 §6 leaves one check openly pending rather than
-claiming it.
+believed on faith. Document 08 §6 left one check openly pending rather than
+claiming it, and §6.1 records the measurement that closed it.
 
 ## Related, but deliberately not a foundation
 

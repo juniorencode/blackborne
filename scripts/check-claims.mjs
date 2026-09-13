@@ -45,6 +45,7 @@
  * impossible to break quietly, and give the next one somewhere to go.
  */
 import { readdirSync, readFileSync } from 'node:fs';
+import { countStories } from './stories.mjs';
 import { join } from 'node:path';
 
 const read = path => readFileSync(path, 'utf8');
@@ -108,31 +109,6 @@ const countCaptures = () => {
     total += (source.slice(open, index).match(/'components-/g) ?? []).length;
   }
   return { total, problems };
-};
-
-/**
- * The stories, counted the way Storybook counts them.
- *
- * Checked against the built index rather than assumed: `export const X: Story`
- * across every `.stories.tsx` gave 484, and so did `storybook-static`'s own
- * `index.json`. The parse is used because the index needs a catalog build and
- * this runs in the fast gate.
- */
-const countStories = () => {
-  const root = 'packages/blackborne/src';
-  let total = 0;
-  const walk = directory => {
-    for (const entry of readdirSync(directory, { withFileTypes: true })) {
-      const path = join(directory, entry.name);
-      if (entry.isDirectory()) walk(path);
-      else if (entry.name.endsWith('.stories.tsx')) {
-        total += (read(path).match(/^export const \w+\s*:\s*Story/gm) ?? [])
-          .length;
-      }
-    }
-  };
-  walk(root);
-  return total;
 };
 
 /**

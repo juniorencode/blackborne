@@ -16,7 +16,7 @@ Two files are written for agents and are worth reading yourself, because they
 are the shortest statement of the rules that exists:
 
 - [`../../CLAUDE.md`](../../CLAUDE.md) — repository-wide: layout, commands, the
-  eight hard rules, and the traps specific to this project
+  nine hard rules, and the traps specific to this project
 - [`../../packages/blackborne/CLAUDE.md`](../../packages/blackborne/CLAUDE.md) —
   library source: token layers, theme axes, fields, exports, what to test
 

@@ -128,8 +128,9 @@ Doc 10 §6 lists four conditions for avoiding constant false positives. All four
 hold:
 
 - **Animations disabled** during capture, in `playwright.config.ts`
-- **Fixed sample data** — by construction, since no story contains a date, an
-  id or a random value
+- **Fixed sample data** — no story contains an id or a random value, and the
+  one thing not fixed by construction is today: `e2e/clock` pins the instant
+  for every capture (doc 10 §6.1)
 - **Fonts loaded** before capturing, awaited explicitly
 - **Every change approved explicitly**, which is the workflow above
 
