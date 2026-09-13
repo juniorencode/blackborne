@@ -154,7 +154,7 @@ Most of them are cheap if you know where to look.
 ## 6. Keyboard means the same thing everywhere
 
 These are fixed across the whole library. One component breaking the pattern
-destroys trust in the other twenty-nine.
+destroys trust in the other fifty-two.
 
 | Key      | Always means                                       |
 | -------- | -------------------------------------------------- |

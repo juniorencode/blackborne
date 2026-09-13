@@ -6,9 +6,9 @@
 > along for years.
 
 **Status:** adopted · **Date:** 2026-09-02
-**Still open:** the concrete semantic mapping (which step fills which role) and
-the list of families published as themes. Both are settled during the tuning
-pass, with the first component on screen.
+**Still open:** the list of families published as themes. The concrete semantic
+mapping was settled with the first component on screen, and is §4 plus
+`src/styles/semantic.css`.
 **Depends on:** [01 · Principles](./01-principles.md), in particular P3 (zero
 global state) and P4 (the container decides).
 

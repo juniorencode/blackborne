@@ -895,7 +895,8 @@ Three claims, over three measurements: the captures, counted out of the visual
 suite's own five registries; the stories, counted as the exported `Story`
 constants; and the components, counted as the story FILES rather than the
 directories. That last one is not pedantry — `Accordion` and `Collapsible`
-share a folder, so the directories are 51 and the components are 52, and a
+share a folder, so when this was written the directories were 51 and the
+components 52, and a
 first attempt got 52 by counting `components.test.ts` as a directory and agreed
 with the guide for the wrong reason.
 

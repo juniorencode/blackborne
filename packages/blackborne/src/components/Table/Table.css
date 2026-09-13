@@ -516,11 +516,10 @@
  *
  * Hiding every heading and keeping the row was a `role="row"` with no cell in
  * it, which is `aria-required-children`, critical. CI found it and a local run
- * did not, for a reason worth writing down rather than shrugging at: `pnpm
- * visual` builds the catalog INSIDE Docker, so it does not refresh the local
- * build the other suites are served from. The accessibility run chained after
- * it read a catalog two hours old — 497 checks against CI's 501 — and once the
- * build was current it reproduced on the first try.
+ * did not: the suite reported 497 checks green against CI's 501, against a
+ * build that was not current, and once it was it reproduced on the first try.
+ * `pnpm check:catalog` exists because of this and the suites now refuse to
+ * start without it.
  *
  * `:has()` rather than counting in JavaScript, for the reason `Steps` gives
  * about its own numbering: CSS re-evaluates on its own, so a table whose only

@@ -247,7 +247,8 @@ cannot know what level it landed at. Emphasis comes from weight and colour.
   unconditionally and hide it with a `data-selected` variant (which the row
   needed anyway, so it does not move as the selection walks), and pass
   `textValue` through where the children are a string. `select.spec.ts` has the
-  one check in this repository that reads the console.
+  first check in this repository that reads the console, and
+  `breadcrumbs.spec.ts` and `tabs.spec.ts` took the same guard afterwards.
 - **A list that matches its trigger's width spells the base's variable.** A
   popover publishes `--trigger-width`, and `Select`'s list declares
   `min-w-(--trigger-width)` with the narrow container as a ceiling — `min`, so a
@@ -727,14 +728,21 @@ nothing in `Steps` is focusable, so there is no control to reach. Doc 04 rule 4
 is the one that does — what the component knows must survive the structure
 changing.
 
-**A hidden label is still a label, and it has to be the BASE's.** Anything
-outside `Field` that offers `isLabelHidden` has to render the base's own
-`Label` and hide it with `bb:sr-only`, never leave it out: the base publishes a
+**A hidden label is still a label, and what it has to be depends on the base.**
+Where the base publishes a label context — `Progress`, `Slider` — anything
+outside `Field` offering `isLabelHidden` renders the base's own `Label` and
+hides it with `bb:sr-only`, never leaves it out: the base publishes a
 label context that `Label` consumes to take an id, and the control points
 `aria-labelledby` at that id. A plain `<span>` is wired to nothing, so hiding it
 leaves the control with no accessible name at all — which `Progress` shipped in
 its first draft and which only a query BY NAME catches, since `getByRole` passes
 either way.
+
+Where the base publishes NO label context there is no `Label` to render, and the
+component wires the name itself: `ColorSwatchField` and `ColorPicker` put an id
+on a `<span>` and point the control's `aria-labelledby` at it, because
+`ColorSwatchPickerProps` extends `AriaLabelingProps` and nothing else. What is
+forbidden is a span nothing references — not a span.
 
 **And `empty:hidden` cannot hide a row that holds an `sr-only` child.** The
 child is still a child, so `:empty` never matches; what has to go is the GAP
@@ -742,11 +750,17 @@ above the thing below it. `Progress` collapses its own `gap` when both the label
 and the number are hidden, which is the difference between a bar that sits
 against what it belongs to and one that floats a few pixels under it.
 
-**A runtime percentage is the one inline style in this library.** Tailwind
+**A runtime percentage is the only inline style in a component's JSX**, apart
+from `TagsInput`'s deliberate `flexBasis: '8ch'`. Tailwind
 generates the classes it can see, and a width that arrives as a number at run
 time is not one of them. Doc 03's rule is about colour and spacing coming from
 tokens; a fraction of a measured width is neither, and `Progress`'s fill is the
 only place it appears.
+
+Two components also write an inline PROPERTY from an effect, which is a
+different thing and is measurement rather than style: `TextArea` its autosized
+height, and `Table` the width of a pinned column, so the overflow indication
+can move inward by it.
 
 **A DROP BUILT IN THE PAGE DELIVERS NO FILE**, which is the check for a file
 field passing while proving nothing. `new DataTransfer()` with a `File` added
@@ -839,8 +853,9 @@ question keeps arising — a list whose load failed wants a "Retry":
 The base's `renderEmptyState` is wrapped in a `role=option` too, so the
 "nothing found" row is no different. `FileUpload` ships a per-row retry for
 exactly the reason this cannot: its rows are a plain `<ul>` where nothing is
-chosen, so a button in one is just a button. **The test is whether the list is
-a COLLECTION**, not whether it is a list.
+chosen, so a button in one is just a button. **The test is whether the collection offers a KEYBOARD ROUTE into the row** — a
+grid does, a listbox does not, which is why `Table` ships `RowActions` with a
+button in a cell and a `ListBox` row still may not hold one.
 
 **Not every field publishes a group context, so a frame may have to be TOLD.**
 `ControlFrame` reads `isInvalid` and `isDisabled` from the base's group context,
@@ -914,7 +929,10 @@ component reading a state context inside it gets `null`. The symptom is a
 filter that computes the right answer and a list that ignores it. Anything that
 has to know what the collection is being asked for cannot ask from inside it;
 `ComboBox` hands the base a filter instead of filtering the rows
-(decision 0021), and the table suite will meet the same wall.
+(decision 0021), and the table suite met the same wall in a second shape: a
+step provided INSIDE the collection left every row folded at every width. So
+anything a collection's children read is provided from outside it, which is why
+`Table`'s two providers sit above `AriaTable`.
 
 **And a select's required state is announced by nothing the base gives the
 trigger.** `Field` hides the asterisk from a reader on the grounds that the base
@@ -1057,8 +1075,8 @@ instead of the formatter.
 
 ## Layers
 
-Everything that renders in a portal. Four things were measured while building
-`Dialog` and every one of them will apply to the next layer.
+Everything that renders in a portal. These were measured across the seven
+layers, starting with `Dialog`, and each one applies to anything else portalled.
 
 - **The element that scrolls must be the element the base focuses.** A browser
   scrolls the nearest scrollable **ancestor** of what has focus, and the base

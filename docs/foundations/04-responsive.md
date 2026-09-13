@@ -467,16 +467,16 @@ decorative.
 Which components need N3 (a structural change). Completed as they are built,
 which is why one row below is a correction and not a forecast:
 
-| Component         | Expected change                                                 | State                |
-| ----------------- | --------------------------------------------------------------- | -------------------- |
-| Data table        | Rows to cards in a narrow container                             | Forecast             |
-| Tabs              | To a select when they do not fit                                | **Done** · §11.1     |
-| Dialog            | To full-screen in a narrow window                               | **Done, and not N3** |
-| Toolbar / actions | Collapse into a menu                                            | Forecast             |
-| Pagination        | Fewer page slots as the width falls, previous/next as the floor | **Done** · §6.2      |
-| Breadcrumbs       | The middle collapses into a menu                                | **Done** · §11.2     |
-| Steps             | To the indicators alone, scrolling                              | **Done** · §11.4     |
-| RangeCalendar     | Two months where there is room, one where there is not          | **Done** · §11.3     |
+| Component         | Expected change                                                 | State                       |
+| ----------------- | --------------------------------------------------------------- | --------------------------- |
+| Data table        | Rows to cards in a narrow container                             | **Done, and not N3** · §6.3 |
+| Tabs              | To a select when they do not fit                                | **Done** · §11.1            |
+| Dialog            | To full-screen in a narrow window                               | **Done, and not N3**        |
+| Toolbar / actions | Collapse into a menu                                            | Forecast                    |
+| Pagination        | Fewer page slots as the width falls, previous/next as the floor | **Done** · §6.2             |
+| Breadcrumbs       | The middle collapses into a menu                                | **Done** · §11.2            |
+| Steps             | To the indicators alone, scrolling                              | **Done** · §11.4            |
+| RangeCalendar     | Two months where there is room, one where there is not          | **Done** · §11.3            |
 
 **Dialog turned out not to need JavaScript.** It is a media query and the §5
 exception: same threshold, same outcome, no different tree to mount. Worth
