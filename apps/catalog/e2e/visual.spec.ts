@@ -926,7 +926,27 @@ const AXES: Array<[string, string]> = [
   ['components-table--dark', 'axis-table-dark'],
   ['components-table--compact', 'axis-table-compact'],
   ['components-table--direction', 'axis-table-rtl'],
-  ['components-table--brand-override', 'axis-table-brand']
+  ['components-table--brand-override', 'axis-table-brand'],
+  /*
+   * THE FOURTH AXIS, and the only one whose value is a colour a project
+   * chooses rather than a state of the interface.
+   *
+   * The two swatch sheets are here because a colour is the one thing an
+   * assertion is worst at: `palette.spec.ts` can say a scope reached the
+   * component and that a pairing clears 4.5:1, and neither of those notices a
+   * family whose ladder has a step out of order or a hue that jumps in the
+   * middle. Six hundred values, and a person looking is the layer that catches
+   * that (doc 10 §4).
+   *
+   * `Switching` carries the half a swatch cannot show: `amber` declares dark
+   * text on its solid and moves hover and press the other way up the scale, so
+   * the picture is of a light accent that still reads.
+   */
+  ['foundations-palette--accents', 'axis-palette-accents'],
+  ['foundations-palette--bases', 'axis-palette-bases'],
+  ['foundations-palette--switching', 'axis-palette-switching'],
+  ['foundations-palette--tones-do-not-follow', 'axis-palette-tones'],
+  ['foundations-palette--nesting', 'axis-palette-nesting']
 ];
 
 for (const [id, name] of AXES) {

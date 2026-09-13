@@ -168,10 +168,17 @@ export const Sizes: Story = {
  *
  * How they are forced is not a detail — passing them as props does nothing at
  * all, which is why <Force> exists. Read the note on it.
+ *
+ * AND IT IS LIGHT AND DARK, which it was not until 2026-09-13 and which cost a
+ * real defect. A forced-state story is the only place a state is ever
+ * rendered, so a light-only one leaves every state in dark mode unreachable by
+ * anything — axe reads what is on a page. What lived in that gap: a pressed
+ * primary button in dark at 2.08:1, for as long as the token layer has
+ * existed, under 501 stories and 211 baselines (doc 10 §11.9).
  */
 
-export const States: Story = {
-  render: () => (
+function AllStates() {
+  return (
     <div className="catalog-stack">
       {VARIANTS.map(variant => (
         <div key={variant} className="catalog-row">
@@ -199,6 +206,19 @@ export const States: Story = {
           </Button>
         </div>
       ))}
+    </div>
+  );
+}
+
+export const States: Story = {
+  render: () => (
+    <div className="catalog-pair">
+      <Scope label="Light" mode="light">
+        <AllStates />
+      </Scope>
+      <Scope label="Dark" mode="dark">
+        <AllStates />
+      </Scope>
     </div>
   )
 };

@@ -16,7 +16,9 @@ pages are explicitly out of scope and do not influence any decision.
 - **Accessibility is inherited, not bolted on.** Built on React Aria
   Components; WCAG 2.2 AA is an entry condition, not an aspiration.
 - **Themed by CSS variables.** Three independent axes — mode, brand color and
-  density — each set by redefining variables on a container. Nestable.
+  density — each set by redefining variables on a container. Nestable. The brand
+  axis ships a catalogue with it: eighteen accents and seven bases in an opt-in
+  second stylesheet, so `data-bb-accent="red"` is the whole change.
 - **RTL from day one.** No physical `left`/`right` anywhere; enforced by lint.
 - **Container-driven, not viewport-driven.** A component adapts to the width of
   its own container, so it works in a 320px side panel on a 1920px screen.

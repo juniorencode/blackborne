@@ -85,9 +85,9 @@ say(`publint --strict: ${publint.status === 0 ? 'clean' : 'FAILED'}`);
  * Two flags, and both are about what the instrument can measure rather
  * than about lowering a bar:
  *
- *   --exclude-entrypoints styles.css
+ *   --exclude-entrypoints styles.css palette.css
  *      attw analyses TYPE resolution and a stylesheet has none, so it
- *      reports the CSS entrypoint as unresolvable under all four. That
+ *      reports the CSS entrypoints as unresolvable under all four. That
  *      export is checked instead by the dist inventory below, which
  *      asserts the file the map points at exists.
  *
@@ -104,6 +104,7 @@ const attw = run('@arethetypeswrong/cli', [
   '.',
   '--exclude-entrypoints',
   'styles.css',
+  'palette.css',
   '--profile',
   'esm-only'
 ]);

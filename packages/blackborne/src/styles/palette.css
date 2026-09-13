@@ -1,0 +1,938 @@
+/*
+ * GENERATED FILE — do not edit.
+ * Source: scripts/palette.mjs, this library's own palette.
+ * Regenerate: pnpm --filter blackborne tokens
+ *
+ * THE WHOLE PALETTE, as scopes a project can switch between.
+ *
+ *   import 'blackborne/styles.css';
+ *   import 'blackborne/palette.css';   (in this order)
+ *
+ *   <div data-bb-accent="red">    everything accent-coloured is red
+ *   <div data-bb-base="stone">    the greys are warm
+ *
+ * Optional on purpose: a project that never changes its accent should not pay
+ * for eighteen it never uses, so the stylesheet carries only the six families
+ * it is built from and this carries the rest.
+ *
+ * THE MODE GOES OUTERMOST: put the scope on the element carrying
+ * `data-bb-mode`, or inside it with no other mode in between (doc 03 §3.2).
+ *
+ * An accent whose solid is a LIGHT colour also declares the text that goes on
+ * it and the direction its hover and pressed states move in, because a
+ * background and its text are a pair (doc 03 §4.0). The ratios are in the
+ * comment above each one, generated from the same numbers.
+ *
+ * The four tone families do not follow the accent, which is decision 0028.
+ */
+
+/* ── accents ─────────────────────────────────────────────────────── */
+
+[data-bb-accent='amber'] {
+  --bb-x-brand-1: oklch(99.1% 0.006 70.3);
+  --bb-x-brand-2: oklch(98.1% 0.014 70.2);
+  --bb-x-brand-3: oklch(95.6% 0.032 70.1);
+  --bb-x-brand-4: oklch(93.4% 0.049 70.1);
+  --bb-x-brand-5: oklch(91.3% 0.065 70.1);
+  --bb-x-brand-6: oklch(89.0% 0.084 70.1);
+  --bb-x-brand-7: oklch(85.7% 0.112 70.1);
+  --bb-x-brand-8: oklch(80.2% 0.161 70.1);
+  --bb-x-brand-9: oklch(66.6% 0.144 70.1);
+  --bb-x-brand-10: oklch(63.6% 0.138 70.1);
+  --bb-x-brand-11: oklch(50.8% 0.110 70.1);
+  --bb-x-brand-12: oklch(24.4% 0.053 70.1);
+
+  /* A light solid, so it carries dark text and its states move the
+     other way: 5.25 / 8.55 / 10.41 at rest, hovered and pressed. */
+  --bb-accent-on: var(--bb-x-brand-12);
+  --bb-accent-hover: var(--bb-x-brand-8);
+  --bb-accent-active: var(--bb-x-brand-7);
+
+  /* The solid is 3.04:1 on the page, so a link takes
+     the text step instead: 5.80:1. */
+  --bb-link: var(--bb-x-brand-11);
+}
+
+[data-bb-mode='dark'] [data-bb-accent='amber'],
+[data-bb-accent='amber'][data-bb-mode='dark'] {
+  --bb-x-brand-1: oklch(17.9% 0.039 70.0);
+  --bb-x-brand-2: oklch(21.4% 0.046 70.1);
+  --bb-x-brand-3: oklch(25.5% 0.055 70.1);
+  --bb-x-brand-4: oklch(28.7% 0.062 70.1);
+  --bb-x-brand-5: oklch(31.4% 0.068 70.1);
+  --bb-x-brand-6: oklch(35.1% 0.076 70.1);
+  --bb-x-brand-7: oklch(40.3% 0.087 70.1);
+  --bb-x-brand-8: oklch(49.5% 0.107 70.1);
+  --bb-x-brand-9: oklch(66.6% 0.144 70.1);
+  --bb-x-brand-10: oklch(70.6% 0.153 70.1);
+  --bb-x-brand-11: oklch(77.7% 0.168 70.1);
+  --bb-x-brand-12: oklch(95.0% 0.037 70.1);
+
+  /* A light solid, so it carries dark text and its states move the
+     other way: 6.05 / 6.98 / 9.04 at rest, hovered and pressed. */
+  --bb-accent-on: var(--bb-x-brand-1);
+  --bb-accent-hover: var(--bb-x-brand-10);
+  --bb-accent-active: var(--bb-x-brand-11);
+}
+
+[data-bb-accent='blue'] {
+  --bb-x-brand-1: oklch(99.1% 0.004 259.6);
+  --bb-x-brand-2: oklch(98.1% 0.009 259.7);
+  --bb-x-brand-3: oklch(95.5% 0.021 259.8);
+  --bb-x-brand-4: oklch(93.2% 0.032 259.8);
+  --bb-x-brand-5: oklch(91.1% 0.043 259.8);
+  --bb-x-brand-6: oklch(88.6% 0.055 259.8);
+  --bb-x-brand-7: oklch(85.2% 0.073 259.8);
+  --bb-x-brand-8: oklch(79.4% 0.104 259.8);
+  --bb-x-brand-9: oklch(54.6% 0.220 259.8);
+  --bb-x-brand-10: oklch(51.6% 0.208 259.8);
+  --bb-x-brand-11: oklch(51.2% 0.207 259.8);
+  --bb-x-brand-12: oklch(24.5% 0.091 259.8);
+}
+
+[data-bb-mode='dark'] [data-bb-accent='blue'],
+[data-bb-accent='blue'][data-bb-mode='dark'] {
+  --bb-x-brand-1: oklch(17.9% 0.072 259.8);
+  --bb-x-brand-2: oklch(21.4% 0.087 259.8);
+  --bb-x-brand-3: oklch(25.5% 0.091 259.8);
+  --bb-x-brand-4: oklch(28.6% 0.093 259.8);
+  --bb-x-brand-5: oklch(31.4% 0.109 259.8);
+  --bb-x-brand-6: oklch(35.1% 0.130 259.8);
+  --bb-x-brand-7: oklch(40.5% 0.164 259.8);
+  --bb-x-brand-8: oklch(49.8% 0.201 259.8);
+  --bb-x-brand-9: oklch(54.6% 0.220 259.8);
+  --bb-x-brand-10: oklch(58.6% 0.227 259.8);
+  --bb-x-brand-11: oklch(76.9% 0.118 259.8);
+  --bb-x-brand-12: oklch(94.7% 0.025 259.8);
+}
+
+[data-bb-accent='cyan'] {
+  --bb-x-brand-1: oklch(99.1% 0.007 214.9);
+  --bb-x-brand-2: oklch(98.0% 0.015 215.1);
+  --bb-x-brand-3: oklch(95.2% 0.037 215.1);
+  --bb-x-brand-4: oklch(92.7% 0.057 215.2);
+  --bb-x-brand-5: oklch(90.5% 0.075 215.2);
+  --bb-x-brand-6: oklch(87.8% 0.097 215.2);
+  --bb-x-brand-7: oklch(84.1% 0.128 215.2);
+  --bb-x-brand-8: oklch(78.2% 0.138 215.2);
+  --bb-x-brand-9: oklch(60.9% 0.108 215.2);
+  --bb-x-brand-10: oklch(57.9% 0.102 215.2);
+  --bb-x-brand-11: oklch(49.5% 0.088 215.2);
+  --bb-x-brand-12: oklch(23.8% 0.042 215.2);
+
+  /* A light solid, so it carries dark text and its states move the
+     other way: 4.43 / 8.53 / 10.44 at rest, hovered and pressed. */
+  --bb-accent-on: var(--bb-x-brand-12);
+  --bb-accent-hover: var(--bb-x-brand-8);
+  --bb-accent-active: var(--bb-x-brand-7);
+
+  /* The solid is 3.59:1 on the page, so a link takes
+     the text step instead: 5.77:1. */
+  --bb-link: var(--bb-x-brand-11);
+}
+
+[data-bb-mode='dark'] [data-bb-accent='cyan'],
+[data-bb-accent='cyan'][data-bb-mode='dark'] {
+  --bb-x-brand-1: oklch(17.9% 0.032 215.2);
+  --bb-x-brand-2: oklch(21.2% 0.037 215.2);
+  --bb-x-brand-3: oklch(25.1% 0.044 215.2);
+  --bb-x-brand-4: oklch(28.2% 0.050 215.2);
+  --bb-x-brand-5: oklch(30.8% 0.054 215.2);
+  --bb-x-brand-6: oklch(34.3% 0.061 215.2);
+  --bb-x-brand-7: oklch(39.4% 0.069 215.2);
+  --bb-x-brand-8: oklch(48.4% 0.086 215.2);
+  --bb-x-brand-9: oklch(60.9% 0.108 215.2);
+  --bb-x-brand-10: oklch(64.9% 0.115 215.2);
+  --bb-x-brand-11: oklch(75.9% 0.134 215.2);
+  --bb-x-brand-12: oklch(94.7% 0.041 215.2);
+
+  /* A light solid, so it carries dark text and its states move the
+     other way: 5.08 / 6.00 / 9.03 at rest, hovered and pressed. */
+  --bb-accent-on: var(--bb-x-brand-1);
+  --bb-accent-hover: var(--bb-x-brand-10);
+  --bb-accent-active: var(--bb-x-brand-11);
+}
+
+[data-bb-accent='emerald'] {
+  --bb-x-brand-1: oklch(99.1% 0.013 162.6);
+  --bb-x-brand-2: oklch(98.0% 0.021 162.5);
+  --bb-x-brand-3: oklch(95.0% 0.052 162.5);
+  --bb-x-brand-4: oklch(92.4% 0.075 162.5);
+  --bb-x-brand-5: oklch(90.0% 0.097 162.5);
+  --bb-x-brand-6: oklch(87.3% 0.119 162.5);
+  --bb-x-brand-7: oklch(83.6% 0.147 162.5);
+  --bb-x-brand-8: oklch(77.5% 0.169 162.5);
+  --bb-x-brand-9: oklch(59.6% 0.130 162.5);
+  --bb-x-brand-10: oklch(56.6% 0.123 162.5);
+  --bb-x-brand-11: oklch(49.0% 0.107 162.5);
+  --bb-x-brand-12: oklch(23.7% 0.051 162.5);
+
+  /* A light solid, so it carries dark text and its states move the
+     other way: 4.31 / 8.57 / 10.45 at rest, hovered and pressed. */
+  --bb-accent-on: var(--bb-x-brand-12);
+  --bb-accent-hover: var(--bb-x-brand-8);
+  --bb-accent-active: var(--bb-x-brand-7);
+
+  /* The solid is 3.68:1 on the page, so a link takes
+     the text step instead: 5.74:1. */
+  --bb-link: var(--bb-x-brand-11);
+}
+
+[data-bb-mode='dark'] [data-bb-accent='emerald'],
+[data-bb-accent='emerald'][data-bb-mode='dark'] {
+  --bb-x-brand-1: oklch(17.9% 0.039 162.5);
+  --bb-x-brand-2: oklch(21.1% 0.046 162.5);
+  --bb-x-brand-3: oklch(25.0% 0.051 162.5);
+  --bb-x-brand-4: oklch(28.0% 0.055 162.5);
+  --bb-x-brand-5: oklch(30.7% 0.061 162.5);
+  --bb-x-brand-6: oklch(34.1% 0.069 162.5);
+  --bb-x-brand-7: oklch(39.1% 0.081 162.5);
+  --bb-x-brand-8: oklch(47.9% 0.104 162.5);
+  --bb-x-brand-9: oklch(59.6% 0.130 162.5);
+  --bb-x-brand-10: oklch(63.6% 0.138 162.5);
+  --bb-x-brand-11: oklch(75.2% 0.164 162.5);
+  --bb-x-brand-12: oklch(94.5% 0.056 162.5);
+
+  /* A light solid, so it carries dark text and its states move the
+     other way: 4.93 / 5.81 / 9.07 at rest, hovered and pressed. */
+  --bb-accent-on: var(--bb-x-brand-1);
+  --bb-accent-hover: var(--bb-x-brand-10);
+  --bb-accent-active: var(--bb-x-brand-11);
+}
+
+[data-bb-accent='fuchsia'] {
+  --bb-x-brand-1: oklch(99.1% 0.007 322.3);
+  --bb-x-brand-2: oklch(98.2% 0.015 322.2);
+  --bb-x-brand-3: oklch(95.8% 0.032 322.1);
+  --bb-x-brand-4: oklch(93.7% 0.049 322.1);
+  --bb-x-brand-5: oklch(91.7% 0.065 322.1);
+  --bb-x-brand-6: oklch(89.5% 0.084 322.1);
+  --bb-x-brand-7: oklch(86.5% 0.114 322.1);
+  --bb-x-brand-8: oklch(81.2% 0.162 322.1);
+  --bb-x-brand-9: oklch(59.1% 0.281 322.1);
+  --bb-x-brand-10: oklch(56.1% 0.266 322.1);
+  --bb-x-brand-11: oklch(53.6% 0.255 322.1);
+  --bb-x-brand-12: oklch(25.7% 0.122 322.1);
+}
+
+[data-bb-mode='dark'] [data-bb-accent='fuchsia'],
+[data-bb-accent='fuchsia'][data-bb-mode='dark'] {
+  --bb-x-brand-1: oklch(17.9% 0.085 322.1);
+  --bb-x-brand-2: oklch(21.8% 0.104 322.1);
+  --bb-x-brand-3: oklch(26.4% 0.125 322.1);
+  --bb-x-brand-4: oklch(29.7% 0.137 322.1);
+  --bb-x-brand-5: oklch(32.6% 0.146 322.1);
+  --bb-x-brand-6: oklch(36.4% 0.158 322.1);
+  --bb-x-brand-7: oklch(42.0% 0.185 322.1);
+  --bb-x-brand-8: oklch(51.9% 0.247 322.1);
+  --bb-x-brand-9: oklch(59.1% 0.281 322.1);
+  --bb-x-brand-10: oklch(63.1% 0.300 322.1);
+  --bb-x-brand-11: oklch(78.6% 0.186 322.1);
+  --bb-x-brand-12: oklch(94.8% 0.041 322.1);
+}
+
+[data-bb-accent='green'] {
+  --bb-x-brand-1: oklch(99.1% 0.014 149.6);
+  --bb-x-brand-2: oklch(98.0% 0.021 149.6);
+  --bb-x-brand-3: oklch(95.0% 0.057 149.6);
+  --bb-x-brand-4: oklch(92.4% 0.085 149.6);
+  --bb-x-brand-5: oklch(89.9% 0.115 149.6);
+  --bb-x-brand-6: oklch(87.2% 0.149 149.6);
+  --bb-x-brand-7: oklch(83.4% 0.177 149.6);
+  --bb-x-brand-8: oklch(77.2% 0.212 149.6);
+  --bb-x-brand-9: oklch(62.7% 0.174 149.6);
+  --bb-x-brand-10: oklch(59.7% 0.166 149.6);
+  --bb-x-brand-11: oklch(48.9% 0.136 149.6);
+  --bb-x-brand-12: oklch(23.6% 0.065 149.6);
+
+  /* A light solid, so it carries dark text and its states move the
+     other way: 5.00 / 8.60 / 10.48 at rest, hovered and pressed. */
+  --bb-accent-on: var(--bb-x-brand-12);
+  --bb-accent-hover: var(--bb-x-brand-8);
+  --bb-accent-active: var(--bb-x-brand-7);
+
+  /* The solid is 3.19:1 on the page, so a link takes
+     the text step instead: 5.77:1. */
+  --bb-link: var(--bb-x-brand-11);
+}
+
+[data-bb-mode='dark'] [data-bb-accent='green'],
+[data-bb-accent='green'][data-bb-mode='dark'] {
+  --bb-x-brand-1: oklch(17.9% 0.050 149.6);
+  --bb-x-brand-2: oklch(21.1% 0.059 149.6);
+  --bb-x-brand-3: oklch(25.0% 0.065 149.6);
+  --bb-x-brand-4: oklch(28.0% 0.068 149.6);
+  --bb-x-brand-5: oklch(30.6% 0.074 149.6);
+  --bb-x-brand-6: oklch(34.1% 0.083 149.6);
+  --bb-x-brand-7: oklch(39.1% 0.095 149.6);
+  --bb-x-brand-8: oklch(47.8% 0.132 149.6);
+  --bb-x-brand-9: oklch(62.7% 0.174 149.6);
+  --bb-x-brand-10: oklch(66.7% 0.185 149.6);
+  --bb-x-brand-11: oklch(74.9% 0.208 149.6);
+  --bb-x-brand-12: oklch(94.6% 0.062 149.6);
+
+  /* A light solid, so it carries dark text and its states move the
+     other way: 5.70 / 6.65 / 9.06 at rest, hovered and pressed. */
+  --bb-accent-on: var(--bb-x-brand-1);
+  --bb-accent-hover: var(--bb-x-brand-10);
+  --bb-accent-active: var(--bb-x-brand-11);
+}
+
+[data-bb-accent='indigo'] {
+  --bb-x-brand-1: oklch(99.1% 0.004 277.0);
+  --bb-x-brand-2: oklch(98.1% 0.009 277.1);
+  --bb-x-brand-3: oklch(95.6% 0.021 277.1);
+  --bb-x-brand-4: oklch(93.3% 0.032 277.1);
+  --bb-x-brand-5: oklch(91.2% 0.043 277.1);
+  --bb-x-brand-6: oklch(88.8% 0.055 277.1);
+  --bb-x-brand-7: oklch(85.5% 0.072 277.1);
+  --bb-x-brand-8: oklch(79.8% 0.103 277.1);
+  --bb-x-brand-9: oklch(51.1% 0.278 277.1);
+  --bb-x-brand-10: oklch(48.1% 0.297 277.1);
+  --bb-x-brand-11: oklch(52.8% 0.255 277.1);
+  --bb-x-brand-12: oklch(24.8% 0.090 277.1);
+}
+
+[data-bb-mode='dark'] [data-bb-accent='indigo'],
+[data-bb-accent='indigo'][data-bb-mode='dark'] {
+  --bb-x-brand-1: oklch(17.9% 0.090 277.1);
+  --bb-x-brand-2: oklch(21.4% 0.090 277.1);
+  --bb-x-brand-3: oklch(25.5% 0.090 277.1);
+  --bb-x-brand-4: oklch(28.8% 0.107 277.1);
+  --bb-x-brand-5: oklch(31.7% 0.122 277.1);
+  --bb-x-brand-6: oklch(35.6% 0.142 277.1);
+  --bb-x-brand-7: oklch(41.7% 0.210 277.1);
+  --bb-x-brand-8: oklch(51.4% 0.261 277.1);
+  --bb-x-brand-9: oklch(51.1% 0.278 277.1);
+  --bb-x-brand-10: oklch(55.1% 0.252 277.1);
+  --bb-x-brand-11: oklch(77.0% 0.118 277.1);
+  --bb-x-brand-12: oklch(94.5% 0.026 277.1);
+}
+
+[data-bb-accent='lime'] {
+  --bb-x-brand-1: oklch(99.1% 0.019 130.8);
+  --bb-x-brand-2: oklch(97.8% 0.045 130.8);
+  --bb-x-brand-3: oklch(94.8% 0.107 130.8);
+  --bb-x-brand-4: oklch(92.1% 0.156 130.8);
+  --bb-x-brand-5: oklch(89.7% 0.196 130.8);
+  --bb-x-brand-6: oklch(87.1% 0.215 130.8);
+  --bb-x-brand-7: oklch(83.6% 0.228 130.8);
+  --bb-x-brand-8: oklch(77.9% 0.212 130.8);
+  --bb-x-brand-9: oklch(64.8% 0.177 130.8);
+  --bb-x-brand-10: oklch(61.8% 0.168 130.8);
+  --bb-x-brand-11: oklch(49.3% 0.134 130.8);
+  --bb-x-brand-12: oklch(23.8% 0.065 130.8);
+
+  /* A light solid, so it carries dark text and its states move the
+     other way: 5.32 / 8.61 / 10.51 at rest, hovered and pressed. */
+  --bb-accent-on: var(--bb-x-brand-12);
+  --bb-accent-hover: var(--bb-x-brand-8);
+  --bb-accent-active: var(--bb-x-brand-7);
+
+  /* The solid is 3.00:1 on the page, so a link takes
+     the text step instead: 5.73:1. */
+  --bb-link: var(--bb-x-brand-11);
+}
+
+[data-bb-mode='dark'] [data-bb-accent='lime'],
+[data-bb-accent='lime'][data-bb-mode='dark'] {
+  --bb-x-brand-1: oklch(17.9% 0.049 130.8);
+  --bb-x-brand-2: oklch(21.1% 0.058 130.8);
+  --bb-x-brand-3: oklch(25.1% 0.068 130.8);
+  --bb-x-brand-4: oklch(28.1% 0.073 130.8);
+  --bb-x-brand-5: oklch(30.7% 0.079 130.8);
+  --bb-x-brand-6: oklch(34.2% 0.087 130.8);
+  --bb-x-brand-7: oklch(39.3% 0.098 130.8);
+  --bb-x-brand-8: oklch(48.2% 0.131 130.8);
+  --bb-x-brand-9: oklch(64.8% 0.177 130.8);
+  --bb-x-brand-10: oklch(68.8% 0.187 130.8);
+  --bb-x-brand-11: oklch(75.5% 0.206 130.8);
+  --bb-x-brand-12: oklch(94.2% 0.120 130.8);
+
+  /* A light solid, so it carries dark text and its states move the
+     other way: 6.09 / 7.06 / 9.10 at rest, hovered and pressed. */
+  --bb-accent-on: var(--bb-x-brand-1);
+  --bb-accent-hover: var(--bb-x-brand-10);
+  --bb-accent-active: var(--bb-x-brand-11);
+}
+
+[data-bb-accent='orange'] {
+  --bb-x-brand-1: oklch(99.1% 0.005 47.8);
+  --bb-x-brand-2: oklch(98.1% 0.010 47.7);
+  --bb-x-brand-3: oklch(95.7% 0.024 47.6);
+  --bb-x-brand-4: oklch(93.5% 0.036 47.6);
+  --bb-x-brand-5: oklch(91.4% 0.048 47.6);
+  --bb-x-brand-6: oklch(89.1% 0.062 47.6);
+  --bb-x-brand-7: oklch(85.9% 0.083 47.6);
+  --bb-x-brand-8: oklch(80.4% 0.122 47.6);
+  --bb-x-brand-9: oklch(64.6% 0.177 47.6);
+  --bb-x-brand-10: oklch(61.6% 0.169 47.6);
+  --bb-x-brand-11: oklch(51.5% 0.141 47.6);
+  --bb-x-brand-12: oklch(24.7% 0.068 47.6);
+
+  /* A light solid, so it carries dark text and its states move the
+     other way: 4.68 / 8.58 / 10.47 at rest, hovered and pressed. */
+  --bb-accent-on: var(--bb-x-brand-12);
+  --bb-accent-hover: var(--bb-x-brand-8);
+  --bb-accent-active: var(--bb-x-brand-7);
+
+  /* The solid is 3.41:1 on the page, so a link takes
+     the text step instead: 5.77:1. */
+  --bb-link: var(--bb-x-brand-11);
+}
+
+[data-bb-mode='dark'] [data-bb-accent='orange'],
+[data-bb-accent='orange'][data-bb-mode='dark'] {
+  --bb-x-brand-1: oklch(17.9% 0.049 47.5);
+  --bb-x-brand-2: oklch(21.5% 0.059 47.6);
+  --bb-x-brand-3: oklch(25.8% 0.071 47.6);
+  --bb-x-brand-4: oklch(29.0% 0.079 47.6);
+  --bb-x-brand-5: oklch(31.8% 0.087 47.6);
+  --bb-x-brand-6: oklch(35.5% 0.097 47.6);
+  --bb-x-brand-7: oklch(40.8% 0.112 47.6);
+  --bb-x-brand-8: oklch(50.1% 0.137 47.6);
+  --bb-x-brand-9: oklch(64.6% 0.177 47.6);
+  --bb-x-brand-10: oklch(68.6% 0.188 47.6);
+  --bb-x-brand-11: oklch(77.9% 0.140 47.6);
+  --bb-x-brand-12: oklch(94.9% 0.028 47.6);
+
+  /* A light solid, so it carries dark text and its states move the
+     other way: 5.41 / 6.28 / 9.03 at rest, hovered and pressed. */
+  --bb-accent-on: var(--bb-x-brand-1);
+  --bb-accent-hover: var(--bb-x-brand-10);
+  --bb-accent-active: var(--bb-x-brand-11);
+}
+
+[data-bb-accent='pink'] {
+  --bb-x-brand-1: oklch(99.1% 0.005 354.2);
+  --bb-x-brand-2: oklch(98.1% 0.010 354.2);
+  --bb-x-brand-3: oklch(95.8% 0.022 354.3);
+  --bb-x-brand-4: oklch(93.6% 0.036 354.3);
+  --bb-x-brand-5: oklch(91.6% 0.048 354.3);
+  --bb-x-brand-6: oklch(89.4% 0.063 354.3);
+  --bb-x-brand-7: oklch(86.2% 0.084 354.3);
+  --bb-x-brand-8: oklch(80.9% 0.123 354.3);
+  --bb-x-brand-9: oklch(59.2% 0.244 354.3);
+  --bb-x-brand-10: oklch(56.2% 0.231 354.3);
+  --bb-x-brand-11: oklch(53.1% 0.218 354.3);
+  --bb-x-brand-12: oklch(25.4% 0.105 354.3);
+}
+
+[data-bb-mode='dark'] [data-bb-accent='pink'],
+[data-bb-accent='pink'][data-bb-mode='dark'] {
+  --bb-x-brand-1: oklch(17.9% 0.074 354.3);
+  --bb-x-brand-2: oklch(21.7% 0.089 354.3);
+  --bb-x-brand-3: oklch(26.2% 0.108 354.3);
+  --bb-x-brand-4: oklch(29.5% 0.113 354.3);
+  --bb-x-brand-5: oklch(32.3% 0.123 354.3);
+  --bb-x-brand-6: oklch(36.2% 0.137 354.3);
+  --bb-x-brand-7: oklch(41.7% 0.159 354.3);
+  --bb-x-brand-8: oklch(51.5% 0.212 354.3);
+  --bb-x-brand-9: oklch(59.2% 0.244 354.3);
+  --bb-x-brand-10: oklch(63.2% 0.260 354.3);
+  --bb-x-brand-11: oklch(78.3% 0.144 354.3);
+  --bb-x-brand-12: oklch(94.8% 0.028 354.3);
+}
+
+[data-bb-accent='purple'] {
+  --bb-x-brand-1: oklch(99.1% 0.005 304.0);
+  --bb-x-brand-2: oklch(98.1% 0.011 304.0);
+  --bb-x-brand-3: oklch(95.7% 0.025 303.9);
+  --bb-x-brand-4: oklch(93.5% 0.038 303.9);
+  --bb-x-brand-5: oklch(91.5% 0.050 303.9);
+  --bb-x-brand-6: oklch(89.2% 0.065 303.9);
+  --bb-x-brand-7: oklch(85.9% 0.085 303.9);
+  --bb-x-brand-8: oklch(80.5% 0.121 303.9);
+  --bb-x-brand-9: oklch(55.8% 0.292 303.9);
+  --bb-x-brand-10: oklch(52.8% 0.276 303.9);
+  --bb-x-brand-11: oklch(54.1% 0.282 303.9);
+  --bb-x-brand-12: oklch(25.9% 0.136 303.9);
+}
+
+[data-bb-mode='dark'] [data-bb-accent='purple'],
+[data-bb-accent='purple'][data-bb-mode='dark'] {
+  --bb-x-brand-1: oklch(17.9% 0.094 303.9);
+  --bb-x-brand-2: oklch(21.9% 0.114 303.9);
+  --bb-x-brand-3: oklch(26.5% 0.139 303.9);
+  --bb-x-brand-4: oklch(29.9% 0.151 303.9);
+  --bb-x-brand-5: oklch(32.7% 0.160 303.9);
+  --bb-x-brand-6: oklch(36.4% 0.171 303.9);
+  --bb-x-brand-7: oklch(42.2% 0.206 303.9);
+  --bb-x-brand-8: oklch(52.3% 0.273 303.9);
+  --bb-x-brand-9: oklch(55.8% 0.292 303.9);
+  --bb-x-brand-10: oklch(59.8% 0.273 303.9);
+  --bb-x-brand-11: oklch(77.7% 0.140 303.9);
+  --bb-x-brand-12: oklch(94.5% 0.032 303.9);
+}
+
+[data-bb-accent='red'] {
+  --bb-x-brand-1: oklch(99.1% 0.004 25.4);
+  --bb-x-brand-2: oklch(98.1% 0.009 25.3);
+  --bb-x-brand-3: oklch(95.7% 0.021 25.3);
+  --bb-x-brand-4: oklch(93.5% 0.032 25.3);
+  --bb-x-brand-5: oklch(91.5% 0.043 25.3);
+  --bb-x-brand-6: oklch(89.2% 0.056 25.3);
+  --bb-x-brand-7: oklch(86.0% 0.075 25.3);
+  --bb-x-brand-8: oklch(80.6% 0.110 25.3);
+  --bb-x-brand-9: oklch(57.7% 0.234 25.3);
+  --bb-x-brand-10: oklch(54.7% 0.222 25.3);
+  --bb-x-brand-11: oklch(52.8% 0.214 25.3);
+  --bb-x-brand-12: oklch(25.2% 0.092 25.3);
+}
+
+[data-bb-mode='dark'] [data-bb-accent='red'],
+[data-bb-accent='red'][data-bb-mode='dark'] {
+  --bb-x-brand-1: oklch(17.9% 0.073 25.3);
+  --bb-x-brand-2: oklch(21.7% 0.088 25.3);
+  --bb-x-brand-3: oklch(26.0% 0.093 25.3);
+  --bb-x-brand-4: oklch(29.3% 0.104 25.3);
+  --bb-x-brand-5: oklch(32.1% 0.115 25.3);
+  --bb-x-brand-6: oklch(35.9% 0.128 25.3);
+  --bb-x-brand-7: oklch(41.5% 0.155 25.3);
+  --bb-x-brand-8: oklch(51.2% 0.208 25.3);
+  --bb-x-brand-9: oklch(57.7% 0.234 25.3);
+  --bb-x-brand-10: oklch(61.7% 0.250 25.3);
+  --bb-x-brand-11: oklch(78.0% 0.129 25.3);
+  --bb-x-brand-12: oklch(94.7% 0.026 25.3);
+}
+
+[data-bb-accent='rose'] {
+  --bb-x-brand-1: oklch(99.1% 0.004 16.4);
+  --bb-x-brand-2: oklch(98.1% 0.009 16.4);
+  --bb-x-brand-3: oklch(95.7% 0.021 16.4);
+  --bb-x-brand-4: oklch(93.5% 0.033 16.4);
+  --bb-x-brand-5: oklch(91.6% 0.043 16.4);
+  --bb-x-brand-6: oklch(89.3% 0.056 16.4);
+  --bb-x-brand-7: oklch(86.1% 0.075 16.4);
+  --bb-x-brand-8: oklch(80.7% 0.111 16.4);
+  --bb-x-brand-9: oklch(58.6% 0.234 16.4);
+  --bb-x-brand-10: oklch(55.6% 0.222 16.4);
+  --bb-x-brand-11: oklch(52.9% 0.212 16.4);
+  --bb-x-brand-12: oklch(25.4% 0.101 16.4);
+}
+
+[data-bb-mode='dark'] [data-bb-accent='rose'],
+[data-bb-accent='rose'][data-bb-mode='dark'] {
+  --bb-x-brand-1: oklch(17.9% 0.072 16.4);
+  --bb-x-brand-2: oklch(21.7% 0.087 16.4);
+  --bb-x-brand-3: oklch(26.2% 0.105 16.4);
+  --bb-x-brand-4: oklch(29.4% 0.114 16.4);
+  --bb-x-brand-5: oklch(32.3% 0.125 16.4);
+  --bb-x-brand-6: oklch(36.1% 0.140 16.4);
+  --bb-x-brand-7: oklch(41.7% 0.163 16.4);
+  --bb-x-brand-8: oklch(51.3% 0.205 16.4);
+  --bb-x-brand-9: oklch(58.6% 0.234 16.4);
+  --bb-x-brand-10: oklch(62.6% 0.250 16.4);
+  --bb-x-brand-11: oklch(78.1% 0.129 16.4);
+  --bb-x-brand-12: oklch(94.8% 0.026 16.4);
+}
+
+[data-bb-accent='sky'] {
+  --bb-x-brand-1: oklch(99.1% 0.005 237.0);
+  --bb-x-brand-2: oklch(98.0% 0.011 237.2);
+  --bb-x-brand-3: oklch(95.4% 0.024 237.3);
+  --bb-x-brand-4: oklch(93.0% 0.038 237.3);
+  --bb-x-brand-5: oklch(90.8% 0.051 237.3);
+  --bb-x-brand-6: oklch(88.3% 0.065 237.3);
+  --bb-x-brand-7: oklch(84.8% 0.086 237.3);
+  --bb-x-brand-8: oklch(78.9% 0.123 237.3);
+  --bb-x-brand-9: oklch(58.8% 0.129 237.3);
+  --bb-x-brand-10: oklch(55.8% 0.122 237.3);
+  --bb-x-brand-11: oklch(49.8% 0.109 237.3);
+  --bb-x-brand-12: oklch(24.0% 0.053 237.3);
+
+  /* The solid is 3.96:1 on the page, so a link takes
+     the text step instead: 5.81:1. */
+  --bb-link: var(--bb-x-brand-11);
+}
+
+[data-bb-mode='dark'] [data-bb-accent='sky'],
+[data-bb-accent='sky'][data-bb-mode='dark'] {
+  --bb-x-brand-1: oklch(17.9% 0.039 237.3);
+  --bb-x-brand-2: oklch(21.2% 0.047 237.3);
+  --bb-x-brand-3: oklch(25.2% 0.055 237.3);
+  --bb-x-brand-4: oklch(28.3% 0.062 237.3);
+  --bb-x-brand-5: oklch(31.0% 0.068 237.3);
+  --bb-x-brand-6: oklch(34.5% 0.076 237.3);
+  --bb-x-brand-7: oklch(39.7% 0.087 237.3);
+  --bb-x-brand-8: oklch(48.7% 0.107 237.3);
+  --bb-x-brand-9: oklch(58.8% 0.129 237.3);
+  --bb-x-brand-10: oklch(62.8% 0.138 237.3);
+  --bb-x-brand-11: oklch(76.4% 0.138 237.3);
+  --bb-x-brand-12: oklch(94.9% 0.027 237.3);
+}
+
+[data-bb-accent='teal'] {
+  --bb-x-brand-1: oklch(99.1% 0.012 182.6);
+  --bb-x-brand-2: oklch(98.0% 0.019 182.5);
+  --bb-x-brand-3: oklch(95.0% 0.054 182.5);
+  --bb-x-brand-4: oklch(92.3% 0.082 182.5);
+  --bb-x-brand-5: oklch(89.9% 0.104 182.5);
+  --bb-x-brand-6: oklch(87.2% 0.125 182.5);
+  --bb-x-brand-7: oklch(83.6% 0.141 182.5);
+  --bb-x-brand-8: oklch(77.8% 0.139 182.5);
+  --bb-x-brand-9: oklch(60.0% 0.107 182.5);
+  --bb-x-brand-10: oklch(57.0% 0.102 182.5);
+  --bb-x-brand-11: oklch(49.2% 0.088 182.5);
+  --bb-x-brand-12: oklch(23.7% 0.042 182.5);
+
+  /* A light solid, so it carries dark text and its states move the
+     other way: 4.39 / 8.60 / 10.48 at rest, hovered and pressed. */
+  --bb-accent-on: var(--bb-x-brand-12);
+  --bb-accent-hover: var(--bb-x-brand-8);
+  --bb-accent-active: var(--bb-x-brand-7);
+
+  /* The solid is 3.63:1 on the page, so a link takes
+     the text step instead: 5.76:1. */
+  --bb-link: var(--bb-x-brand-11);
+}
+
+[data-bb-mode='dark'] [data-bb-accent='teal'],
+[data-bb-accent='teal'][data-bb-mode='dark'] {
+  --bb-x-brand-1: oklch(17.9% 0.032 182.5);
+  --bb-x-brand-2: oklch(21.1% 0.038 182.5);
+  --bb-x-brand-3: oklch(25.1% 0.045 182.5);
+  --bb-x-brand-4: oklch(28.1% 0.047 182.5);
+  --bb-x-brand-5: oklch(30.7% 0.051 182.5);
+  --bb-x-brand-6: oklch(34.2% 0.056 182.5);
+  --bb-x-brand-7: oklch(39.3% 0.065 182.5);
+  --bb-x-brand-8: oklch(48.1% 0.086 182.5);
+  --bb-x-brand-9: oklch(60.0% 0.107 182.5);
+  --bb-x-brand-10: oklch(64.0% 0.114 182.5);
+  --bb-x-brand-11: oklch(75.4% 0.135 182.5);
+  --bb-x-brand-12: oklch(94.4% 0.060 182.5);
+
+  /* A light solid, so it carries dark text and its states move the
+     other way: 5.02 / 5.86 / 9.01 at rest, hovered and pressed. */
+  --bb-accent-on: var(--bb-x-brand-1);
+  --bb-accent-hover: var(--bb-x-brand-10);
+  --bb-accent-active: var(--bb-x-brand-11);
+}
+
+[data-bb-accent='tomato'] {
+  --bb-x-brand-1: oklch(99.1% 0.004 33.4);
+  --bb-x-brand-2: oklch(98.1% 0.009 33.3);
+  --bb-x-brand-3: oklch(95.7% 0.021 33.3);
+  --bb-x-brand-4: oklch(93.5% 0.033 33.3);
+  --bb-x-brand-5: oklch(91.5% 0.044 33.3);
+  --bb-x-brand-6: oklch(89.2% 0.057 33.3);
+  --bb-x-brand-7: oklch(86.0% 0.077 33.3);
+  --bb-x-brand-8: oklch(80.5% 0.112 33.3);
+  --bb-x-brand-9: oklch(57.7% 0.211 33.3);
+  --bb-x-brand-10: oklch(54.7% 0.200 33.3);
+  --bb-x-brand-11: oklch(52.4% 0.192 33.3);
+  --bb-x-brand-12: oklch(25.1% 0.092 33.3);
+}
+
+[data-bb-mode='dark'] [data-bb-accent='tomato'],
+[data-bb-accent='tomato'][data-bb-mode='dark'] {
+  --bb-x-brand-1: oklch(17.9% 0.066 33.2);
+  --bb-x-brand-2: oklch(21.6% 0.079 33.3);
+  --bb-x-brand-3: oklch(26.0% 0.093 33.3);
+  --bb-x-brand-4: oklch(29.3% 0.104 33.3);
+  --bb-x-brand-5: oklch(32.1% 0.114 33.3);
+  --bb-x-brand-6: oklch(35.9% 0.128 33.3);
+  --bb-x-brand-7: oklch(41.4% 0.152 33.3);
+  --bb-x-brand-8: oklch(50.9% 0.186 33.3);
+  --bb-x-brand-9: oklch(57.7% 0.211 33.3);
+  --bb-x-brand-10: oklch(61.7% 0.226 33.3);
+  --bb-x-brand-11: oklch(77.9% 0.130 33.3);
+  --bb-x-brand-12: oklch(94.8% 0.026 33.3);
+}
+
+[data-bb-accent='violet'] {
+  --bb-x-brand-1: oklch(99.1% 0.005 292.7);
+  --bb-x-brand-2: oklch(98.1% 0.010 292.7);
+  --bb-x-brand-3: oklch(95.6% 0.022 292.7);
+  --bb-x-brand-4: oklch(93.4% 0.034 292.7);
+  --bb-x-brand-5: oklch(91.4% 0.046 292.7);
+  --bb-x-brand-6: oklch(89.0% 0.058 292.7);
+  --bb-x-brand-7: oklch(85.7% 0.077 292.7);
+  --bb-x-brand-8: oklch(80.2% 0.110 292.7);
+  --bb-x-brand-9: oklch(54.1% 0.282 292.7);
+  --bb-x-brand-10: oklch(51.1% 0.284 292.7);
+  --bb-x-brand-11: oklch(53.8% 0.280 292.7);
+  --bb-x-brand-12: oklch(26.0% 0.141 292.7);
+}
+
+[data-bb-mode='dark'] [data-bb-accent='violet'],
+[data-bb-accent='violet'][data-bb-mode='dark'] {
+  --bb-x-brand-1: oklch(17.9% 0.100 292.7);
+  --bb-x-brand-2: oklch(21.9% 0.122 292.7);
+  --bb-x-brand-3: oklch(26.5% 0.141 292.7);
+  --bb-x-brand-4: oklch(29.6% 0.148 292.7);
+  --bb-x-brand-5: oklch(32.6% 0.162 292.7);
+  --bb-x-brand-6: oklch(36.5% 0.181 292.7);
+  --bb-x-brand-7: oklch(42.4% 0.225 292.7);
+  --bb-x-brand-8: oklch(52.1% 0.277 292.7);
+  --bb-x-brand-9: oklch(54.1% 0.282 292.7);
+  --bb-x-brand-10: oklch(58.1% 0.254 292.7);
+  --bb-x-brand-11: oklch(77.3% 0.127 292.7);
+  --bb-x-brand-12: oklch(94.4% 0.029 292.7);
+}
+
+[data-bb-accent='yellow'] {
+  --bb-x-brand-1: oklch(99.1% 0.010 86.1);
+  --bb-x-brand-2: oklch(98.1% 0.021 86.1);
+  --bb-x-brand-3: oklch(95.5% 0.049 86.0);
+  --bb-x-brand-4: oklch(93.3% 0.074 86.0);
+  --bb-x-brand-5: oklch(91.2% 0.098 86.0);
+  --bb-x-brand-6: oklch(88.8% 0.125 86.0);
+  --bb-x-brand-7: oklch(85.5% 0.165 86.0);
+  --bb-x-brand-8: oklch(79.7% 0.163 86.0);
+  --bb-x-brand-9: oklch(68.1% 0.139 86.0);
+  --bb-x-brand-10: oklch(65.1% 0.133 86.0);
+  --bb-x-brand-11: oklch(50.4% 0.103 86.0);
+  --bb-x-brand-12: oklch(24.2% 0.050 86.0);
+
+  /* A light solid, so it carries dark text and its states move the
+     other way: 5.66 / 8.55 / 10.41 at rest, hovered and pressed. */
+  --bb-accent-on: var(--bb-x-brand-12);
+  --bb-accent-hover: var(--bb-x-brand-8);
+  --bb-accent-active: var(--bb-x-brand-7);
+
+  /* The solid is 2.82:1 on the page, so a link takes
+     the text step instead: 5.81:1. */
+  --bb-link: var(--bb-x-brand-11);
+}
+
+[data-bb-mode='dark'] [data-bb-accent='yellow'],
+[data-bb-accent='yellow'][data-bb-mode='dark'] {
+  --bb-x-brand-1: oklch(17.9% 0.037 85.9);
+  --bb-x-brand-2: oklch(21.3% 0.044 86.0);
+  --bb-x-brand-3: oklch(25.4% 0.052 86.0);
+  --bb-x-brand-4: oklch(28.5% 0.058 86.0);
+  --bb-x-brand-5: oklch(31.2% 0.064 86.0);
+  --bb-x-brand-6: oklch(34.8% 0.071 86.0);
+  --bb-x-brand-7: oklch(40.1% 0.082 86.0);
+  --bb-x-brand-8: oklch(49.2% 0.101 86.0);
+  --bb-x-brand-9: oklch(68.1% 0.139 86.0);
+  --bb-x-brand-10: oklch(72.1% 0.148 86.0);
+  --bb-x-brand-11: oklch(77.2% 0.158 86.0);
+  --bb-x-brand-12: oklch(94.9% 0.056 86.0);
+
+  /* A light solid, so it carries dark text and its states move the
+     other way: 6.53 / 7.59 / 9.08 at rest, hovered and pressed. */
+  --bb-accent-on: var(--bb-x-brand-1);
+  --bb-accent-hover: var(--bb-x-brand-10);
+  --bb-accent-active: var(--bb-x-brand-11);
+}
+
+/* ── bases ───────────────────────────────────────────────────────── */
+
+[data-bb-base='mauve'] {
+  --bb-x-gray-1: oklch(99.1% 0.000 89.9);
+  --bb-x-gray-2: oklch(98.1% 0.000 322.5);
+  --bb-x-gray-3: oklch(95.6% 0.003 322.5);
+  --bb-x-gray-4: oklch(93.3% 0.004 322.5);
+  --bb-x-gray-5: oklch(91.2% 0.006 322.5);
+  --bb-x-gray-6: oklch(88.8% 0.009 322.5);
+  --bb-x-gray-7: oklch(85.4% 0.013 322.5);
+  --bb-x-gray-8: oklch(79.5% 0.015 322.5);
+  --bb-x-gray-9: oklch(64.7% 0.025 322.5);
+  --bb-x-gray-10: oklch(61.3% 0.028 322.5);
+  --bb-x-gray-11: oklch(50.6% 0.032 322.5);
+  --bb-x-gray-12: oklch(24.4% 0.022 322.5);
+}
+
+[data-bb-mode='dark'] [data-bb-base='mauve'],
+[data-bb-base='mauve'][data-bb-mode='dark'] {
+  --bb-x-gray-1: oklch(17.9% 0.014 322.5);
+  --bb-x-gray-2: oklch(21.4% 0.019 322.5);
+  --bb-x-gray-3: oklch(25.5% 0.023 322.5);
+  --bb-x-gray-4: oklch(28.6% 0.025 322.5);
+  --bb-x-gray-5: oklch(31.4% 0.027 322.5);
+  --bb-x-gray-6: oklch(35.0% 0.028 322.5);
+  --bb-x-gray-7: oklch(40.2% 0.029 322.5);
+  --bb-x-gray-8: oklch(49.3% 0.032 322.5);
+  --bb-x-gray-9: oklch(54.0% 0.034 322.5);
+  --bb-x-gray-10: oklch(58.6% 0.030 322.5);
+  --bb-x-gray-11: oklch(77.0% 0.016 322.5);
+  --bb-x-gray-12: oklch(94.9% 0.004 322.5);
+}
+
+[data-bb-base='mist'] {
+  --bb-x-gray-1: oklch(99.1% 0.002 213.5);
+  --bb-x-gray-2: oklch(98.1% 0.002 213.5);
+  --bb-x-gray-3: oklch(95.5% 0.003 213.5);
+  --bb-x-gray-4: oklch(93.2% 0.004 213.5);
+  --bb-x-gray-5: oklch(91.0% 0.006 213.5);
+  --bb-x-gray-6: oklch(88.6% 0.006 213.5);
+  --bb-x-gray-7: oklch(85.2% 0.008 213.5);
+  --bb-x-gray-8: oklch(79.3% 0.011 213.5);
+  --bb-x-gray-9: oklch(64.3% 0.017 213.5);
+  --bb-x-gray-10: oklch(60.9% 0.019 213.5);
+  --bb-x-gray-11: oklch(50.1% 0.019 213.5);
+  --bb-x-gray-12: oklch(24.1% 0.009 213.5);
+}
+
+[data-bb-mode='dark'] [data-bb-base='mist'],
+[data-bb-base='mist'][data-bb-mode='dark'] {
+  --bb-x-gray-1: oklch(17.9% 0.006 213.5);
+  --bb-x-gray-2: oklch(21.2% 0.008 213.5);
+  --bb-x-gray-3: oklch(25.3% 0.010 213.5);
+  --bb-x-gray-4: oklch(28.4% 0.011 213.5);
+  --bb-x-gray-5: oklch(31.1% 0.012 213.5);
+  --bb-x-gray-6: oklch(34.6% 0.014 213.5);
+  --bb-x-gray-7: oklch(39.8% 0.016 213.5);
+  --bb-x-gray-8: oklch(48.9% 0.018 213.5);
+  --bb-x-gray-9: oklch(53.6% 0.020 213.5);
+  --bb-x-gray-10: oklch(58.1% 0.020 213.5);
+  --bb-x-gray-11: oklch(76.8% 0.012 213.5);
+  --bb-x-gray-12: oklch(94.9% 0.003 213.5);
+}
+
+[data-bb-base='neutral'] {
+  --bb-x-gray-1: oklch(99.1% 0.000 89.9);
+  --bb-x-gray-2: oklch(98.1% 0.000 89.9);
+  --bb-x-gray-3: oklch(95.5% 0.000 89.9);
+  --bb-x-gray-4: oklch(93.2% 0.000 89.9);
+  --bb-x-gray-5: oklch(91.1% 0.000 89.9);
+  --bb-x-gray-6: oklch(88.7% 0.000 89.9);
+  --bb-x-gray-7: oklch(85.2% 0.000 89.9);
+  --bb-x-gray-8: oklch(79.4% 0.000 89.9);
+  --bb-x-gray-9: oklch(64.5% 0.000 89.9);
+  --bb-x-gray-10: oklch(61.0% 0.000 89.9);
+  --bb-x-gray-11: oklch(50.2% 0.000 89.9);
+  --bb-x-gray-12: oklch(24.1% 0.000 89.9);
+}
+
+[data-bb-mode='dark'] [data-bb-base='neutral'],
+[data-bb-base='neutral'][data-bb-mode='dark'] {
+  --bb-x-gray-1: oklch(17.9% 0.000 89.9);
+  --bb-x-gray-2: oklch(21.3% 0.000 89.9);
+  --bb-x-gray-3: oklch(25.4% 0.000 89.9);
+  --bb-x-gray-4: oklch(28.4% 0.000 89.9);
+  --bb-x-gray-5: oklch(31.2% 0.000 89.9);
+  --bb-x-gray-6: oklch(34.8% 0.000 89.9);
+  --bb-x-gray-7: oklch(39.9% 0.000 89.9);
+  --bb-x-gray-8: oklch(49.0% 0.000 89.9);
+  --bb-x-gray-9: oklch(53.7% 0.000 89.9);
+  --bb-x-gray-10: oklch(58.3% 0.000 89.9);
+  --bb-x-gray-11: oklch(76.9% 0.000 89.9);
+  --bb-x-gray-12: oklch(94.9% 0.000 89.9);
+}
+
+[data-bb-base='olive'] {
+  --bb-x-gray-1: oklch(99.1% 0.003 107.3);
+  --bb-x-gray-2: oklch(98.1% 0.004 107.3);
+  --bb-x-gray-3: oklch(95.5% 0.006 107.3);
+  --bb-x-gray-4: oklch(93.2% 0.007 107.3);
+  --bb-x-gray-5: oklch(91.1% 0.009 107.3);
+  --bb-x-gray-6: oklch(88.6% 0.011 107.3);
+  --bb-x-gray-7: oklch(85.2% 0.013 107.3);
+  --bb-x-gray-8: oklch(79.3% 0.017 107.3);
+  --bb-x-gray-9: oklch(64.3% 0.027 107.3);
+  --bb-x-gray-10: oklch(60.9% 0.029 107.3);
+  --bb-x-gray-11: oklch(50.1% 0.027 107.3);
+  --bb-x-gray-12: oklch(24.1% 0.014 107.3);
+}
+
+[data-bb-mode='dark'] [data-bb-base='olive'],
+[data-bb-base='olive'][data-bb-mode='dark'] {
+  --bb-x-gray-1: oklch(17.9% 0.008 107.3);
+  --bb-x-gray-2: oklch(21.3% 0.012 107.3);
+  --bb-x-gray-3: oklch(25.3% 0.014 107.3);
+  --bb-x-gray-4: oklch(28.4% 0.016 107.3);
+  --bb-x-gray-5: oklch(31.1% 0.018 107.3);
+  --bb-x-gray-6: oklch(34.7% 0.020 107.3);
+  --bb-x-gray-7: oklch(39.9% 0.023 107.3);
+  --bb-x-gray-8: oklch(48.9% 0.026 107.3);
+  --bb-x-gray-9: oklch(53.6% 0.029 107.3);
+  --bb-x-gray-10: oklch(58.2% 0.031 107.3);
+  --bb-x-gray-11: oklch(76.8% 0.019 107.3);
+  --bb-x-gray-12: oklch(94.9% 0.006 107.3);
+}
+
+[data-bb-base='sage'] {
+  --bb-x-gray-1: oklch(99.1% 0.002 171.6);
+  --bb-x-gray-2: oklch(98.1% 0.002 171.6);
+  --bb-x-gray-3: oklch(95.5% 0.003 171.6);
+  --bb-x-gray-4: oklch(93.2% 0.004 171.6);
+  --bb-x-gray-5: oklch(91.0% 0.006 171.6);
+  --bb-x-gray-6: oklch(88.6% 0.006 171.6);
+  --bb-x-gray-7: oklch(85.1% 0.008 171.6);
+  --bb-x-gray-8: oklch(79.3% 0.011 171.6);
+  --bb-x-gray-9: oklch(64.3% 0.017 171.6);
+  --bb-x-gray-10: oklch(60.8% 0.019 171.6);
+  --bb-x-gray-11: oklch(50.0% 0.019 171.6);
+  --bb-x-gray-12: oklch(24.0% 0.009 171.6);
+}
+
+[data-bb-mode='dark'] [data-bb-base='sage'],
+[data-bb-base='sage'][data-bb-mode='dark'] {
+  --bb-x-gray-1: oklch(17.9% 0.006 171.6);
+  --bb-x-gray-2: oklch(21.2% 0.008 171.6);
+  --bb-x-gray-3: oklch(25.3% 0.010 171.6);
+  --bb-x-gray-4: oklch(28.3% 0.011 171.6);
+  --bb-x-gray-5: oklch(31.0% 0.012 171.6);
+  --bb-x-gray-6: oklch(34.6% 0.014 171.6);
+  --bb-x-gray-7: oklch(39.8% 0.016 171.6);
+  --bb-x-gray-8: oklch(48.8% 0.018 171.6);
+  --bb-x-gray-9: oklch(53.5% 0.020 171.6);
+  --bb-x-gray-10: oklch(58.1% 0.020 171.6);
+  --bb-x-gray-11: oklch(76.8% 0.012 171.6);
+  --bb-x-gray-12: oklch(94.9% 0.003 171.6);
+}
+
+[data-bb-base='slate'] {
+  --bb-x-gray-1: oklch(99.1% 0.003 257.4);
+  --bb-x-gray-2: oklch(98.1% 0.004 257.4);
+  --bb-x-gray-3: oklch(95.5% 0.009 257.4);
+  --bb-x-gray-4: oklch(93.2% 0.013 257.4);
+  --bb-x-gray-5: oklch(91.1% 0.016 257.4);
+  --bb-x-gray-6: oklch(88.6% 0.019 257.4);
+  --bb-x-gray-7: oklch(85.2% 0.024 257.4);
+  --bb-x-gray-8: oklch(79.3% 0.030 257.4);
+  --bb-x-gray-9: oklch(64.4% 0.042 257.4);
+  --bb-x-gray-10: oklch(61.0% 0.044 257.4);
+  --bb-x-gray-11: oklch(50.2% 0.045 257.4);
+  --bb-x-gray-12: oklch(24.1% 0.042 257.4);
+}
+
+[data-bb-mode='dark'] [data-bb-base='slate'],
+[data-bb-base='slate'][data-bb-mode='dark'] {
+  --bb-x-gray-1: oklch(17.9% 0.042 257.4);
+  --bb-x-gray-2: oklch(21.3% 0.042 257.4);
+  --bb-x-gray-3: oklch(25.4% 0.041 257.4);
+  --bb-x-gray-4: oklch(28.4% 0.041 257.4);
+  --bb-x-gray-5: oklch(31.1% 0.042 257.4);
+  --bb-x-gray-6: oklch(34.7% 0.043 257.4);
+  --bb-x-gray-7: oklch(39.9% 0.044 257.4);
+  --bb-x-gray-8: oklch(49.0% 0.044 257.4);
+  --bb-x-gray-9: oklch(53.7% 0.046 257.4);
+  --bb-x-gray-10: oklch(58.2% 0.045 257.4);
+  --bb-x-gray-11: oklch(76.8% 0.033 257.4);
+  --bb-x-gray-12: oklch(94.9% 0.010 257.4);
+}
+
+[data-bb-base='stone'] {
+  --bb-x-gray-1: oklch(99.1% 0.001 58.1);
+  --bb-x-gray-2: oklch(98.1% 0.001 58.1);
+  --bb-x-gray-3: oklch(95.5% 0.002 58.1);
+  --bb-x-gray-4: oklch(93.2% 0.003 58.1);
+  --bb-x-gray-5: oklch(91.1% 0.003 58.1);
+  --bb-x-gray-6: oklch(88.7% 0.004 58.1);
+  --bb-x-gray-7: oklch(85.2% 0.006 58.1);
+  --bb-x-gray-8: oklch(79.4% 0.007 58.1);
+  --bb-x-gray-9: oklch(64.5% 0.011 58.1);
+  --bb-x-gray-10: oklch(61.1% 0.012 58.1);
+  --bb-x-gray-11: oklch(50.3% 0.012 58.1);
+  --bb-x-gray-12: oklch(24.2% 0.006 58.1);
+}
+
+[data-bb-mode='dark'] [data-bb-base='stone'],
+[data-bb-base='stone'][data-bb-mode='dark'] {
+  --bb-x-gray-1: oklch(17.9% 0.005 58.1);
+  --bb-x-gray-2: oklch(21.3% 0.006 58.1);
+  --bb-x-gray-3: oklch(25.4% 0.007 58.1);
+  --bb-x-gray-4: oklch(28.5% 0.007 58.1);
+  --bb-x-gray-5: oklch(31.2% 0.008 58.1);
+  --bb-x-gray-6: oklch(34.8% 0.009 58.1);
+  --bb-x-gray-7: oklch(40.0% 0.010 58.1);
+  --bb-x-gray-8: oklch(49.1% 0.012 58.1);
+  --bb-x-gray-9: oklch(53.8% 0.013 58.1);
+  --bb-x-gray-10: oklch(58.3% 0.012 58.1);
+  --bb-x-gray-11: oklch(76.9% 0.008 58.1);
+  --bb-x-gray-12: oklch(94.9% 0.002 58.1);
+}

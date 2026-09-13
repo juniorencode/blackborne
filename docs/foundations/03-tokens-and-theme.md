@@ -130,6 +130,14 @@ Nestable means: the application in light mode at normal density, and one
 particular table at compact density. No tricks — you open a container with the
 variables redefined.
 
+**The brand axis has a ready-made half.** `blackborne/palette.css` is an opt-in
+second stylesheet carrying the whole palette — eighteen accents and seven bases
+— as `[data-bb-accent]` and `[data-bb-base]` scopes, so a project whose brand
+is red writes `data-bb-accent="red"` rather than building a twelve-step scale.
+It is the same mechanism as the row above and not a fourth axis: the accent
+scope redefines the brand family, the base scope redefines the greys, and the
+four tone families follow neither ([decision 0029](../decisions/0029-the-catalogue-is-opt-in-and-a-scope-carries-the-pair.md)).
+
 ### 3.1 The scope rule, and why it is not optional
 
 Redefining the variables on a container is only half of it. The other half is
@@ -146,7 +154,9 @@ So the semantic mapping is **re-declared on every theme scope**:
 ```css
 :root,
 [data-bb-mode],
-[data-bb-theme] {
+[data-bb-theme],
+[data-bb-accent],
+[data-bb-base] {
   /* the whole semantic mapping */
 }
 ```
@@ -166,6 +176,58 @@ guide because the failure is invisible:
 
 This was found with the first component on screen, by a brand override that
 appeared to be ignored. It is written here so nobody rediscovers it.
+
+### 3.2 The mode goes outermost
+
+§3.1's re-declaration has a second half that went unwritten until 2026-09-13,
+and it cost a real defect: **the dark block has to match those scopes too.**
+
+The mapping the light block declares is the whole mapping, so a scope that
+re-declares it also re-declares the twenty-five tokens the dark block restates.
+With the dark block matching only `[data-bb-mode='dark']`, a theme scope NESTED
+inside a dark element put the light mapping back. Measured in a browser:
+
+| token                 | dark  | inside a nested scope           |
+| --------------------- | ----- | ------------------------------- |
+| `--bb-surface-raised` | 25.4% | **17.9%** — level with the page |
+| `--bb-surface-sunken` | 21.3% | **25.4%** — lighter than it     |
+| `--bb-border`         | 31.1% | 34.7%                           |
+
+Nothing had shown it, because the catalog's own panels put `data-bb-theme` and
+`data-bb-mode` on the **same** element, where the dark block has always
+matched. Nesting them is what a consumer does.
+
+So the dark block carries the scopes as descendants as well:
+
+```css
+[data-bb-mode='dark'],
+[data-bb-mode='dark'] [data-bb-theme],
+[data-bb-mode='dark'] [data-bb-accent],
+[data-bb-mode='dark'] [data-bb-base] {
+  /* the twenty-five that genuinely differ */
+}
+```
+
+**And that is a descendant selector, which answers the wrong question.** It
+asks "is there a dark ancestor", where the question is "is the NEAREST mode
+ancestor dark" — and no plain selector can ask that. `@scope` can, and is not
+worth a token layer's compatibility floor. So the rule is one sentence:
+
+> **The mode goes outermost.** Put a theme scope on the element carrying
+> `data-bb-mode`, or inside it with no other mode in between.
+
+Two arrangements are therefore **undefined**, both measured rather than
+assumed, and both avoided by that sentence:
+
+- `dark > light > accent` — the accent scope takes the dark mapping, because
+  the dark rule matches through the light element.
+- `accent > dark` — `primitives.css`'s own `[data-bb-mode='dark']` block
+  redeclares the default brand family on the inner element, and a declaration
+  beats an inherited value, so the accent is lost.
+
+It is not enforced, because there is nothing to enforce it with: a stylesheet
+cannot warn. It is documented, it is the arrangement every example uses, and
+`e2e/palette.spec.ts` measures the supported ones.
 
 ## 4. Catalog of semantic tokens
 
@@ -233,6 +295,43 @@ remembering it in the component.
 
 Practical consequence: **there is no standalone "text on accent" token.** There
 is a pair.
+
+#### 4.0.1 The pair has to be a pair in the FILE, not only in the rule
+
+The paragraph above was written in 2026-08 and was half true for a year.
+`--bb-accent-on` was the literal `#fff`, which is correct for one brand: the
+default is a dark blue. The decision did live in the theme; it just did not
+depend on the brand.
+
+Shipping eighteen accents is what made that visible. Measured, white text on
+each family's solid step: **nine of the eighteen are under 4.5:1** — amber
+3.12, cyan 3.68, emerald 3.78, green 3.28, lime 3.08, orange 3.50, sky 4.07,
+teal 3.72, yellow 2.89 — which is this section's own sentence, unfixed, nine
+times over.
+
+**So a background whose colour a project can change declares its text as part
+of the same scope**, and which text is a measurement rather than a judgement:
+whichever of white and the family's own darkest step reads better on the
+solid. It generalises past the colour itself, because a pair has to hold in
+every state the background has:
+
+> Hover and press move **away** from the text's lightness. Interacting spends
+> no contrast.
+
+Which in a role scale is: a white-text family walks 9, 10, 11 in light and
+9, 8, 7 in dark; a dark-text family does the opposite. The second half of that
+was the shipped default getting it wrong — a pressed primary button in dark
+mode was white on step 11, which is the scale's low-contrast **text** step
+being used as a **fill**, at 2.08:1. Nothing had seen it because the catalog's
+states story is light-only.
+
+**Two floors survive this and are named rather than smoothed over.** Four
+accents have a mid-tone solid that cannot carry a run of text either way —
+cyan 4.48, emerald 4.31, sky 4.07, teal 4.39 — and two have a solid within 3:1
+of the page: yellow in light at 2.82, indigo in dark at 2.88. Those are
+properties of the palette rather than of the mapping, and
+[decision 0028](../decisions/0028-the-palette-is-ours-and-what-it-guarantees.md)
+carries them under what is **not** guaranteed.
 
 **Focus**
 `focus-ring` · `focus-ring-offset` — **one single ring for the whole
@@ -571,14 +670,25 @@ Practical consequence: the visual catalog must be able to show both modes
 
 ## 7. The customization contract
 
-Three levels, from least to most invasive. All of them consist of redefining
+Four levels, from least to most invasive. All of them consist of redefining
 variables:
 
-| Level | The project wants…          | What it overrides                                           |
-| ----- | --------------------------- | ----------------------------------------------------------- |
-| 1     | Its brand colors            | The brand scale. The semantic tokens recompute on their own |
-| 2     | To adjust specific details  | Whichever semantic tokens it cares about                    |
-| 3     | A complete theme of its own | The entire semantic map                                     |
+| Level | The project wants…                | What it overrides                                           |
+| ----- | --------------------------------- | ----------------------------------------------------------- |
+| 0     | A colour from the palette we ship | Nothing. It names a scope: `data-bb-accent`, `data-bb-base` |
+| 1     | Its own brand colors              | The brand scale. The semantic tokens recompute on their own |
+| 2     | To adjust specific details        | Whichever semantic tokens it cares about                    |
+| 3     | A complete theme of its own       | The entire semantic map                                     |
+
+**Level 0 is new, and it is the one most projects want.** Level 1 asks for a
+twelve-step scale per mode — twenty-four values, with the step roles §1.1
+describes — which is real work, and the level's own history is of people doing
+it badly: five hand-written copies of one override in this repository's catalog
+had drifted apart, three of them missing steps, and every missing step fell
+back to the library's own brand while looking deliberate. `palette.css` ships
+twenty-five families that already satisfy the contract, so a project whose
+brand is close to one of them declares an attribute and is done
+([decision 0029](../decisions/0029-the-catalogue-is-opt-in-and-a-scope-carries-the-pair.md)).
 
 What is **never** offered: overriding internal classes, or depending on DOM
 structure (non-goal 10). If a project needs something no level covers, that is

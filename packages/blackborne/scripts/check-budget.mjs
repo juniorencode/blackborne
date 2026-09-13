@@ -105,6 +105,7 @@ const weigh = (label, bytes) => {
 
 weigh('dist/index.js', readFileSync(join(HERE, 'dist/index.js')));
 weigh('dist/styles.css', readFileSync(join(HERE, 'dist/styles.css')));
+weigh('dist/palette.css', readFileSync(join(HERE, 'dist/palette.css')));
 
 /*
  * The tarball is what a consumer actually downloads, so it is measured as one

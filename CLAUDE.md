@@ -335,6 +335,23 @@ and the NUMBER became `usePaging`, which sits beside `Pagination` rather than
 in the table suite because there is no table in it, along with the re-anchoring
 rule nobody writes by hand.
 
+**And the colour layer got its second half.** The palette became ours in
+[decision 0028](./docs/decisions/0028-the-palette-is-ours-and-what-it-guarantees.md)
+— twenty-five families as data in this repository, six of them filling the six
+roles. The other nineteen now ship too, as `blackborne/palette.css`: an opt-in
+second stylesheet of `[data-bb-accent]` and `[data-bb-base]` scopes, so a
+project whose brand is red names a colour instead of writing twenty-four values
+([decision 0029](./docs/decisions/0029-the-catalogue-is-opt-in-and-a-scope-carries-the-pair.md)).
+
+**It found two defects older than itself, and neither was in the catalogue.** A
+theme scope NESTED inside a dark element had been losing all twenty-five dark
+restatements since the token layer was written — the catalog never showed it
+because its panels put both attributes on ONE element — and a pressed primary
+button in dark mode was white text on the scale's low-contrast TEXT step, at
+**2.08:1**, invisible to 501 stories and 211 baselines because the one story
+that forces a pressed state was light-only. Both are in the traps below, and
+the second is doc 10 §11.9.
+
 ## Commands
 
 | Command              | What it does                                                           |
@@ -720,6 +737,34 @@ Things that look like improvements and are not:
   the built catalog names its own stories — plus the modification times, which
   the count alone cannot see.
 
+- **Do not put a theme scope outside the mode, or a mode between two of
+  them.** The semantic mapping is re-declared on every theme scope (doc 03
+  §3.1), so a scope re-declares the LIGHT mapping — and the dark block has to
+  match those scopes as descendants or the twenty-five restatements are lost.
+  Measured on a `[data-bb-theme]` div inside a dark one, before the fix:
+  `--bb-surface-raised` collapsed from 25.4% onto the page's 17.9% and
+  `--bb-surface-sunken` came out LIGHTER than the page. The catalog never
+  showed it because its panels put both attributes on ONE element. A descendant
+  selector cannot ask which mode ancestor is nearest, so two arrangements stay
+  undefined and one sentence avoids both: **the mode goes outermost**
+  (doc 03 §3.2).
+- **Do not write a background's text colour as a constant when the background
+  is switchable.** Doc 03 §4.0 says a background declares its text and gives
+  the reason — "when the brand theme is a light color the text on top has to be
+  dark" — and `--bb-accent-on` was `#fff` anyway, which is right for exactly
+  one brand. Shipping eighteen accents measured the rest: **nine are under
+  4.5:1 with white**, yellow at 2.89. The pair has to hold in every STATE too,
+  which is where the default was broken: `--bb-accent-active` is step 11, and
+  a dark scale runs dark-to-light, so a pressed primary button in dark mode was
+  white on a text step at **2.08:1**. Hover and press move AWAY from the text's
+  lightness ([decision 0029](./docs/decisions/0029-the-catalogue-is-opt-in-and-a-scope-carries-the-pair.md)).
+- **Do not assume a green accessibility suite covers a state.** axe reads what
+  is RENDERED, so the reach of that suite is decided by the stories. The 2.08:1
+  above survived 501 stories, 480 axe runs and 211 baselines because the one
+  story that forces hover and pressed was LIGHT-ONLY, and the story that
+  carries both modes shows every variant at rest. Neither cell was the one the
+  defect was in. Count which cells of a matrix the fixtures visit, not how many
+  checks there are (doc 10 §11.9).
 - **Do not reference private projects** in code, examples or documentation. The
   library is public and its API is designed for strangers.
 

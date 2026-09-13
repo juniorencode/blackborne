@@ -135,7 +135,7 @@ written in the file.
 | **Behavior**                | The component from the perspective of someone using it, and never how fast the machine ran it (§11)                | Medium                  |
 | **Re-render**               | That typing in one field does not re-render its neighbours                                                         | Medium                  |
 | **Automated accessibility** | Contrast, missing labels, malformed ARIA. **Running**: axe against every story in the catalog                      | Medium                  |
-| **Visual regression**       | What changed in appearance, and where. **Running**: 211 captures, generated in Docker so the tolerance can be zero | Slow                    |
+| **Visual regression**       | What changed in appearance, and where. **Running**: 216 captures, generated in Docker so the tolerance can be zero | Slow                    |
 | **Package**                 | Types resolve, exports are correct, no side effects, and the public surface is a reviewed diff                     | Fast                    |
 | **Server**                  | That everything prerenders without mismatches                                                                      | Free: the site gives it |
 | **Manual**                  | Keyboard always; screen reader on the complex ones                                                                 | Minutes                 |
@@ -1050,3 +1050,42 @@ row". An instrument that can only ever say one thing is not an instrument.
 
 What was NOT done is widen the tolerance. §11 forbids it by name, and it would
 turn the next real difference into a coincidence.
+
+### 11.9 An automated check reads what is ON the page, so a story decides its reach
+
+Every rule above is about a check that measures the wrong thing. This one is
+about a check that measures nothing, and it is harder to see because the run is
+green and the count is high.
+
+**Measured, 2026-09-13.** A pressed primary button in dark mode was white text
+on `#87b5ff` — **2.08:1**, where AA asks 4.5 — and hovered was 4.35:1. It had
+been that way since the token layer was written. The library had 501 stories,
+an accessibility suite running axe over all of them, and 211 visual baselines.
+None of them could see it.
+
+The reason is one line of a story file. `Button`'s `States` story is where
+hover, focus and pressed are forced, because a screenshot cannot hover
+(§4) — and that story renders **light only**. The mode story renders every
+variant at rest in both modes. So the two halves of the matrix that were
+covered were "every state in light" and "every variant in dark", and the cell
+the defect lived in — a state, in dark — was in neither.
+
+Three things follow, and the first is the general one:
+
+1. **axe measures a rendered page.** "The accessibility suite covers every
+   story" is a statement about stories, not about the component. A state no
+   story renders is a state nothing checks, however many checks there are.
+2. **A forced-state story is the one that has to carry both modes**, precisely
+   because the states are the thing no other story reaches. A "modes" story
+   costs little and covers only rest.
+3. **Where a pairing is the subject, assert the TOKENS rather than the
+   rendering.** `--bb-accent-on` against each of `--bb-accent`,
+   `--bb-accent-hover` and `--bb-accent-active` is four values readable from
+   one element in one story, in both modes, and it does not depend on anybody
+   having built a story that renders a pressed button in dark.
+   `e2e/palette.spec.ts` does that, and it is what now stands between this
+   defect and its return.
+
+The corollary is worth stating because it is the cheap version: when a check
+covers a MATRIX, ask which cells the fixtures actually visit. Counting the
+checks answers a different question.

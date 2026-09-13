@@ -106,7 +106,18 @@ const countCaptures = () => {
       if (source[index] === '[') depth++;
       else if (source[index] === ']' && --depth === 0) break;
     }
-    total += (source.slice(open, index).match(/'components-/g) ?? []).length;
+    /*
+     * A STORY ID, not a component id. The pattern was `/'components-/g`, and
+     * the first story registered from outside that namespace —
+     * `foundations-palette--accents` — was counted as zero. Five captures
+     * missing out of 216, with the total still looking like a number, which is
+     * the exact failure the note above this function describes and is why the
+     * registry names are asserted. The shape every id has is the double dash
+     * between the title and the story.
+     */
+    total += (
+      source.slice(open, index).match(/'[a-z][a-z0-9-]*--[a-z0-9-]+'/g) ?? []
+    ).length;
   }
   return { total, problems };
 };

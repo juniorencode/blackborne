@@ -36,6 +36,7 @@
       "import": "./dist/index.js"
     },
     "./styles.css": "./dist/styles.css",
+    "./palette.css": "./dist/palette.css",
     "./package.json": "./package.json"
   },
   "publishConfig": {
@@ -47,17 +48,18 @@
     "react-dom": "^19.0.0"
   },
   "scripts": {
-    "tokens": "node scripts/generate-primitives.mjs",
+    "tokens": "node scripts/generate-tokens.mjs",
     "build:clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
     "build:types": "tsc -p tsconfig.build.json",
     "build:dts": "rollup -c rollup.dts.config.mjs",
     "build:js": "vite build",
     "build:css": "tailwindcss -i src/styles/index.css -o dist/styles.css",
-    "build": "pnpm build:clean && pnpm build:types && pnpm build:dts && pnpm build:js && pnpm build:css",
+    "build:palette": "node -e \"require('node:fs').copyFileSync('src/styles/palette.css','dist/palette.css')\"",
+    "build": "pnpm build:clean && pnpm build:types && pnpm build:dts && pnpm build:js && pnpm build:css && pnpm build:palette",
     "check:package": "node scripts/check-package.mjs",
     "check:budget": "node scripts/check-budget.mjs",
     "check:surface": "node scripts/check-surface.mjs",
-    "check:tokens": "node scripts/check-primitives.mjs",
+    "check:tokens": "node scripts/check-tokens.mjs",
     "test": "vitest run --passWithNoTests",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json"
   },

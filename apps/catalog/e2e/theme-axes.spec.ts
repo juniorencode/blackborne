@@ -17,13 +17,14 @@ import { toSrgb } from './colour';
 import { gotoStory } from './story';
 
 /**
- * Radix slate step 2, which is what --bb-surface-control maps to in each mode.
+ * Gray step 2, which is what --bb-surface-control maps to in each mode.
  *
  * Pinned to the palette on purpose: these three constants are the reason a
  * token remap shows up as a named failure. They did exactly that when the
- * control surface moved from step 3 to step 2 and the alternate brand became
- * Radix violet — five red tests naming the token, rather than a difference
- * somebody might or might not notice in a screenshot.
+ * control surface moved from step 3 to step 2, again when the alternate brand
+ * changed, and again when this library's own palette replaced Radix — red
+ * tests naming the token, rather than a difference somebody might or might not
+ * notice in a screenshot.
  */
 const CONTROL_LIGHT = '247,249,251';
 const CONTROL_DARK = '12,25,44';
