@@ -86,7 +86,8 @@ function Revealed({ children }: { children: React.ReactNode }) {
  *
  * So the input is focused, and the base reports the state the way it does for
  * a person. Only one element in a document can hold focus, so exactly one
- * panel in this catalog may ask for it.
+ * panel per STORY may ask for it — the states pair asks in its light half, and
+ * `Modes` asks in its dark one.
  */
 function Focused({ children }: { children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -115,29 +116,27 @@ type Story = StoryObj<typeof meta>;
 
 export const Playground: Story = {};
 
-/**
- * All eight states from doc 07 §6, masked.
+/*
+ * The rows, so the story below can render them once per mode.
  *
- * Two that are almost always forgotten sit next to each other on purpose:
- * **disabled** and **read-only** are not the same thing. Read-only shows a
- * value you can read, select and copy — and on this field that is not an
- * abstraction, because the reveal toggle keeps working there and nowhere else
- * does the difference between the two states have a control to demonstrate it.
- *
- * The focused row is focused for real rather than faked; the note on `Focused`
- * says why it has to be.
+ * `focus` is a parameter rather than one more row because only one of the two
+ * panels may ask for it: one element in a document holds focus, so a second
+ * `Focused` would take the ring off the first and leave a row labelled
+ * "Focused" with nothing to show. The dark one is in `Modes`.
  */
-export const States: Story = {
-  render: () => (
+function AllStates({ focus }: { focus: boolean }) {
+  return (
     <div
       className="catalog-stack"
       style={{ maxWidth: 360, gap: 'var(--bb-field-gap)' }}
     >
       <PasswordField label="Empty" placeholder="Nothing typed yet" />
       <PasswordField label="With value" defaultValue="correct-horse-battery" />
-      <Focused>
-        <PasswordField label="Focused" defaultValue="correct-horse-battery" />
-      </Focused>
+      {focus ? (
+        <Focused>
+          <PasswordField label="Focused" defaultValue="correct-horse-battery" />
+        </Focused>
+      ) : null}
       <PasswordField
         label="With description"
         defaultValue="correct-horse-battery"
@@ -167,6 +166,39 @@ export const States: Story = {
       />
       <PasswordField label="Loading" placeholder="Waiting for data" isLoading />
       <PasswordField label="Saving" defaultValue="correct-horse" isSaving />
+    </div>
+  );
+}
+
+/**
+ * All eight states from doc 07 §6, masked.
+ *
+ * Two that are almost always forgotten sit next to each other on purpose:
+ * **disabled** and **read-only** are not the same thing. Read-only shows a
+ * value you can read, select and copy — and on this field that is not an
+ * abstraction, because the reveal toggle keeps working there and nowhere else
+ * does the difference between the two states have a control to demonstrate it.
+ *
+ * The focused row is focused for real rather than faked; the note on `Focused`
+ * says why it has to be.
+ *
+ * **And it is light AND dark**, which it was not until 2026-09-13. A state
+ * reached only by pointing at a thing is rendered nowhere except the story
+ * that forces it, so a light-only one leaves the dark half of every state here
+ * measured by nothing at all: axe reads what is on a page and the visual suite
+ * photographs one (doc 10 §11.9). Focus is the one that cannot be in both
+ * panels — one element in a document holds it — so its dark half is in
+ * `Modes`.
+ */
+export const States: Story = {
+  render: () => (
+    <div className="catalog-pair">
+      <Scope label="Light" mode="light">
+        <AllStates focus />
+      </Scope>
+      <Scope label="Dark" mode="dark">
+        <AllStates focus={false} />
+      </Scope>
     </div>
   )
 };
@@ -351,6 +383,11 @@ export const Densities: Story = {
  * Dark mode is not an inversion: each semantic token is defined per mode, and
  * the toggle reads `--bb-text-muted` and `--bb-surface-hover` like every other
  * small control, so it follows without knowing a mode exists.
+ *
+ * The dark panel carries one row the light one does not: a field focused for
+ * real. Only one element in a document can hold focus, so the states pair
+ * renders that ring in light and this is the only place the dark one is
+ * rendered at all (doc 10 §11.9).
  */
 export const Modes: Story = {
   render: () => (
@@ -382,6 +419,12 @@ export const Modes: Story = {
               defaultValue="not-here"
               isDisabled
             />
+            {/* Dark only, and the note on this story says why. */}
+            {mode === 'dark' ? (
+              <Focused>
+                <PasswordField label="Focused" defaultValue="correct-horse" />
+              </Focused>
+            ) : null}
           </div>
         </Scope>
       ))}

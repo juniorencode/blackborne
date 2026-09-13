@@ -603,6 +603,48 @@ it shows immediately.
    All of this was found by automated accessibility, not by review, and it had
    been in the catalog since the first component.
 
+   **And the half automated accessibility CANNOT find now has a check of its
+   own.** axe measures the contrast of text; a border, a box-shadow and a fill
+   are not text, which is why every failure in the list above was found by a
+   person opening a picture. Two files close it from opposite ends:
+
+   - `e2e/contrast.spec.ts` measures the rule of pairs (§4.0) over every pair
+     the stylesheet declares, in both modes, with the list DERIVED from the
+     CSSOM rather than written down — `--bb-X-on` is by definition the text on
+     `--bb-X`, plus whichever of `--bb-X-hover` and `--bb-X-active` exists. It
+     needs no story, so a pair nothing paints yet is measured anyway. Two
+     exemptions are named with their numbers and asserted in both directions,
+     so one that stops being needed fails rather than rots.
+   - `e2e/focus-ring.spec.ts` measures the one graphical element that is
+     always the only channel for its state. It cannot be derived — which
+     ground a ring lands on is a fact about each component — so it carries an
+     explicit registry, and the last test reads a REAL focused control to
+     check that the colours the registry models are the colours the browser
+     computed.
+
+   **A focus indication is measured at the boundary it has, and it has three.**
+   Measured on a primary button: the 1px edge is `--bb-focus-ring` on
+   `--bb-accent`, which are the SAME COLOUR — 1.00:1, an edge that does not
+   exist — and the halo over the page reads 1.43:1 against that page. Neither
+   is the answer. The halo against the button's own fill is 3.51:1, and a
+   magnified photograph shows exactly that: a pale band whose visible boundary
+   is the one with the blue. So the indication passes if it clears 3:1 at the
+   edge against the fill, the halo against the fill, or the halo against the
+   surrounding surface.
+
+   **Two grounds do not clear it, both in dark mode**, and they are pinned as
+   open defects rather than fixed: a primary button (and a selected checkbox,
+   radio or switch) at **2.59:1**, and a hovered table row at **2.55:1**. The
+   fix was searched for and is not a token: swept across the whole registry,
+   `--bb-x-brand-10` and `-11` still leave the primary button under the floor,
+   because that control's fill IS the accent and anything near enough to be
+   "the brand" is near enough to disappear on it — and the one candidate that
+   clears every row, `--bb-x-brand-12`, measures **1.00:1 against
+   `--bb-x-gray-12`**, which would make a focused colour swatch
+   indistinguishable from a chosen one. What works is a two-colour ring, a gap
+   of the surrounding surface between the fill and the ring, and that changes
+   the geometry of every focused control in the library.
+
 3. The library does **not** write to `document`, does not write to
    `localStorage`, and does not detect the system preference on its own. It
    receives the mode already resolved. The project decides (P3).

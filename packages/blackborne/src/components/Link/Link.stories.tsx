@@ -117,9 +117,8 @@ export const AgainstAButton: Story = {
   )
 };
 
-/** Every state. Rest is already underlined, which is the point. */
-export const States: Story = {
-  render: args => (
+function AllStates({ args }: { args: React.ComponentProps<typeof Link> }) {
+  return (
     <div className="catalog-stack" style={{ maxWidth: 320 }}>
       {(
         [
@@ -145,6 +144,30 @@ export const States: Story = {
           )}
         </div>
       ))}
+    </div>
+  );
+}
+
+/**
+ * Every state. Rest is already underlined, which is the point.
+ *
+ * AND IT IS LIGHT AND DARK, because hover, pressed and focus are reachable
+ * only by pointing at the thing, so this story is the ONLY place they are ever
+ * rendered — and a light-only one leaves all three unmeasured in dark by every
+ * automated layer here: axe reads what is on a page and the visual suite
+ * photographs one. What lived in that gap on `Button` was a pressed primary
+ * button in dark at 2.08:1, under 501 stories and 211 baselines (doc 10
+ * §11.9).
+ */
+export const States: Story = {
+  render: args => (
+    <div className="catalog-pair">
+      <Scope label="Light" mode="light">
+        <AllStates args={args} />
+      </Scope>
+      <Scope label="Dark" mode="dark">
+        <AllStates args={args} />
+      </Scope>
     </div>
   )
 };

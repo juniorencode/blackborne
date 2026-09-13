@@ -352,6 +352,24 @@ button in dark mode was white text on the scale's low-contrast TEXT step, at
 that forces a pressed state was light-only. Both are in the traps below, and
 the second is doc 10 §11.9.
 
+**And that second one was a symptom, so three rules with no check got one.**
+The audit asked, of each rule, what would go red if it were broken — and for
+three the answer was "nothing" (doc 10 §11.10):
+
+- **`e2e/contrast.spec.ts`** measures the rule of pairs over every pair the
+  stylesheet declares, in both modes, with the list DERIVED from the CSSOM so
+  it cannot drift. It needs no story, which is the point: axe only ever saw a
+  pair some component happened to paint.
+- **`e2e/forced-states.spec.ts`** measures that every KIND of forced state
+  appears in a light scope and a dark one. It found **fifteen of eighteen**
+  story files showing their states in light only, all fixed here — and the
+  accessibility suite stayed green over the new dark halves, so the 2.08:1 was
+  the only thing hiding in that gap.
+- **`e2e/focus-ring.spec.ts`** measures the library's single ring against
+  every ground it lands on. Two do not clear 3:1, both in dark, and both are
+  PINNED as open defects rather than fixed, because the fix is a change to the
+  ring itself — see the trap below and the catalog's §7.
+
 ## Commands
 
 | Command              | What it does                                                           |
@@ -765,6 +783,35 @@ Things that look like improvements and are not:
   carries both modes shows every variant at rest. Neither cell was the one the
   defect was in. Count which cells of a matrix the fixtures visit, not how many
   checks there are (doc 10 §11.9).
+- **Do not assume a rule is enforced because it is written down.** The test is
+  what goes RED if it is broken. Audited on 2026-09-13, three of this
+  repository's own rules had no check at all — the rule of pairs, a forced
+  state being visible in both modes, and the 3:1 floor for a graphical
+  element — and the first of those LOOKS covered, because axe measures
+  contrast. It measures contrast on a RENDERED page, so a pair reaches it only
+  if some component paints it in some story; `--bb-accent-on` was the literal
+  `#fff` for as long as the token layer had existed. A rule with nothing behind
+  it has been true by luck for as long as nobody has written the code that
+  breaks it (doc 10 §11.10).
+- **Do not measure a focus ring against one thing.** It has three boundaries
+  and only has to be visible at one. Measured on a primary button: the 1px
+  edge is `--bb-focus-ring` on `--bb-accent`, which are the SAME COLOUR at
+  1.00:1, and the halo over the page reads 1.43:1 against that page — both
+  numbers say "invisible" and both are the wrong question. The halo against
+  the button's own fill is 3.51:1, which is what a magnified photograph shows.
+  Two grounds fail all three in dark mode and are pinned rather than fixed,
+  because no ring colour clears them: the only candidate that does measures
+  **1.00:1 against `--bb-x-gray-12`** and would make a focused colour swatch
+  indistinguishable from a chosen one.
+- **Do not write a list in a check when the naming IS the rule.** `--bb-X-on`
+  is by definition the text on `--bb-X`, so `contrast.spec.ts` reads its pairs
+  out of the CSSOM rather than carrying a copy — a list in a check is a second
+  copy of the thing checked, and five hand-written copies of one brand
+  override in this catalog had already drifted apart with three of them
+  missing steps. Where it genuinely cannot be derived — which ground a focus
+  ring lands on is a fact about each component — the registry is explicit AND
+  a test compares it against a real rendered element, because a model of a
+  ring is not a ring.
 - **Do not reference private projects** in code, examples or documentation. The
   library is public and its API is designed for strangers.
 

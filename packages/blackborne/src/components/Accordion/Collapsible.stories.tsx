@@ -120,9 +120,12 @@ export const WithACount: Story = {
   )
 };
 
-/** Every state of the header, closed and open. */
-export const States: Story = {
-  render: args => (
+function AllStates({
+  args
+}: {
+  args: React.ComponentProps<typeof Collapsible>;
+}) {
+  return (
     <div className="catalog-stack" style={{ maxWidth: 420 }}>
       <Collapsible {...args} title="Default">
         Content
@@ -148,6 +151,30 @@ export const States: Story = {
       <Collapsible {...args} title="Open" defaultExpanded>
         The divider, the air and the chevron turned over.
       </Collapsible>
+    </div>
+  );
+}
+
+/**
+ * Every state of the header, closed and open — and in BOTH modes.
+ *
+ * Hover, press and focus are reachable only by pointing at the thing, so they
+ * are forced here, which makes this story the only place they are ever
+ * rendered. A light-only one therefore leaves them unmeasured in dark by every
+ * automated layer this repository has: axe reads a page that was rendered and
+ * the visual suite photographs one. What lived in that gap on `Button` was a
+ * pressed primary in dark at 2.08:1, under 501 stories and 211 baselines
+ * (doc 10 §11.9).
+ */
+export const States: Story = {
+  render: args => (
+    <div className="catalog-pair">
+      <Scope label="Light" mode="light">
+        <AllStates args={args} />
+      </Scope>
+      <Scope label="Dark" mode="dark">
+        <AllStates args={args} />
+      </Scope>
     </div>
   )
 };

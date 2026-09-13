@@ -40,16 +40,8 @@ type Story = StoryObj<typeof meta>;
 
 export const Playground: Story = {};
 
-/**
- * Every state.
- *
- * Note what is missing: there is no invalid row. A switch takes effect the
- * moment it is flipped, so there is no later point at which it can be found
- * invalid — see the next story.
- */
-
-export const States: Story = {
-  render: () => (
+function AllStates() {
+  return (
     <div className="catalog-stack" style={{ maxWidth: 420 }}>
       <Switch>Off</Switch>
       <Switch defaultSelected>On</Switch>
@@ -80,6 +72,34 @@ export const States: Story = {
       <Switch description="Takes effect immediately. You will stop receiving daily summaries.">
         With a description
       </Switch>
+    </div>
+  );
+}
+
+/**
+ * Every state.
+ *
+ * Note what is missing: there is no invalid row. A switch takes effect the
+ * moment it is flipped, so there is no later point at which it can be found
+ * invalid — see the next story.
+ *
+ * Light AND dark, because this is the only story in the file where hover,
+ * focus and pressed are rendered at all: axe measures a rendered page and the
+ * visual suite photographs one, so a light-only forced-state story leaves
+ * those states unmeasured in dark by every automated layer here. What lived in
+ * that gap once was a pressed primary button at 2.08:1, under 501 stories, 480
+ * axe runs and 211 baselines (doc 10 §11.9).
+ */
+
+export const States: Story = {
+  render: () => (
+    <div className="catalog-pair">
+      <Scope label="Light" mode="light">
+        <AllStates />
+      </Scope>
+      <Scope label="Dark" mode="dark">
+        <AllStates />
+      </Scope>
     </div>
   )
 };

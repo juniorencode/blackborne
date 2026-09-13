@@ -211,22 +211,9 @@ export const States: Story = {
   )
 };
 
-/**
- * THE FOCUS RING, on the middle button of each variant.
- *
- * The ring is a 1px border and a 4px halo drawn as a box-shadow, and the
- * buttons overlap by a pixel so that one border does the work of two. Every
- * button is `position: relative` already — the pending spinner needs somewhere
- * to centre — so with no z-index the later sibling paints over the halo and
- * the ring of anything but the last button is cut in half down its trailing
- * edge.
- *
- * Nothing in the DOM is wrong when that happens, and no assertion can read a
- * box-shadow. This is the picture instead.
- */
-export const TheFocusRing: Story = {
-  name: 'The focus ring',
-  render: () => (
+/** The three variants, each with the middle button's focus forced on. */
+function FocusedRows() {
+  return (
     <div className="catalog-stack">
       {VARIANTS.map(variant => (
         <Force
@@ -241,6 +228,41 @@ export const TheFocusRing: Story = {
           </ButtonGroup>
         </Force>
       ))}
+    </div>
+  );
+}
+
+/**
+ * THE FOCUS RING, on the middle button of each variant.
+ *
+ * The ring is a 1px border and a 4px halo drawn as a box-shadow, and the
+ * buttons overlap by a pixel so that one border does the work of two. Every
+ * button is `position: relative` already — the pending spinner needs somewhere
+ * to centre — so with no z-index the later sibling paints over the halo and
+ * the ring of anything but the last button is cut in half down its trailing
+ * edge.
+ *
+ * Nothing in the DOM is wrong when that happens, and no assertion can read a
+ * box-shadow. This is the picture instead.
+ *
+ * AND IT IS IN BOTH MODES, because a forced state is rendered nowhere else.
+ * `data-focused` is reachable only by pointing at the thing, so this is the
+ * only page in this file that carries it at all — and a light-only one leaves
+ * the ring in dark unmeasured by every automated layer here, since axe reads
+ * what is rendered and the visual suite photographs it. `Button`'s states
+ * story was light-only, and a pressed primary button in dark sat at 2.08:1
+ * under 501 stories, 480 axe runs and 211 baselines, all green (doc 10 §11.9).
+ */
+export const TheFocusRing: Story = {
+  name: 'The focus ring',
+  render: () => (
+    <div className="catalog-pair">
+      <Scope label="Light" mode="light">
+        <FocusedRows />
+      </Scope>
+      <Scope label="Dark" mode="dark">
+        <FocusedRows />
+      </Scope>
     </div>
   )
 };

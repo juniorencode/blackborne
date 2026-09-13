@@ -166,6 +166,66 @@ export const Sizes: Story = {
   )
 };
 
+/** The body of the story below, so it can be rendered once per mode. */
+function AllStates({
+  args,
+  mode
+}: {
+  args: React.ComponentProps<typeof SplitButton>;
+  mode: 'light' | 'dark';
+}) {
+  return (
+    <div className="catalog-stack">
+      <Scope label="Default" mode={mode}>
+        <div className="catalog-row">
+          <SplitButton {...args}>{alternatives}</SplitButton>
+          <SplitButton {...args} variant="secondary">
+            {alternatives}
+          </SplitButton>
+        </div>
+      </Scope>
+      <Scope label="Hover, on the action" mode={mode}>
+        <Force state="data-hovered" target=".bb-split-button-action">
+          <SplitButton {...args}>{alternatives}</SplitButton>
+        </Force>
+      </Scope>
+      <Scope label="Hover, on the arrow" mode={mode}>
+        <Force state="data-hovered" target=".bb-split-button-arrow">
+          <SplitButton {...args}>{alternatives}</SplitButton>
+        </Force>
+      </Scope>
+      <Scope label="Focus, on the arrow" mode={mode}>
+        <Force state="data-focused" target=".bb-split-button-arrow">
+          <SplitButton {...args}>{alternatives}</SplitButton>
+        </Force>
+      </Scope>
+      <Scope label="Disabled" mode={mode}>
+        <div className="catalog-row">
+          <SplitButton {...args} isDisabled>
+            {alternatives}
+          </SplitButton>
+          <SplitButton {...args} variant="secondary" isDisabled>
+            {alternatives}
+          </SplitButton>
+        </div>
+      </Scope>
+      <Scope label="Pending · the arrow goes with it" mode={mode}>
+        <SplitButton {...args} isPending>
+          {alternatives}
+        </SplitButton>
+      </Scope>
+    </div>
+  );
+}
+
+/*
+ * The panels carry the mode rather than a wrapper around them, which is not
+ * the shape `Button` uses and is the shape this component's own browser check
+ * reads: it walks `.catalog-panel` in document order and compares the first
+ * three, so the light column has to be six panels in the order they were in.
+ * A single panel per mode holding all six states would leave that check
+ * comparing two panels and an undefined one.
+ */
 /**
  * Every state, and two of them are the ones a split button adds.
  *
@@ -178,48 +238,21 @@ export const Sizes: Story = {
  * state doc 09 §7 is about — `ConfirmDialog` disables its cancelling button
  * from the same argument. The label keeps its width, so nothing beside it
  * moves.
+ *
+ * **And every one of them is here twice, once per mode.** Hover and focus are
+ * reachable only by pointing at the thing, so they are forced (`Force`) and
+ * this story is the only place they are ever rendered — a light-only one
+ * therefore leaves them unmeasured in dark by every automated layer this
+ * repository has, since axe reads a page that was rendered and the visual
+ * suite photographs one. What lived in that gap on `Button` was a pressed
+ * primary in dark at 2.08:1, under 501 stories and 211 baselines
+ * (doc 10 §11.9).
  */
 export const States: Story = {
   render: args => (
-    <div className="catalog-stack">
-      <Scope label="Default">
-        <div className="catalog-row">
-          <SplitButton {...args}>{alternatives}</SplitButton>
-          <SplitButton {...args} variant="secondary">
-            {alternatives}
-          </SplitButton>
-        </div>
-      </Scope>
-      <Scope label="Hover, on the action">
-        <Force state="data-hovered" target=".bb-split-button-action">
-          <SplitButton {...args}>{alternatives}</SplitButton>
-        </Force>
-      </Scope>
-      <Scope label="Hover, on the arrow">
-        <Force state="data-hovered" target=".bb-split-button-arrow">
-          <SplitButton {...args}>{alternatives}</SplitButton>
-        </Force>
-      </Scope>
-      <Scope label="Focus, on the arrow">
-        <Force state="data-focused" target=".bb-split-button-arrow">
-          <SplitButton {...args}>{alternatives}</SplitButton>
-        </Force>
-      </Scope>
-      <Scope label="Disabled">
-        <div className="catalog-row">
-          <SplitButton {...args} isDisabled>
-            {alternatives}
-          </SplitButton>
-          <SplitButton {...args} variant="secondary" isDisabled>
-            {alternatives}
-          </SplitButton>
-        </div>
-      </Scope>
-      <Scope label="Pending · the arrow goes with it">
-        <SplitButton {...args} isPending>
-          {alternatives}
-        </SplitButton>
-      </Scope>
+    <div className="catalog-pair">
+      <AllStates args={args} mode="light" />
+      <AllStates args={args} mode="dark" />
     </div>
   )
 };

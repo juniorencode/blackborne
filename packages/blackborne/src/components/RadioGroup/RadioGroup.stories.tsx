@@ -47,16 +47,8 @@ type Story = StoryObj<typeof meta>;
 
 export const Playground: Story = {};
 
-/**
- * Every state.
- *
- * The two-level label structure is what this component adds: one label for the
- * group and one per option, with the description and error hanging off the
- * group rather than off any single radio. The base wires all of it — verified,
- * which is why nothing is supplied by hand here, unlike a lone checkbox.
- */
-export const States: Story = {
-  render: () => (
+function AllStates() {
+  return (
     <div
       className="catalog-stack"
       style={{ maxWidth: 420, gap: 'var(--bb-field-gap)' }}
@@ -135,6 +127,34 @@ export const States: Story = {
           <Radio value="standard">Pressed and selected</Radio>
         </Force>
       </RadioGroup>
+    </div>
+  );
+}
+
+/**
+ * Every state.
+ *
+ * The two-level label structure is what this component adds: one label for the
+ * group and one per option, with the description and error hanging off the
+ * group rather than off any single radio. The base wires all of it — verified,
+ * which is why nothing is supplied by hand here, unlike a lone checkbox.
+ *
+ * AND IT IS LIGHT AND DARK, which it was not until 2026-09-13. A forced-state
+ * story is the only place hover, press and focus are ever rendered, so a
+ * light-only one leaves all three unreachable in dark by every automated layer
+ * here — axe measures a rendered page and the visual suite photographs one.
+ * What lived in that gap on `Button`: a pressed primary in dark at 2.08:1,
+ * under 501 stories and 211 baselines (doc 10 §11.9).
+ */
+export const States: Story = {
+  render: () => (
+    <div className="catalog-pair">
+      <Scope label="Light" mode="light">
+        <AllStates />
+      </Scope>
+      <Scope label="Dark" mode="dark">
+        <AllStates />
+      </Scope>
     </div>
   )
 };
@@ -402,33 +422,8 @@ export const TheWholeCardIsTheTarget: Story = {
   )
 };
 
-/**
- * Every state a card has, including the two the circle cannot express.
- *
- * WHICH CHANNEL MOVES is the thing to check here, because a card answers
- * differently from a circle on purpose:
- *
- * - the BORDER answers the pointer arriving, which is the field's rule — a
- *   large surface repainted every time a pointer crosses it makes a list of
- *   them shimmer
- * - the FILL answers a press, which is Button's rule, and a press is
- *   deliberate and momentary so it cannot shimmer
- * - the FILL also carries SELECTION, in `surface-selected`, and once a card is
- *   tinted the border takes over hover and press along the accent ramp so the
- *   tint never flickers back to grey
- *
- * Disabled and read-only are opposites on purpose (doc 07 §6): disabled keeps
- * its border and changes its fill, read-only loses its border and keeps the
- * selected tint — a read-only group exists to show what was chosen.
- *
- * Hovered and pressed appear twice each, unselected and selected, and the
- * pairing is the point rather than thoroughness: the rule that picks between
- * the grey ramp and the accent ramp is a stacked variant whose specificity
- * beats either single one, and a screenshot is what proves the pair did not
- * collapse into whichever rule happens to be written last.
- */
-export const CardStates: Story = {
-  render: () => (
+function AllCardStates() {
+  return (
     <div
       className="catalog-stack"
       style={{ maxWidth: 420, gap: 'var(--bb-field-gap)' }}
@@ -515,6 +510,51 @@ export const CardStates: Story = {
           <Radio value="basic">Basic — one project</Radio>
         </Force>
       </RadioGroup>
+    </div>
+  );
+}
+
+/**
+ * Every state a card has, including the two the circle cannot express.
+ *
+ * WHICH CHANNEL MOVES is the thing to check here, because a card answers
+ * differently from a circle on purpose:
+ *
+ * - the BORDER answers the pointer arriving, which is the field's rule — a
+ *   large surface repainted every time a pointer crosses it makes a list of
+ *   them shimmer
+ * - the FILL answers a press, which is Button's rule, and a press is
+ *   deliberate and momentary so it cannot shimmer
+ * - the FILL also carries SELECTION, in `surface-selected`, and once a card is
+ *   tinted the border takes over hover and press along the accent ramp so the
+ *   tint never flickers back to grey
+ *
+ * Disabled and read-only are opposites on purpose (doc 07 §6): disabled keeps
+ * its border and changes its fill, read-only loses its border and keeps the
+ * selected tint — a read-only group exists to show what was chosen.
+ *
+ * Hovered and pressed appear twice each, unselected and selected, and the
+ * pairing is the point rather than thoroughness: the rule that picks between
+ * the grey ramp and the accent ramp is a stacked variant whose specificity
+ * beats either single one, and a screenshot is what proves the pair did not
+ * collapse into whichever rule happens to be written last.
+ *
+ * AND IT IS LIGHT AND DARK, for the reason the plain states story is: a
+ * forced-state story is the only place hover, press and focus are ever
+ * rendered, so a light-only one leaves all three unmeasured in the other mode,
+ * since axe reads a rendered page (doc 10 §11.9). The tint and the ramps the
+ * border and the fill walk are declared per mode, and `CardModes` shows every
+ * card at rest — so dark held no interacted card at all.
+ */
+export const CardStates: Story = {
+  render: () => (
+    <div className="catalog-pair">
+      <Scope label="Light" mode="light">
+        <AllCardStates />
+      </Scope>
+      <Scope label="Dark" mode="dark">
+        <AllCardStates />
+      </Scope>
     </div>
   )
 };

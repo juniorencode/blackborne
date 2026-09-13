@@ -219,33 +219,55 @@ export const States: Story = {
   )
 };
 
+function ZoneStates() {
+  return (
+    <div className="catalog-stack">
+      <FileUpload label="At rest" />
+      {(
+        [
+          ['Hovered', 'data-hovered'],
+          ['Focused', 'data-focus-visible'],
+          ['A file over it', 'data-drop-target']
+        ] as const satisfies readonly (readonly [string, ForcedState])[]
+      ).map(([name, state]) => (
+        <Force key={name} state={state} target=".bb-file-upload-zone">
+          <FileUpload label={name} />
+        </Force>
+      ))}
+    </div>
+  );
+}
+
 /**
- * THE ZONE'S FOUR STATES, forced so they can be photographed.
+ * THE ZONE'S FOUR STATES, forced so they can be photographed, IN BOTH MODES.
  *
  * `data-drop-target` is the one that matters and the one nothing else in this
  * library has: it exists only while something is being dragged over the zone,
  * so it cannot be seen by poking at the component. Doc 09 §3 asks for a
  * visible response to every interaction, and a drop is an interaction that
  * happens before anything is released.
+ *
+ * And that is why it is rendered twice rather than once. A forced-state story
+ * is the ONLY place these states are ever on a page, so a light-only one
+ * leaves all three unmeasured in dark by everything automated here — axe reads
+ * what is rendered and the visual suite photographs it. `Button`'s states
+ * story was light-only, and a pressed primary button in dark sat at 2.08:1
+ * under 501 stories, 480 axe runs and 211 baselines (doc 10 §11.9).
  */
 export const Zone: Story = {
   render: () => (
-    <Scope label="The zone">
-      <div className="catalog-stack">
-        <FileUpload label="At rest" />
-        {(
-          [
-            ['Hovered', 'data-hovered'],
-            ['Focused', 'data-focus-visible'],
-            ['A file over it', 'data-drop-target']
-          ] as const satisfies readonly (readonly [string, ForcedState])[]
-        ).map(([name, state]) => (
-          <Force key={name} state={state} target=".bb-file-upload-zone">
-            <FileUpload label={name} />
-          </Force>
-        ))}
-      </div>
-    </Scope>
+    <div className="catalog-pair">
+      {(
+        [
+          ['Light', 'light'],
+          ['Dark', 'dark']
+        ] as const
+      ).map(([label, mode]) => (
+        <Scope key={label} label={label} mode={mode}>
+          <ZoneStates />
+        </Scope>
+      ))}
+    </div>
   )
 };
 

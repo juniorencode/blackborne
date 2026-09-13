@@ -257,20 +257,8 @@ export const Removable: Story = {
   render: () => <RemovableRow />
 };
 
-/**
- * Every state of the remove button, visible at once and without interaction.
- *
- * Hover, focus and pressed are normally reachable only by pointing at the
- * thing. `Force` puts the same DOM attributes React Aria puts there — the real
- * attribute the CSS targets, not a fake one — because a screenshot cannot
- * hover and the gate wants every state in the catalog.
- *
- * The badge itself has no states: it is a label, not a control. The only thing
- * that reacts here is the button, and its hover tint is mixed from the badge's
- * own text colour so it never leaves the tone's colour family.
- */
-export const States: Story = {
-  render: () => (
+function AllStates() {
+  return (
     <div className="catalog-stack">
       {VARIANTS.map(variant => (
         <div key={variant} className="catalog-row">
@@ -318,6 +306,40 @@ export const States: Story = {
           With an icon
         </Badge>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Every state of the remove button, visible at once and without interaction.
+ *
+ * Hover, focus and pressed are normally reachable only by pointing at the
+ * thing. `Force` puts the same DOM attributes React Aria puts there — the real
+ * attribute the CSS targets, not a fake one — because a screenshot cannot
+ * hover and the gate wants every state in the catalog.
+ *
+ * The badge itself has no states: it is a label, not a control. The only thing
+ * that reacts here is the button, and its hover tint is mixed from the badge's
+ * own text colour so it never leaves the tone's colour family.
+ *
+ * AND IT IS LIGHT AND DARK, both of them on this page. A forced-state story is
+ * the only place these states are ever rendered, so a light-only one leaves
+ * every one of them in dark mode unreachable by anything automated here — axe
+ * reads what is on a page and the baselines photograph one. What lived in that
+ * gap on `Button` was a pressed primary at 2.08:1 in dark, under 501 stories
+ * and 211 baselines (doc 10 §11.9). The tint above is mixed from the badge's
+ * text colour, which is a different colour in each mode, so the two panels are
+ * two measurements rather than the same one twice.
+ */
+export const States: Story = {
+  render: () => (
+    <div className="catalog-pair">
+      <Scope label="Light" mode="light">
+        <AllStates />
+      </Scope>
+      <Scope label="Dark" mode="dark">
+        <AllStates />
+      </Scope>
     </div>
   )
 };
