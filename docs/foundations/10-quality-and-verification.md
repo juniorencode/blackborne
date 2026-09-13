@@ -136,7 +136,7 @@ written in the file.
 | **Re-render**               | That typing in one field does not re-render its neighbours                                                         | Medium                  |
 | **Automated accessibility** | Contrast, missing labels, malformed ARIA. **Running**: axe against every story in the catalog                      | Medium                  |
 | **Token contrast**          | The rule of pairs and the focus ring, over the TOKENS rather than over a rendered page (§11.10)                    | Fast                    |
-| **Visual regression**       | What changed in appearance, and where. **Running**: 216 captures, generated in Docker so the tolerance can be zero | Slow                    |
+| **Visual regression**       | What changed in appearance, and where. **Running**: 216 captures, generated in Docker, with no pixel budget at all | Slow                    |
 | **Package**                 | Types resolve, exports are correct, no side effects, and the public surface is a reviewed diff                     | Fast                    |
 | **Server**                  | That everything prerenders without mismatches                                                                      | Free: the site gives it |
 | **Manual**                  | Keyboard always; screen reader on the complex ones                                                                 | Minutes                 |
@@ -302,6 +302,57 @@ of them was ever on film. Fixing the instant makes a baseline reproducible; it
 does not make it complete, and the states baseline now chooses a day that is
 not today so both rings appear at once.
 
+### 6.2 A baseline may not depend on the CPU either, and that one cannot be removed
+
+**Added 2026-09-13.** §6.1 pinned the clock. This is the variable underneath it
+that no amount of pinning reaches.
+
+The suite compared with **no tolerance at all**, resting on a claim this
+repository stated as fact in five places: every reference is generated in the
+same container CI uses, so a capture taken on a laptop is BYTE-IDENTICAL to one
+taken on CI.
+
+`avatar-states` had been saying otherwise for months — 225 pixels, then 289,
+then 332 — and was twice written off as the machine. Measured on the third
+occurrence, against the capture CI actually produced:
+
+|                                 |                          |
+| ------------------------------- | ------------------------ |
+| pixels differing                | **2046**                 |
+| where                           | **every one on a curve** |
+| largest difference in the image | **2 units of 255**       |
+| differing by 3 or more          | **none**                 |
+| content, geometry, layout       | **identical**            |
+
+Rounding in the antialiasing blend, not a different picture. **Not the core
+count**: regenerated in the container at one, two and four visible CPUs, the
+file came out byte-identical all three times. **Not a Skia flag**:
+`--disable-skia-runtime-opts` changed nothing. What is left is the CPU under
+the rasteriser, and a repository has the one it has.
+
+**§11.5's own diagnostic said this was never bad luck.** One check failing
+repeatedly in the same place is the check or the code; several failing once
+each is the machine. The same baseline, in the same place, three times, is the
+first of those — and reading it as the second is what let it run for months.
+
+**So the bar is calibrated to the residue rather than set below it.** The pixel
+BUDGET stays at zero, because that one is not about the machine: a budget large
+enough to absorb a CPU is large enough to absorb a component. The PER-PIXEL bar
+is set just above two units and well below the smallest real change it exists
+to catch — decision 0030 has the arithmetic, in the units pixelmatch actually
+uses.
+
+**And that is a calibration rather than a widening**, which §11 forbids by
+name. A bar that reads to two units when the instrument only agrees with itself
+to two units across machines is not stricter; it reports noise as signal. §11's
+own remedy — stop measuring the machine rather than lower the bar — was tried
+first and has no candidate here.
+
+**The rule to carry:** a picture is evidence about layout, geometry and whether
+something appeared. It is weak evidence about a colour, and this layer should
+not be the thing a colour rests on. Colour is asserted over the TOKENS, where
+no rasteriser is involved.
+
 ## 7. Budgets with numbers
 
 A budget without a number is not a budget: when you exceed it, you do not find
@@ -428,9 +479,19 @@ than fails.
 
 **This does not license a slow check to be deleted.** The machine-dependent
 suite in this repository is the visual one, and its answer is the opposite
-direction: generate every reference in the same container so the tolerance can
-stay at zero (§6). Removing the dependence is the fix in both cases; agreeing
-to ignore it is not.
+direction: generate every reference in the same container, so that what is left
+of the machine is small enough to measure (§6). Removing the dependence is the
+fix in both cases; agreeing to ignore it is not.
+
+**And where a dependence cannot be removed, it is MEASURED and the bar is set
+to it — which is not the same as ignoring it.** The container does not make two
+different CPUs round a curve the same way, and no flag was found that does.
+Measured, the whole of that residue is **two units of 255, on curves, with the
+content identical**. A bar that reads finer than the instrument agrees with
+itself is miscalibrated rather than strict, so the per-pixel threshold is set
+just above the residue and well below the smallest real change it exists to
+catch ([decision 0030](../decisions/0030-the-pixel-bar-is-calibrated-rather-than-zero.md)).
+The pixel BUDGET stays at zero, because that one is not about the machine.
 
 ### 11.1 And an instrument may not fake the thing it measures
 

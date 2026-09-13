@@ -30,10 +30,11 @@ pnpm visual          # compare against the baselines
 pnpm visual:update   # accept the current appearance as correct
 ```
 
-Both run inside the same Docker container CI uses, so a capture taken on your
-machine is byte-identical to one taken in CI. Docker has to be running.
+Both run inside the same Docker container CI uses, which is what makes a
+capture taken on your machine comparable with one taken in CI. Docker has to be
+running.
 
-## Why Docker, and why the tolerance is zero
+## Why Docker, and where the bar sits
 
 A screenshot taken on Windows and one taken on Linux are not identical: fonts
 rasterise differently, and a one or two pixel difference appears that is not a
@@ -45,7 +46,24 @@ change to anything. Three ways out:
 | One baseline per platform               | Twice the files, twice the approvals, and they drift apart                                                                              |
 | **Make every machine the same machine** | An image to pull, and Docker as a prerequisite                                                                                          |
 
-The third is chosen, which is what lets `maxDiffPixelRatio` stay at **0**.
+The third is chosen, which is what lets `maxDiffPixelRatio` stay at **0** —
+no pixel budget at all, so a real change to a small element cannot hide inside
+one.
+
+**It does not make two captures byte-identical, and this guide said it did
+until 2026-09-13.** The container fixes the fonts, the renderer version and the
+platform suffix; it does not make two different CPUs round the same way.
+Measured against a capture CI produced: 2046 pixels differed, every one of them
+on a CURVE, and the largest difference in the whole image was **two units of
+255** — rounding in the antialiasing blend, with the content, the geometry and
+the layout identical. Not the core count either: regenerated at one, two and
+four visible CPUs, the file came out byte-identical all three times.
+
+So the per-pixel bar is **calibrated rather than zero**: `threshold: 0.01`,
+which tolerates that rounding, still fails a three-unit change, and still fails
+the nine-unit change that set it to zero in the first place. The numbers and
+the argument that this is a calibration rather than a widening are in
+[decision 0030](../decisions/0030-the-pixel-bar-is-calibrated-rather-than-zero.md).
 
 ## The part that decides whether this is worth having
 

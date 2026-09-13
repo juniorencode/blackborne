@@ -6,12 +6,20 @@
 # on Linux are not identical: fonts rasterise differently, and a one or two
 # pixel difference appears that is not a change to anything. There are three
 # ways out — tolerate a pixel budget, keep one baseline per platform, or make
-# every machine the same machine. This is the third, and the only one that lets
-# the tolerance stay at zero.
+# every machine the same machine. This is the third, and it is the only one
+# that lets the pixel BUDGET stay at zero.
 #
-# Zero tolerance matters because a budget large enough to absorb the platform
+# A zero budget matters because a budget large enough to absorb the platform
 # difference is also large enough to absorb real one-pixel drift, and that
 # drift is exactly what visual regression exists to catch.
+#
+# WHAT THE CONTAINER DOES NOT DO is make two captures byte-identical, and this
+# comment claimed it did until 2026-09-13. It fixes the fonts, the renderer and
+# the platform suffix; it does not make two different CPUs round a curve the
+# same way. Measured against a capture from CI: 2046 pixels differed, all of
+# them on curves, none by more than TWO units of 255. The per-pixel threshold
+# is calibrated to that residue in playwright.config.ts, and decision 0030 has
+# the arithmetic.
 #
 # Usage, from the repository root:
 #   pnpm visual          # compare against the baselines
@@ -97,7 +105,8 @@ docker run --rm \
     # config asks for half the cores now, which is what makes the other suites
     # quick; a screenshot taken while three other browsers compete for the
     # machine is a screenshot taken at a different moment, and this suite's
-    # whole premise is that a picture is byte-identical or wrong. CI=1 used to
+    # whole premise is that a picture is the same picture or a changed one, to
+    # within a rounding this repository has measured. CI=1 used to
     # imply one worker on its own, and an explicit config setting overrides
     # that — so the guarantee has to be written here.
     pnpm --filter catalog exec playwright test --project=visual --workers=1 ${*@Q}

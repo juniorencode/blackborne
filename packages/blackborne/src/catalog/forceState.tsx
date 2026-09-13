@@ -165,7 +165,24 @@ export function Force({
   }, [state, target]);
 
   return (
-    <span ref={ref} style={{ display: 'contents' }}>
+    /*
+     * `data-catalog-forced` says which state was forced HERE, and it exists
+     * for `e2e/forced-states.spec.ts` rather than for anything on screen.
+     *
+     * That check has to answer "did the catalog force this state, in this
+     * mode", and looking for the attribute itself answers a different
+     * question: a component can carry `data-focused` because it genuinely has
+     * focus. Measured — a combo box in an open-list story reported
+     * `data-focused` and `data-focus-visible` that no story forced, and
+     * whether the page had focus at all varied between runs under parallel
+     * workers, so the check failed once and passed the next time on the same
+     * commit. A marker the catalog writes cannot do that.
+     *
+     * It is on the wrapper rather than on the element, because the element is
+     * found by a selector or by walking, and may not exist yet when this
+     * renders.
+     */
+    <span ref={ref} data-catalog-forced={state} style={{ display: 'contents' }}>
       {children}
     </span>
   );
