@@ -23,22 +23,37 @@ docs/                  foundations, dated decisions, guides
 
 ## Commands
 
-| Command                     | What it does                                              |
-| --------------------------- | --------------------------------------------------------- |
-| `pnpm verify`               | The full gate: format, lint, types, tests                 |
-| `pnpm lint`                 | ESLint, including this project's own rules                |
-| `pnpm typecheck`            | Types across the workspace                                |
-| `pnpm test`                 | Unit and behavior tests                                   |
-| `pnpm verify:full`          | Everything above, plus browser checks against the catalog |
-| `pnpm --filter catalog dev` | The visual catalog, on port 6006                          |
-| `pnpm format`               | Apply formatting                                          |
+| Command                     | What it does                                                            |
+| --------------------------- | ----------------------------------------------------------------------- |
+| `pnpm verify`               | **The fast gate.** Format, lint, types, unit tests, and the package     |
+| `pnpm verify:full`          | The gate, plus the behaviour and accessibility suites in a real browser |
+| `pnpm visual`               | The screenshots, in the Docker container the references came from       |
+| `pnpm lint`                 | ESLint, including this project's own rules                              |
+| `pnpm typecheck`            | Types across the workspace                                              |
+| `pnpm test`                 | Unit and behaviour tests, in jsdom                                      |
+| `pnpm build:catalog`        | The package and the catalog the browser suites are served from          |
+| `pnpm --filter catalog dev` | The visual catalog, on port 6006                                        |
+| `pnpm format`               | Apply formatting                                                        |
 
 Run `pnpm verify` before opening a pull request.
 
-Two levels, on purpose. `pnpm verify` is the fast gate and the same thing CI
-runs first, so a green local run means a green first job. `pnpm verify:full`
-adds the browser checks, which need Chromium and run as a separate CI job so
-they never delay the fast one.
+**Every command, what each answer is worth, how long it takes and the order
+that reproduces CI are in
+[`docs/contributing/running-the-checks.md`](./docs/contributing/running-the-checks.md).**
+Two things from it are worth knowing before you start, because both cost an
+afternoon the first time:
+
+- **`pnpm verify` is the FAST gate, not the full one.** It is nine checks
+  rather than the four this table used to list, and it builds the package and
+  checks what a consumer would receive — publint, the type surface, the weight
+  budgets.
+- **`pnpm verify:full` does not take screenshots.** It adds the browser and
+  accessibility suites; the pictures are `pnpm visual`, separately, and they
+  need Docker running.
+
+Three levels, on purpose. The fast gate is what CI runs first, so a green local
+run means a green first job. The browser layers need Chromium and run as their
+own CI jobs so they never delay it.
 
 A browser is not optional pedantry: jsdom does not implement real tab order,
 so it cannot say where focus goes, and it does not resolve CSS variables, so

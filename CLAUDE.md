@@ -382,10 +382,15 @@ three the answer was "nothing" (doc 10 §11.10):
 | `pnpm typecheck`     | Types across the workspace                                             |
 | `pnpm test`          | Vitest                                                                 |
 | `pnpm verify:full`   | Everything above, plus the browser and accessibility checks            |
+| `pnpm visual`        | The screenshots, in Docker. **`verify:full` does NOT include these**   |
 | `pnpm build:catalog` | The package and the catalog, which the browser checks are served from  |
 | `pnpm format`        | Apply formatting                                                       |
 
-Two levels, on purpose. `pnpm verify` is the fast gate and the same thing CI
+Every command, what each layer can uniquely answer, how long each takes on
+which machine, and the traps are in
+[`docs/contributing/running-the-checks.md`](./docs/contributing/running-the-checks.md).
+
+THREE levels, on purpose, and the third is the one that gets forgotten. `pnpm verify` is the fast gate and the same thing CI
 runs first, so a green local run means a green first job. It builds the package
 and checks it — doc 10 §3's `Package` layer, which prices itself at "Fast" and
 measures about fifteen seconds — because nothing here consumed the built
