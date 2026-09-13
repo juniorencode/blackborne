@@ -185,28 +185,73 @@ export default defineConfig({
   expect: {
     toHaveScreenshot: {
       /*
-       * ZERO tolerance, on purpose, and it takes BOTH of these.
+       * NO PIXEL BUDGET, AND A CALIBRATED PER-PIXEL BAR. They are different
+       * knobs and only one of them was ever the right place to give ground.
        *
-       * A pixel budget absorbs the difference between two machines AND real
-       * one-pixel drift, and drift is exactly what this is for. The platform
-       * problem is solved by generating every reference in the same container
-       * (see the docker: scripts), not by agreeing to ignore differences.
+       * `maxDiffPixelRatio` bounds HOW MANY pixels may differ and stays at
+       * zero: a real change to a small element is a small number of pixels,
+       * and a budget large enough to absorb a machine is large enough to
+       * absorb a component. `threshold` bounds HOW MUCH one pixel may differ
+       * before it counts as differing at all, and its default is 0.2 — a fifth
+       * of the colour space, per pixel, silently allowed.
        *
-       * maxDiffPixelRatio alone does NOT do that, and for a long time this
-       * file claimed it did. It bounds HOW MANY pixels may differ; `threshold`
-       * bounds HOW MUCH one pixel may differ before it counts as differing at
-       * all, and its default is 0.2 — a fifth of the colour space, per pixel,
-       * silently allowed. Zero of an over-counted thing is still zero.
-       *
-       * Measured, with the default in place: moving a switch track from grey
+       * Measured with that default in place: moving a switch track from grey
        * step 3 to step 2 changed roughly 1760 pixels of a 271,360 pixel
-       * capture, by nine units per channel, and the suite reported it as
-       * identical. That is precisely the change this exists to catch, and it
-       * is exactly the size of change small enough to slip under a per-pixel
-       * threshold — large colour moves still failed, which is what made the
-       * gap look like it was not there.
+       * capture, by NINE units per channel, and the suite reported it as
+       * identical. That measurement is what set this to zero, and it is still
+       * the measurement that decides where it sits.
+       *
+       * ## Why it is no longer zero
+       *
+       * Zero was set on a belief this file used to state as fact: that
+       * generating every reference in the same container makes a capture here
+       * byte-identical to one taken on CI. It does not, and `avatar-states`
+       * had said so three times before anybody measured the diff rather than
+       * theorising about it (225 pixels, then 289, then this).
+       *
+       * Measured on 2026-09-13, against the actual capture a CI run produced:
+       *
+       *   2046 pixels differ, every one of them on a CURVE
+       *   the largest difference in the whole image is TWO units of 255
+       *   nothing — no content, no geometry, no layout — differs at all
+       *
+       * That is rounding in the antialiasing blend, not a different picture.
+       * It is not the core count either: regenerated inside the container at
+       * one, two and four visible CPUs, the file came out byte-identical all
+       * three times. What is left is the CPU underneath Skia, and this
+       * repository has one of those.
+       *
+       * ## Where the bar now sits, in the units pixelmatch actually uses
+       *
+       * `threshold` is compared against a squared YIQ distance scaled by
+       * 35215, so the smallest value that tolerates a given difference is
+       * `sqrt(delta / 35215)` — a number that can be measured rather than
+       * guessed. Measured:
+       *
+       *   the CI disagreement, worst pixel   delta  2.0   needs 0.0076
+       *   a flat 3-unit change               delta  4.5   needs 0.0114
+       *   a flat 9-unit change               delta 40.9   needs 0.0341
+       *
+       * 0.01 sits in the gap. It tolerates the rounding, still fails a
+       * three-unit change, and still fails the nine-unit change the paragraph
+       * above exists for — with 3.4x of margin on the one that has actually
+       * happened.
+       *
+       * THIS IS A CALIBRATION, NOT A WIDENING, and the difference is the whole
+       * argument (decision 0030). A bar that reads to two units when the
+       * instrument only agrees with itself to two units across machines is not
+       * stricter, it is miscalibrated. And what it stops catching is covered
+       * better elsewhere: colour correctness is asserted over the TOKENS by
+       * `e2e/contrast.spec.ts` and `e2e/theme-axes.spec.ts`, which do not
+       * depend on a rasteriser at all. What this layer uniquely sees is
+       * geometry, layout and whether something appeared or vanished — none of
+       * which is a two-unit difference.
+       *
+       * The honest caveat: it is calibrated against ONE observed disagreement.
+       * A machine that rounds by three brings it back, and the instrument will
+       * say so in the same words it did this time.
        */
-      threshold: 0,
+      threshold: 0.01,
       maxDiffPixelRatio: 0,
       /*
        * Animations frozen at their end state, per doc 10 §6: an animation
@@ -235,8 +280,9 @@ export default defineConfig({
    * suite by accident.
    *
    * The references are linux-only by design — generated in the container, so
-   * that a screenshot taken here is byte-identical to one taken in CI, which
-   * is what lets the tolerance stay at zero. But {platform} is part of the
+   * that a screenshot taken here is comparable with one taken in CI, to within
+   * the rounding the calibrated threshold above is set to. But {platform} is
+   * part of the
    * path, so on Windows the suite looks for -win32 references, finds none,
    * fails, AND WRITES nineteen of them into the repository. They look
    * plausible, they carry a sensible name, and a stray `git add .` turns them

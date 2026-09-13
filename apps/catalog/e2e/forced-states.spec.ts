@@ -33,9 +33,12 @@
  * rendered page, which is the only thing that knows what a story actually
  * puts on screen.
  *
- * Scanning 184 stories out of 506 rather than all of them is what keeps this
- * cheap. The narrowing is by MECHANISM, never by story name — `--states` is a
- * convention, and a convention is not a guarantee.
+ * Scanning the files that force rather than all 506 stories is what keeps this
+ * cheap, and stopping as soon as every kind is covered is what keeps it quick:
+ * 184 page loads and 1.2 minutes became a fraction of that. The narrowing is by
+ * MECHANISM, never by story name — `--states` is a convention, and a
+ * convention is not a guarantee — and the early exit is bounded by the SOURCE
+ * rather than by what has been seen, which is the note on `settled` below.
  */
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
@@ -90,13 +93,25 @@ const storyFiles = (): string[] =>
  * being dragged, an uploader with something over it, a link — so searching for
  * `Force` alone would have skipped them.
  */
-const filesThatForce = (): Set<string> => {
-  const found = new Set<string>();
+const filesThatForce = (): Map<string, string[]> => {
+  const found = new Map<string, string[]>();
   for (const path of storyFiles()) {
     const source = readFileSync(join(SOURCE_ROOT, path), 'utf8');
     const usesHelper = /\bForce\b/.test(source);
-    const writesOne = FORCED.some(attribute => source.includes(attribute));
-    if (usesHelper || writesOne) found.add(path);
+    const named = FORCED.filter(attribute => source.includes(attribute));
+    if (!usesHelper && named.length === 0) continue;
+    /*
+     * WHICH KINDS THE FILE COULD FORCE, and it is deliberately over-broad: a
+     * file that mentions `data-pressed` in a comment is credited with it. The
+     * only thing this set is used for is knowing when there is nothing left to
+     * look for, so too MANY kinds costs a few more page loads and too FEW
+     * would stop the visit early and narrow the check. Over-broad is the safe
+     * direction and it is the one taken.
+     *
+     * A file that uses the helper without naming a state is credited with all
+     * of them, for the same reason.
+     */
+    found.set(path, named.length > 0 ? named : [...FORCED]);
   }
   return found;
 };
@@ -145,35 +160,57 @@ const candidates = filesThatForce();
 const byFile = new Map<string, StoryEntry[]>();
 for (const entry of stories) {
   const path = entry.importPath.split('/').slice(-3).join('/');
-  const match = [...candidates].find(candidate => path.endsWith(candidate));
+  const match = [...candidates.keys()].find(candidate =>
+    path.endsWith(candidate)
+  );
   if (match === undefined) continue;
   byFile.set(match, [...(byFile.get(match) ?? []), entry]);
 }
 
 /**
- * Every forced state on the page, with the mode it is being shown in.
+ * Every state the CATALOG forced on this page, with the mode it is shown in.
+ *
+ * ## Why it reads a marker and not the attribute
+ *
+ * "Which elements carry `data-focused`" is a different question from "which
+ * states did a story force", and the gap between them is not academic: a combo
+ * box in an open-list story carries `data-focused` because it genuinely has
+ * focus. Measured — that made this check fail once and pass the next time on
+ * the same commit, because whether the page has focus at all varies between
+ * runs under parallel workers. A state the browser arrived at by itself is not
+ * a state a story is responsible for showing in both modes.
+ *
+ * So `catalog/forceState` marks its own wrapper with
+ * `data-catalog-forced="<state>"`, and that is what is counted.
+ *
+ * ## And the attribute still has to be there
+ *
+ * The marker alone would say a state is covered even if `Force` never managed
+ * to apply it — which is that component's own documented failure, and the
+ * reason it exists at all. So a marker counts only when the attribute it names
+ * is actually present inside it.
  *
  * The mode is the NEAREST `data-bb-mode` ancestor, or light where there is
- * none — which is what the stylesheet does, since `:root` carries the light
- * mapping. Reading the attribute rather than a colour, because the question is
- * which scope the element is in, not what it ended up looking like.
+ * none, which is what the stylesheet does since `:root` carries the light
+ * mapping.
  */
-const forcedOn = (page: Page, attributes: string[]) =>
-  page.evaluate(names => {
+const forcedOn = (page: Page) =>
+  page.evaluate(() => {
     const seen: Array<{ state: string; mode: string }> = [];
-    for (const name of names) {
-      for (const element of Array.from(
-        document.querySelectorAll(`[${name}]`)
-      )) {
-        const scope = element.closest('[data-bb-mode]');
-        seen.push({
-          state: name,
-          mode: scope?.getAttribute('data-bb-mode') ?? 'light'
-        });
-      }
+    for (const marker of Array.from(
+      document.querySelectorAll('[data-catalog-forced]')
+    )) {
+      const state = marker.getAttribute('data-catalog-forced');
+      if (state === null) continue;
+      if (marker.querySelector(`[${state}]`) === null) continue;
+      const scope = marker.closest('[data-bb-mode]');
+      seen.push({
+        state,
+        mode: scope?.getAttribute('data-bb-mode') ?? 'light'
+      });
     }
     return seen;
-  }, attributes);
+  });
 
 test('the list of forcible states still matches the component', () => {
   expect(declaredStates.length).toBeGreaterThan(0);
@@ -182,7 +219,7 @@ test('the list of forcible states still matches the component', () => {
 
 test('every file that forces a state is a file the catalog serves stories from', () => {
   expect(candidates.size).toBeGreaterThan(0);
-  expect([...candidates].filter(path => !byFile.has(path))).toEqual([]);
+  expect([...candidates.keys()].filter(path => !byFile.has(path))).toEqual([]);
 });
 
 for (const [path, entries] of byFile) {
@@ -191,13 +228,62 @@ for (const [path, entries] of byFile) {
   test(`states: ${component}`, async ({ page }) => {
     /** Which modes each kind of forced state was seen in, across the file. */
     const modes = new Map<string, Set<string>>();
+    const expected = candidates.get(path) ?? [...FORCED];
 
+    /*
+     * IT STOPS WHEN THERE IS NOTHING LEFT TO LOOK FOR, and the bound is what
+     * makes that safe rather than a narrowing.
+     *
+     * The claim is per file and per KIND: each kind the file could force has
+     * to turn up in a light scope and in a dark one. So once every kind the
+     * SOURCE names has been seen in both, no further story can change the
+     * answer, and visiting the rest is 160-odd page loads spent to re-confirm
+     * what is already settled. Measured before this existed: 184 stories,
+     * 1.2 minutes.
+     *
+     * The bound comes from the source rather than from what has been seen so
+     * far, and that is the whole difference. Stopping when "everything seen so
+     * far is covered" would stop after the first story every time — a kind
+     * that only appears later would never be looked for, and the check would
+     * report green over a gap it never visited. That is the silent-narrowing
+     * shape doc 10 §11.1 is about, and the source set is deliberately
+     * over-broad so that the error, if there is one, is more page loads rather
+     * than fewer.
+     */
+    const settled = () =>
+      /*
+       * Every kind the source names AND every kind actually seen. The second
+       * half is what stops an early exit from narrowing the check: a state
+       * that turns up without the source naming it would otherwise let this
+       * stop while that state is still one-sided.
+       */
+      [...expected, ...modes.keys()].every(
+        kind => (modes.get(kind)?.size ?? 0) === 2
+      );
+
+    let visited = 0;
     for (const entry of entries) {
+      if (settled()) break;
+      visited += 1;
       await gotoStory(page, entry.id);
-      for (const { state, mode } of await forcedOn(page, FORCED)) {
+      for (const { state, mode } of await forcedOn(page)) {
         modes.set(state, (modes.get(state) ?? new Set()).add(mode));
       }
     }
+
+    /*
+     * SAID OUT LOUD, because an early exit that nobody can see is how a check
+     * quietly comes to cover less than its name claims. The annotation shows
+     * in the report and in `--reporter=list`.
+     */
+    test.info().annotations.push({
+      type: 'visited',
+      description: `${visited} of ${entries.length} stories; ${
+        settled()
+          ? 'stopped once every kind was covered'
+          : 'visited all of them'
+      }`
+    });
 
     /*
      * A file in the candidate list that turns out to force nothing is not a

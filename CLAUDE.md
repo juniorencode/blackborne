@@ -812,6 +812,39 @@ Things that look like improvements and are not:
   ring lands on is a fact about each component — the registry is explicit AND
   a test compares it against a real rendered element, because a model of a
   ring is not a ring.
+- **Do not read a pixel difference as a rendering difference until you have
+  counted it.** `avatar-states` disagreed with CI three times — 225 pixels,
+  then 289, then 332 — and was written off as the machine twice. Measured on
+  the third: **2046 pixels differ, every one on a curve, and not one by more
+  than TWO units of 255**, with the content, geometry and layout identical.
+  That is rounding in the antialiasing blend. Not the core count either: one,
+  two and four visible CPUs give byte-identical files. The container fixes the
+  fonts, the renderer and the platform — it does not make two CPUs round the
+  same way, and five places in this repository said it did. The per-pixel bar
+  is calibrated to that residue now; the pixel BUDGET is still zero, because
+  that one is not about the machine
+  ([decision 0030](./docs/decisions/0030-the-pixel-bar-is-calibrated-rather-than-zero.md)).
+- **Do not mistake a state a component ARRIVED at for a state a story staged.**
+  `e2e/forced-states.spec.ts` asks which states the catalog forces, and looking
+  for the attribute answers a different question: a combo box in an open-list
+  story carries `data-focused` because it genuinely has focus, and whether the
+  page has focus at all varies between runs under parallel workers — so the
+  check failed once and passed the next time on the same commit. `Force` marks
+  its own wrapper with `data-catalog-forced`, and that is what is counted, with
+  the attribute still required to be present inside it so a marker cannot
+  vouch for a state that never arrived. `PasswordField` carries the marker on a
+  helper that focuses a real input, because `Force` cannot reach the element
+  its ring is keyed on.
+- **Do not rename a job in `verify.yml`, and do not split one without leaving
+  its name behind.** Both job names are required status checks in this
+  repository's branch protection, matched as exact strings, and that list is
+  not visible from any file here. The three browser suites are three JOBS now
+  rather than three steps — 11m21s of wall clock became about six — and the
+  name `Browser checks, accessibility and visual regression` survives on a
+  fourth job that does no work and reports their verdict. It uses
+  `if: always()` and tests each result explicitly, because a job whose
+  dependency failed is SKIPPED rather than failed, and a skipped required check
+  is not a red one.
 - **Do not reference private projects** in code, examples or documentation. The
   library is public and its API is designed for strangers.
 

@@ -88,6 +88,19 @@ function Revealed({ children }: { children: React.ReactNode }) {
  * a person. Only one element in a document can hold focus, so exactly one
  * panel per STORY may ask for it — the states pair asks in its light half, and
  * `Modes` asks in its dark one.
+ *
+ * AND IT CARRIES `Force`'S MARKER ANYWAY, which is what puts this file inside
+ * `e2e/forced-states.spec.ts` rather than skipped by it. That check counts
+ * `data-catalog-forced` rather than the state attribute, precisely so that a
+ * component holding focus for its own reasons is not mistaken for a story
+ * staging one — and this file stages one, it just does it with real focus
+ * because the alternative lands the attribute on an element no selector reads.
+ * The marker names the attribute the RING is keyed on, so the check verifies
+ * the state actually arrived rather than trusting the marker.
+ *
+ * Without it the split above is unguarded: making `Modes` light-only would
+ * leave a focused field unphotographed and unmeasured in dark, which is the
+ * whole subject of doc 10 §11.9.
  */
 function Focused({ children }: { children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -98,7 +111,11 @@ function Focused({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <div ref={ref} style={{ display: 'contents' }}>
+    <div
+      ref={ref}
+      data-catalog-forced="data-focus-within"
+      style={{ display: 'contents' }}
+    >
       {children}
     </div>
   );

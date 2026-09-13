@@ -59,25 +59,69 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm verify
 
-  # The slow layer, in its own job so it never delays the fast one.
+  # THE SLOW LAYER, AND IT IS THREE JOBS RATHER THAN THREE STEPS.
   #
   # It exists because several core guarantees cannot be checked without a
   # browser. jsdom does not resolve CSS variables, does not implement real tab
   # order, and applies no stylesheet — so it can answer neither "what colour
   # did this end up", nor "where did focus go", nor "which mark is showing".
   # Every one of those has caught a real defect here.
-  browser:
-    name: Browser checks, accessibility and visual regression
+  #
+  # ## Why they were split, with the numbers
+  #
+  # Measured from this repository's own CI logs on 2026-09-13, when the three
+  # were steps inside one job:
+  #
+  #   initialise the container   0m35s
+  #   checkout, pnpm, node       0m18s
+  #   install                    0m05s
+  #   build the catalog          0m12s
+  #   behaviour checks           3m17s
+  #   automated accessibility    4m57s
+  #   visual regression          2m01s
+  #   ----------------------------------
+  #   the job                   11m21s
+  #
+  # Three steps run one after another, so the job pays the sum. Three jobs run
+  # at once, so the wall clock is the longest of them plus its own setup —
+  # about six minutes, for the price of two more runners.
+  #
+  # THIS IS THE ONE LEVER THAT ADDS NO FLAKINESS, and that is the reason it was
+  # chosen over the alternatives. Every machine-shaped failure this repository
+  # has recorded came from contention on ONE machine: sockets accumulating in
+  # TIME_WAIT across runs until a story could not be fetched (doc 10 §11.5.1),
+  # and nineteen orphaned processes holding 3.1GB (§11.5). More WORKERS on one
+  # machine makes both worse. More MACHINES makes both better — each of these
+  # jobs gets a fresh container and its own socket table.
+  #
+  # What was considered and rejected: caching the catalog build between jobs.
+  # The build is TWELVE SECONDS, and a cache is a mechanism for serving a stale
+  # one — which is the exact defect `check:catalog` exists to prevent, and
+  # which would defeat that guard's mtime signal anyway, since git does not
+  # preserve modification times and a restored build would look stale on every
+  # run.
+  #
+  # ## Everything below this line is repeated three times, deliberately
+  #
+  # No matrix. A matrix would write the suite as `test:${{ matrix.suite }}`,
+  # and `scripts/check-release-gate.mjs` compares the LITERAL `run:` values of
+  # this file against release.yml to prove the release gate runs everything a
+  # pull request runs. An interpolated command matches nothing there, so the
+  # parity guard would pass while comparing a string neither file executes.
+  # Three explicit jobs keep that comparison meaningful, at the cost of
+  # repeating the setup — which is the same trade the three steps made before
+  # them, and for the same reason: a failure has to say which layer failed.
+
+  behaviour:
+    name: Behaviour checks
     runs-on: ubuntu-latest
-    # Measured at 11m52s on 2026-09-11, of which 11m0s is the three suites.
-    # Generous rather than tight: this bounds a hang, it does not police a
-    # duration (doc 10 §11 — a check on how long a suite took is a check on
-    # how loaded the machine was).
-    timeout-minutes: 45
-    # Runs in the same image the baselines were generated in, so a screenshot
-    # taken here is byte-identical to one taken locally through
-    # apps/catalog/docker-visual.sh. That is what lets the pixel tolerance stay
-    # at zero — see that script for why a tolerance would defeat the purpose.
+    # Measured at 3m17s on 2026-09-13. Generous rather than tight: this bounds
+    # a hang, it does not police a duration (doc 10 §11 — a check on how long a
+    # suite took is a check on how loaded the machine was).
+    timeout-minutes: 25
+    # The same image the baselines were generated in. It matters most for the
+    # visual job, and it is kept on all three so that a behaviour check which
+    # reads a colour or a box reads the one CI will photograph.
     container:
       image: mcr.microsoft.com/playwright:v1.62.1-noble
       options: --ipc=host
@@ -92,81 +136,156 @@ jobs:
 
       # The catalog renders the built stylesheet, exactly as a consumer does,
       # and the checks are served from the BUILT catalog rather than from a dev
-      # server — so both builds come first, once, for the three suites below.
-      #
-      # The catalog build takes about ten seconds and buys two things. A dev
-      # server compiles each story the first time it is asked for, which has
-      # timed a story out three times in this repository under load; and
-      # nothing left to compile is what makes running the suites in parallel
-      # safe rather than a way to produce more of those timeouts.
+      # server. A dev server compiles each story the first time it is asked
+      # for, which has timed a story out three times in this repository under
+      # load; a built directory has nothing left to compile, which is what
+      # makes running the suites in parallel safe rather than a way to produce
+      # more of those timeouts.
       - name: Build the package and the catalog
         run: pnpm build:catalog
 
-      # The three suites are three steps rather than one command, so a failure
-      # says which layer failed in the job's own log. They no longer overlap:
-      # the accessibility suite is its own project, and until this run it was
-      # ALSO part of the behaviour checks — so its 357 story checks ran twice
-      # per pipeline, for one set of results.
-      #
-      # Measured on the way in, and the reason this job was the long pole:
-      #
-      #   behaviour     · 7.5m serial → 2.7m
-      #   accessibility · 13.1m       → 4.6m, and it ran twice
-      #   visual        · 4.8m, one worker on purpose
-      #
-      # Playwright defaults to ONE worker when CI is set, so every one of those
-      # serial numbers was what this job actually paid. `workers` is now
-      # explicit in the config, which is where the rest of the reasoning is.
-      #
-      # AND THOSE ARE LOCAL NUMBERS, which is worth knowing before using them
-      # to plan anything about this job. Measured HERE on 2026-09-11, on the
-      # same commit: behaviour 3.3m, accessibility 5.4m, visual 2.3m, which is
-      # 11m0s of the job's 11m52s. A CI runner has fewer cores than the machine
-      # the local figures came from, so the two parallel suites are SLOWER here
-      # and the single-worker one is FASTER -- which no amount of reading the
-      # local numbers would have predicted. Doc 10 section 12: a duration is a
-      # measurement of a machine, so it carries the machine and the date or it
-      # says nothing.
       - name: Behaviour checks
         run: pnpm --filter catalog test:e2e
 
-      # Doc 06 §5 is clear that this layer catches "a small fraction" and is a
-      # cheap filter rather than a guarantee. It earns its place anyway: it
-      # found a filled danger button at 3.91:1 against a 4.5:1 requirement,
-      # which had been in the catalog since the first component.
+      - name: The failure has pictures to ship
+        if: failure()
+        working-directory: apps/catalog
+        run: |
+          set -u
+          report=playwright-report/index.html
+          if [ ! -s "$report" ]; then
+            echo "::error::$report is missing or empty, so this failure ships no report."
+            echo "Playwright's reporter is configured in apps/catalog/playwright.config.ts;"
+            echo "on CI it must include ['html', { open: 'never' }]. Doc 10 §11.6."
+            exit 1
+          fi
+          echo "$report exists, $(wc -c < "$report") bytes"
+          echo "--- images this run produced ---"
+          find test-results -name '*.png' -type f | sort | while read -r png; do
+            echo "$(wc -c < "$png") bytes  $png"
+          done
+          echo "--- end ---"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: failure()
+        with:
+          name: playwright-report-behaviour
+          path: |
+            apps/catalog/playwright-report/
+            apps/catalog/test-results/
+          if-no-files-found: warn
+          retention-days: 7
+
+  # Doc 06 §5 is clear that this layer catches "a small fraction" and is a
+  # cheap filter rather than a guarantee. It earns its place anyway: it found a
+  # filled danger button at 3.91:1 against a 4.5:1 requirement, which had been
+  # in the catalog since the first component.
+  accessibility:
+    name: Automated accessibility
+    runs-on: ubuntu-latest
+    # Measured at 4m57s on 2026-09-13, and the longest of the three — so this
+    # job is what the wall clock now waits for.
+    timeout-minutes: 25
+    container:
+      image: mcr.microsoft.com/playwright:v1.62.1-noble
+      options: --ipc=host
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build the package and the catalog
+        run: pnpm build:catalog
+
       - name: Automated accessibility
         run: pnpm --filter catalog test:a11y
 
-      # Doc 10 §6: the safety net that says WHICH components changed appearance
-      # after a token edit. Demonstrated rather than assumed — changing one
-      # radius token failed 13 of 19 baselines and left 6 untouched.
+      - name: The failure has pictures to ship
+        if: failure()
+        working-directory: apps/catalog
+        run: |
+          set -u
+          report=playwright-report/index.html
+          if [ ! -s "$report" ]; then
+            echo "::error::$report is missing or empty, so this failure ships no report."
+            echo "Playwright's reporter is configured in apps/catalog/playwright.config.ts;"
+            echo "on CI it must include ['html', { open: 'never' }]. Doc 10 §11.6."
+            exit 1
+          fi
+          echo "$report exists, $(wc -c < "$report") bytes"
+          echo "--- images this run produced ---"
+          find test-results -name '*.png' -type f | sort | while read -r png; do
+            echo "$(wc -c < "$png") bytes  $png"
+          done
+          echo "--- end ---"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: failure()
+        with:
+          name: playwright-report-accessibility
+          path: |
+            apps/catalog/playwright-report/
+            apps/catalog/test-results/
+          if-no-files-found: warn
+          retention-days: 7
+
+  # Doc 10 §6: the safety net that says WHICH components changed appearance
+  # after a token edit. Demonstrated rather than assumed — changing one radius
+  # token failed 13 of 19 baselines and left 6 untouched.
+  visual:
+    name: Visual regression
+    runs-on: ubuntu-latest
+    # Measured at 2m01s on 2026-09-13.
+    timeout-minutes: 25
+    # THE SAME IMAGE THE BASELINES WERE GENERATED IN, which is what makes a
+    # capture here comparable with one taken locally through
+    # apps/catalog/docker-visual.sh.
+    #
+    # It does NOT make them byte-identical, and that sentence used to live here
+    # claiming it did. Measured on 2026-09-13 against a capture this job
+    # produced: every differing pixel was on a CURVE, and the largest
+    # difference in the whole image was TWO units out of 255 — rounding in the
+    # antialiasing blend, not a different picture. The image is the same; the
+    # CPU underneath it is not. `playwright.config.ts` carries the calibrated
+    # threshold and decision 0030 has the numbers.
+    container:
+      image: mcr.microsoft.com/playwright:v1.62.1-noble
+      options: --ipc=host
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build the package and the catalog
+        run: pnpm build:catalog
+
       - name: Visual regression
         run: pnpm --filter catalog test:visual
 
       # The diff images are the whole point of a visual failure: a report that
       # says "13 differ" without showing them is unactionable.
       #
-      # This step uploaded NOTHING until 2026-09-10, and the comment above is
-      # what made it look finished. No reporter was configured, so Playwright
-      # used its default -- list locally, dot on CI -- and neither writes a
-      # report, so `playwright-report/` never existed. The config now asks for
-      # the html reporter on CI, and both paths are uploaded: the report to
-      # browse and the raw actual/diff PNGs to open directly.
-      #
-      # It cost what the comment predicted: `avatar-states` failed at 289
-      # pixels on a branch that changed no pixel, and the artefact that would
-      # have said why was not there.
       # AND THE ARTEFACT IS VERIFIED, NOT THE STEP. Doc 10 §11.6 is about this
-      # exact upload: it ran on every failure for months, uploaded nothing,
-      # and said nothing, because an upload of a missing path is a warning
-      # rather than an error. The reporter was fixed on 2026-09-10 and
-      # verified once, by hand, which is the same standing the comment below
-      # had before it turned out to be false.
+      # exact upload: it ran on every failure for months, uploaded nothing, and
+      # said nothing, because an upload of a missing path is a warning rather
+      # than an error. So this runs before the upload and fails if the report
+      # is not there. It also PRINTS what the upload is about to take: a log
+      # line survives a broken upload action, an expired artefact and a
+      # retention window, and is the only copy of the evidence that does.
       #
-      # So this runs before the upload and fails if the report is not there.
-      # It also PRINTS what the upload is about to take: a log line survives a
-      # broken upload action, an expired artefact and a retention window, and
-      # is the only copy of the evidence that does.
+      # It has already paid for itself twice. `avatar-states` failed at 289
+      # pixels on a branch that changed no pixel and the artefact that would
+      # have said why was not there; when it failed again on 2026-09-13 the
+      # artefact WAS there, and opening the diff is what turned a third theory
+      # into a measurement.
       - name: The failure has pictures to ship
         if: failure()
         working-directory: apps/catalog
@@ -195,3 +314,41 @@ jobs:
             apps/catalog/test-results/
           if-no-files-found: warn
           retention-days: 7
+
+  # THE NAME IS THE POINT OF THIS JOB, and it does no work.
+  #
+  # `Browser checks, accessibility and visual regression` is a REQUIRED STATUS
+  # CHECK in this repository's branch protection, matched as an exact string,
+  # and that list is not visible from any file here. Splitting the work into
+  # three jobs would have retired that name and introduced three that nothing
+  # requires — branch protection silently weakened by a refactor, which is the
+  # failure the note above the fast job warns about in as many words.
+  #
+  # So the name stays, on a job that reports the verdict of the three above it.
+  #
+  # `if: always()` plus an explicit test rather than `needs:` alone, because a
+  # job whose dependency failed is SKIPPED rather than failed, and a skipped
+  # required check is not a red one. The condition therefore names every result
+  # that is not success, so a cancelled or skipped dependency is a failure here
+  # too.
+  browser:
+    name: Browser checks, accessibility and visual regression
+    runs-on: ubuntu-latest
+    needs: [behaviour, accessibility, visual]
+    if: always()
+    timeout-minutes: 5
+    steps:
+      - name: Every browser layer passed
+        run: |
+          set -u
+          echo "behaviour     ${{ needs.behaviour.result }}"
+          echo "accessibility ${{ needs.accessibility.result }}"
+          echo "visual        ${{ needs.visual.result }}"
+          for result in "${{ needs.behaviour.result }}" \
+                        "${{ needs.accessibility.result }}" \
+                        "${{ needs.visual.result }}"; do
+            if [ "$result" != "success" ]; then
+              echo "::error::a browser layer did not pass, so this gate does not either."
+              exit 1
+            fi
+          done

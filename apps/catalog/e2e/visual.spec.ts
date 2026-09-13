@@ -40,8 +40,9 @@ import { gotoStory } from './story';
  * Refuse to run anywhere but linux.
  *
  * The references exist for linux alone, on purpose — they are generated in the
- * container so that a capture taken on a laptop is byte-identical to one taken
- * in CI, which is what lets the tolerance stay at zero. The platform is part
+ * container so that a capture taken on a laptop is comparable with one taken in
+ * CI — near enough that what remains is two units of 255 on a curve, which is
+ * what the calibrated threshold is set to (decision 0030). The platform is part
  * of the reference filename, so running this suite on Windows or macOS finds
  * nothing to compare against, fails, and writes a fresh set of references
  * named for that platform. They look entirely plausible. Committing them by
