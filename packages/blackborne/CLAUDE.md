@@ -45,6 +45,32 @@ nestable. All three are implemented the same way: **redefining variables on a
 container**. None of them is ever implemented with per-component conditional
 classes.
 
+**The brand axis ships a catalogue with it.** `src/styles/palette.css` is
+generated beside `primitives.css` and published as `blackborne/palette.css`,
+opt-in: twenty-five families as `[data-bb-accent]` and `[data-bb-base]` scopes,
+so a project names a colour instead of writing twenty-four values. Same
+mechanism, not a fourth axis (decision 0029).
+
+**THE MODE GOES OUTERMOST, and it is the rule that was missing.** A theme scope
+re-declares the whole LIGHT mapping, so the dark block has to match those
+scopes as descendants too — without that, a scope nested inside a dark element
+lost all twenty-five dark restatements, and `--bb-surface-sunken` came out
+lighter than the page. Both halves of the selector list are in `semantic.css`
+with the measurement. A descendant selector answers "is there a dark ancestor"
+rather than "is the nearest mode ancestor dark", which no plain selector can
+ask, so a mode nested between a scope and its own mode is undefined and written
+down as such (doc 03 §3.2).
+
+**AND A SWITCHABLE BACKGROUND DECLARES ITS TEXT, IN EVERY STATE.** `--bb-accent-on`
+was `#fff`, correct for a dark blue brand and for nothing else: measured, nine
+of the eighteen accents are under 4.5:1 with white, yellow at 2.89. A scope
+whose solid is light declares its own text — whichever of white and the
+family's own darkest step reads better, which is a measurement — and the
+interaction steps follow from that choice: **hover and press move AWAY from the
+text's lightness**, so a white-text family walks 9, 10, 11 in light and 9, 8, 7
+in dark. The second half was the shipped default getting it wrong, at 2.08:1
+pressed in dark, because step 11 is a TEXT step being used as a FILL.
+
 Density moves spacing, control heights and row heights. It does **not** move
 any color, and it does not move the base text size — compact trims air, not
 legibility.

@@ -107,7 +107,45 @@ Every background token has a paired `-on` token for the text that goes on it.
 Set them together — that is what keeps contrast correct when a brand colour is
 light.
 
-**Overriding the brand scale needs `data-bb-theme` on the same element.**
+**Or take a colour from the catalogue, which is the shortest route.**
+`blackborne/palette.css` is a second, optional stylesheet carrying the whole
+palette — eighteen accents and seven bases — as scopes you name:
+
+```ts
+import 'blackborne/styles.css';
+import 'blackborne/palette.css'; // in this order
+```
+
+```tsx
+<div data-bb-mode="dark" data-bb-accent="red" data-bb-base="stone">
+  …
+</div>
+```
+
+| Attribute        | Choices                                                                                                                                       |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data-bb-accent` | amber · blue · cyan · emerald · fuchsia · green · indigo · lime · orange · pink · purple · red · rose · sky · teal · tomato · violet · yellow |
+| `data-bb-base`   | mauve · mist · neutral · olive · sage · slate · stone                                                                                         |
+
+It is opt-in because it weighs 36 kB — a project that never changes its accent
+should not download eighteen it never uses. The two attributes are independent,
+they compose with the mode and the density, and a scope carries the **text
+colour its solid needs**: nine of the eighteen accents are too light for white
+text, so those declare their own. The whole contract, including the four whose
+solid cannot carry a run of text at all, is in
+[decision 0029](https://github.com/juniorencode/blackborne/blob/main/docs/decisions/0029-the-catalogue-is-opt-in-and-a-scope-carries-the-pair.md).
+
+**Put the attribute on the element that carries `data-bb-mode`, or inside it
+with no other mode in between.** A stylesheet cannot ask which mode scope is
+nearest, so a mode nested between the two is undefined — the mode goes
+outermost.
+
+**The four tone colours do not follow the accent.** A listing whose accent is
+red still marks an error in the danger colour. Two reds beside each other is
+avoided by not choosing red, and that is your call rather than the library's.
+
+**Overriding the brand scale yourself needs `data-bb-theme` on the same
+element.**
 The scale is a set of primitives that the semantic tokens are computed from,
 and a CSS `var()` resolves where it is declared, not where it is used. The
 attribute is what tells the library to recompute the mapping in that scope:
@@ -156,11 +194,18 @@ it arrived the way the sentence above predicts: the numbers were published here
 at `0.2.0` with nothing reading them, and on 2026-09-10 `dist/styles.css` was
 66.5 kB against a 60 kB ceiling. Nobody found out.
 
-| What              | Ceiling                |
-| ----------------- | ---------------------- |
-| `dist/index.js`   | structural — see below |
-| `dist/styles.css` | 80 kB raw / 13 kB gzip |
-| Published tarball | 220 kB                 |
+| What               | Ceiling                |
+| ------------------ | ---------------------- |
+| `dist/index.js`    | structural — see below |
+| `dist/styles.css`  | 80 kB raw / 13 kB gzip |
+| `dist/palette.css` | 45 kB raw / 7 kB gzip  |
+| Published tarball  | 220 kB                 |
+
+`palette.css` is **opt-in**, and that is why it has a ceiling of its own rather
+than a share of the one above. It is the whole palette — twenty-five families,
+twelve steps, two modes, six hundred declarations — and a project that never
+changes its accent never imports it and never pays for it. Measured on
+2026-09-13: 36.3 kB raw, 5.4 kB gzip.
 
 **There is no "now" column any more**, on purpose. It said 38.2 kB while the
 file was 66.5 kB, because a number written in prose has nobody to keep it true

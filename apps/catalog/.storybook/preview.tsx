@@ -19,6 +19,20 @@ import { a11yParameter } from '../e2e/a11yRules';
  * `pnpm --filter blackborne build` or the catalog keeps showing the old CSS.
  */
 import 'blackborne/styles.css';
+/*
+ * The opt-in catalogue, imported AFTER the stylesheet and never before it.
+ *
+ * A consumer chooses whether to ship this; the catalog always does, because
+ * the palette story is what puts every family on a screen and a family nothing
+ * renders is a family nobody has checked.
+ *
+ * The order is load-bearing in exactly one arrangement and is therefore easy
+ * to get wrong without noticing: a scope rule is `[data-bb-accent='red']` at
+ * (0,1,0), the same weight as `primitives.css`'s `:root`, so an accent put on
+ * the ROOT element itself has both rules on one element and the later file
+ * wins. Everywhere else the two land on different elements and never compete.
+ */
+import 'blackborne/palette.css';
 import './catalog.css';
 
 /*

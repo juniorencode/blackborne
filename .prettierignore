@@ -3,4 +3,5 @@ dist/
 coverage/
 storybook-static/
 packages/*/src/styles/primitives.css
+packages/*/src/styles/palette.css
 .pnpm-store/

@@ -20,8 +20,9 @@ export default tseslint.config(
       '**/storybook-static/**',
       // Written by the Docker container's pnpm install; a cache, not source.
       '.pnpm-store/**',
-      // Generated from @radix-ui/colors; regenerate rather than edit.
-      'packages/*/src/styles/primitives.css'
+      // Generated from scripts/palette.mjs; regenerate rather than edit.
+      'packages/*/src/styles/primitives.css',
+      'packages/*/src/styles/palette.css'
     ]
   },
 
