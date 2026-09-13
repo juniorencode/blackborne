@@ -12,6 +12,7 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { pinClock } from './clock';
+import { contrast, opacity } from './colour';
 import { gotoStory } from './story';
 
 const OVERVIEW = 'components-datefield--overview';
@@ -87,45 +88,20 @@ test('the focused segment is filled, and legibly', async ({ page }) => {
    */
   const focused = page.locator('.bb-date-segment[data-focused]');
   await expect
-    .poll(() =>
-      focused.evaluate(node =>
-        /*
-         * `rgba(` and not a regex over the whole value: an opaque computed
-         * colour serialises as `rgb(...)` and a translucent one as `rgba(...)`,
-         * so the prefix IS the question. The first version of this poll used a
-         * pattern that matched both and therefore never became true.
-         */
-        getComputedStyle(node).backgroundColor.startsWith('rgba(')
+    .poll(async () =>
+      opacity(
+        page,
+        await focused.evaluate(node => getComputedStyle(node).backgroundColor)
       )
     )
-    .toBe(false);
+    .toBe(1);
 
   const seen = await focused.evaluate(node => {
     const styles = getComputedStyle(node);
     return { bg: styles.backgroundColor, colour: styles.color };
   });
 
-  const ratio = await page.evaluate(
-    ([a, b]) => {
-      const parse = (value: string) =>
-        (/rgba?\(([^)]+)\)/.exec(value)?.[1] ?? '0,0,0')
-          .split(',')
-          .map(part => Number.parseFloat(part));
-      const luminance = (value: string) => {
-        const [r, g, b2] = parse(value);
-        const channel = (n: number) => {
-          const s = n / 255;
-          return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
-        };
-        return (
-          0.2126 * channel(r!) + 0.7152 * channel(g!) + 0.0722 * channel(b2!)
-        );
-      };
-      const [x, y] = [luminance(a!), luminance(b!)];
-      return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
-    },
-    [seen.colour, seen.bg]
-  );
+  const ratio = await contrast(page, seen.bg, seen.colour);
 
   /*
    * There is no caret in a date field — the segments are not editable text —

@@ -12,6 +12,7 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { pinClock } from './clock';
+import { contrast } from './colour';
 import { gotoStory } from './story';
 
 const OVERVIEW = 'components-calendar--overview';
@@ -300,31 +301,6 @@ test('a month with nothing in it cannot be pressed', async ({ page }) => {
  */
 const RING_FLOOR = 3;
 
-/** WCAG relative luminance, and the ratio between two resolved colours. */
-const contrast = (page: Page, one: string, other: string) =>
-  page.evaluate(
-    ([a, b]) => {
-      const parse = (value: string): number[] => {
-        const found = /rgba?\(([^)]+)\)/.exec(value);
-        if (found === null) throw new Error(`not a colour: ${value}`);
-        return found[1]!.split(',').map(part => Number.parseFloat(part));
-      };
-      const luminance = (colour: string) => {
-        const [r, g, b] = parse(colour);
-        const channel = (v: number) => {
-          const s = v / 255;
-          return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
-        };
-        return (
-          0.2126 * channel(r!) + 0.7152 * channel(g!) + 0.0722 * channel(b!)
-        );
-      };
-      const [x, y] = [luminance(a!), luminance(b!)];
-      return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
-    },
-    [one, other]
-  );
-
 /** Every marked cell in the story, with the colour it is drawn against. */
 const ringsIn = (page: Page) =>
   page.locator('.bb-calendar').evaluateAll(scopes =>
@@ -333,7 +309,7 @@ const ringsIn = (page: Page) =>
       if (cell === null) throw new Error('no day marked as today');
 
       const shadow = getComputedStyle(cell).boxShadow;
-      const ring = /rgba?\([^)]+\)(?=[^,]*inset)/.exec(shadow);
+      const ring = /[a-z]+\([^)]+\)(?=[^,]*inset)/.exec(shadow);
       if (ring === null) throw new Error(`no inset ring in: ${shadow}`);
 
       /*

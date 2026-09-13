@@ -12,7 +12,14 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { pinClock } from './clock';
+import { contrast } from './colour';
 import { gotoStory } from './story';
+
+/*
+ * Doc 03 §5 rule 2: a graphical element carrying information needs 3:1. The
+ * ring is the only thing marking today, so it carries information.
+ */
+const RING_FLOOR = 3;
 
 const OVERVIEW = 'components-rangecalendar--overview';
 const STRUCTURES = 'components-rangecalendar--structures';
@@ -32,33 +39,6 @@ const TOGETHER = 'components-rangecalendar--together';
 test.beforeEach(async ({ page }) => {
   await pinClock(page);
 });
-
-/** The floor for a graphical element that carries information (doc 03 §5). */
-const RING_FLOOR = 3;
-
-const contrast = (page: Page, one: string, other: string) =>
-  page.evaluate(
-    ([a, b]) => {
-      const parse = (value: string): number[] => {
-        const found = /rgba?\(([^)]+)\)/.exec(value);
-        if (found === null) throw new Error(`not a colour: ${value}`);
-        return found[1]!.split(',').map(part => Number.parseFloat(part));
-      };
-      const luminance = (colour: string) => {
-        const [r, g, b] = parse(colour);
-        const channel = (v: number) => {
-          const s = v / 255;
-          return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
-        };
-        return (
-          0.2126 * channel(r!) + 0.7152 * channel(g!) + 0.0722 * channel(b!)
-        );
-      };
-      const [x, y] = [luminance(a!), luminance(b!)];
-      return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
-    },
-    [one, other]
-  );
 
 /** What the calendar is showing, read from the page. */
 const shape = (page: Page) =>
@@ -317,7 +297,7 @@ test("today's ring clears the floor on all three of its backgrounds", async ({
         const out: Array<{ where: string; ring: string; behind: string }> = [];
         for (const cell of document.querySelectorAll('.bb-calendar-today')) {
           const s = getComputedStyle(cell);
-          const ring = /rgba?\([^)]+\)(?=[^,]*inset)/.exec(s.boxShadow);
+          const ring = /[a-z]+\([^)]+\)(?=[^,]*inset)/.exec(s.boxShadow);
           if (ring === null) throw new Error(`no ring in: ${s.boxShadow}`);
 
           /*

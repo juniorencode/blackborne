@@ -464,11 +464,11 @@
    * running. Every number here came from a measurement, not from a preference.
    */
   --bb-danger: var(--bb-x-danger-9);
-  --bb-danger-on: var(--bb-x-gray-1);
+  --bb-danger-on: #fff;
   --bb-success: var(--bb-x-success-9);
   --bb-success-on: var(--bb-x-gray-1);
   --bb-info: var(--bb-x-info-9);
-  --bb-info-on: var(--bb-x-gray-1);
+  --bb-info-on: #fff;
   /*
    * Amber needs the restatement too, and the reason it was left out is worth
    * keeping: it pairs with step 12, which IS dark text — in light mode. The

@@ -10,6 +10,7 @@
  * this component does.
  */
 import { expect, test } from '@playwright/test';
+import { contrast } from './colour';
 import { gotoStory } from './story';
 
 const OVERVIEW = 'components-slider--overview';
@@ -304,40 +305,26 @@ test('the handle is at the leading edge of the fill, in both directions', async 
 test('a disabled slider still shows what it holds', async ({ page }) => {
   await gotoStory(page, STATES);
 
-  const seen = await page
-    .locator('.bb-slider')
-    .nth(4)
-    .evaluate(root => {
-      const luminance = (value: string) => {
-        const parts = (/rgba?\(([^)]+)\)/.exec(value)?.[1] ?? '0,0,0')
-          .split(',')
-          .map(part => Number.parseFloat(part));
-        const channel = (n: number) => {
-          const s = n / 255;
-          return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
-        };
-        return (
-          0.2126 * channel(parts[0]!) +
-          0.7152 * channel(parts[1]!) +
-          0.0722 * channel(parts[2]!)
-        );
-      };
-      const rail = getComputedStyle(
-        root.querySelector('.bb-slider-rail')!
-      ).backgroundColor;
-      const fill = getComputedStyle(
-        root.querySelector('.bb-slider-fill')!
-      ).backgroundColor;
-      const a = luminance(rail);
-      const b = luminance(fill);
-      return {
-        disabled: root.querySelector('input')!.disabled,
-        ratio:
-          Math.round(
-            ((Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)) * 100
-          ) / 100
-      };
-    });
+  const slider = page.locator('.bb-slider').nth(4);
+  const colours = await slider.evaluate(root => ({
+    disabled: root.querySelector('input')!.disabled,
+    rail: getComputedStyle(root.querySelector('.bb-slider-rail')!)
+      .backgroundColor,
+    fill: getComputedStyle(root.querySelector('.bb-slider-fill')!)
+      .backgroundColor
+  }));
+
+  /*
+   * The ratio is taken OUTSIDE the page now, through `e2e/colour`. The reading
+   * used to be a regex over the computed value with a fallback to black, which
+   * is worse than throwing: since the palette is published in `oklch`, that
+   * regex matches nothing and the helper would have reported a confident ratio
+   * against a colour nobody painted.
+   */
+  const seen = {
+    disabled: colours.disabled,
+    ratio: await contrast(page, colours.rail, colours.fill)
+  };
 
   /*
    * THE FIRST BASELINE IS WHAT FOUND THIS. The disabled fill was

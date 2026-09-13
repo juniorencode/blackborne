@@ -12,6 +12,21 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **Every colour changed.** The palette is this library's own now, not
+  `@radix-ui/colors` — which is gone from the dependency tree — and it ships in
+  `oklch`, so a screen that can show more than sRGB shows the colour that was
+  chosen. The six roles are unchanged; `brand` is `blue` where it was `indigo`,
+  which is a choice of default rather than a rename.
+
+  **Two pairings moved with it**: `--bb-danger-on` and `--bb-info-on` are white
+  in dark mode, because the new solids are darker than the old ones and
+  near-black on them measured 3.86:1 and 3.67:1 against a floor of 4.5. The
+  rule was already written — a background declares the text that goes on it —
+  and had been applied by MODE rather than by the background.
+
+  What a consumer may rely on, and what they may not, is
+  [decision 0028](./docs/decisions/0028-the-palette-is-ours-and-what-it-guarantees.md).
+
 - **`usePaging`** — which page of a listing, how big a page is, and the one
   rule nobody writes by hand.
 
