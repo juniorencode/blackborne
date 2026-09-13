@@ -39,18 +39,25 @@ const Room = ({
   label,
   mode = 'light',
   density = 'normal',
+  theme,
   children
 }: {
   width: number | string;
   label: string;
   mode?: 'light' | 'dark';
   density?: 'normal' | 'compact';
+  /* The catalog's own alternative brand, which is how every other component
+     demonstrates the axis. A scope rather than a variable written here: the
+     axis is redefining the BRAND's steps, and `--bb-accent` is one of the
+     things derived from them. */
+  theme?: 'catalog-alt';
   children: React.ReactNode;
 }) => (
   <div
     className="catalog-panel"
     data-bb-density={density}
     data-bb-mode={mode}
+    {...(theme ? { 'data-bb-theme': theme } : {})}
     style={{ width }}
   >
     <p className="catalog-label">{label}</p>
@@ -1214,17 +1221,49 @@ export const Direction: Story = {
 };
 
 /** Gate box 8's other half: nothing here may be the accent by accident. */
+/**
+ * THE BRAND AXIS, and this story demonstrated nothing until 2026-09-12.
+ *
+ * It set `--bb-accent: var(--bb-x-amber-9)` on a panel, and that token does not
+ * exist — the generated families are `gray`, `brand`, `danger`, `warning`,
+ * `success` and `info`, never `amber`. Measured in a browser: `--bb-accent`
+ * computed to the EMPTY STRING on the panel, because an invalid `var()` makes a
+ * custom property guaranteed-invalid rather than falling back to the inherited
+ * value. And the picture could not have shown it either way: the table had no
+ * selection, so nothing in it was drawn in the accent at all.
+ *
+ * Two things fix it, and both are the convention every other component already
+ * follows. The scope is `data-bb-theme`, which redefines the BRAND's steps —
+ * the axis is the family, and `--bb-accent` is one of the things derived from
+ * it, so overriding the derived token would have demonstrated the narrower
+ * thing even if it had worked. And the two panels sit side by side, because one
+ * panel on its own is a colour with nothing to be different from.
+ */
 export const BrandOverride: Story = {
-  render: args => (
-    <div
-      className="catalog-panel"
-      style={{ ['--bb-accent' as string]: 'var(--bb-x-amber-9)', width: 560 }}
-    >
-      <p className="catalog-label">An overridden brand accent</p>
-      <Table {...args}>
+  render: args => {
+    const chosen = INVOICES.slice(0, 2).map(invoice => invoice.id);
+    const listing = (
+      <Table
+        aria-label={args['aria-label'] ?? 'Invoices'}
+        defaultSelectedKeys={chosen}
+        selectionMode="multiple"
+        sortDescriptor={{ column: 'number', direction: 'ascending' }}
+        onSortChange={() => undefined}
+      >
         <Head sortable />
         <Body rows={INVOICES.slice(0, 3)} />
       </Table>
-    </div>
-  )
+    );
+
+    return (
+      <div className="catalog-pair">
+        <Room label="The brand as it ships" width={560}>
+          {listing}
+        </Room>
+        <Room label="An overridden brand" theme="catalog-alt" width={560}>
+          {listing}
+        </Room>
+      </div>
+    );
+  }
 };
