@@ -57,22 +57,9 @@ type Story = StoryObj<typeof meta>;
 
 export const Playground: Story = {};
 
-/**
- * Every state.
- *
- * Two levels of label, one for the group and one per option, with the
- * description and the error hanging off the group. The base wires all of it,
- * and it wires it to a different place than RadioGroup does: `role="group"`
- * supports neither `aria-invalid` nor `aria-required`, so both land on every
- * option and the group carries only the data attributes. Nothing is supplied
- * by hand.
- *
- * The forced rows are on the options, because that is where the base puts the
- * state attributes and where `bb:group` sits — a checkbox is hovered, a set of
- * them is not.
- */
-export const States: Story = {
-  render: () => (
+/** The body of the story below, so it can be rendered once per mode. */
+function AllStates() {
+  return (
     <div
       className="catalog-stack"
       style={{ maxWidth: 420, gap: 'var(--bb-field-gap)' }}
@@ -164,6 +151,40 @@ export const States: Story = {
           <Checkbox value="email">Pressed and selected</Checkbox>
         </Force>
       </CheckboxGroup>
+    </div>
+  );
+}
+
+/**
+ * Every state.
+ *
+ * Two levels of label, one for the group and one per option, with the
+ * description and the error hanging off the group. The base wires all of it,
+ * and it wires it to a different place than RadioGroup does: `role="group"`
+ * supports neither `aria-invalid` nor `aria-required`, so both land on every
+ * option and the group carries only the data attributes. Nothing is supplied
+ * by hand.
+ *
+ * The forced rows are on the options, because that is where the base puts the
+ * state attributes and where `bb:group` sits — a checkbox is hovered, a set of
+ * them is not.
+ *
+ * And it is light AND dark, which it was not until 2026-09-13. A forced-state
+ * story is the only place hover, pressed and focus are ever rendered, so a
+ * light-only one leaves all three unreachable in dark mode by every automated
+ * layer here: axe reads what is on a page and the visual suite photographs
+ * one. What lived in that gap on `Button` was a pressed primary at 2.08:1,
+ * under 501 stories, 480 axe runs and 211 baselines (doc 10 §11.9).
+ */
+export const States: Story = {
+  render: () => (
+    <div className="catalog-pair">
+      <Scope label="Light" mode="light">
+        <AllStates />
+      </Scope>
+      <Scope label="Dark" mode="dark">
+        <AllStates />
+      </Scope>
     </div>
   )
 };

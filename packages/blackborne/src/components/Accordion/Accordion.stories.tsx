@@ -18,7 +18,7 @@ import { Badge } from '../Badge';
 import { Button } from '../Button';
 import { Card } from '../Card';
 import { Force } from '../../catalog/forceState';
-import { Accordion, Collapsible } from './Accordion';
+import { Accordion, type AccordionProps, Collapsible } from './Accordion';
 
 /** One scope of the theme axes, with a label. */
 function Scope({
@@ -112,15 +112,9 @@ export const Overview: Story = {
   )
 };
 
-/**
- * Every state of a header, plus the two a section has that a control does
- * not: open, and open while disabled.
- *
- * The forced states are put on the BUTTON rather than on the section — see
- * the note in `forceState`, which this component is the reason for.
- */
-export const States: Story = {
-  render: args => (
+/** The body of the story below, so it can be rendered once per mode. */
+function AllStates({ args }: { args: AccordionProps }) {
+  return (
     <div className="catalog-stack" style={{ maxWidth: 460 }}>
       <div>
         <p className="catalog-label">closed</p>
@@ -162,6 +156,34 @@ export const States: Story = {
           </Collapsible>
         </Accordion>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Every state of a header, plus the two a section has that a control does
+ * not: open, and open while disabled.
+ *
+ * The forced states are put on the BUTTON rather than on the section — see
+ * the note in `forceState`, which this component is the reason for.
+ *
+ * AND IT IS LIGHT AND DARK. A forced state is reachable only by pointing at
+ * the thing, so this story is the ONLY place hover, press and focus are ever
+ * rendered — and both automated layers read a rendered page: axe measures one
+ * and the visual suite photographs one. Light-only leaves all three
+ * unmeasured in dark by everything this repository has, which is where a
+ * pressed primary button sat at 2.08:1 under 501 stories, 480 axe runs and
+ * 211 baselines, all green (doc 10 §11.9).
+ */
+export const States: Story = {
+  render: args => (
+    <div className="catalog-pair">
+      <Scope label="Light" mode="light">
+        <AllStates args={args} />
+      </Scope>
+      <Scope label="Dark" mode="dark">
+        <AllStates args={args} />
+      </Scope>
     </div>
   )
 };

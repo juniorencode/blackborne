@@ -167,10 +167,21 @@ test('read-only keeps the room its toggle occupied', async ({ page }) => {
    * the edge is `inert` and hidden from the reader, and it still occupies the
    * same width as the one in the editable field above it.
    */
-  const edges = page.locator('.bb-field-box > span:last-child');
+  /*
+   * SCOPED TO ONE PANEL, because this story renders both modes since
+   * 2026-09-13 (doc 10 §11.9) and every field in it therefore exists twice.
+   * The claim is about two fields side by side in the SAME scope — a
+   * read-only edge as wide as an editable one — so comparing across panels
+   * would be comparing two different pages that happen to be on one screen.
+   */
+  const panel = page
+    .locator('.catalog-panel:has(> .catalog-label:text-is("Light"))')
+    .first();
+
+  const edges = panel.locator('.bb-field-box > span:last-child');
   const editable = await edges.first().boundingBox();
 
-  const hidden = page.locator(
+  const hidden = panel.locator(
     '[data-readonly] .bb-field-box > span:last-child'
   );
   const hiddenBox = await hidden.boundingBox();

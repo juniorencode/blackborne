@@ -16,7 +16,12 @@ import { LayerPage } from '../../catalog/layerPage';
 import { Button } from '../Button';
 import { Force } from '../../catalog/forceState';
 import { TextField } from '../TextField';
-import { Select, SelectItem, type SelectSize } from './Select';
+import {
+  Select,
+  SelectItem,
+  type SelectProps,
+  type SelectSize
+} from './Select';
 
 const SIZES = ['sm', 'md', 'lg'] as const satisfies readonly SelectSize[];
 
@@ -144,15 +149,14 @@ export const Overview: Story = {
 };
 
 /**
- * Every state doc 07 §6 asks for, minus one that does not exist here.
+ * The rows, so the story below can render them once per mode.
  *
- * **There is no read-only select**, because the base has none and the reason is
- * sound: a select is either offered or it is not. Read-only belongs to the
- * fields you can type in, where "you may not change this" and "this is
- * switched off" look different in the value.
+ * `focus` is a parameter rather than a row because only one of the two panels
+ * may ask for it, for the reason `Focused` gives above: one element in a
+ * document holds focus.
  */
-export const States: Story = {
-  render: args => (
+function AllStates({ args, focus }: { args: SelectProps; focus: boolean }) {
+  return (
     <div className="catalog-stack" style={{ maxWidth: 320 }}>
       <Select {...args} label="Default">
         <Options />
@@ -169,11 +173,18 @@ export const States: Story = {
           <Options />
         </Select>
       </Force>
-      <Focused>
-        <Select {...args} label="Focus">
-          <Options />
-        </Select>
-      </Focused>
+      {/*
+       * Real focus, so it is in the panel that can hold it and not in both: a
+       * second `Focused` would take the ring off the first and leave a row
+       * labelled "Focus" with nothing to show.
+       */}
+      {focus ? (
+        <Focused>
+          <Select {...args} label="Focus">
+            <Options />
+          </Select>
+        </Focused>
+      ) : null}
       <Select {...args} label="Chosen" defaultSelectedKey="USD">
         <Options />
       </Select>
@@ -197,6 +208,34 @@ export const States: Story = {
       <Select {...args} label="Saving" isSaving defaultSelectedKey="USD">
         <Options />
       </Select>
+    </div>
+  );
+}
+
+/**
+ * Every state doc 07 §6 asks for, minus one that does not exist here.
+ *
+ * **There is no read-only select**, because the base has none and the reason is
+ * sound: a select is either offered or it is not. Read-only belongs to the
+ * fields you can type in, where "you may not change this" and "this is
+ * switched off" look different in the value.
+ *
+ * **And it is light AND dark**, which it was not until 2026-09-13. A
+ * forced-state story is the only place a forced state is ever rendered, so a
+ * light-only one leaves the hovered frame in dark mode measured by nothing at
+ * all: axe reads what is on a page and the visual suite photographs one. What
+ * lived in that gap on `Button` was a pressed primary at 2.08:1, under 501
+ * stories, 480 axe runs and 211 baselines (doc 10 §11.9).
+ */
+export const States: Story = {
+  render: args => (
+    <div className="catalog-pair">
+      <Scope label="Light" mode="light">
+        <AllStates args={args} focus />
+      </Scope>
+      <Scope label="Dark" mode="dark">
+        <AllStates args={args} focus={false} />
+      </Scope>
     </div>
   )
 };

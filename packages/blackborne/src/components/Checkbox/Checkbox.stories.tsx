@@ -51,17 +51,8 @@ type Story = StoryObj<typeof meta>;
 
 export const Playground: Story = {};
 
-/**
- * Every state at once.
- *
- * Hover, pressed and focus are forced by setting the same DOM attributes the
- * base sets, so they are visible without interaction and reachable by a
- * screenshot tool. That is not faking a state — those are the attributes the
- * CSS targets.
- */
-
-export const States: Story = {
-  render: () => (
+function AllStates() {
+  return (
     <div className="catalog-stack" style={{ maxWidth: 420 }}>
       <Checkbox>Unchecked</Checkbox>
       <Checkbox defaultSelected>Checked</Checkbox>
@@ -108,6 +99,35 @@ export const States: Story = {
       >
         Invalid, with both messages
       </Checkbox>
+    </div>
+  );
+}
+
+/**
+ * Every state at once.
+ *
+ * Hover, pressed and focus are forced by setting the same DOM attributes the
+ * base sets, so they are visible without interaction and reachable by a
+ * screenshot tool. That is not faking a state — those are the attributes the
+ * CSS targets.
+ *
+ * It carries both modes, because a forced-state story is the only place
+ * those states are ever rendered: light alone leaves hover, pressed and
+ * focus in dark unmeasured by axe, which reads a rendered page, and
+ * unphotographed by the visual suite. That gap held a pressed primary
+ * button at 2.08:1 under 501 stories and 211 baselines, all green
+ * (doc 10 §11.9).
+ */
+
+export const States: Story = {
+  render: () => (
+    <div className="catalog-pair">
+      <Scope label="Light" mode="light">
+        <AllStates />
+      </Scope>
+      <Scope label="Dark" mode="dark">
+        <AllStates />
+      </Scope>
     </div>
   )
 };

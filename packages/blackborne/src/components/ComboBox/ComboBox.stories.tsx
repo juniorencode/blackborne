@@ -234,20 +234,20 @@ export const Overview: Story = {
 };
 
 /**
- * All eight states of doc 07 §6, and this field has all eight.
+ * The rows, so the story below can render them once per mode.
  *
- * **Read-only is the one a `Select` cannot have.** A select is either offered
- * or it is not; a combo box holds text you can read, select and copy, so "you
- * may not change this" is a state with something to show. Its toggle goes
- * unreachable with the value still readable — the room it takes stays, because
- * closing the gap would slide the text across (doc 07 §2.2 rule 1).
- *
- * **And there is no clear button in any of them.** Rule 5 of the same section:
- * the trailing edge belongs to the toggle, because a pointer has no other way
- * to ask for the whole list.
+ * `focus` is a parameter rather than a row because only one of the two
+ * panels may ask for it, for the reason `Focused` gives above: one element
+ * in a document holds focus.
  */
-export const States: Story = {
-  render: args => (
+function AllStates({
+  args,
+  focus
+}: {
+  args: ComboBoxOneProps;
+  focus: boolean;
+}) {
+  return (
     <div className="catalog-stack" style={{ maxWidth: 320 }}>
       <ComboBox {...args} label="Default">
         {doctors}
@@ -263,11 +263,18 @@ export const States: Story = {
           {doctors}
         </ComboBox>
       </Force>
-      <Focused>
-        <ComboBox {...args} label="Focus">
-          {doctors}
-        </ComboBox>
-      </Focused>
+      {/*
+       * Real focus, so it is in the panel that can hold it and not in both:
+       * a second `Focused` would take the ring off the first and leave a row
+       * labelled "Focus" with nothing to show.
+       */}
+      {focus ? (
+        <Focused>
+          <ComboBox {...args} label="Focus">
+            {doctors}
+          </ComboBox>
+        </Focused>
+      ) : null}
       <ComboBox {...args} label="Chosen" defaultSelectedKey="vega">
         {doctors}
       </ComboBox>
@@ -299,6 +306,39 @@ export const States: Story = {
       <ComboBox {...args} label="Saving" isSaving defaultSelectedKey="vega">
         {doctors}
       </ComboBox>
+    </div>
+  );
+}
+
+/**
+ * All eight states of doc 07 §6, and this field has all eight.
+ *
+ * **Read-only is the one a `Select` cannot have.** A select is either offered
+ * or it is not; a combo box holds text you can read, select and copy, so "you
+ * may not change this" is a state with something to show. Its toggle goes
+ * unreachable with the value still readable — the room it takes stays, because
+ * closing the gap would slide the text across (doc 07 §2.2 rule 1).
+ *
+ * **And there is no clear button in any of them.** Rule 5 of the same section:
+ * the trailing edge belongs to the toggle, because a pointer has no other way
+ * to ask for the whole list.
+ *
+ * **And it is light AND dark**, which it was not until 2026-09-13. A
+ * forced-state story is the only place a forced state is ever rendered, so a
+ * light-only one leaves the hovered frame in dark mode measured by nothing at
+ * all: axe reads what is on a page and the visual suite photographs one. What
+ * lived in that gap on `Button` was a pressed primary at 2.08:1, under 501
+ * stories, 480 axe runs and 211 baselines (doc 10 §11.9).
+ */
+export const States: Story = {
+  render: args => (
+    <div className="catalog-pair">
+      <Scope label="Light" mode="light">
+        <AllStates args={args} focus />
+      </Scope>
+      <Scope label="Dark" mode="dark">
+        <AllStates args={args} focus={false} />
+      </Scope>
     </div>
   )
 };

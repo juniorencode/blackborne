@@ -135,6 +135,7 @@ written in the file.
 | **Behavior**                | The component from the perspective of someone using it, and never how fast the machine ran it (§11)                | Medium                  |
 | **Re-render**               | That typing in one field does not re-render its neighbours                                                         | Medium                  |
 | **Automated accessibility** | Contrast, missing labels, malformed ARIA. **Running**: axe against every story in the catalog                      | Medium                  |
+| **Token contrast**          | The rule of pairs and the focus ring, over the TOKENS rather than over a rendered page (§11.10)                    | Fast                    |
 | **Visual regression**       | What changed in appearance, and where. **Running**: 216 captures, generated in Docker so the tolerance can be zero | Slow                    |
 | **Package**                 | Types resolve, exports are correct, no side effects, and the public surface is a reviewed diff                     | Fast                    |
 | **Server**                  | That everything prerenders without mismatches                                                                      | Free: the site gives it |
@@ -1089,3 +1090,53 @@ Three things follow, and the first is the general one:
 The corollary is worth stating because it is the cheap version: when a check
 covers a MATRIX, ask which cells the fixtures actually visit. Counting the
 checks answers a different question.
+
+### 11.10 A rule with no check is a rule that has been true by luck
+
+§11.9 is about a check whose reach is decided by the stories. This is the
+sentence underneath it: **some rules have no check at all**, and the way to
+tell is to ask what would go red if the rule were broken.
+
+Three were audited on 2026-09-13 and all three answered "nothing":
+
+| the rule                                      | what enforced it             |
+| --------------------------------------------- | ---------------------------- |
+| doc 03 §4.0, a background declares its text   | axe, on pairs a story paints |
+| a forced state is visible in both modes       | nothing                      |
+| doc 03 §5 rule 2, 3:1 for a graphical element | nothing                      |
+
+The first is the interesting one, because it looks covered. axe measures the
+contrast of text on a RENDERED page, so a pair reaches it only if some
+component paints it in some story — and `--bb-accent-on` was the literal
+`#fff` for as long as the token layer had existed. It took shipping eighteen
+accents to find out that nine of them are under 4.5:1 with white text. The
+rule was written down from the beginning; it had never been measured.
+
+**So the test of a rule is not whether it is documented, it is what goes red.**
+Where the answer is "nothing", the rule has been true by luck for as long as
+nobody has written the code that breaks it.
+
+Two shapes came out of closing these, and both are worth reusing:
+
+**Derive the list where the naming IS the rule.** `--bb-X-on` is the text on
+`--bb-X` by definition, so `contrast.spec.ts` reads its pairs out of the
+CSSOM instead of carrying a copy. A list written in a check is a second copy of
+the thing checked, and this repository has already paid for that shape — five
+hand-written copies of one brand override had drifted apart, three of them
+missing steps, and every missing step fell back to the default while looking
+deliberate. What cannot be derived gets an explicit registry AND a test that
+compares the registry against a real rendered element, because a model of a
+ring is not a ring.
+
+**Assert an exemption in both directions.** Both new files carry a short list
+of things deliberately below the floor — a disabled control, and two focus
+grounds that are open defects. Each entry has to still FAIL: a row that rises
+above the floor reddens the file and the entry comes out. That is the
+`lint:rules` pattern, and it is what keeps an exemption list from becoming a
+place where things go to be forgotten.
+
+**And pinning a defect is not widening a check.** §11 forbids lowering a bar to
+make a run green. The two focus grounds are not lowered: they are recorded at
+the number they measure, they fail if they get worse, they fail if they get
+better, and the catalog's §7 carries the row. The alternative was to ship no
+check at all, which guards neither them nor the eleven grounds that pass.

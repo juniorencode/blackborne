@@ -165,33 +165,56 @@ export const Structures: Story = {
   )
 };
 
-/**
- * The states of one tab, in the row.
+/*
+ * The four rows, rendered once per mode.
  *
- * Four rows, and the third is the one that catches a mistake: **hover and
- * focus belong to the tab**, not to the component around it, so the forced
- * state names the tab it belongs to. A state written on the wrong element
- * lands in the DOM, matches no rule, and photographs identically to the
- * default — which is what the catalog's own helper exists to prevent and has
- * now caught three times.
+ * The mode is a PROP here rather than a scope around the whole set, because
+ * the panels are the scopes: `Scope` always writes `data-bb-mode`, which is
+ * the attribute that decides which mapping applies and the one the
+ * forced-state check reads, so a `Scope` inside a `Scope` would win and leave
+ * both halves light.
  */
-export const States: Story = {
-  render: args => (
+function AllStates({
+  args,
+  mode
+}: {
+  args: React.ComponentProps<typeof Tabs>;
+  mode: 'light' | 'dark';
+}) {
+  const where = mode === 'dark' ? 'Dark' : 'Light';
+
+  return (
     <div className="catalog-stack">
-      <Scope label="Default · the first tab is open" width={560}>
+      <Scope
+        label={`${where} · Default · the first tab is open`}
+        mode={mode}
+        width={560}
+      >
         <Tabs {...args}>{invoice}</Tabs>
       </Scope>
-      <Scope label="Hover, on the tab that is not open" width={560}>
+      <Scope
+        label={`${where} · Hover, on the tab that is not open`}
+        mode={mode}
+        width={560}
+      >
         <Force state="data-hovered" target=".bb-tabs-tab:nth-child(2)">
           <Tabs {...args}>{invoice}</Tabs>
         </Force>
       </Scope>
-      <Scope label="Focus, on the tab that is not open" width={560}>
+      <Scope
+        label={`${where} · Focus, on the tab that is not open`}
+        mode={mode}
+        width={560}
+      >
         <Force state="data-focused" target=".bb-tabs-tab:nth-child(2)">
           <Tabs {...args}>{invoice}</Tabs>
         </Force>
       </Scope>
-      <Scope label="A tab that is present and not selectable" width={560}>
+      <Scope
+        label={`${where} · A tab that is present and not selectable`}
+        mode={mode}
+        width={560}
+      >
         <Tabs {...args}>
           <Tab id="lines" title="Lines">
             Three line items, and what they cost.
@@ -204,6 +227,34 @@ export const States: Story = {
           </Tab>
         </Tabs>
       </Scope>
+    </div>
+  );
+}
+
+/**
+ * The states of one tab, in the row.
+ *
+ * Four rows, and the third is the one that catches a mistake: **hover and
+ * focus belong to the tab**, not to the component around it, so the forced
+ * state names the tab it belongs to. A state written on the wrong element
+ * lands in the DOM, matches no rule, and photographs identically to the
+ * default — which is what the catalog's own helper exists to prevent and has
+ * now caught three times.
+ *
+ * AND IT IS LIGHT AND DARK, stacked rather than side by side because the row
+ * of tabs only exists above the medium step and every panel here is therefore
+ * 560px wide. Hover and focus are reachable only by pointing at the thing, so
+ * this story is the ONLY place either is ever rendered — and a light-only one
+ * leaves both unmeasured in dark by every automated layer here: axe reads what
+ * is on a page and the visual suite photographs one. What lived in that gap on
+ * `Button` was a pressed primary in dark at 2.08:1, under 501 stories and 211
+ * baselines (doc 10 §11.9).
+ */
+export const States: Story = {
+  render: args => (
+    <div className="catalog-stack">
+      <AllStates args={args} mode="light" />
+      <AllStates args={args} mode="dark" />
     </div>
   )
 };
