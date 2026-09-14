@@ -303,7 +303,23 @@ export const ConfirmDialog = forwardRef<HTMLDivElement, ConfirmDialogProps>(
                * before the way through.
                */}
               <Button
-                variant="secondary"
+                /*
+                 * LINK, not secondary. The way out of a confirmation is not a
+                 * second offer of equal weight: a bordered button beside a
+                 * filled one reads as two choices being presented, and doc 09
+                 * §5.5 already says which of the two this dialog wants reached
+                 * by reflex. Ordinary text until pointed at, at the far end of
+                 * the bar — `FOOTER` is what pins it there.
+                 *
+                 * AND IT CHANGES WHAT FOCUS LOOKS LIKE HERE, which matters
+                 * more on this button than on any other in the library. This
+                 * variant switches the ring off and puts an underline in its
+                 * place — a real indicator, deliberately, and doc 06 allows a
+                 * focus indicator to be CHANGED and never removed. This is the
+                 * one control the library focuses on open, so the underline is
+                 * doing a job the ring does everywhere else.
+                 */
+                variant="link"
                 /*
                  * The one `autoFocus` in the library, and the lint rule that
                  * forbids it is right in general — doc 06 §4 point 8 lists

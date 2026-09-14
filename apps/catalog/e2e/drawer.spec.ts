@@ -324,27 +324,36 @@ test.describe('doc 08 §6, the case the document names', () => {
 });
 
 test.describe('scrolling', () => {
-  test('the drawer scrolls from the keyboard the moment it opens', async ({
-    page
-  }) => {
+  test('the drawer scrolls its body from the keyboard', async ({ page }) => {
     /*
      * The same structural rule as `Dialog`, and worth asserting again on this
-     * component rather than trusting the shared sheet: a browser scrolls the
-     * nearest scrollable ANCESTOR of what has focus, and the base focuses the
-     * element carrying `role="dialog"`. If the scroll ever moved to an inner
-     * body element, no key would reach it and no screenshot would say so.
+     * component rather than trusting the shared sheet.
+     *
+     * It used to read: focus the panel the way opening does, press `PageDown`,
+     * the panel scrolls — true while the scrolling element and the element the
+     * base focuses were the same one. The scroll moved to the body on
+     * 2026-09-14 so the bar spans the content (doc 08 §4.1), which makes the
+     * scroller a descendant of the focused element and costs the immediacy.
+     * The route back is a tab stop on the region, and this presses a key at it
+     * because nothing else would notice it going.
      */
     await gotoStory(page, 'components-drawer--scrolling');
 
     const panel = page.getByRole('dialog');
     await expect(panel).toBeVisible();
 
-    await panel.evaluate(node => (node as HTMLElement).focus());
-    expect(await panel.evaluate(node => node.scrollTop)).toBe(0);
+    /* The panel does not scroll; the body does. Both halves. */
+    expect(
+      await panel.evaluate(node => node.scrollHeight - node.clientHeight <= 1)
+    ).toBe(true);
 
+    const body = page.locator('.bb-layer-body');
+    expect(await body.evaluate(node => node.scrollTop)).toBe(0);
+
+    await body.focus();
     await page.keyboard.press('PageDown');
     await expect
-      .poll(() => panel.evaluate(node => node.scrollTop), { timeout: 1000 })
+      .poll(() => body.evaluate(node => node.scrollTop), { timeout: 1000 })
       .toBeGreaterThan(0);
   });
 });

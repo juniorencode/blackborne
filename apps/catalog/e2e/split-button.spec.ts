@@ -12,6 +12,7 @@
  * browser.
  */
 import { expect, test } from '@playwright/test';
+import { animationsSettled, painted } from './settle';
 import { gotoStory } from './story';
 
 const OVERVIEW = 'components-splitbutton--overview';
@@ -183,12 +184,37 @@ test('the menu lands under the arrow, aligned to its outer edge', async ({
   await page.locator('.bb-split-button-arrow').click();
   await expect(page.getByRole('menu')).toBeVisible();
 
+  /*
+   * AND WAIT FOR IT TO STOP MOVING. A layer animates IN, so "visible" is the
+   * start of a journey rather than the end of one, and a box read during it is
+   * a box from somewhere along the way.
+   *
+   * Measured on 2026-09-14: settled, the panel's end is at 1268 against the
+   * arrow's 1277 — comfortably inside. Read the instant it became visible, the
+   * same panel reported 1280, which is the window's own edge, and the check
+   * failed on an alignment that was correct.
+   *
+   * It had been passing by luck: a layer's entry was 160ms until doc 09 §2.0
+   * split one duration band into two, and at 300 the window to be wrong in is
+   * nearly twice as wide.
+   */
+  await painted(page);
+  await animationsSettled(page);
+
   const boxes = await page.evaluate(() => {
     const a = document
       .querySelector('.bb-split-button-arrow')!
       .getBoundingClientRect();
+    /*
+     * THE PANEL, NOT THE LIST INSIDE IT. This read `[role="menu"]` until
+     * 2026-09-14, which was the same box only while the panel's horizontal
+     * padding was there to make it so. `Menu` moved that inset onto its
+     * commands — so dividers could run edge to edge — and the list grew out to
+     * the panel's own edge, reporting a 2px misalignment in a panel that had
+     * not moved at all. Alignment is a fact about the painted box.
+     */
     const panel = document
-      .querySelector('[role="menu"]')!
+      .querySelector('.bb-layer-panel')!
       .getBoundingClientRect();
     return {
       arrow: { left: a.left, right: a.right, bottom: a.bottom },

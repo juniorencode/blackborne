@@ -116,7 +116,7 @@ the run died with `EPIPE` from a process writing into nothing.
 
 ## What is captured, and what is not
 
-221 captures, not all 517 stories. Photographing every story would be slow and
+214 captures, not all 507 stories. Photographing every story would be slow and
 most of the extra shots would be near-duplicates that fail together and teach
 nothing — a component's four sizes move as one, and a suite where one token
 change turns thirty pictures red says less than one where it turns three.

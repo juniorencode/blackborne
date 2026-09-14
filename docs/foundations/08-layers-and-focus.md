@@ -130,7 +130,14 @@ The rule for anything new: a layer never closes a layer it did not open.
   holds the keyboard is point 10 of
   [doc 06](./06-accessibility.md) §4 exactly.
 
-  Two more things came out of the same measurement, and they shape the
+  **And the component it was written for is gone.** `Preview` was removed on
+  2026-09-14 (catalog §7). Everything above stays because none of it is about
+  our component: the base still excludes `PreviewTrigger` from containment by
+  name, that exclusion is still defeated by nesting a `role="dialog"` inside
+  it, and both were measured in a browser. Anyone building a hover card on this
+  base meets all of it again.
+
+  Two more things came out of the same measurement, and they shaped the
   component rather than just forbidding a structure:
 
   - **A preview's panel is an UNNAMED dialog by default.** The base gives it
@@ -158,6 +165,52 @@ The rule for anything new: a layer never closes a layer it did not open.
 - **Nothing is autofocused** beyond the layer container itself. Focusing a
   specific control on open is a per-component decision that needs a reason
   ([doc 06](./06-accessibility.md) §4, point 8).
+
+### 4.1 The body scrolls, and the keyboard is bought back rather than assumed
+
+**Decision, 2026-09-14: a layer's BODY is its scroll container, and the region
+is a tab stop while it has somewhere to go.**
+
+**What it replaced, and why that was right first.** The scroll used to be on
+the element carrying `role="dialog"` — the same element the base focuses on
+open. A browser scrolls the nearest scrollable ANCESTOR of whatever has focus,
+so the arrows and `PageDown` worked from the moment a layer appeared, with
+nothing to wire. The header and footer were `sticky` INSIDE that scroller so
+they would travel with the content and pin themselves.
+
+**What it cost.** A scrollbar belongs to its scroll container, so the bar ran
+the full height of the panel — past a pinned header and a pinned footer, over
+content that occupies neither. The stickiness was machinery in aid of a bar in
+the wrong place.
+
+**What moving it costs, measured rather than estimated.** An inner scroller is
+a DESCENDANT of the focused element, so the keys reach nothing until something
+inside is focused. The route back is the one WCAG 2.1.1 asks for and axe's
+`scrollable-region-focusable` rule checks: the region is a tab stop.
+`internal/useScrollableRegion` makes it one only while it overflows, because a
+tab stop on a region with nothing to scroll is a stop that lands on nothing.
+
+The residual cost is that scrolling is **no longer immediate**. Measured on
+`Dialog / Scrolling`, from the state opening leaves you in: two stops, in
+order — the close button, then the region. `layer.spec.ts` asserts that list
+exactly, so a third stop appearing between them turns red.
+
+**Three things follow, and all three have been paid once.**
+
+1. **The header and footer must not shrink.** They are ordinary flex items now
+   rather than sticky children, and a flex item's default `flex-shrink` is 1 —
+   a long body would take the difference out of the title rather than out of
+   itself. `flex-none` on both.
+2. **The body and the sheet both take `flex-auto`, never `flex-1`.** A basis of
+   zero stops an element contributing its own height, and a `Dialog`'s panel is
+   sized BY its contents. Measured with the wrong one: a `Drawer`'s panel was
+   900px and its sheet 316, leaving the footer 584px from the bottom of the
+   layer it belongs to.
+3. **A hook that observes needs a jsdom guard.** `ResizeObserver` does not
+   exist there, and wiring this one in without checking threw in eleven of
+   `Dialog`'s thirteen unit tests and fifteen of `Drawer`'s sixteen. Where
+   there is no observer the answer is "nothing to scroll", which is also what a
+   first paint says.
 
 ## 5. Dismissable is a decision, not a default
 

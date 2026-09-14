@@ -1028,62 +1028,19 @@ const captureAfterHover = async (
 };
 
 /*
- * The hover layers. One per mode plus the two that carry a rule: the arrow
- * turning with the direction, and a long value wrapping at the maximum width
- * rather than spanning the window.
+ * The hover layer. One per mode plus the three that carry a rule: the arrow
+ * turning with the direction, a long value wrapping at the maximum width
+ * rather than spanning the window, and rich children.
+ *
+ * It was two layers until 2026-09-14, when `Preview` was removed — seven of
+ * these rows went with it.
  */
 const ON_HOVER: Array<[string, string, string, string?]> = [
   ['components-tooltip--light', 'tooltip-light', 'trigger'],
   ['components-tooltip--dark', 'tooltip-dark', 'trigger'],
   ['components-tooltip--direction', 'tooltip-rtl', 'trigger'],
   ['components-tooltip--long-text', 'tooltip-long-text', 'trigger'],
-  ['components-tooltip--nodes', 'tooltip-nodes', 'trigger'],
-  /*
-   * The preview, the second hover layer and the first one with a picture worth
-   * arguing about: `preview-interactive` is the shot that shows what separates
-   * this component from a tooltip, because the thing in the card is something
-   * you can press.
-   *
-   * `preview-long-text` is here for the reason `Popover` taught: the panel is
-   * content-sized, and the failure mode of a content-sized panel is a picture
-   * nobody took. Its width is asserted in `preview.spec.ts` as well, with a
-   * floor.
-   */
-  ['components-preview--light', 'preview-light', 'trigger', '.bb-preview'],
-  ['components-preview--dark', 'preview-dark', 'trigger', '.bb-preview'],
-  [
-    'components-preview--interactive',
-    'preview-interactive',
-    'trigger',
-    '.bb-preview'
-  ],
-  [
-    'components-preview--text-only',
-    'preview-text-only',
-    'trigger',
-    '.bb-preview'
-  ],
-  [
-    'components-preview--long-text',
-    'preview-long-text',
-    'trigger',
-    '.bb-preview'
-  ],
-  /* The preview's own two axes: RTL, where the card aligns to the other edge of
-     its trigger and the arrow turns with it, and density on its paddings —
-     which moves the size of the box itself, because the width is the content's. */
-  [
-    'components-preview--direction',
-    'axis-preview-rtl',
-    'trigger',
-    '.bb-preview'
-  ],
-  [
-    'components-preview--compact',
-    'axis-preview-compact',
-    'trigger',
-    '.bb-preview'
-  ]
+  ['components-tooltip--nodes', 'tooltip-nodes', 'trigger']
 ];
 
 /*

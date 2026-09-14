@@ -51,7 +51,26 @@ const MENU_PANEL = cx(
   PANEL,
   'bb:min-h-0',
   'bb:border bb:rounded-lg',
-  'bb:p-(--bb-space-1)'
+  /*
+   * AIR ABOVE AND BELOW ONLY, AND NONE AT THE SIDES — which is the opposite
+   * of what it looks like it should be, and the reason is the separator.
+   *
+   * A command has to be inset from the panel's edges so its highlight reads as
+   * a row inside a box rather than as a band reaching the border. A divider
+   * has to do the other thing: run edge to edge, or it reads as a short line
+   * floating in the middle of a list.
+   *
+   * Padding here would inset BOTH, and buying the divider back means a
+   * negative margin on it — which the list clips. `overflow-y: auto` forces
+   * the other axis to compute to `auto` as well, so the escape either
+   * disappears or grows a horizontal scrollbar, and both are worse than the
+   * thing being fixed.
+   *
+   * So the inset belongs to the COMMANDS, as a margin of their own, and the
+   * divider simply does not take one. No negative values, nothing to clip, and
+   * the scrollbar sits against the panel's edge where it belongs.
+   */
+  'bb:py-(--bb-space-2)'
 );
 
 /*
@@ -88,6 +107,11 @@ const ITEM_BASE = cx(
      door, at the size that makes it invisible. */
   'bb:flex-none',
   'bb:gap-x-(--bb-space-3) bb:px-(--bb-space-3) bb:py-(--bb-space-2)',
+  /*
+   * The inset from the panel's sides, carried here rather than by the panel —
+   * see the note on `MENU_PANEL`, which is where the reasoning lives.
+   */
+  'bb:mx-(--bb-space-2)',
   'bb:rounded-md bb:cursor-pointer bb:select-none',
   'bb:outline-hidden',
   /*
@@ -145,7 +169,13 @@ const ITEM_TONE = {
 /** A line between groups of commands. */
 const SEPARATOR = cx(
   'bb-menu-separator',
-  'bb:my-(--bb-space-1) bb:border-t bb:border-border'
+  /*
+   * Edge to edge, which is why it carries no horizontal margin while every
+   * command carries one. The vertical space is a step up from where it was:
+   * a divider with 2px either side reads as a line that happened to land
+   * between two rows rather than as the boundary it is.
+   */
+  'bb:my-(--bb-space-2) bb:border-t bb:border-border'
 );
 
 export type MenuItemTone = 'neutral' | 'danger';

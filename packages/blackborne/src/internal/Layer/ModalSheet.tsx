@@ -2,6 +2,7 @@ import { Dialog as AriaDialog, Heading } from 'react-aria-components';
 import { Button } from '../../components/Button';
 import { NoButtonSet } from '../buttonAppearance';
 import { useMessage } from '../../config';
+import { useScrollableRegion } from '../useScrollableRegion';
 import { BODY, FOOTER, HEADER, SHEET, TITLE } from './layerBox';
 import { CrossGlyph } from '../CrossGlyph';
 
@@ -29,6 +30,8 @@ export function ModalSheet({
   footer
 }: ModalSheetProps): React.ReactNode {
   const closeLabel = useMessage('close');
+  const { ref: bodyRef, tabIndex: bodyTabIndex } =
+    useScrollableRegion<HTMLDivElement>();
 
   return (
     /*
@@ -85,10 +88,24 @@ export function ModalSheet({
             variant="ghost"
             size="sm"
             aria-label={closeLabel}
-            // -my/-me pull the button's own padding back so the cross aligns
-            // with the title's first line and the panel's inner edge, rather
-            // than sitting a hair inside both.
-            className="bb:-my-1 bb:-me-2 bb:flex-none"
+            /*
+             * `-my-1` only, and the `-me-2` that used to sit beside it is
+             * gone.
+             *
+             * Its comment said the pull aligned the cross with "the panel's
+             * inner edge", and measured, it did not: the button's box came to
+             * rest 8px from the panel while the footer's action rests at 16,
+             * and the cross's own ink landed at 21px — past the 16px padding
+             * edge it was supposed to meet, and nowhere near the footer
+             * button. Neither alignment, from a number nobody had checked.
+             *
+             * With the pull gone the two boxes agree at 16px, which is what a
+             * person compares: the way out at the top and the way through at
+             * the bottom, the same distance from the same edge. The vertical
+             * pull stays — that one is about the title's first line, which is
+             * a different question and still true.
+             */
+            className="bb:-my-1 bb:flex-none"
           >
             {/*
              * The library's own cross, shared rather than copied — the same
@@ -102,7 +119,15 @@ export function ModalSheet({
           </Button>
         </header>
 
-        <div className={BODY}>{children}</div>
+        {/*
+         * The scroll region, and a tab stop while it has somewhere to go.
+         * `useScrollableRegion` says why it is conditional and what it
+         * observes; doc 08 §4.1 says why the scroll is here at all rather
+         * than on the element the base focuses.
+         */}
+        <div className={BODY} ref={bodyRef} tabIndex={bodyTabIndex}>
+          {children}
+        </div>
 
         {footer === undefined || footer === null ? null : (
           <footer className={FOOTER}>{footer}</footer>

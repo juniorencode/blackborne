@@ -136,7 +136,7 @@ written in the file.
 | **Re-render**               | That typing in one field does not re-render its neighbours                                                         | Medium                  |
 | **Automated accessibility** | Contrast, missing labels, malformed ARIA. **Running**: axe against every story in the catalog                      | Medium                  |
 | **Token contrast**          | The rule of pairs and the focus ring, over the TOKENS rather than over a rendered page (§11.10)                    | Fast                    |
-| **Visual regression**       | What changed in appearance, and where. **Running**: 221 captures, generated in Docker, with no pixel budget at all | Slow                    |
+| **Visual regression**       | What changed in appearance, and where. **Running**: 214 captures, generated in Docker, with no pixel budget at all | Slow                    |
 | **Package**                 | Types resolve, exports are correct, no side effects, and the public surface is a reviewed diff                     | Fast                    |
 | **Server**                  | That everything prerenders without mismatches                                                                      | Free: the site gives it |
 | **Manual**                  | Keyboard always; screen reader on the complex ones                                                                 | Minutes                 |

@@ -350,6 +350,46 @@ minor versions. Every break is listed here with its migration.
 
 ### Changed
 
+- **A layer's footer is shorter, and its way out sits at the far end.** The
+  padding is 12px vertically where it was 16 — a bar of 36px controls was the
+  tallest band in the panel for the least content — and it stays at 16
+  horizontally, because the header and the body use that step and the leading
+  edge of a column has to agree with itself. `FOOTER` pushes the FIRST action
+  to the leading edge when there is more than one, so a way out and a way
+  through sit at opposite ends rather than grouped as equals. A lone button
+  does not move: `:not(:last-child)` is load-bearing.
+
+  `ConfirmDialog`'s cancel is a `link` rather than a bordered button, and the
+  catalog's own `Dialog` and `Drawer` footers follow. One consequence is worth
+  knowing: that variant trades the focus ring for an underline, deliberately,
+  and this is the one control the library focuses on open.
+
+- **A layer's close button lines up with its footer action.** It carried a
+  negative inline margin whose comment said the pull aligned the cross with the
+  panel's inner edge; measured, the box came to rest 8px from the panel while
+  the footer's action rested at 16, and the cross's own ink landed at 21 —
+  neither alignment, from a number nobody had checked. Both boxes are at 16
+  now.
+
+- **A layer scrolls its BODY rather than its panel**, so the bar spans the
+  content instead of running past a pinned header and a pinned footer. Doc 08
+  §4.1 has the decision, what it costs and the three things that follow. The
+  short version: the header and footer are ordinary rows again, the scroll
+  region is a tab stop while it overflows, and scrolling from the keyboard is
+  no longer immediate — two stops, asserted in that order.
+
+  **A `Drawer`'s footer sits at the bottom** as part of the same change, which
+  it did not before: the sheet now fills its panel. Measured, a 900px drawer
+  had a 316px sheet.
+
+- **A `Menu`'s commands are inset from the panel and its dividers are not.**
+  The inset is a margin on the COMMANDS rather than padding on the panel, which
+  is the opposite of the obvious arrangement and the only one that works:
+  padding would inset the dividers too, and buying them back means a negative
+  margin that the list clips — `overflow-y: auto` forces the other axis to
+  `auto` as well, so the escape either disappears or grows a horizontal
+  scrollbar.
+
 - **The page is white in light mode**, and the base axis no longer reaches it
   there. `--bb-surface` is the literal `#fff` rather than step 1 of the grey
   scale, so a field's fill reads as a well rather than as a slightly different
@@ -474,6 +514,30 @@ minor versions. Every break is listed here with its migration.
   the local numbers would have predicted the direction of either.
 
 ### Removed
+
+- **`Preview`**, the hover card, built and shipped and taken out again during
+  the layer review on 2026-09-14. `Preview` and `PreviewProps` are gone from
+  the public surface, which is a **breaking change** for anybody who imported
+  them; nothing else in the library referred to it.
+
+  **Why.** What it does is open a card on hover, and every route that is not a
+  pointer is narrower than it looks: on touch there is no hover at all, and the
+  keyboard route is the base's rather than something a person would find. So
+  its audience is pointer users on a pointer device, and the component that
+  serves everybody for the same job is a `Popover` — a press, a panel that
+  stays, a close button and `Escape`.
+
+  **Migration**: a `Preview` becomes a `Popover` whose trigger is the same
+  element. The content moves across unchanged; what changes is that it opens on
+  a press rather than on hover, and it carries a close button.
+
+  **What is kept rather than tidied away.** Everything it measured is about the
+  BASE and stays where it was made: doc 08 §4's reading of `PreviewTrigger`
+  being excluded from focus containment by name and that exclusion being
+  defeated by a nested `role="dialog"`, doc 09's note on the 600ms open delay
+  being the dependency's default, and doc 06 §2's second heading case, which
+  now has no instance in the library and says so. Those are measurements
+  attached to events, and doc 10 §12 says they are correct forever.
 
 - **`--bb-border-control`**, which had no readers left. It was a field's edge
   when a field's edge differed from every other border; the two are one colour

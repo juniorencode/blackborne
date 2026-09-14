@@ -1714,13 +1714,6 @@ type PopoverProps
   style? (own)
   title (own)
   trigger (own)
-value Preview: ForwardRefExoticComponent<PreviewProps & RefAttributes<HTMLElement>>
-type PreviewProps
-  children? (own)
-  isDisabled? (own)
-  placement? (own)
-  title (own)
-  trigger (own)
 value Progress: ForwardRefExoticComponent<ProgressProps & RefAttributes<HTMLDivElement>>
 type ProgressProps
   className? (own)

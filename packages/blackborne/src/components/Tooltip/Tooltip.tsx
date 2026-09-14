@@ -62,8 +62,11 @@ export interface TooltipProps {
    * interactive in here exists for a pointer and for nobody else. And on a
    * touch device it does not appear at all, because there is no hover.
    *
-   * Interactive content is a `Popover`. Content on hover that somebody may want
-   * to read at length, or select, is a `Preview`.
+   * Interactive content is a `Popover`. So is content somebody may want to read
+   * at length or select — that used to be a `Preview`, a hover card of its own,
+   * and the component was removed on 2026-09-14 (catalog §7). What the rule
+   * above is really saying is that a tooltip holds a SHORT description and
+   * nothing a person has to act on.
    */
   content: React.ReactNode;
   /**

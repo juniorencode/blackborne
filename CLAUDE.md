@@ -33,12 +33,13 @@ this file is out of date. Fix this file.
 assuming anything exists.
 
 At the time of writing: all ten foundations are written, the pipeline is
-complete, and **fifty-three components exist** — the ten simple fields and
+complete, and **fifty-two components exist** — the ten simple fields and
 controls, `Button` with `ButtonGroup`, `Slider`, the flat pieces around them
 (`Alert`, `Avatar`, `Badge`, `Card`, `EmptyState`, `Progress`, `Separator`,
-`Skeleton`, `Spinner`, `Steps`, `VisuallyHidden`), seven
-layers (`Dialog`, `Drawer`, `ConfirmDialog`, `Tooltip`, `Popover`, `Preview`,
-`Toast`), and the composition batch so far: `Accordion`, `Collapsible`, `Link`,
+`Skeleton`, `Spinner`, `Steps`, `VisuallyHidden`), six
+layers (`Dialog`, `Drawer`, `ConfirmDialog`, `Tooltip`, `Popover`, `Toast`) —
+it was seven until `Preview` was removed on 2026-09-14 — and the composition
+batch so far: `Accordion`, `Collapsible`, `Link`,
 `Breadcrumbs`, `Pagination`, `CursorPagination`, `Menu`, `Select`, `Tabs` and
 `SplitButton`. `ComboBox` is the thirty-seventh and the first of the batch
 that follows; `Calendar` and `RangeCalendar` are the thirty-eighth and

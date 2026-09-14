@@ -704,9 +704,10 @@ doc 02 §3.1.1's rule for a variant belonging to the set — and a React context
 does not stop at a portal. Measured with a probe in a popover's footer: it read
 `primary/sm` inside a row of small primary buttons, so a person opening that
 layer would have seen a footer of small primary buttons in a dialog.
-`internal/buttonAppearance` exports `NoButtonSet`, and four of the five layers
-close the set at ONE call site because they share `ModalSheet`; `Preview` says
-it itself, being the one layer that cannot use the sheet (doc 08 §4).
+`internal/buttonAppearance` exports `NoButtonSet`, and every layer closes the
+set at ONE call site, because they all share `ModalSheet`. That used to read
+"four of the five": `Preview` said it itself, being the one layer that could
+not use the sheet (doc 08 §4), and it was removed on 2026-09-14.
 
 The part worth carrying forward is why this arrives now. The exposure is not
 the context, it is **what the members are**: a radio inside a dialog inside a

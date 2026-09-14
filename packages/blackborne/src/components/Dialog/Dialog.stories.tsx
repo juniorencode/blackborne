@@ -53,8 +53,15 @@ void MISSING;
  */
 function CancelButton() {
   const { close } = useDialog();
+  /*
+   * `link`, not `secondary`, and the placement is the layer's rather than
+   * this button's: `FOOTER` pushes the first action to the leading edge when
+   * there is more than one. A way OUT is not a second offer of equal weight
+   * beside the way through — `ConfirmDialog` makes the same choice in code
+   * the library owns, and this is a consumer doing it in a footer it passes.
+   */
   return (
-    <Button variant="secondary" onPress={close}>
+    <Button variant="link" onPress={close}>
       Cancel
     </Button>
   );
