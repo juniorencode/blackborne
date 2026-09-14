@@ -24,7 +24,6 @@ import {
   useOwnedValue
 } from '../../internal/Field';
 import { useMessage } from '../../config';
-import { CheckGlyph } from '../../internal/CheckGlyph';
 import { ChevronGlyph } from '../../internal/ChevronGlyph';
 import { ANCHORED, LAYER_OFFSET, PANEL } from '../../internal/Layer';
 import { cx } from '../../internal/cx';
@@ -133,7 +132,51 @@ const crossId = (scope: string, index: number): string =>
  * works is the base's, and re-declaring it would be a second translation set
  * to maintain for nothing.
  */
-const TOGGLE = cx('bb-combobox-toggle', EDGE_BUTTON, 'bb:me-(--bb-space-1)');
+/*
+ * No trailing margin. It had one, and the gap it left meant the chevron was
+ * NEARLY at the edge — near enough to read as a misalignment rather than as
+ * an inset. A full-height control flush against the frame has nowhere to sit
+ * but the corner it finishes.
+ */
+const TOGGLE = cx('bb-combobox-toggle', EDGE_BUTTON);
+
+/*
+ * THE ONE FIELD WHOSE FRAME GROWS, and the one place `EDGE_BUTTON`'s square
+ * needed bounding.
+ *
+ * That class is `self-stretch` plus `aspect-square`, which is exactly right
+ * while a frame is one control tall: the height is the frame's and the width
+ * follows it. A combo box holding several values grows with its chips — and
+ * measured on a field with four of them, the toggle became a square as wide as
+ * the frame was tall and hung off the trailing edge.
+ *
+ * So the height is the frame's CONTENT height, spelled out: the size's height
+ * minus the frame's two borders, because the frame is `box-border` and a 44px
+ * frame has a 42px content box. A flat 44 pushed every one-row field in this
+ * component to 46 — measured, while every other field in the library stayed at
+ * 44 and stopped lining up with it.
+ *
+ * The subtraction is spelled with UNDERSCORES — `calc(var(--x)_-_2px)` — and
+ * that is not cosmetic. Tailwind turns an underscore in an arbitrary value
+ * into a space, and `calc()` requires whitespace around a `-` or the whole
+ * expression is invalid: written without them the class compiled to NOTHING,
+ * which is the FIFTH utility in this repository found to produce no rule at
+ * all while looking right in the source — after `w-control-md`, `size-box`,
+ * `min-w-hit` and `font-medium`. Grep the compiled stylesheet.
+ *
+ * A DEFINITE height and nothing else. `max-height` was tried and is worse than
+ * useless here: with no definite height, `aspect-square` has nothing to work
+ * from, so the button collapsed to the glyph's own width and the chevron came
+ * to rest against the frame's border — measured, one antialiased pixel between
+ * the glyph's arm and the edge. And `self-start` is not needed either: a flex
+ * item with a definite cross size ignores `stretch` and sits at the start on
+ * its own, which is what puts the square on the first chip row.
+ */
+const TOGGLE_HEIGHT: Record<ComboBoxSize, string> = {
+  sm: 'bb:h-[calc(var(--bb-control-height-sm)_-_2px)]',
+  md: 'bb:h-[calc(var(--bb-control-height-md)_-_2px)]',
+  lg: 'bb:h-[calc(var(--bb-control-height-lg)_-_2px)]'
+} satisfies Record<ComboBoxSize, string>;
 
 const CHEVRON = cx(
   'bb-combobox-chevron',
@@ -160,27 +203,38 @@ const LIST_PANEL = cx(
   PANEL,
   'bb:min-h-0',
   'bb:border bb:rounded-lg',
+  /*
+   * NO SHADOW. `PANEL` brings `shadow-lg`, which is right for a dialog or a
+   * drawer floating over a page — and a select's list is not floating over the
+   * page so much as hanging off the field, a few pixels below it.
+   *
+   * What holds it up instead is the border it already draws plus the raised
+   * fill: measured in light, the panel is #f7f9fb against a white page with a
+   * 1px edge, which is the same way the field above it is held. In dark the
+   * surface does the lifting anyway — doc 03 §5 rule 5, a shadow is barely
+   * visible on a dark ground — so nothing is lost there at all.
+   */
+  'bb:shadow-none',
+
   'bb:p-(--bb-space-1)'
 );
 
 const LIST = cx(
   'bb-combobox-options',
   'bb:box-border bb:flex bb:min-h-0 bb:flex-col',
+  'bb-scroller',
   'bb:overflow-y-auto bb:outline-hidden',
   'bb:font-sans bb:text-md bb:leading-normal'
 );
 
 /*
- * An option, and the tick that marks the chosen one.
+ * An option.
  *
  * Identical to `Select`'s two lists, by intention rather than by accident: the
  * library extracts a shared style at the FOURTH copy and this is the second
- * (the reasoning is on `controlBox`). Both of Select's arguments hold here
- * unchanged — `data-focused` rather than `data-hovered`, because a list has
- * one highlight and the base moves it with the pointer as well as with a key;
- * and a tick that is always rendered and merely invisible, because a tick
- * appearing takes its width with it and every label below would step sideways
- * as the highlight walked down the list.
+ * (the reasoning is on `controlBox`). Select's argument holds here unchanged —
+ * `data-focused` rather than `data-hovered`, because a list has one highlight
+ * and the base moves it with the pointer as well as with a key.
  */
 const OPTION = cx(
   'bb-combobox-option',
@@ -192,15 +246,54 @@ const OPTION = cx(
   'bb:text-text',
   'bb:transition-[background-color,color]',
   'bb:duration-(--bb-duration-fast) bb:ease-standard',
-  'bb:data-focused:bg-surface-hover',
+  /*
+   * `surface-raised-hover`, not `surface-hover`.
+   *
+   * These rows sit on a RAISED panel and not on the page, and `surface-hover`
+   * is chosen against the page — on a near-white panel it landed two steps
+   * away and read as a slab. The token that belongs to this ground is the one
+   * to use, and naming it is what made the second half visible: in dark it is
+   * still DARKER than the panel it sits on, where the same idea on the page
+   * goes lighter. That direction is an open decision, recorded in
+   * `semantic.css` rather than guessed at here.
+   */
+  'bb:data-focused:bg-surface-raised-hover',
   'bb:data-pressed:bg-surface-active',
+  /*
+   * THE CHOSEN ROW IS A SOFT ACCENT BAND, and it holds that band under the
+   * highlight rather than yielding to it.
+   *
+   * It used to be a tick at the trailing edge. The band says the same thing
+   * without a glyph, and `surface-selected` is the token already carrying it
+   * elsewhere — a tint of the brand rather than the brand, so it sits close to
+   * the panel instead of shouting over it, and it follows a consumer's own
+   * scale for free.
+   *
+   * The stacked pairs are the point: a list has ONE highlight and the base
+   * moves it on hover as well as on a key, so without them pointing at the
+   * chosen row would repaint it grey and it would stop looking chosen at the
+   * exact moment somebody reached for it. Two attributes outrank one, so this
+   * does not depend on the order Tailwind emits them.
+   *
+   * WEIGHT IS THE SECOND CHANNEL and it is load-bearing now rather than
+   * decorative: with the tick gone, weight is what survives greyscale and what
+   * separates "chosen" from "where the keyboard is" (doc 06 §3).
+   */
+  /*
+   * THE BAND ONLY. The row keeps `--bb-text`, so a chosen option reads in the
+   * page's own ink — black in light, white in dark — rather than in the brand.
+   *
+   * This paints a background WITHOUT using its `-on` companion, which is doc
+   * 03 §4.0's rule of pairs stepped around, so the numbers are here instead of
+   * an assumption: measured, `--bb-text` on this band is 13.4:1 in light and
+   * 12.3:1 in dark. The pair exists for a band that has to carry text of its
+   * own; this one is a tint of the page under the page's own text.
+   */
+  'bb:data-selected:bg-surface-selected',
   'bb:data-selected:font-strong',
+  'bb:data-selected:data-focused:bg-surface-selected',
+  'bb:data-selected:data-pressed:bg-surface-selected',
   'bb:data-disabled:cursor-not-allowed bb:data-disabled:text-text-disabled'
-);
-
-const TICK = cx(
-  'bb:h-mark bb:w-mark bb:flex-none bb:text-accent',
-  'bb:invisible bb:group-data-selected:visible'
 );
 
 /* Nothing matched. A row, rather than a list that closes — see the component. */
@@ -357,6 +450,20 @@ interface ComboBoxSharedProps extends Omit<
    * not show is a `WHERE` clause rather than a prop.
    */
   source?: ComboBoxSource;
+  /**
+   * A decorative mark at the START of the field.
+   *
+   * Doc 07 §2.2b and decision 0031. It arrives as a node you wrote — the
+   * library ships no icons and resolves no names — and the slot gives it its
+   * size and its colour.
+   *
+   * **Hidden from assistive technology**, because the label is always there
+   * and a mark can never be the only carrier of meaning. Something a person
+   * NEEDS in order to answer belongs in the label or the description.
+   *
+   * There is no trailing counterpart: that edge belongs to the field.
+   */
+  icon?: React.ReactNode;
   /**
    * Applied to the field's outermost element, for placement in the consumer's
    * layout. Nothing reaches an internal node (doc 02 §6).
@@ -615,6 +722,7 @@ export const ComboBox = forwardRef<HTMLInputElement, ComboBoxProps>(
       isLoading = false,
       isSaving = false,
       size = 'md',
+      icon,
       className,
       source,
       selectionMode = 'single'
@@ -848,12 +956,13 @@ export const ComboBox = forwardRef<HTMLInputElement, ComboBoxProps>(
           isSaving={isSaving}
         >
           <ControlFrame
+            {...(icon === undefined ? {} : { icon })}
             className={cx(
               several ? GROWS[size].frame : SIZE[size].frame,
               several && GROWS[size].text
             )}
             trailing={
-              <AriaButton className={TOGGLE}>
+              <AriaButton className={cx(TOGGLE, TOGGLE_HEIGHT[size])}>
                 <ChevronGlyph className={CHEVRON} />
               </AriaButton>
             }
@@ -908,7 +1017,6 @@ export const ComboBox = forwardRef<HTMLInputElement, ComboBoxProps>(
                   <span className="bb:min-w-0 bb:truncate">
                     {option.children}
                   </span>
-                  <CheckGlyph className={TICK} />
                 </AriaListBoxItem>
               ))}
               {source === undefined ? null : (

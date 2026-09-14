@@ -251,20 +251,39 @@ equivalent check found nothing: no layer-2 token resolves to step 7 in either
 mode. Named for the role rather than for `Switch`, on `surface-overlay`'s
 precedent, and it has one reader today.
 
-**`surface-raised` deliberately equals `surface` in light mode**, and that is
+**`surface-raised` carries elevation differently in the two modes**, and it is
 the clearest example of §6.1's rule that a token may be restated when its role
-genuinely differs between modes. In light, elevation is carried by the SHADOW,
-so a floating panel takes the lightest surface there is and the shadow does the
-lifting. In dark it cannot — §5 rule 5, a shadow is barely visible on a dark
-ground — so the dark block restates it two steps up, which the dark scale makes
-lighter than the page.
+genuinely differs between them. In dark it cannot use a shadow — §5 rule 5, a
+shadow is barely visible on a dark ground — so the surface does the lifting and
+the dark block restates it lighter than the page.
 
+**In light it used to equal the page exactly, and as of 2026-09-13 it does
+not.** The reasoning for the identity was sound and is worth keeping in view: in
+light, elevation is what a shadow is FOR, so a floating panel could take the
+lightest surface there is and let the shadow do the work. What changed is that
+the panel read as nothing at all against a near-white page once its shadow was
+softened — a select's list is not a dialog floating over a page, it hangs off
+the field a few pixels below — so the panel now has a faint body of its own AND
+its shadow. One step, not two: enough to be a surface, not enough to be a slab.
+
+**What that cost, recorded rather than discovered later.** The token has two
+kinds of reader and they no longer want the same thing. A dialog, a popover, a
+menu and a toast float OVER the page and are better for having a body. An
+`Accordion` is inside the page — inside a `Card`, in one of this catalog's own
+stories — and a body makes it darker than the thing containing it, which
+inverts what the name asserts. The catalog's §7 carries the row. A second token
+for "a section with its own surface" is the obvious answer and has not been
+earned yet: one reader is not a pattern.
+
+There is an older correction under this one, and it is why the identity existed.
 It was step 2 until `Dialog` became its first reader, and measured against the
 page that was elevation pointing the wrong way: 0.9486 relative luminance
 against the page's 0.9741, so the "raised" surface was **darker** than what it
 floats above, at 1.03:1 — imperceptible, and imperceptibly backwards. A scrim
 hides it, which is why a dialog would never have exposed it; a popover has no
-scrim.
+scrim. Step 2 is where it has landed again, and the difference is that this time
+it is a body chosen against a measurement rather than a value nobody had looked
+at.
 
 **Content** — three levels, no more:
 `text` (primary) · `text-muted` (secondary) · `text-disabled` · `link`

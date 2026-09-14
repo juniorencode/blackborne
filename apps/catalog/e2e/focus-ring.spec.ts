@@ -87,8 +87,35 @@ const FLOOR = 3;
  * carries the row.
  */
 const OPEN: Record<string, number> = {
-  'dark · a primary Button, and a selected checkbox, radio or switch': 2.59,
-  'dark · a hovered Table row': 2.55
+  /*
+   * 2.2, and it was 2.59 until 2026-09-13. It got worse without the button or
+   * the ring changing: the halo is TRANSLUCENT, so it composites over the page,
+   * and the dark page moved up the scale. A pinned number is a measurement of a
+   * pair, and this pair has one half in the page.
+   */
+  'dark · a primary Button, and a selected checkbox, radio or switch': 2.2,
+  'dark · a hovered Table row': 2.55,
+  /*
+   * THREE MORE ON 2026-09-13, and they arrived together for one reason worth
+   * stating: none of these three grounds was touched. The surfaces UNDER them
+   * moved — the dark page up the scale, the raised panel with it, the selected
+   * tint one step — and the ring fell through the floor on all three.
+   *
+   * Measured across the dark scale, the accent against a panel: step 3 is
+   * 3.08:1, step 4 is 2.81, step 5 is 2.55, step 7 is 1.81. The ring is the
+   * ACCENT, a mid-dark blue, so the lighter a dark surface gets the less
+   * contrast it has — and doc 03 §5 rule 5 says elevation in dark IS a lighter
+   * surface. The two rules pull against each other, and no value of any
+   * surface token satisfies both.
+   *
+   * So this is not five separate defects. It is one, counted five times, and
+   * the catalog's §7 row already names the only fix that works: a gap of the
+   * surrounding surface between the fill and the ring. That is a change to
+   * every focused control in the library and it needs its own document.
+   */
+  'dark · a danger Button, whose ring is re-pointed to danger': 2.67,
+  'dark · an Accordion trigger': 2.81,
+  'dark · a selected Table row': 2.81
 };
 
 type Ground = {
@@ -119,8 +146,15 @@ const GROUNDS: Ground[] = [
     surface: '--bb-surface'
   },
   {
-    what: 'an invalid field, whose ring is re-pointed to danger',
-    ring: '--bb-danger',
+    /*
+     * `--bb-border-invalid` rather than `--bb-danger`, and that changed on
+     * 2026-09-13 with the token it names. An invalid field re-points the ring
+     * to the colour of its own EDGE, so the ring and the border a person is
+     * looking at are one colour — the solid step is a FILL, with white paired
+     * to it, and in dark it is two steps away from the edge.
+     */
+    what: 'an invalid field, whose ring is re-pointed to its edge',
+    ring: '--bb-border-invalid',
     fill: '--bb-surface-control',
     surface: '--bb-surface'
   },

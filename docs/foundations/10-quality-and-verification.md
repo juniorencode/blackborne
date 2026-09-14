@@ -136,7 +136,7 @@ written in the file.
 | **Re-render**               | That typing in one field does not re-render its neighbours                                                         | Medium                  |
 | **Automated accessibility** | Contrast, missing labels, malformed ARIA. **Running**: axe against every story in the catalog                      | Medium                  |
 | **Token contrast**          | The rule of pairs and the focus ring, over the TOKENS rather than over a rendered page (§11.10)                    | Fast                    |
-| **Visual regression**       | What changed in appearance, and where. **Running**: 216 captures, generated in Docker, with no pixel budget at all | Slow                    |
+| **Visual regression**       | What changed in appearance, and where. **Running**: 221 captures, generated in Docker, with no pixel budget at all | Slow                    |
 | **Package**                 | Types resolve, exports are correct, no side effects, and the public surface is a reviewed diff                     | Fast                    |
 | **Server**                  | That everything prerenders without mismatches                                                                      | Free: the site gives it |
 | **Manual**                  | Keyboard always; screen reader on the complex ones                                                                 | Minutes                 |
@@ -767,6 +767,32 @@ Three things are worth carrying:
    occurrences; the wait for the mount above it had none, and it is the one
    that kept failing. When a helper is instrumented, instrument all of its
    waits — the next mystery will choose the one that was skipped.
+
+**And the second occurrence, on 2026-09-14, gave the remedy a positive
+control** — which the first one could not, because the pool was never observed
+recovering.
+
+The diagnostic ran on its own this time and needed no console at all:
+`ColorPicker / Overview` failed one run, `Switch / In Settings Narrow` the next,
+neither repeated, both passed in isolation in about six seconds. The pool was
+**894 sockets in TIME_WAIT to the preview port** after the first run and 589
+after the second. Memory was 4.72GB free of 15.85 with no orphaned test process
+— the twenty node and browser processes on the machine had all been started days
+earlier by a person.
+
+Then the lever showed itself. The visual suite runs inside Docker, so its
+server and its sockets are in the container and it adds NOTHING to the host's
+pool: eight minutes of it, and the host count went **894 → 589 → 0**. The same
+suite, at the same two workers, on the same commit, then passed **518 of 518**.
+
+So point 2 gets a sharper form: the count changes the peak, and what actually
+runs out is a pool that is shared with every run before it. The state of that
+pool when a suite STARTS is the variable, which makes the cheapest remedy not
+`--workers=N` at all — it is to let the pool drain, which it does on its own in
+minutes once nothing on the host is loading stories. Check the count before
+lowering anything:
+
+    netstat -an | grep <port> | grep -c TIME_WAIT
 
 ### 11.6 An artefact nobody can open is a failure nobody can read
 

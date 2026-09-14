@@ -598,6 +598,12 @@ that truncates, which showed the ellipsis early for no reason anybody could
 see. It is `display: none` in there now, through a parent-scoped variant on the
 tick itself — and no baseline moved, because the box was invisible.
 
+**The tick itself is gone since 2026-09-13**, and the lesson is not: a chosen
+row is a soft band of the brand now, so there is no glyph for `SelectValue` to
+copy into the trigger. Anything rendered inside a collection row still arrives
+in the trigger with it, which is the part to remember before putting a second
+thing in one.
+
 **AND AN OPEN LAYER NEEDS `LayerPage` TO BE PHOTOGRAPHED AT ALL.** The visual
 suite screenshots `body`, whose box does not include an absolutely positioned
 child — so the first baseline of a picker with its list open came out as a
@@ -642,6 +648,18 @@ slider's knob collapsed to its border, looking like a styling accident rather
 than a missing utility. The theme's own comment records the same trap for
 `min-w-hit`; the way to check either is to grep the COMPILED stylesheet, which
 is where `.bb\:h-box` either exists or does not.
+
+**AND A SUBTRACTION INSIDE AN ARBITRARY VALUE IS SPELLED WITH UNDERSCORES.**
+The fifth utility in this repository to compile to nothing, after
+`w-control-md`, `size-box`, `min-w-hit` and `font-medium`. Tailwind turns an underscore in an arbitrary value into a
+space, and `calc()` requires whitespace around a `-` or the expression is
+invalid — so `h-[calc(var(--bb-control-height-md)-2px)]` is a class name with
+no rule behind it, while `h-[calc(var(--bb-control-height-md)_-_2px)]` emits
+`height: calc(var(--bb-control-height-md) - 2px)`. Written the first way on a
+combo box's toggle it left the button with no height, which left
+`aspect-square` with nothing to compute a width from, which put the chevron
+against the frame's border. Same remedy as every one before it: grep the
+compiled stylesheet.
 
 **`justify-between` PUTS A SINGLE ITEM AT THE START.** A hidden label is
 `sr-only`, which is out of flow — so a row of label-and-number with the label
@@ -1177,6 +1195,17 @@ layers, starting with `Dialog`, and each one applies to anything else portalled.
   lock with it, which would let an outside click both close the menu and press
   what is under it. Left alone, asserted in `menu.spec.ts`, and on doc 06 §5's
   screen-reader list.
+
+  **`Select` HAS taken that lever, and the difference is what a wrong click
+  costs.** A page that scrolls loses its scrollbar to the underlay's scroll
+  lock, and the whole layout jumps sideways by its width for the time it takes
+  to choose an option. The base's own `ComboBox` passes `isNonModal: true` to
+  the same component and always has, so the library was already shipping both
+  behaviours and the difference between two fields with a list was the base's
+  default rather than a decision of ours. A click that closes a list of options
+  and reaches what is under it is a different size of mistake from one that
+  closes a menu and fires a command.
+
 - **Danger-coloured TEXT is `--bb-danger-text`, never `--bb-danger`.** The
   solid step is for a fill whose pair carries the text. Reaching for it as text
   passes in light mode by coincidence — there the solid and the text step are

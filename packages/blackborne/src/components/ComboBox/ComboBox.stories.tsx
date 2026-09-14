@@ -11,6 +11,7 @@
  * declares one.
  */
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { DemoIcon } from '../../catalog/demoIcon';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { LayerPage } from '../../catalog/layerPage';
 import { Button } from '../Button';
@@ -181,6 +182,17 @@ const meta = {
    * The stories that hold several values write their props out instead.
    */
 } satisfies Meta<ComboBoxOneProps>;
+
+/*
+ * Forty rows, so the list SCROLLS — see the note on `Select`'s own long list:
+ * no list in this catalog overflowed, so the browser's light scrollbar inside
+ * a dark panel had never been rendered.
+ */
+const MANY = Array.from({ length: 40 }, (_, i) => (
+  <ComboBoxItem key={`row-${i + 1}`} id={`row-${i + 1}`}>
+    {`Option number ${i + 1}`}
+  </ComboBoxItem>
+));
 
 export default meta;
 /*
@@ -1051,4 +1063,47 @@ export const WaitingForAQuery: Story = {
 
     return <Demo />;
   }
+};
+
+/* One mode per story — see the note on `Select`'s pair, and on `Opened`. */
+export const LongList: Story = {
+  render: () => (
+    <LayerPage label="Forty options, so the bar is drawn.">
+      <Opened>
+        <div style={{ width: 280 }}>
+          <ComboBox label="Status" defaultSelectedKey="row-3">
+            {MANY}
+          </ComboBox>
+        </div>
+      </Opened>
+    </LayerPage>
+  )
+};
+
+export const LongListDark: Story = {
+  render: () => (
+    <LayerPage mode="dark" label="Forty options, so the bar is drawn.">
+      <Opened>
+        <div style={{ width: 280 }}>
+          <ComboBox label="Status" defaultSelectedKey="row-3">
+            {MANY}
+          </ComboBox>
+        </div>
+      </Opened>
+    </LayerPage>
+  )
+};
+
+/*
+ * THE `icon` SLOT. Decision 0031 and doc 07 §2.2b: one mark, at the START,
+ * because the toggle owns the trailing edge permanently.
+ */
+export const WithIcon: Story = {
+  render: () => (
+    <div style={{ maxWidth: 320 }}>
+      <ComboBox label="Status" icon={DemoIcon} defaultSelectedKey="ruiz">
+        {doctors}
+      </ComboBox>
+    </div>
+  )
 };

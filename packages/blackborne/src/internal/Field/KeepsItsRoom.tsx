@@ -25,14 +25,21 @@ import { cx } from '../cx';
  */
 export function KeepsItsRoom({
   isReachable,
+  className,
   children
 }: {
   isReachable: boolean;
+  /**
+   * For the slot wrappers, which are the only thing that knows WHICH edge it
+   * is at — see `controlBox.css`, where the corner is finished.
+   */
+  className?: string;
   children: ReactNode;
 }): ReactNode {
   return (
     <span
       className={cx(
+        className,
         'bb:flex bb:flex-none bb:items-stretch',
         !isReachable && 'bb:invisible'
       )}

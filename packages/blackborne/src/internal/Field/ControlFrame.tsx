@@ -46,6 +46,24 @@ export interface ControlFrameProps {
   /** A control the field owns at the trailing edge — a stepper's `+`, a cross. */
   trailing?: React.ReactNode;
   /**
+   * A decorative mark at the START of the field, from the consumer.
+   *
+   * Doc 07 §2.2b, which counts what stands at that edge: a numeric field's
+   * `−` and this, in the order `[control] [icon] [affix] [value]`. The control
+   * keeps the edge because it is the thing that has to be hit; an icon is
+   * text's kind of thing and takes the affix's place in the order.
+   *
+   * **Hidden from assistive technology**, like the affix beside it and for the
+   * same reason: the label is always present, so this can never be the only
+   * carrier of meaning. Something a person needs in order to answer belongs in
+   * the label or the description (doc 02 §11.3).
+   *
+   * There is no trailing counterpart, and doc 07 §2.2b says why — six of the
+   * seven fields own that edge, so it would be a slot that empties itself when
+   * an unrelated prop is set.
+   */
+  icon?: React.ReactNode;
+  /**
    * What the box is, to a reader. `group` by default, which is what the base
    * makes it and what every field wants.
    *
@@ -99,6 +117,21 @@ export interface ControlFrameProps {
 const AFFIX = cx(
   'bb:flex bb:flex-none bb:items-center',
   /*
+   * A SLOT SIZES WHAT ARRIVES IN IT, and this one did not.
+   *
+   * Measured: an `<svg>` carrying only a `viewBox` rendered at 0 by 0 in here,
+   * because such an element has no intrinsic size and nothing gave it one. So
+   * a consumer passing an icon as an affix got nothing on screen and nothing
+   * in the console. `Avatar`'s empty circle is the same defect and is written
+   * up as a trap; this is its second appearance.
+   *
+   * `h-mark`/`w-mark` rather than `size-*`: the theme declares `--height-mark`
+   * and `--width-mark`, and `size-*` resolves from a namespace this theme
+   * clears — `size-box` is one of the three utilities in this repository found
+   * to compile to nothing at all.
+   */
+  'bb:[&>svg]:h-mark bb:[&>svg]:w-mark bb:[&>svg]:flex-none',
+  /*
    * Muted, because an affix is orientation and not content: `@` is part of the
    * shape of an email address, not part of the address. Doc 03 §4.7's second
    * level, which is what secondary text is for.
@@ -121,9 +154,27 @@ const AFFIX = cx(
  * clear and the chevron beside it stays, so a slot-wide answer was no longer
  * enough. This is the same behaviour applied to a whole slot.
  */
-function edge(content: React.ReactNode, isHidden: boolean): React.ReactNode {
+function edge(
+  content: React.ReactNode,
+  isHidden: boolean,
+  side: 'start' | 'end'
+): React.ReactNode {
   if (content === undefined) return null;
-  return <KeepsItsRoom isReachable={!isHidden}>{content}</KeepsItsRoom>;
+  /*
+   * The slot carries the side, and `controlBox.css` finishes the corner on it
+   * rather than on the control inside.
+   *
+   * The control cannot do it: a date picker puts TWO at one edge (doc 07
+   * §2.2a) and each is wrapped separately, so `:last-child` on a button is
+   * true of BOTH — measured, both ends came out rounded and one of them sat
+   * in the middle of the row. The slot is the only element that knows where
+   * the edge is and how many things are standing on it.
+   */
+  return (
+    <KeepsItsRoom isReachable={!isHidden} className={`bb-field-edge-${side}`}>
+      {content}
+    </KeepsItsRoom>
+  );
 }
 
 export function ControlFrame({
@@ -131,6 +182,7 @@ export function ControlFrame({
   suffix,
   leading,
   trailing,
+  icon,
   isLeadingHidden = false,
   isTrailingHidden = false,
   isInvalid,
@@ -157,7 +209,15 @@ export function ControlFrame({
       {...(isInvalid === undefined ? {} : { isInvalid })}
       {...(isDisabled === undefined ? {} : { isDisabled })}
     >
-      {edge(leading, isLeadingHidden)}
+      {edge(leading, isLeadingHidden, 'start')}
+      {icon === undefined ? null : (
+        <span
+          aria-hidden="true"
+          className={cx(AFFIX, 'bb:ps-(--bb-control-padding-x)')}
+        >
+          {icon}
+        </span>
+      )}
       {prefix === undefined ? null : (
         <span
           aria-hidden="true"
@@ -175,7 +235,7 @@ export function ControlFrame({
           {suffix}
         </span>
       )}
-      {edge(trailing, isTrailingHidden)}
+      {edge(trailing, isTrailingHidden, 'end')}
     </Group>
   );
 }

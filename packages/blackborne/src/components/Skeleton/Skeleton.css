@@ -48,16 +48,23 @@
    * The period comes from the motion token rather than being written as a
    * number, so the reduced-motion rule at the foot of semantic.css — which
    * sets that token to 0ms — reaches this without the file having to remember.
-   * Eight times it because this one LOOPS: doc 09's 150-200ms is the budget
-   * for a change that happens once, and 160ms repeating for the length of a
-   * request is a strobe, which is the opposite of an interface that does not
-   * call attention to itself.
+   * A MULTIPLE of it because this one LOOPS, and doc 09 §2's table holds two
+   * budgets rather than one: a change that happens once is the row above, and
+   * a cycle repeating for the length of a request is ~700-1300ms, judged by
+   * whether it still reads as calm at the fiftieth repetition.
+   *
+   * The multiplier is therefore chosen to land INSIDE that second row, and it
+   * moved when the token did: it was eight while `--bb-duration-normal` was
+   * 160ms, giving 1280, and it is four now that the token is 300ms, giving
+   * 1200. The product is the thing under the rule — a multiplier left at eight
+   * would have taken this to 2400ms, half again outside the band, which is the
+   * trap of deriving one budget's value from another budget's token.
    *
    * ease-in-out and not --bb-ease: the library's curve is asymmetric on
    * purpose, fast out and gentle in, which is right for a transition that goes
    * one way and lopsided on a cycle that returns to where it started.
    */
-  animation: bb-skeleton-pulse calc(var(--bb-duration-normal) * 8) ease-in-out
+  animation: bb-skeleton-pulse calc(var(--bb-duration-normal) * 4) ease-in-out
     infinite;
 }
 

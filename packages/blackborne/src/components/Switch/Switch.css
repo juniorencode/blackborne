@@ -37,8 +37,21 @@
   background: var(--bb-accent-on);
 }
 
+/*
+ * A disabled thumb keeps its own colour and loses only its shadow.
+ *
+ * It used to repaint to `--bb-surface-disabled`, which is near-white in light
+ * and therefore looked right there by accident. In dark that token is the same
+ * value as the control surface, so the thumb became the colour of the ground
+ * behind it: a switched-off switch showed a HOLE punched in its track rather
+ * than a disc sitting in it. The light side was doing the same thing — it was
+ * simply invisible, because the value it borrowed happened to match.
+ *
+ * So the state is carried by the track and the label, and the thumb stays the
+ * thumb: `--bb-surface-knob` when off and `--bb-accent-on` when on, in both
+ * modes. Dropping the shadow is what says it is not live.
+ */
 [data-disabled] .bb-switch-thumb {
-  background: var(--bb-surface-disabled);
   box-shadow: none;
 }
 

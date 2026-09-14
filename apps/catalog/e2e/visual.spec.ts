@@ -363,6 +363,29 @@ const STATES: Array<[string, string]> = [
   ['components-select--open', 'select-open'],
   ['components-select--long-options', 'select-long-options'],
   /*
+   * The `icon` slot, once for all six fields that have one rather than six
+   * times for six near-identical frames — the reasoning is in the story.
+   */
+  ['foundations-a-field-icon--every-slot', 'field-icon'],
+  /*
+   * FORTY ROWS, SO THE LIST SCROLLS, and one picture per mode.
+   *
+   * Nothing else in this catalog overflows a list: every select and combo box
+   * in it holds three to six options, so an overflowing one had never been
+   * photographed at all — the panel's ceiling, where it clips, and how a long
+   * list sits under its field are all new here.
+   *
+   * WHAT THESE DO NOT SHOW IS THE BAR, and the comment saying they did lasted
+   * about an hour. Measured in the container this suite photographs in: the
+   * scroller's `offsetWidth` and `clientWidth` are both 268, so the bar takes
+   * no layout space — it is an OVERLAY scrollbar, painted while a pointer is
+   * on it or a gesture is in flight and absent at rest. Scrolling it from
+   * script and shooting 50ms later showed nothing either. `scroller.spec.ts`
+   * is what guards the two declarations.
+   */
+  ['components-select--long-list', 'select-long-list'],
+  ['components-select--long-list-dark', 'select-long-list-dark'],
+  /*
    * A combo box earns three, and each one is a picture no other baseline
    * holds. `states` is the field half, and it is the only field in this
    * library with all EIGHT of doc 07 §6's states — read-only included, which
@@ -373,6 +396,8 @@ const STATES: Array<[string, string]> = [
    */
   ['components-combobox--states', 'combobox-states'],
   ['components-combobox--open', 'combobox-open'],
+  ['components-combobox--long-list', 'combobox-long-list'],
+  ['components-combobox--long-list-dark', 'combobox-long-list-dark'],
   ['components-combobox--no-options', 'combobox-no-options'],
   /*
    * And two more for the field that holds SEVERAL, because the chips are a

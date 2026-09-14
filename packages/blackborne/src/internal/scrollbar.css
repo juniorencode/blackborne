@@ -1,0 +1,45 @@
+/*
+ * Layer 3: the scrollbar of a list the library owns.
+ *
+ * Scoped to `.bb-scroller` and nowhere else. A library may not style the
+ * consumer's page — hard rule 5 — and a scrollbar rule is the easiest one to
+ * write globally by accident, because the obvious selector is `*`.
+ *
+ * ## Why this is here and not a utility
+ *
+ * `scrollbar-width` and `scrollbar-color` ARE standard properties and could be
+ * written as arbitrary values in a class. They are here anyway, with the
+ * WebKit fallback they need, because the two halves have to agree and a rule
+ * split between a class list and a stylesheet is the shape doc 01 §7 warns
+ * about: two ways to write one thing.
+ *
+ * ## What it does, and the one thing it fixes rather than decorates
+ *
+ * The standard pair gives a thin bar with NO arrows — the buttons are not
+ * drawn at all, which is what `::-webkit-scrollbar` makes you remove by hand
+ * and then only in one engine.
+ *
+ * And it corrects something measured rather than noticed: `color-scheme`
+ * computes to `normal` on this library's pages, because dark mode is an
+ * ATTRIBUTE here and not a colour scheme. So a browser paints its LIGHT
+ * scrollbar inside a dark panel, and nothing in the catalog had shown it
+ * because no list in it has enough options to overflow. Naming the colours
+ * settles it in both modes without reaching for `color-scheme`, which is a
+ * property about the page as much as about this element.
+ *
+ * The track is TRANSPARENT rather than a colour: the panel is already painted
+ * and a track of its own would draw a second rectangle inside it.
+ *
+ * ## And there is no `::-webkit-scrollbar` fallback
+ *
+ * There was one, guarded by `@supports not`, and it came out because it put
+ * the published stylesheet over its weight budget by 0.1 kB — which is the
+ * budget doing its job rather than an inconvenience. Weighed against what it
+ * bought: the standard pair is in every current engine, and where it is not,
+ * the degradation is a browser's ordinary scrollbar rather than a broken one.
+ * Two mechanisms for one result is also what doc 01 §7 warns about.
+ */
+.bb-scroller {
+  scrollbar-width: thin;
+  scrollbar-color: var(--bb-border-strong) transparent;
+}

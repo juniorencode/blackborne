@@ -34,3 +34,105 @@
      shifts when a field becomes read-only (doc 09 §3). */
   border-color: transparent;
 }
+
+/*
+ * The browser's own affordances inside a field, removed.
+ *
+ * A search input paints a cancel cross of its own and a password input paints
+ * a reveal eye of its own, both drawn by the engine and neither matching
+ * anything here. Every field that has one of those ALSO ships ours — doc 07
+ * §2.2 rule 4 gives the trailing edge to exactly one control — so the native
+ * one is a second button for the same job, in the wrong place, with the wrong
+ * glyph, and it does not follow the mode.
+ *
+ * Why this cannot be a utility: these are engine pseudo-elements. Tailwind has
+ * no variant for `::-webkit-search-cancel-button`, and arbitrary variants
+ * cannot reach a pseudo-element the browser owns. It is the same reason the
+ * rule above is here.
+ *
+ * `appearance: none` is what actually removes the WebKit one; `display: none`
+ * is what removes the Edge pair. Both are listed rather than guessed at.
+ */
+.bb-field-box input::-webkit-search-cancel-button,
+.bb-field-box input::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
+
+.bb-field-box input::-ms-clear,
+.bb-field-box input::-ms-reveal {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/*
+ * The frame's corner, finished by the SLOT rather than by the control in it.
+ *
+ * An edge control is a square that spans the frame's height and sits flush
+ * against its edge, so it lands exactly where the box curves. Something has to
+ * follow that curve or the hover highlight is a hard corner poking out of a
+ * soft one — visible the moment the stepper became full height.
+ *
+ * It cannot be the control. Doc 07 §2.2a puts TWO of them at one edge for the
+ * date family, each wrapped separately by `KeepsItsRoom`, so `:last-child` on
+ * a button is true of BOTH — measured, both ends came out rounded and one of
+ * them sat in the middle of the row. The slot is the only element that knows
+ * which edge it is and how many things are standing on it.
+ *
+ * `overflow: hidden` rather than a radius on the children: it clips whatever
+ * is inside to the curve, so the rule holds for one control or two without
+ * either of them knowing. Safe here because an edge control paints a
+ * background and a glyph and nothing that leaves its box — the focus ring is
+ * the FRAME's, drawn outside all of this.
+ */
+.bb-field-edge-start,
+.bb-field-edge-end {
+  overflow: hidden;
+}
+
+.bb-field-edge-start {
+  border-start-start-radius: var(--bb-radius-md);
+  border-end-start-radius: var(--bb-radius-md);
+}
+
+.bb-field-edge-end {
+  border-start-end-radius: var(--bb-radius-md);
+  border-end-end-radius: var(--bb-radius-md);
+}
+
+/*
+ * The frame's corner, finished by the SLOT rather than by the control in it.
+ *
+ * An edge control is a square that spans the frame's height and sits flush
+ * against its edge, so it lands exactly where the box curves. Something has to
+ * follow that curve, or the hover highlight is a hard corner poking out of a
+ * soft one — visible the moment the stepper became full height.
+ *
+ * It cannot be the control. Doc 07 §2.2a puts TWO of them at one edge for the
+ * date family, each wrapped separately by `KeepsItsRoom`, so `:last-child` on
+ * a button is true of BOTH — measured, both ends came out rounded and one of
+ * them sat in the middle of the row. The slot is the only element that knows
+ * which edge it is and how many things are standing on it.
+ *
+ * `overflow: hidden` rather than a radius on the children: it clips whatever
+ * is inside to the curve, so the rule holds for one control or two without
+ * either of them knowing. Safe here because an edge control paints a
+ * background and a glyph and nothing that leaves its box — the focus ring is
+ * the FRAME's, drawn outside all of this.
+ */
+.bb-field-edge-start,
+.bb-field-edge-end {
+  overflow: hidden;
+}
+
+.bb-field-edge-start {
+  border-start-start-radius: var(--bb-radius-md);
+  border-end-start-radius: var(--bb-radius-md);
+}
+
+.bb-field-edge-end {
+  border-start-end-radius: var(--bb-radius-md);
+  border-end-end-radius: var(--bb-radius-md);
+}

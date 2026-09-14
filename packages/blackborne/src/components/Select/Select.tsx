@@ -18,7 +18,6 @@ import {
 } from '../../internal/Field';
 import { VisuallyHidden } from '../VisuallyHidden';
 import { useMessage } from '../../config';
-import { CheckGlyph } from '../../internal/CheckGlyph';
 import { ChevronGlyph } from '../../internal/ChevronGlyph';
 import { ANCHORED, LAYER_OFFSET, PANEL } from '../../internal/Layer';
 import { cx } from '../../internal/cx';
@@ -52,7 +51,14 @@ const TRIGGER = cx(
   CONTROL_INSIDE,
   CONTROL_TEXT,
   'bb:flex bb:items-center bb:justify-between bb:gap-x-(--bb-space-2)',
-  'bb:cursor-pointer bb:text-start bb:outline-hidden'
+  'bb:cursor-pointer bb:text-start bb:outline-hidden',
+  /*
+   * The package ships no reset, so a `<button>` arrives with the browser's own
+   * 1px of vertical padding. It cost nothing while the trigger held only text;
+   * it made the chevron's square 40 inside a 42 frame the moment that square
+   * started stretching to the trigger's content box.
+   */
+  'bb:py-0'
 );
 
 /*
@@ -81,6 +87,46 @@ const CHEVRON = cx(
   'bb:transition-[rotate] bb:duration-(--bb-duration-fast) bb:ease-standard',
   'bb:group-data-open:rotate-180',
   'bb:group-data-disabled:text-text-disabled'
+);
+
+/*
+ * The square the chevron sits in.
+ *
+ * It is NOT a button — the whole trigger opens the list, and a button inside a
+ * button is not a thing — but it occupies the same square as the edge controls
+ * every other field puts there: a cross, a reveal toggle, a combo box's
+ * chevron. Without it the mark floated one control-padding in from the edge
+ * and a select in a column of fields had its mark in a different place from
+ * all of them.
+ *
+ * The negative margin cancels the trigger's own trailing padding so the square
+ * reaches the frame, which is what the others do by being in the edge slot.
+ * Logical, so it mirrors with the direction.
+ */
+const CHEVRON_BOX = cx(
+  'bb:flex bb:items-center bb:justify-center',
+  'bb:aspect-square bb:flex-none bb:self-stretch',
+  'bb:-me-(--bb-control-padding-x)'
+);
+
+/*
+ * THE RING STAYS WHILE THE LIST IS OPEN.
+ *
+ * A select moves focus INTO the layer when it opens, so the frame loses
+ * `data-focus-within` and went back to its resting edge the moment the list
+ * appeared — the one moment the field is most obviously the thing being used.
+ * A combo box does not have this problem because its input keeps focus.
+ *
+ * `data-open` is on the select's ROOT, which is the group — the same state the
+ * chevron turns on. And the hovered pair is stacked for the reason the frame's
+ * own focus rules are: two single variants setting one property are decided by
+ * emission order, so a pointer resting on an open select would take the edge
+ * back again.
+ */
+const OPEN_RING = cx(
+  'bb:group-data-open:border-focus-ring',
+  'bb:data-hovered:group-data-open:border-focus-ring',
+  'bb:group-data-open:shadow-[0_0_0_4px_color-mix(in_oklab,var(--bb-focus-ring)_var(--bb-focus-ring-halo-strength),transparent)]'
 );
 
 /*
@@ -113,12 +159,31 @@ const LIST_PANEL = cx(
   PANEL,
   'bb:min-h-0',
   'bb:border bb:rounded-lg',
-  'bb:p-(--bb-space-1)'
+  /*
+   * NO SHADOW. `PANEL` brings `shadow-lg`, which is right for a dialog or a
+   * drawer floating over a page — and a select's list is not floating over the
+   * page so much as hanging off the field, a few pixels below it.
+   *
+   * What holds it up instead is the border it already draws plus the raised
+   * fill: measured in light, the panel is #f7f9fb against a white page with a
+   * 1px edge, which is the same way the field above it is held. In dark the
+   * surface does the lifting anyway — doc 03 §5 rule 5, a shadow is barely
+   * visible on a dark ground — so nothing is lost there at all.
+   */
+  'bb:shadow-none',
+
+  /*
+   * Step 2, and it was step 1. At 2px the rows were nearly touching the
+   * panel's own border — enough to keep them off it and not enough to read as
+   * a margin, so the list looked like it had overflowed its box.
+   */
+  'bb:p-(--bb-space-2)'
 );
 
 const LIST = cx(
   'bb-select-options',
   'bb:box-border bb:flex bb:min-h-0 bb:flex-col',
+  'bb-scroller',
   'bb:overflow-y-auto bb:outline-hidden',
   'bb:font-sans bb:text-md bb:leading-normal'
 );
@@ -131,14 +196,16 @@ const LIST = cx(
  * on a key, so styling hover separately would put two marks on the screen for
  * one position.
  *
- * The chosen option is marked by a tick AND by weight, never by the highlight
- * alone: the highlight says where you are and the tick says what is chosen,
- * and in a list you have just opened those are two different rows.
+ * The chosen option is marked by a BAND and by weight, never by the highlight
+ * alone: the highlight says where you are and the band says what is chosen,
+ * and in a list you have just opened those are two different rows. It was a
+ * tick at the trailing edge until 2026-09-13 — see the note on the band
+ * below.
  */
 const OPTION = cx(
   'bb-select-option',
-  // The group the tick reads its state from, which is the item and not the
-  // field: the root is a group too and never carries `data-selected`.
+  // The group a descendant reads `data-selected` from, which is the item and
+  // not the field: the root is a group too and never carries it.
   'bb:group',
   'bb:box-border bb:flex bb:min-h-hit bb:items-center',
   'bb:justify-between bb:gap-x-(--bb-space-3)',
@@ -147,55 +214,54 @@ const OPTION = cx(
   'bb:text-text',
   'bb:transition-[background-color,color]',
   'bb:duration-(--bb-duration-fast) bb:ease-standard',
-  'bb:data-focused:bg-surface-hover',
-  'bb:data-pressed:bg-surface-active',
-  'bb:data-selected:font-strong',
-  'bb:data-disabled:cursor-not-allowed bb:data-disabled:text-text-disabled'
-);
-
-/*
- * The tick. ALWAYS RENDERED, and hidden until the option is the chosen one.
- *
- * Two reasons, and the second one is the whole reason this file was rewritten.
- *
- * The row does not move. A tick that appears and goes takes its width with it,
- * so every label would shift sideways as the selection walked down the list —
- * doc 09 §7's "nothing moves under the cursor", in a list somebody is moving
- * through with the arrows.
- *
- * And the collection needs plain text. The first version drew the tick from a
- * render function, which made the item's children a function rather than a
- * string — so the base could derive no `textValue`, and **the typeahead
- * silently stopped working**: typing `e` in a currency list moved nothing.
- * Measured, and the base had said so all along in a development warning that
- * nothing in this repository was reading.
- *
- * `visibility` rather than a conditional, which is also doc 02 §4: style
- * against the DOM state attributes the base exposes, never against a class
- * string built in JavaScript. The glyph is `aria-hidden` either way, so
- * leaving the accessibility tree is no loss (the package guide's note on
- * hiding).
- */
-const TICK = cx(
-  'bb-select-tick',
-  'bb:h-mark bb:w-mark bb:flex-none bb:text-accent',
-  'bb:invisible bb:group-data-selected:visible',
   /*
-   * AND GONE ENTIRELY INSIDE THE TRIGGER, which is a phantom box found while
-   * building `TimePicker`.
+   * `surface-raised-hover`, not `surface-hover`.
    *
-   * `SelectValue` renders the selected row's own children — all of them — so
-   * the trigger contains a copy of this glyph. `visibility: hidden` keeps a
-   * box, deliberately, so the row does not move as the selection walks: the
-   * consequence is 16px of invisible width inside `.bb-select-value`, which is
-   * `truncate`, so a long value shows its ellipsis 16px early for no reason
-   * anybody could see.
-   *
-   * `display: none` is right in the TRIGGER for the same reason `visibility`
-   * is right in the row: there is nothing in the trigger for it to keep a
-   * place for.
+   * These rows sit on a RAISED panel and not on the page, and `surface-hover`
+   * is chosen against the page — on a near-white panel it landed two steps
+   * away and read as a slab. The token that belongs to this ground is the one
+   * to use, and naming it is what made the second half visible: in dark it is
+   * still DARKER than the panel it sits on, where the same idea on the page
+   * goes lighter. That direction is an open decision, recorded in
+   * `semantic.css` rather than guessed at here.
    */
-  'bb:[.bb-select-value_&]:hidden'
+  'bb:data-focused:bg-surface-raised-hover',
+  'bb:data-pressed:bg-surface-active',
+  /*
+   * THE CHOSEN ROW IS A SOFT ACCENT BAND, and it holds that band under the
+   * highlight rather than yielding to it.
+   *
+   * It used to be a tick at the trailing edge. The band says the same thing
+   * without a glyph, and `surface-selected` is the token already carrying it
+   * elsewhere — a tint of the brand rather than the brand, so it sits close to
+   * the panel instead of shouting over it, and it follows a consumer's own
+   * scale for free.
+   *
+   * The stacked pairs are the point: a list has ONE highlight and the base
+   * moves it on hover as well as on a key, so without them pointing at the
+   * chosen row would repaint it grey and it would stop looking chosen at the
+   * exact moment somebody reached for it. Two attributes outrank one, so this
+   * does not depend on the order Tailwind emits them.
+   *
+   * WEIGHT IS THE SECOND CHANNEL and it is load-bearing now rather than
+   * decorative: with the tick gone, weight is what survives greyscale and what
+   * separates "chosen" from "where the keyboard is" (doc 06 §3).
+   */
+  /*
+   * THE BAND ONLY. The row keeps `--bb-text`, so a chosen option reads in the
+   * page's own ink — black in light, white in dark — rather than in the brand.
+   *
+   * This paints a background WITHOUT using its `-on` companion, which is doc
+   * 03 §4.0's rule of pairs stepped around, so the numbers are here instead of
+   * an assumption: measured, `--bb-text` on this band is 13.4:1 in light and
+   * 12.3:1 in dark. The pair exists for a band that has to carry text of its
+   * own; this one is a tint of the page under the page's own text.
+   */
+  'bb:data-selected:bg-surface-selected',
+  'bb:data-selected:font-strong',
+  'bb:data-selected:data-focused:bg-surface-selected',
+  'bb:data-selected:data-pressed:bg-surface-selected',
+  'bb:data-disabled:cursor-not-allowed bb:data-disabled:text-text-disabled'
 );
 
 export interface SelectProps extends Omit<
@@ -250,6 +316,20 @@ export interface SelectProps extends Omit<
    * Applied to the field's outermost element, for placement in the consumer's
    * layout. Nothing reaches an internal node (doc 02 §6).
    */
+  /**
+   * A decorative mark at the START of the field.
+   *
+   * Doc 07 §2.2b and decision 0031. It arrives as a node you wrote — the
+   * library ships no icons and resolves no names — and the slot gives it its
+   * size and its colour.
+   *
+   * **Hidden from assistive technology**, because the label is always there
+   * and a mark can never be the only carrier of meaning. Something a person
+   * NEEDS in order to answer belongs in the label or the description.
+   *
+   * There is no trailing counterpart: that edge belongs to the field.
+   */
+  icon?: React.ReactNode;
   className?: string;
 }
 
@@ -303,6 +383,7 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(
       isSaving = false,
       size = 'md',
       onSelectionChange,
+      icon,
       className,
       ...ariaProps
     },
@@ -378,7 +459,8 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(
           isSaving={isSaving}
         >
           <ControlFrame
-            className={cx(SIZE[size].frame, busy && 'bb:pe-9')}
+            {...(icon === undefined ? {} : { icon })}
+            className={cx(SIZE[size].frame, OPEN_RING, busy && 'bb:pe-9')}
             /*
              * Passed rather than inherited, and measured: the base's
              * `TextField` publishes a group context that a frame reads these
@@ -394,11 +476,43 @@ export const Select = forwardRef<HTMLButtonElement, SelectProps>(
           >
             <AriaButton ref={ref} className={cx(TRIGGER, SIZE[size].text)}>
               <SelectValue className={VALUE} />
-              <ChevronGlyph className={CHEVRON} />
+              <span className={CHEVRON_BOX}>
+                <ChevronGlyph className={CHEVRON} />
+              </span>
             </AriaButton>
           </ControlFrame>
         </Field>
-        <AriaPopover className={LIST_WRAPPER} offset={LAYER_OFFSET}>
+        <AriaPopover
+          className={LIST_WRAPPER}
+          offset={LAYER_OFFSET}
+          /*
+           * NOT MODAL, so the page keeps its scrollbar while the list is open.
+           *
+           * A popover is modal by default: the base gives it `role="dialog"`
+           * and an underlay, and the underlay brings a scroll lock. On a page
+           * that scrolls, that lock takes the scrollbar away and the whole
+           * layout jumps sideways by its width — for the time it takes to
+           * choose a status.
+           *
+           * THE LIBRARY ALREADY SHIPPED BOTH BEHAVIOURS AND NOBODY HAD
+           * NOTICED. Read in the installed base: its own `ComboBox` passes
+           * `isNonModal: true` to this same component, and `Select` and `Menu`
+           * pass nothing. So two fields with a list, side by side, treated the
+           * page differently — and the difference was the base's default
+           * rather than a decision of ours.
+           *
+           * The cost is real and is accepted rather than overlooked: with no
+           * underlay, a click outside closes the list AND reaches what is
+           * under it. That is exactly what a `ComboBox` has always done here,
+           * which is what makes it acceptable — this is the two components
+           * agreeing, not a new risk.
+           *
+           * `Menu` stays modal for now. A click that closes a menu and also
+           * fires an action underneath is a different size of mistake from one
+           * that closes a list of options.
+           */
+          isNonModal
+        >
           <div className={LIST_PANEL}>
             <AriaListBox className={LIST}>{children}</AriaListBox>
           </div>
@@ -426,9 +540,9 @@ export interface SelectItemProps extends Pick<
 /**
  * One option in a `Select`. Only useful inside one.
  *
- * The chosen option shows a tick, and the tick is the point: the highlight
- * says where you are in the list and the tick says what is chosen, and the
- * moment you open a list those are two different rows.
+ * The chosen option carries a soft band of the brand, and the band is the
+ * point: the highlight says where you are in the list and the band says what
+ * is chosen, and the moment you open a list those are two different rows.
  */
 export const SelectItem = forwardRef<HTMLDivElement, SelectItemProps>(
   function SelectItem({ children, className, ...itemProps }, ref) {
@@ -447,7 +561,6 @@ export const SelectItem = forwardRef<HTMLDivElement, SelectItemProps>(
         {...itemProps}
       >
         <span className="bb:min-w-0 bb:truncate">{children}</span>
-        <CheckGlyph className={TICK} />
       </AriaListBoxItem>
     );
   }

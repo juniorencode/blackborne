@@ -13,6 +13,7 @@
  * screenshot ever covers.
  */
 import { useLayoutEffect, useRef } from 'react';
+import { DemoIcon } from '../../catalog/demoIcon';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ConfigProvider } from '../../config';
 import { PasswordField, type PasswordFieldSize } from './PasswordField';
@@ -665,6 +666,27 @@ export const AutoCompleteAndPaste: Story = {
         isInvalid
         errorMessage="This appears in a list of the ten thousand most common passwords."
         description="The library presents the verdict; your project reaches it."
+      />
+    </div>
+  )
+};
+
+/*
+ * THE `icon` SLOT. Decision 0031 and doc 07 §2.2b: one mark, at the START,
+ * because six of the seven fields own their trailing edge permanently or
+ * conditionally and a slot that empties itself is worse than no slot.
+ *
+ * The glyph carries only a `viewBox`, which is the case that rendered at 0 by
+ * 0 until the slot was taught to size what arrives in it.
+ */
+export const WithIcon: Story = {
+  render: args => (
+    <div className="catalog-stack" style={{ maxWidth: 320 }}>
+      <PasswordField
+        {...args}
+        label="Password"
+        icon={DemoIcon}
+        defaultValue="correct horse"
       />
     </div>
   )

@@ -65,18 +65,26 @@ const INPUT = cx(
 const STEPPER = cx(
   EDGE_CONTROL,
   /*
-   * A column rather than a floating target: it spans the frame's full height
-   * flush against the inner edge, so it takes a fixed width and no radius
-   * where the cross and the toggle take the hit-area token and round
-   * themselves.
+   * A SQUARE that spans the frame's height. It was 28 by 42 — a tall slot
+   * around a 15px glyph — and a target whose two axes disagree that much reads
+   * as a strip of the field rather than as a button.
    *
-   * Worth knowing that this makes it 28px at BOTH densities where the others
-   * go to 24px at compact. It is deliberate here — the height already comes
-   * from the frame, so the width is the whole target — but it is also the one
-   * edge control that does not follow the density token, which is recorded
-   * rather than settled.
+   * The height is the frame's and the WIDTH follows it, rather than the other
+   * way round: the field's height is the thing already agreed with every other
+   * control in a row, so shrinking the button to a square would have made the
+   * target smaller instead of making it square.
+   *
+   * `aspect-square` off the stretched height, never a `w-*` token: the theme
+   * has `--height-control-*` and no `--width-control-*`, so a width utility
+   * compiles to nothing and leaves a box with a height and no width. That is
+   * written down as a trap because it has already shipped once.
+   *
+   * It follows the frame, so it follows density with it — which settles
+   * something that was recorded and left open here: the stepper used to be
+   * 28px at BOTH densities where every other edge control went to 24 at
+   * compact.
    */
-  'bb:w-7 bb:flex-none'
+  'bb:aspect-square bb:flex-none bb:self-stretch'
 );
 
 export interface NumberFieldProps extends Omit<
@@ -156,6 +164,20 @@ export interface NumberFieldProps extends Omit<
    * chose.
    */
   isClearable?: boolean;
+  /**
+   * A decorative mark at the START of the field.
+   *
+   * Doc 07 §2.2b and decision 0031. It arrives as a node you wrote — the
+   * library ships no icons and resolves no names — and the slot gives it its
+   * size and its colour.
+   *
+   * **Hidden from assistive technology**, because the label is always there
+   * and a mark can never be the only carrier of meaning. Something a person
+   * NEEDS in order to answer belongs in the label or the description.
+   *
+   * There is no trailing counterpart: that edge belongs to the field.
+   */
+  icon?: React.ReactNode;
   className?: string;
 }
 
@@ -190,6 +212,7 @@ export const NumberField = forwardRef<HTMLInputElement, NumberFieldProps>(
       isClearable = false,
       currency,
       placeholder,
+      icon,
       className,
       ...ariaProps
     },
@@ -274,6 +297,7 @@ export const NumberField = forwardRef<HTMLInputElement, NumberFieldProps>(
           isSaving={isSaving}
         >
           <ControlFrame
+            {...(icon === undefined ? {} : { icon })}
             {...(prefix === undefined ? {} : { prefix })}
             {...(suffix === undefined ? {} : { suffix })}
             /*
@@ -285,6 +309,13 @@ export const NumberField = forwardRef<HTMLInputElement, NumberFieldProps>(
              */
             {...(isStepperVisible
               ? {
+                  /*
+                   * The OUTER corner follows the frame's and the inner one is
+                   * square. A full-height control in a rounded box has to
+                   * finish the box's curve: with none, the highlight spills
+                   * past the frame's own corner — visible on the photograph,
+                   * and true before this was touched.
+                   */
                   leading: (
                     <Button slot="decrement" className={STEPPER}>
                       {/*

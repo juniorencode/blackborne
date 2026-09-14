@@ -33,8 +33,47 @@ import type { ValidationProps } from '../../internal/validationProps';
 const BOX = cx(
   'bb-inline-control-box',
   'bb:box-border bb:flex bb:h-box bb:w-box bb:flex-none bb:items-center bb:justify-center',
-  'bb:rounded-sm bb:border bb:border-solid bb:border-border-control',
-  'bb:bg-surface-control bb:text-accent-on',
+  /*
+   * The FIELD's edge at rest, and the small-control one on hover.
+   *
+   * These three used to rest on a token of their own, one step stronger,
+   * chosen for the RATIO — and in dark that made a checkbox's edge brighter
+   * than the box of the text field beside it, so a form read as two different
+   * libraries. Resting on the same edge as a field is what makes a row of
+   * mixed controls look like one thing; the field's hover step is what they
+   * move to, where a field also moves its border.
+   *
+   * THE COST IS STATED RATHER THAN HIDDEN: at rest in dark this is 1.37:1
+   * against the page, where the step it replaced measured 3.09:1, and doc 03
+   * §5 rule 2 asks 3:1 of a graphical element. The old token had no readers
+   * left and was removed; its measurement lives in the catalog's §7, with the
+   * other rules this library knows it is not meeting.
+   */
+  'bb:rounded-sm bb:border bb:border-solid bb:border-border',
+  /* The SAME step the field's box moves to on hover, not the small-control
+     one — a checkbox and the text field beside it answer a pointer with the
+     same colour or they read as two libraries. In light the small-control
+     token is an alias of the resting one, so the old rule did nothing there
+     at all. */
+  'bb:group-data-hovered:border-border-strong',
+  /*
+   * surface-SUNKEN, and all three of these moved together.
+   *
+   * It was surface-control, the fill a text field uses, which at 1.06:1
+   * against a white page is very nearly the page itself — so a 20px box read
+   * as an outline with nothing in it. One step down is 1.14:1 and gives the
+   * box a floor for its mark to sit on.
+   *
+   * IT CHANGES LIGHT ONLY, which is why it is this token and not a new one:
+   * measured, surface-sunken and surface-control are the SAME value in dark
+   * (#0c192c), so the dark side is untouched.
+   *
+   * This reverses a note that used to sit here saying the opposite — that the
+   * switch had rested one step darker than the other two and was brought up to
+   * match them. The direction was wrong rather than the instinct: three
+   * controls agreeing is what mattered, and they agree here too.
+   */
+  'bb:bg-surface-sunken bb:text-accent-on',
   'bb:transition-[background-color,border-color,box-shadow]',
   'bb:duration-(--bb-duration-fast) bb:ease-standard',
   // Selected and indeterminate both read as "acted upon", so both fill.
@@ -60,19 +99,30 @@ const BOX = cx(
    * and feedback that fired only over twenty pixels would teach people the
    * text is not pressable when it is.
    */
-  'bb:group-data-hovered:bg-surface-hover',
+  /*
+   * THE FILL DOES NOT MOVE ON HOVER — the border does, which is what a text
+   * field already does and what makes a row of mixed controls answer a pointer
+   * the same way.
+   *
+   * It used to repaint the interior as well. On a 20px box that is the whole
+   * control changing colour for a pointer merely passing over it, and in a
+   * dense form the page shimmers as the cursor crosses it. Press still moves
+   * the fill: a press is a decision, not a pointer passing through.
+   */
   'bb:group-data-pressed:bg-surface-active',
-  'bb:group-data-selected:group-data-hovered:border-accent-hover bb:group-data-selected:group-data-hovered:bg-accent-hover',
+  'bb:group-data-selected:group-data-hovered:border-accent-hover',
   'bb:group-data-selected:group-data-pressed:border-accent-active bb:group-data-selected:group-data-pressed:bg-accent-active',
-  'bb:group-data-indeterminate:group-data-hovered:border-accent-hover bb:group-data-indeterminate:group-data-hovered:bg-accent-hover',
+  'bb:group-data-indeterminate:group-data-hovered:border-accent-hover',
   'bb:group-data-indeterminate:group-data-pressed:border-accent-active bb:group-data-indeterminate:group-data-pressed:bg-accent-active',
   // The ring lands on the box, because the real input is visually hidden. It
   // is the library's single focus ring, from a token, and only on keyboard
   // focus — a ring on mouse click is noise (doc 06 §3).
   'bb:group-data-focused:border-focus-ring bb:group-data-focused:shadow-[0_0_0_4px_color-mix(in_oklab,var(--bb-focus-ring)_var(--bb-focus-ring-halo-strength),transparent)]',
-  'bb:group-data-invalid:border-danger',
-  'bb:group-data-invalid:[--bb-focus-ring:var(--bb-danger)]',
-  'bb:group-data-disabled:border-border-control bb:group-data-disabled:bg-surface-disabled'
+  'bb:group-data-invalid:border-border-invalid',
+  'bb:group-data-invalid:[--bb-focus-ring:var(--bb-border-invalid)]',
+  /* The resting edge, not the hover one: a switched-off control may not be
+     LOUDER than a live one, which it became when rest moved down a step. */
+  'bb:group-data-disabled:border-border bb:group-data-disabled:bg-surface-disabled'
 );
 
 const LABEL = cx(
@@ -144,7 +194,9 @@ export const Checkbox = forwardRef<HTMLLabelElement, CheckboxProps>(
     return (
       <div
         className={cx(
-          'bb:flex bb:flex-col bb:gap-(--bb-field-gap-inner)',
+          /* No gap: nothing sits above the control here, so the messages hug
+             it. `Field` carries the rule. */
+          'bb:flex bb:flex-col',
           className
         )}
       >

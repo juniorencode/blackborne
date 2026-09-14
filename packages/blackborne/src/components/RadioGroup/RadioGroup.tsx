@@ -88,8 +88,17 @@ const VariantContext = createContext<RadioGroupVariant>('plain');
 const DOT = cx(
   'bb-inline-control-box',
   'bb:box-border bb:flex bb:h-box bb:w-box bb:flex-none bb:items-center bb:justify-center',
-  'bb:rounded-full bb:border bb:border-solid bb:border-border-control',
-  'bb:bg-surface-control',
+  /* The field's edge at rest, the small-control one on hover — see the note
+     in Checkbox.tsx, which carries the measurement. */
+  'bb:rounded-full bb:border bb:border-solid bb:border-border',
+  /* The SAME step the field's box moves to on hover, not the small-control
+     one — a checkbox and the text field beside it answer a pointer with the
+     same colour or they read as two libraries. In light the small-control
+     token is an alias of the resting one, so the old rule did nothing there
+     at all. */
+  'bb:group-data-hovered:border-border-strong',
+  /* surface-sunken, with the other two — see the note in Checkbox.tsx. */
+  'bb:bg-surface-sunken',
   'bb:transition-[background-color,border-color,box-shadow]',
   'bb:duration-(--bb-duration-fast) bb:ease-standard',
   'bb:group-data-selected:border-accent bb:group-data-selected:bg-accent',
@@ -117,12 +126,14 @@ const DOT = cx(
    * a pointer that is nowhere near it is the clearest possible statement that
    * the whole card is the target.
    */
-  'bb:group-data-hovered:bg-surface-hover',
+  /* The fill does not move on hover — see the note in Checkbox.tsx. */
   'bb:group-data-pressed:bg-surface-active',
-  'bb:group-data-selected:group-data-hovered:border-accent-hover bb:group-data-selected:group-data-hovered:bg-accent-hover',
+  'bb:group-data-selected:group-data-hovered:border-accent-hover',
   'bb:group-data-selected:group-data-pressed:border-accent-active bb:group-data-selected:group-data-pressed:bg-accent-active',
-  'bb:group-data-invalid:border-danger',
-  'bb:group-data-disabled:border-border-control bb:group-data-disabled:bg-surface-disabled'
+  'bb:group-data-invalid:border-border-invalid',
+  /* The resting edge, not the hover one: a switched-off control may not be
+     LOUDER than a live one, which it became when rest moved down a step. */
+  'bb:group-data-disabled:border-border bb:group-data-disabled:bg-surface-disabled'
 );
 
 /*
@@ -185,7 +196,7 @@ const VARIANT: Record<RadioGroupVariant, VariantClasses> = {
     option: 'bb:w-fit bb:py-0.5',
     dot: cx(
       'bb:group-data-focused:border-focus-ring bb:group-data-focused:shadow-[0_0_0_4px_color-mix(in_oklab,var(--bb-focus-ring)_var(--bb-focus-ring-halo-strength),transparent)]',
-      'bb:group-data-invalid:[--bb-focus-ring:var(--bb-danger)]'
+      'bb:group-data-invalid:[--bb-focus-ring:var(--bb-border-invalid)]'
     )
   },
   card: {
@@ -289,8 +300,16 @@ const VARIANT: Record<RadioGroupVariant, VariantClasses> = {
        * component may not differ in when focus is visible.
        */
       'bb:data-focused:border-focus-ring bb:data-focused:shadow-[0_0_0_4px_color-mix(in_oklab,var(--bb-focus-ring)_var(--bb-focus-ring-halo-strength),transparent)]',
-      'bb:data-invalid:border-danger',
-      'bb:data-invalid:[--bb-focus-ring:var(--bb-danger)]'
+      /*
+       * The same invalid edge the circle inside it draws, from the same token.
+       * A card is a box round a control that also has an edge, so the two are
+       * the one place in this library where a single control could show two
+       * different reds — which it did, for as long as it took to photograph
+       * it: the circle moved to `--bb-border-invalid` and the frame was left
+       * on the solid step.
+       */
+      'bb:data-invalid:border-border-invalid',
+      'bb:data-invalid:[--bb-focus-ring:var(--bb-border-invalid)]'
       /*
        * Disabled and read-only are in RadioGroup.css, not here. Both have to
        * beat `data-selected`, and two utilities of equal specificity are
@@ -407,7 +426,7 @@ export const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(
       <AriaRadioGroup
         ref={ref}
         className={cx(
-          'bb:flex bb:flex-col bb:gap-(--bb-field-gap-inner)',
+          'bb:flex bb:flex-col',
           'bb:font-sans bb:text-md',
           className
         )}
@@ -418,6 +437,10 @@ export const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(
             isLabelHidden
               ? 'bb:sr-only'
               : 'bb:text-md bb:font-strong bb:text-text',
+            /* The field's one inner gap, carried by what is ABOVE the control
+               rather than by the column — `Field` has the rule and the reason,
+               and a form of mixed field types is where disagreeing shows. */
+            'bb:mb-(--bb-field-gap-inner)',
             'bb:w-fit'
           )}
         >

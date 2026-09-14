@@ -13,46 +13,81 @@
  * declares one, rather than by guessing at DOM structure. That way the test
  * asserts the rule and does not break when a wrapper is added.
  */
-import { expect, test, type Locator } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 import { gotoStory } from './story';
 
 /**
- * The vertical gap of the field that contains this control, in pixels.
+ * MEASURED AS GEOMETRY, not read off `row-gap`, and that is the whole point of
+ * this rewrite.
  *
- * A field wrapper is a flex COLUMN, and that qualifier is load-bearing:
- * without it, walking up from a checkbox finds the horizontal gap between its
- * box and its text first, and reports a disagreement between field types that
- * does not exist. The first version of this test did exactly that.
+ * The first version walked up from the control to the first flex COLUMN with a
+ * gap and returned it. That stopped being the field's gap on 2026-09-13, when
+ * the space moved from the column onto a margin on whatever sits above the
+ * control — so the walk sailed past the field and returned the FORM's gap.
+ * Both field types then reported 16 and the test comparing them passed for the
+ * wrong reason, which is worse than the failure beside it.
+ *
+ * Pixels between two boxes answer the question the rule actually asks, and
+ * they keep answering it whichever property a component uses to produce them.
  */
-const fieldGap = (control: Locator) =>
-  control.evaluate(el => {
-    let node: HTMLElement | null = el as HTMLElement;
-    while (node) {
-      const style = getComputedStyle(node);
-      const gap = Number.parseFloat(style.rowGap);
-      const isColumn =
-        style.display.includes('flex') && style.flexDirection === 'column';
-      if (isColumn && Number.isFinite(gap) && gap > 0) return gap;
-      node = node.parentElement;
+const distanceBetween = async (above: Locator, below: Locator) => {
+  const top = await above.boundingBox();
+  const bottom = await below.boundingBox();
+  if (!top || !bottom) throw new Error('one of the two boxes is not rendered');
+  return Math.round((bottom.y - (top.y + top.height)) * 10) / 10;
+};
+
+/**
+ * The space above a message, measured from whatever the field actually drew
+ * above it.
+ *
+ * From the previous SIBLING rather than from the control, because the control
+ * is not the same element in the two field types and neither one is the box a
+ * person sees: a checkbox's input is visually hidden inside its label, and a
+ * text field's input sits inside the frame that draws the border. Measuring
+ * from either reported a difference that was the markup rather than the gap.
+ *
+ * Siblings with no height are skipped, and there is one that matters: `Field`
+ * renders an `aria-live` region between the control and the description, which
+ * is `sr-only` and therefore exactly 1px tall. That 1px WAS the reading.
+ */
+const spaceAboveMessage = (message: Locator) =>
+  message.evaluate(el => {
+    let previous = el.previousElementSibling as HTMLElement | null;
+    while (previous && previous.getBoundingClientRect().height <= 2) {
+      previous = previous.previousElementSibling as HTMLElement | null;
     }
-    return 0;
+    if (!previous) throw new Error('nothing is drawn above this message');
+    const above = previous.getBoundingClientRect();
+    const below = el.getBoundingClientRect();
+    return Math.round((below.top - above.bottom) * 10) / 10;
   });
 
-test('a text field and a checkbox agree on the gap inside a field', async ({
+/** The one gap a field has: whatever is above the control, to the control. */
+const gapAboveControl = (page: Page, label: RegExp, control: Locator) =>
+  distanceBetween(page.getByText(label, { exact: false }).first(), control);
+
+test('a text field and a checkbox agree on the space under the control', async ({
   page
 }) => {
   await gotoStory(page, 'components-checkbox--in-a-form');
 
-  const inText = await fieldGap(
-    page.getByRole('textbox', { name: /Full name/ })
+  /*
+   * The rule changed on 2026-09-13 and this test with it. A field's one inner
+   * gap sits ABOVE its control; underneath, a description or an error belongs
+   * to the control it explains and hugs it. A checkbox has nothing above its
+   * control at all, so "the gap inside a field" is not a number the two share
+   * — what they share is this one, and a form of mixed field types is exactly
+   * where disagreeing about it shows.
+   */
+  const underText = await spaceAboveMessage(
+    page.getByText('As it appears on your identity document.').first()
   );
-  const inCheckbox = await fieldGap(
-    page.getByRole('checkbox', { name: /product news/ })
+  const underCheckbox = await spaceAboveMessage(
+    page.getByText('You can withdraw consent at any time.').first()
   );
 
-  expect(inText).toBeGreaterThan(0);
-  // Two field types disagreeing here is what breaks the rhythm of a form.
-  expect(inCheckbox).toBe(inText);
+  expect(underCheckbox).toBe(underText);
 });
 
 test('the gap between fields is larger than the gap inside one', async ({
@@ -63,16 +98,21 @@ test('the gap between fields is larger than the gap inside one', async ({
   const between = Number.parseFloat(
     await page.getByTestId('form').evaluate(el => getComputedStyle(el).rowGap)
   );
-  const inside = await fieldGap(
+  const inside = await gapAboveControl(
+    page,
+    /Full name/,
     page.getByRole('textbox', { name: /Full name/ })
   );
 
+  expect(inside).toBeGreaterThan(0);
   expect(between).toBeGreaterThan(inside);
 });
 
 test('compact trims both gaps rather than one of them', async ({ page }) => {
   await gotoStory(page, 'components-checkbox--in-a-form');
-  const normalInside = await fieldGap(
+  const normalInside = await gapAboveControl(
+    page,
+    /Full name/,
     page.getByRole('textbox', { name: /Full name/ })
   );
   const normalBetween = Number.parseFloat(
@@ -80,7 +120,9 @@ test('compact trims both gaps rather than one of them', async ({ page }) => {
   );
 
   await gotoStory(page, 'components-checkbox--in-a-form-dark-compact');
-  const compactInside = await fieldGap(
+  const compactInside = await gapAboveControl(
+    page,
+    /Full name/,
     page.getByRole('textbox', { name: /Full name/ })
   );
   const compactBetween = Number.parseFloat(

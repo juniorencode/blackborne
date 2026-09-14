@@ -11,6 +11,7 @@
  * inside the element that declares one.
  */
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { DemoIcon } from '../../catalog/demoIcon';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { LayerPage } from '../../catalog/layerPage';
 import { Button } from '../Button';
@@ -108,6 +109,20 @@ const meta = {
     onSelectionChange: { control: false }
   }
 } satisfies Meta<typeof Select>;
+
+/*
+ * Forty rows, so the list SCROLLS. Nothing in this catalog had one: every
+ * select and combo box in it holds three to six options, which is why a
+ * browser's own LIGHT scrollbar inside a dark panel went unseen until
+ * 2026-09-13. `color-scheme` computes to `normal` here, because dark mode is
+ * an attribute rather than a colour scheme, so the bar's colours are named
+ * instead (`internal/scrollbar.css`).
+ */
+const MANY = Array.from({ length: 40 }, (_, i) => (
+  <SelectItem key={`row-${i + 1}`} id={`row-${i + 1}`}>
+    {`Option number ${i + 1}`}
+  </SelectItem>
+));
 
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -436,6 +451,51 @@ export const Together: Story = {
           <Options />
         </Select>
       </Scope>
+    </div>
+  )
+};
+
+/*
+ * ONE MODE PER STORY, because a list is a layer and two open at once
+ * photograph each other. The pair exists rather than a single picture because
+ * the thing being looked at is the SCROLLBAR, and the whole reason it needed
+ * naming is that a browser was drawing its light one inside the dark panel —
+ * which is only visible beside the light one that is correct by accident.
+ */
+export const LongList: Story = {
+  render: args => (
+    <LayerPage label="Forty options, so the bar is drawn.">
+      <div style={{ width: 280 }}>
+        <Select {...args} defaultOpen defaultSelectedKey="row-3">
+          {MANY}
+        </Select>
+      </div>
+    </LayerPage>
+  )
+};
+
+export const LongListDark: Story = {
+  render: args => (
+    <LayerPage mode="dark" label="Forty options, so the bar is drawn.">
+      <div style={{ width: 280 }}>
+        <Select {...args} defaultOpen defaultSelectedKey="row-3">
+          {MANY}
+        </Select>
+      </div>
+    </LayerPage>
+  )
+};
+
+/*
+ * THE `icon` SLOT. Decision 0031 and doc 07 §2.2b: one mark, at the START.
+ * The chevron owns the other edge, which is why there is no trailing one.
+ */
+export const WithIcon: Story = {
+  render: args => (
+    <div style={{ maxWidth: 320 }}>
+      <Select {...args} label="Status" icon={DemoIcon} defaultSelectedKey="USD">
+        <Options />
+      </Select>
     </div>
   )
 };

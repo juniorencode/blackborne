@@ -14,11 +14,13 @@ import { useDevWarning } from '../../internal/useDevWarning';
 const ROOT = cx(
   'bb-color-swatch-field',
   'bb:box-border bb:flex bb:w-full bb:flex-col',
-  'bb:gap-(--bb-field-gap-inner) bb:font-sans bb:text-md bb:text-text'
+  'bb:font-sans bb:text-md bb:text-text'
 );
 
 const LABEL = cx(
   'bb-color-swatch-field-label',
+  /* The field's one inner gap — see the note on the root. */
+  'bb:mb-(--bb-field-gap-inner)',
   'bb:w-fit bb:text-md bb:font-strong bb:text-text'
 );
 

@@ -36,13 +36,13 @@ transitions, any effect whose purpose is to be pleasing.
 
 |                     |                                                                                     |
 | ------------------- | ----------------------------------------------------------------------------------- |
-| Duration            | 150–200 ms for interface transitions                                                |
+| Duration            | 200 ms for a state change, 300 ms for something that travels (§2.0)                 |
 | Easing              | Fast out on appearing, gentle in on disappearing                                    |
 | Reduced motion      | With the preference active, **nothing** animates. It is not softened: it is removed |
 | A looping indicator | ~700-1300 ms per cycle, and symmetric easing                                        |
 
 The last row is a different budget from the first, and conflating the two is
-how a loading indicator ends up flickering. 150-200 ms is what a change that
+how a loading indicator ends up flickering. The row above is what a change that
 happens **once** may cost; a cycle that repeats for as long as a request lasts
 is judged by whether it still reads as calm at the fiftieth repetition. The
 library's easing is deliberately asymmetric, which is right for something
@@ -50,6 +50,32 @@ arriving and lopsided on a loop that returns to where it started.
 
 The justification, in case anyone asks for it: a 400 ms transition is elegant
 the first time and is forty seconds lost across a hundred repetitions.
+
+### 2.0 One band was covering two different things
+
+**Changed on 2026-09-13.** This section said "150–200 ms for interface
+transitions", one band for every animation that is not a loop, and the
+library's two tokens sat under it at 100 ms and 160 ms. Both numbers moved,
+and the row above now names two budgets instead of one.
+
+**A state change is 200 ms, and it was 100.** At 100 the eye gets about six
+frames: enough to avoid a flicker, not enough to register as movement, so a
+hovered border technically animated and read as a jump. §3's last row asks for
+a visible response to every interaction, and _visible_ is the word that was not
+being met.
+
+**Something that travels is 300 ms, and it was 160.** A panel entering, a
+disclosure's height, a drawer sliding: these cross a distance, where a colour
+does not, and once a state change cost 200 the token called `normal` was
+FASTER than the one called `fast` — a dialog arriving quicker than a button
+changed colour, with the two names saying the opposite of what happened.
+
+**300 is outside the old band deliberately, and the sentence above still
+bounds it.** 400 ms is the number that paragraph rejects, and it rejects it for
+what a hundred repetitions cost; a layer entering is not a hundred repetitions,
+and a state change — the thing that IS repeated, constantly, in a dense form —
+stayed inside the band at its top. What this section had wrong was not the
+numbers so much as treating one budget as covering both.
 
 ### 2.1 A layer does not animate out
 

@@ -194,38 +194,19 @@ test('and an optional one has it first, with no cross at the edge', async ({
   expect(edge.chevrons).toBe(1);
 });
 
-test('and the trigger holds no phantom tick', async ({ page }) => {
-  await gotoStory(page, OPENED);
-
-  const inside = await page
-    .locator('.bb-select-value')
-    .first()
-    .evaluate(value => {
-      const tick = value.querySelector('.bb-select-tick');
-      return {
-        present: tick !== null,
-        display: tick === null ? null : getComputedStyle(tick).display,
-        width: Math.round(value.getBoundingClientRect().width),
-        text: Math.round(
-          value.firstElementChild?.getBoundingClientRect().width ?? 0
-        )
-      };
-    });
-
-  /*
-   * A `Select` DEFECT FOUND BY BUILDING ON IT. `SelectValue` renders the
-   * selected row's own children — all of them — so the trigger contains a copy
-   * of the row's tick. The tick is `visibility: hidden`, deliberately, so a
-   * row does not move as the selection walks; the consequence in the TRIGGER
-   * is 16px of invisible width inside an element that truncates, so a long
-   * value shows its ellipsis early for no reason anybody could see.
-   *
-   * It is `display: none` there now. The markup is still copied — that is the
-   * base's doing — and it takes no room.
-   */
-  expect(inside.present).toBe(true);
-  expect(inside.display).toBe('none');
-});
+/*
+ * WHAT USED TO BE HERE: a check that the trigger held no phantom tick.
+ *
+ * `SelectValue` renders the selected row's own children, so while the row
+ * carried a tick the trigger carried an invisible copy of it — 16px of width
+ * inside an element that truncates, which showed the ellipsis early. The tick
+ * was `display: none` in there for that reason.
+ *
+ * The tick is gone from the row entirely: a chosen option is a soft accent
+ * band and its weight. There is no copy to suppress, so the check has nothing
+ * left to assert and is deleted rather than weakened — an assertion about an
+ * element that no longer exists passes for the wrong reason.
+ */
 
 test('the list is capped and scrolls rather than growing past the window', async ({
   page

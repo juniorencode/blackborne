@@ -106,7 +106,7 @@ export const CheckboxGroup = forwardRef<HTMLDivElement, CheckboxGroupProps>(
       <AriaCheckboxGroup
         ref={ref}
         className={cx(
-          'bb:flex bb:flex-col bb:gap-(--bb-field-gap-inner)',
+          'bb:flex bb:flex-col',
           'bb:font-sans bb:text-md',
           className
         )}
@@ -117,6 +117,10 @@ export const CheckboxGroup = forwardRef<HTMLDivElement, CheckboxGroupProps>(
             isLabelHidden
               ? 'bb:sr-only'
               : 'bb:text-md bb:font-strong bb:text-text',
+            /* The field's one inner gap, carried by what is ABOVE the control
+               rather than by the column — `Field` has the rule and the reason,
+               and a form of mixed field types is where disagreeing shows. */
+            'bb:mb-(--bb-field-gap-inner)',
             'bb:w-fit'
           )}
         >

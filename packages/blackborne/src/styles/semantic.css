@@ -45,20 +45,39 @@
 [data-bb-accent],
 [data-bb-base] {
   /* --- Surfaces ------------------------------------------------------ */
+  /*
+   * Step 1, and it was the literal `#fff` for a day. White is not part of the
+   * grey scale, so the page stopped following `[data-bb-base]` — measured by
+   * `palette.spec.ts`: a `stone` scope moved every grey in the library except
+   * the largest one, which is the page. Decision 0029 promises that scope
+   * moves the greys, and the page is the biggest grey there is.
+   */
   --bb-surface: var(--bb-x-gray-1);
   --bb-surface-on: var(--bb-x-gray-12);
   /*
    * The surface of something that FLOATS: a dialog, a drawer, a popover, a
    * menu (doc 03 §4, and doc 08 for what "floats" means here).
    *
-   * Step 1, the same value as the page, and that identity is chosen rather
-   * than left over. In light mode elevation is carried by the SHADOW — that is
-   * what a shadow is for — so a floating panel takes the lightest surface
-   * there is and the shadow does the lifting. In dark mode it cannot: doc 03
-   * §5 rule 5, a shadow is barely visible on a dark ground, so the dark block
-   * below restates this at step 3, which the dark scale makes LIGHTER than the
-   * page. One token, two mechanisms, exactly the case §6.1 allows a restatement
-   * for.
+   * Step 2, one above the page, and it equalled the page exactly until
+   * 2026-09-13. The identity was not an oversight: in light, elevation is what
+   * a SHADOW is for, so a floating panel could take the lightest surface there
+   * is and let the shadow lift it. What it could not survive was a panel whose
+   * shadow is softened or absent — a select's list hangs off its field rather
+   * than floating over the page — which read as nothing at all against a
+   * near-white ground. One step is enough to be a surface and not enough to be
+   * a slab.
+   *
+   * In dark it cannot use a shadow at all: doc 03 §5 rule 5, a shadow is
+   * barely visible on a dark ground, so the dark block below restates this
+   * lighter than the page and the surface does the lifting. One token, two
+   * mechanisms, exactly the case §6.1 allows a restatement for.
+   *
+   * AND THE TOKEN NOW HAS TWO KINDS OF READER THAT DISAGREE. A dialog, a
+   * popover, a menu and a toast float OVER the page. An `Accordion` sits
+   * INSIDE it — inside a `Card`, in one of the catalog's own stories — where a
+   * body of its own makes it darker than the thing containing it. The catalog's
+   * §7 carries the row; a second token for "a section with its own surface" is
+   * the answer and has not been earned, because one reader is not a pattern.
    *
    * It used to be step 2, and measured against the page that was elevation
    * pointing the wrong way: 0.9486 against 0.9741 relative luminance, so the
@@ -71,7 +90,7 @@
    * Under a scrim it makes no difference, which is why a dialog would never
    * have exposed it. A popover has no scrim and sits directly on the page.
    */
-  --bb-surface-raised: var(--bb-x-gray-1);
+  --bb-surface-raised: var(--bb-x-gray-2);
   --bb-surface-raised-on: var(--bb-x-gray-12);
   --bb-surface-sunken: var(--bb-x-gray-3);
   --bb-surface-sunken-on: var(--bb-x-gray-12);
@@ -87,8 +106,30 @@
   --bb-surface-control: var(--bb-x-gray-2);
   --bb-surface-control-on: var(--bb-x-gray-12);
   --bb-surface-hover: var(--bb-x-gray-5);
+  /*
+   * THE HOVER OF A ROW ON A RAISED SURFACE, which is not the same colour as
+   * the hover of a row on the page — and until now there was only one token
+   * for both.
+   *
+   * `--bb-surface-hover` is chosen against the PAGE. A menu row, a select's
+   * option and a combo box's option sit on `--bb-surface-raised` instead, and
+   * the two grounds are far apart in dark: measured with a list open, the
+   * panel is #38485f and the highlight landed at #0c192c — 1.9:1 DARKER than
+   * what it sits on, where the same token on the page goes lighter. One token
+   * doing two jobs, and the second job only appeared once elevation in dark
+   * became visible.
+   *
+   * Step 4 in light, against the page's step 1: a whisper rather than the
+   * slab step 5 painted on a near-white panel.
+   *
+   * THE DARK VALUE IS UNCHANGED FROM WHAT THE LISTS ALREADY HAD, deliberately.
+   * Naming the role is what this commit does; choosing a dark value that goes
+   * the right way is a decision still open, and putting a guess here would
+   * bury it.
+   */
+  --bb-surface-raised-hover: var(--bb-x-gray-4);
   --bb-surface-active: var(--bb-x-gray-6);
-  --bb-surface-selected: var(--bb-x-brand-3);
+  --bb-surface-selected: var(--bb-x-brand-4);
   --bb-surface-selected-on: var(--bb-x-brand-11);
   --bb-surface-disabled: var(--bb-x-gray-2);
   --bb-surface-disabled-on: var(--bb-x-gray-9);
@@ -165,20 +206,6 @@
    */
   --bb-border: var(--bb-x-gray-6);
   --bb-border-strong: var(--bb-x-gray-8);
-  /*
-   * The border of a SMALL control — a checkbox, a radio, a switch — as
-   * distinct from a field or a panel.
-   *
-   * The same border colour does not read the same on 20px as it does on
-   * 300px: there is a twentieth of the surface carrying it. Doc 03 §4.6b
-   * allows a stronger border as a justified exception, and "small control"
-   * is the justification — it is a rule about perceived weight, not a second
-   * grey creeping in.
-   *
-   * In light mode it is the ordinary border: measured, the difference is
-   * already legible there. Dark mode restates it — see below.
-   */
-  --bb-border-control: var(--bb-border);
   --bb-border-focus: var(--bb-x-brand-8);
 
   /* --- Brand -------------------------------------------------------- */
@@ -234,7 +261,64 @@
    * dark. Every state colour gets a -text pair for the same reason, so
    * nobody reaches for the solid step again.
    */
-  --bb-danger-text: var(--bb-x-danger-11);
+  /*
+   * THE ONE COLOUR TOKEN IN THIS FILE THAT IS NOT A SCALE STEP, and the
+   * reason is a measurement rather than taste.
+   *
+   * It was step 11, went to 9, then to 10, and none of them is the colour
+   * asked for — "redder and less light". On this scale those pull opposite
+   * ways, because chroma falls as the steps darken:
+   *
+   *     9   L 57.7%  C 0.234    the reddest, and the lightest
+   *     10  L 54.7%  C 0.222
+   *     11  L 52.8%  C 0.214    the darkest, and the least red
+   *
+   * So the value is written: step 9's chroma at a lightness between 10 and 11.
+   * `#cc0007`, 5.88:1 against the page — as dark as the 5.94:1 of the step
+   * it replaced, and far purer: step 11 is `#ca011f`, with four times the blue
+   * in it. The lightness was walked down in four steps with the picture open
+   * each time; this is where it landed.
+   * Step 8 is not an option in any case — it falls off a cliff to 1.92:1.
+   *
+   * THE COST, stated because nothing will catch it: the danger scale can now
+   * move underneath this line without it following. If the palette is
+   * regenerated, re-measure.
+   *
+   * The dark block RESTATES it at 11 (7.48:1), and that restatement is not
+   * optional: without it dark inherits this line and lands at 3.23:1, which
+   * is what happened. A dark scale runs the other way, so its lightest usable
+   * red is at the top — 10 there is 3.79:1 and fails as text.
+   *
+   * The field's invalid EDGE is a separate token, `--bb-border-invalid` below,
+   * which in this mode happens to hold the same value — see the note on it for
+   * why the two cannot be one line. Neither of them may be `--bb-danger`: that
+   * is a FILL, with white text paired to it, and in dark the same lightening
+   * would put white on `#ff958d`.
+   */
+  --bb-danger-text: oklch(51.5% 0.235 25.3);
+
+  /*
+   * THE EDGE OF A FIELD IN ERROR, which is not the same colour as the message
+   * under it — and the split is forced by a measurement rather than chosen.
+   *
+   * The two were one token for an afternoon, on the argument that one signal
+   * should be one colour. Then `contrast.spec.ts` measured the message on all
+   * FOUR surfaces instead of only on the page: at the red that reads as red in
+   * dark, it is 3.23:1 on the page and **2.95:1 on a raised panel** — so an
+   * error inside a dialog missed even the 3:1 a graphical element needs, let
+   * alone the 4.5:1 of text.
+   *
+   * A dark scale has no value that is both. The reds an edge wants — step 9 at
+   * 3.23:1 and step 10 at 3.79:1 — are under the 4.5:1 a message needs, and
+   * step 11, the only step legible as text, is a pale pink no border wants. So
+   * the roles separate: an EDGE needs 3:1 and a MESSAGE needs 4.5:1, and
+   * asking one value to clear both is what produced a number that cleared
+   * neither.
+   *
+   * In LIGHT they land on the same value anyway, which is why the split is
+   * invisible there and why it was not obvious to begin with.
+   */
+  --bb-border-invalid: oklch(51.5% 0.235 25.3);
   --bb-danger-subtle: var(--bb-x-danger-3);
   /*
    * Step 12, not 11, and this is the same finding --bb-accent-subtle-on
@@ -363,9 +447,20 @@
    */
   --bb-weight-strong: 500;
 
-  /* --- Motion — cancelled entirely under reduced motion ------------- */
-  --bb-duration-fast: 100ms;
-  --bb-duration-normal: 160ms;
+  /* --- Motion — cancelled entirely under reduced motion -------------
+   *
+   * 200ms, and it was 100ms. At 100 a state change is technically animated
+   * and reads as a jump: the eye gets about six frames, which is enough to
+   * avoid a flicker and not enough to register as movement. Doc 09 §3 asks
+   * for a visible response to every interaction, and "visible" is the word
+   * that was not being met.
+   */
+  --bb-duration-fast: 200ms;
+  /* 300, and it was 160. Once a state change went to 200 this was FASTER than
+     the token called "fast", so a dialog arrived quicker than a button changed
+     colour and the two names said the opposite. A thing that enters travels a
+     distance; a colour does not. */
+  --bb-duration-normal: 300ms;
   --bb-ease: cubic-bezier(0.2, 0, 0.3, 1);
 
   /* --- Stacking — PUBLIC, with wide gaps (doc 08 §2) ---------------- */
@@ -423,9 +518,26 @@
      and the shadow lifts it; here it is step 3 and the surface does.
      Measured, that is 0.0160 against the page's 0.0057 relative
      luminance — lighter, which is the direction this mode needs. */
-  --bb-surface: var(--bb-x-gray-1);
-  --bb-surface-raised: var(--bb-x-gray-3);
+  --bb-surface: var(--bb-x-gray-3);
+  --bb-surface-raised: var(--bb-x-gray-4);
   --bb-surface-sunken: var(--bb-x-gray-2);
+  /*
+   * ONE STEP ABOVE THE PANEL, so hovering LIGHTENS in this mode wherever you
+   * are — on the page and inside a layer.
+   *
+   * It was the open half of the note above, and the reason to close it this
+   * way is that a mode should have one gesture. Measured before: on the page
+   * `surface-hover` is lighter than what it sits on, and inside a panel the
+   * same idea was landing darker, so a table row lit up and a menu row went
+   * out, on one screen. Light mode darkens in both places and is already
+   * consistent; the inversion between MODES is the mode inverting, which is
+   * expected, and the inversion within one mode is not.
+   *
+   * Step 5 against the panel's step 4 is deliberately small. Step 6 reads more
+   * clearly and is the colour of `--bb-border`, so a hovered row in a menu
+   * would swallow the divider under it.
+   */
+  --bb-surface-raised-hover: var(--bb-x-gray-5);
 
   /* Step 7 here too, and restated rather than inherited because §6 says every
      semantic token is defined separately in each mode. The dark scale is
@@ -433,24 +545,16 @@
      different colour and the same judgement: 1.72:1 against the track. */
   --bb-surface-knob: var(--bb-x-gray-7);
 
-  /* Softer than light, deliberately: chosen by eye. See the note on
-     --bb-border above. */
-  --bb-border: var(--bb-x-gray-5);
+  /* Chosen by eye against the page. See the note on --bb-border above.
 
-  /*
-   * Step 8 for small controls in dark, and this one IS about the ratio.
-   *
-   * An unchecked checkbox in dark is a near-black square on a near-black page:
-   * fill 1.19:1, border 1.44:1. Measured across the scale, step 8 is the first
-   * that reaches 3.01:1 — the 3:1 WCAG 1.4.11 asks for what identifies a
-   * component, and the only place in this library where that bar is actually
-   * met rather than argued around.
-   *
-   * It is affordable here precisely because these controls are small. The same
-   * step on every field would turn a form into a grid, which is what §4.6b
-   * warns against.
-   */
-  --bb-border-control: var(--bb-x-gray-8);
+     It was step 5, picked when the page was step 1. The page moved to step 3
+     and the same value fell from 1.44:1 to 1.20:1 — a field's edge is the
+     only thing drawing its box in this mode, so it got quieter exactly where
+     it had least to spare. Step 6 is 1.37:1. It stays deliberately below
+     the 3:1 a small control used to take: that step is affordable on a 20px
+     box and
+     would turn a form into a grid on every field (doc 03 §4.6b). */
+  --bb-border: var(--bb-x-gray-6);
 
   /* Step 11 is already the light end of the dark scale, and it clears every
      subtle background comfortably. Step 12 here would be near-white on a
@@ -525,6 +629,30 @@
    */
   --bb-danger: var(--bb-x-danger-9);
   --bb-danger-on: #fff;
+  /*
+   * STEP 11, AND THE SPLIT BELOW IT IS THE REASON. This is the measurement
+   * that decided both tokens, so it is written where the number is.
+   *
+   * It was step 9 for an afternoon — the family's SOLID, the one value that is
+   * the same in both modes, and the red that looks like the red. Against the
+   * page it is 3.23:1, which clears the 3:1 doc 03 §5 rule 2 asks of a
+   * graphical element and does not clear the 4.5:1 it asks of text; on a
+   * RAISED surface it is 2.95:1 and clears neither, so an error inside a
+   * dialog was below the floor for a border as well.
+   *
+   * A dark scale has no step that is both, because it runs dark to light: 10
+   * is 3.79:1 and still fails as text, and 11 — 7.48:1, the only step legible
+   * as a message — is a pale pink no border wants. So the roles separate, the
+   * edge takes 10 in `--bb-border-invalid` and the message takes 11 here.
+   *
+   * Eight components read this token, and all three candidates were looked at
+   * with the picture open, on a field's edge AND on a menu's destructive row.
+   */
+  --bb-danger-text: var(--bb-x-danger-11);
+  /* Step 10: 3.79:1 against the page, which clears the 3:1 an edge needs and
+     does not clear the 4.5:1 a message needs — which is the whole reason this
+     is a separate token from the message's. */
+  --bb-border-invalid: var(--bb-x-danger-10);
   --bb-success: var(--bb-x-success-9);
   --bb-success-on: var(--bb-x-gray-1);
   --bb-info: var(--bb-x-info-9);

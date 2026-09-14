@@ -6,6 +6,7 @@
  * dictionary existed, which is why those level-0 pieces came first.
  */
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { DemoIcon } from '../../catalog/demoIcon';
 import { Button } from '../Button';
 import { ConfigProvider } from '../../config';
 import {
@@ -509,6 +510,30 @@ export const Clearing: Story = {
           <TextField label="Saving" isClearable defaultValue="Ada" isSaving />
         </div>
       </Scope>
+    </div>
+  )
+};
+
+/*
+ * THE `icon` SLOT. Decision 0031 and doc 07 §2.2b: one mark, at the START,
+ * because six of the seven fields own their trailing edge permanently or
+ * conditionally and a slot that empties itself is worse than no slot.
+ *
+ * The glyph carries only a `viewBox`, which is the case that rendered at 0 by
+ * 0 until the slot was taught to size what arrives in it.
+ */
+export const WithIcon: Story = {
+  render: args => (
+    <div className="catalog-stack" style={{ maxWidth: 320 }}>
+      <TextField {...args} label="Where" icon={DemoIcon} defaultValue="Lima" />
+      {/* Beside a prefix, which is the pair the order in §2.2b decides. */}
+      <TextField
+        {...args}
+        label="Amount"
+        icon={DemoIcon}
+        prefix="S/"
+        defaultValue="1250"
+      />
     </div>
   )
 };
