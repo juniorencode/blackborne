@@ -23,7 +23,7 @@ import { fileURLToPath } from 'node:url';
 import { RULES_A_FRAGMENT_IS_NOT_RESPONSIBLE_FOR } from './a11yRules';
 import { CATALOG_INDEX } from './catalog';
 import { pinClock } from './clock';
-import { imagesSettled, painted } from './settle';
+import { animationsSettled, imagesSettled, painted } from './settle';
 import { gotoStory } from './story';
 
 type StoryEntry = {
@@ -195,6 +195,7 @@ test.describe('automated accessibility', () => {
        * were competing for the machine. `e2e/settle` has the table.
        */
       await painted(page);
+      await animationsSettled(page);
       await imagesSettled(page);
 
       /*
@@ -264,9 +265,52 @@ test.describe('automated accessibility', () => {
           .slice(0, 3)
           .map(node => node.target.join(' '))
           .join(', ');
+
+        /*
+         * AND THE COLOURS, FOR THE ONE RULE WHOSE SELECTOR IS NOT ENOUGH.
+         *
+         * A selector puts someone on the element, which is all a missing name
+         * or a bad role needs. A contrast failure is a NUMBER, and the number
+         * is the question: whether it is 4.49 against a floor of 4.5 or 2.1
+         * decides whether it is a rounding argument or a defect, and whether
+         * the background axe computed is the one the component paints decides
+         * whether it measured the thing at all.
+         *
+         * axe already carries all of it, in `node.any[].data`, and this file
+         * was throwing it away — found when a contrast violation fired ONCE in
+         * a full run, on a story that then passed alone and passed again under
+         * a parallel run of its own component. There was nothing to chase,
+         * which is doc 10 §11.3's rule arriving: ship the thing that will
+         * attribute the next occurrence rather than a theory about this one.
+         */
+        const colours =
+          violation.id === 'color-contrast'
+            ? violation.nodes.slice(0, 3).flatMap(node =>
+                node.any.flatMap(check => {
+                  const data = check.data as
+                    | {
+                        fgColor?: string;
+                        bgColor?: string;
+                        contrastRatio?: number;
+                        expectedContrastRatio?: string;
+                        fontSize?: string;
+                        fontWeight?: string;
+                      }
+                    | undefined;
+                  if (data?.contrastRatio === undefined) return [];
+                  return [
+                    `    ${data.fgColor ?? '?'} on ${data.bgColor ?? '?'} = ` +
+                      `${data.contrastRatio}:1, wanted ${data.expectedContrastRatio ?? '?'}` +
+                      ` (${data.fontSize ?? '?'}, weight ${data.fontWeight ?? '?'})`
+                  ];
+                })
+              )
+            : [];
+
         return [
           `${violation.id} (${violation.impact}): ${violation.help}`,
-          `    at: ${where}`
+          `    at: ${where}`,
+          ...colours
         ].join('\n');
       });
 

@@ -164,12 +164,74 @@ test('a base scope moves the greys and leaves the accent alone', async ({
   const asDefault = page.locator(panel('default'));
   const stone = page.locator(panel('base stone'));
 
-  expect(await token(page, stone, '--bb-surface')).not.toBe(
-    await token(page, asDefault, '--bb-surface')
+  /*
+   * THE GREY IS A PANEL, AND IT USED TO BE THE PAGE. This assertion is the
+   * enforcement of decision 0029's promise, so what it names has to be what
+   * the promise still covers.
+   *
+   * Until 2026-09-14 it read `--bb-surface`, which was step 1 of the grey
+   * scale and therefore the largest thing a base scope moved. The page is the
+   * literal `#fff` in light now, on purpose and with the cost written into
+   * doc 03 §3 and the decision itself, so that token is the one thing in light
+   * a scope does NOT reach — and asserting it here would have asserted the
+   * opposite of what the library promises.
+   */
+  expect(await token(page, stone, '--bb-surface-raised')).not.toBe(
+    await token(page, asDefault, '--bb-surface-raised')
   );
   expect(await token(page, stone, '--bb-accent')).toBe(
     await token(page, asDefault, '--bb-accent')
   );
+});
+
+/*
+ * AND THE EXCEPTION IS MEASURED RATHER THAN WRITTEN DOWN, which is doc 10
+ * §11.10: a rule with no check has been true by luck for as long as nobody has
+ * written the code that breaks it. This one was a defect until the day it was
+ * a decision, so it is the last rule in this library that should rest on a
+ * sentence.
+ *
+ * Both halves are here, because the exception is asymmetric and the asymmetry
+ * is the whole of it: the page is fixed in LIGHT and still follows the scope in
+ * DARK, where there is no white to reach for.
+ */
+test('the page is white in light whatever the base, and follows it in dark', async ({
+  page
+}) => {
+  await gotoStory(page, 'foundations-palette--tones-do-not-follow');
+
+  const asDefault = page.locator(panel('default'));
+  const stone = page.locator(panel('base stone'));
+
+  const white = await token(page, asDefault, '--bb-surface');
+  expect(await token(page, stone, '--bb-surface')).toBe(white);
+
+  /*
+   * The dark half needs no story. A scope is an attribute and the catalogue is
+   * loaded on every page here, so two constructed elements answer it — the
+   * technique `contrast.spec.ts` established, and the reason it can assert
+   * things no component happens to paint.
+   */
+  const inDark = await page.evaluate(() => {
+    const read = (attrs: Record<string, string>) => {
+      const el = document.createElement('div');
+      for (const [name, value] of Object.entries(attrs))
+        el.setAttribute(name, value);
+      document.body.append(el);
+      const resolved = getComputedStyle(el)
+        .getPropertyValue('--bb-surface')
+        .trim();
+      el.remove();
+      return resolved;
+    };
+    return {
+      plain: read({ 'data-bb-mode': 'dark' }),
+      stone: read({ 'data-bb-mode': 'dark', 'data-bb-base': 'stone' })
+    };
+  });
+
+  expect(inDark.plain).not.toBe('');
+  expect(inDark.stone).not.toBe(inDark.plain);
 });
 
 /*

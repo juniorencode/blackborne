@@ -118,6 +118,13 @@ instead.
 A base scope moves the greys and leaves the accent alone. The four tone
 families follow neither.
 
+**One exception, added 2026-09-14: the PAGE in light mode.** `--bb-surface` is
+the literal `#fff` there, so a base scope reaches every panel, control, border
+and divider in light and not the ground they sit on. Dark is unaffected — the
+page there is step 3 of the scale and still follows the scope. A project that
+wants a tinted page in light sets `--bb-surface`, which is a semantic token and
+therefore works by inheritance without `data-bb-theme` (doc 03 §3.1).
+
 **Not guaranteed, and named rather than smoothed over.** Four accents have a
 mid-tone solid that cannot carry a run of text at 4.5:1 either way — **cyan
 4.48, emerald 4.31, sky 4.07, teal 4.39** in light, and sky in dark. They clear

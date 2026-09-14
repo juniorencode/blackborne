@@ -138,6 +138,24 @@ It is the same mechanism as the row above and not a fourth axis: the accent
 scope redefines the brand family, the base scope redefines the greys, and the
 four tone families follow neither ([decision 0029](../decisions/0029-the-catalogue-is-opt-in-and-a-scope-carries-the-pair.md)).
 
+**And as of 2026-09-14 the base scope does not reach the PAGE in light mode.**
+`--bb-surface` is the literal `#fff` there rather than step 1 of the grey scale
+— the second colour token in this library that is a literal and not a scale
+step, after the invalid edge in §5. Every other surface in light still follows
+the base: a panel, a control's fill, a sunken zone, every border and every
+divider. So a project writing `data-bb-base="stone"` gets warm greys throughout
+and a white page under them.
+
+**The trade is taken knowingly and is written here rather than found later.** A
+base scope can no longer tint the largest area on the screen in light mode, and
+a project that wants a tinted page sets `--bb-surface` itself — a semantic
+token, so plain inheritance delivers it anywhere, which is §3.1's first
+consequence and the reason this costs a line rather than a mechanism.
+
+**Dark mode is unchanged.** The page there is step 3 of the base scale and goes
+on following the scope, because in dark the page is not the lightest thing on
+the screen and has no equivalent of white to reach for.
+
 ### 3.1 The scope rule, and why it is not optional
 
 Redefining the variables on a container is only half of it. The other half is
@@ -235,7 +253,8 @@ The closed inventory. Adding a new one requires checking that no equivalent
 already exists — three near-identical greys is how entropy begins.
 
 **Surfaces**
-`surface` (panel or card base) · `surface-control` **+ `surface-control-on`**
+`surface` (the page, and a panel or card sitting flat on it) ·
+`surface-control` **+ `surface-control-on`**
 (the resting background of a control) · `surface-raised` (raised: menu, popover,
 dialog) · `surface-sunken` (sunken: table header, background zones) ·
 `surface-overlay` (the scrim behind a dialog) · `surface-hover` ·

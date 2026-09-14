@@ -350,6 +350,31 @@ minor versions. Every break is listed here with its migration.
 
 ### Changed
 
+- **The page is white in light mode**, and the base axis no longer reaches it
+  there. `--bb-surface` is the literal `#fff` rather than step 1 of the grey
+  scale, so a field's fill reads as a well rather than as a slightly different
+  grey — which is what it is for.
+
+  **The cost is written down rather than discovered later.**
+  [Decision 0029](./docs/decisions/0029-the-catalogue-is-opt-in-and-a-scope-carries-the-pair.md)
+  promised that `data-bb-base` moves the greys, and the page was the biggest
+  grey there is. That promise now carries an exception, in the decision and in
+  doc 03 §3: a base scope still reaches every panel, control, border and
+  divider in light, and not the ground they sit on. Dark is unchanged — the
+  page there is step 3 and still follows the scope, because there is no white
+  to reach for at that end of a dark scale. A project that wants a tinted page
+  sets `--bb-surface`, which is semantic and therefore needs no
+  `data-bb-theme`.
+
+  The exception is MEASURED rather than merely stated: `palette.spec.ts`
+  asserts the page is unmoved by a scope in light and moved by one in dark, and
+  it was verified by putting the page back to step 1 and watching it go red.
+
+- **An option row has the same padding on both axes** — one step of the scale
+  instead of two horizontally against one vertically, which nobody had decided.
+  It applies to `Select`, to `ComboBox`, and to the "nothing matched" row that
+  stands in for them.
+
 - **A pass over the fields, the controls and the two lists, done with the
   pictures open.** Nothing in it is a new capability; it is the appearance of
   what already shipped, reviewed component by component and changed where a
@@ -461,6 +486,44 @@ minor versions. Every break is listed here with its migration.
   defaulting to `primary`.
 
 ### Fixed
+
+- **The accessibility suite was measuring colour while the page was still
+  moving.** `painted()` guarantees a frame has been painted and says nothing
+  about WHICH frame, so a layer that animates in was being read against a scrim
+  a third of the way up. Measured on `Toast / Above a dialog` at the instant
+  axe runs: two animations, 300ms each, at 33% progress — and axe reported
+  `#6b7480 on #f5f7f9 = 4.4:1` against a floor of 4.5, once, on a story that
+  then passed alone in the same build.
+
+  It had been latent since the layers existed and became reachable when doc 09
+  §2.0 took a layer's entry from 160ms to 300: the same instant went from 62%
+  of the way through the animation to 33%. `e2e/settle.ts` now waits for a
+  STATE — no animation with an end still running, an endless one being a
+  spinner or a skeleton and therefore settled by definition — and it was
+  verified by measuring two running before the wait and none after.
+
+  The colours in that message are new too: a contrast failure used to report
+  only a selector, and the number is the whole question. It was verified
+  against a deliberately unreadable element before being trusted.
+
+- **Every row in every scrolling list in this library was being squeezed.** A
+  list is a flex column with a ceiling on its height, so its rows are flex
+  items — and a flex item's default `flex-shrink` is 1, so when the rows did
+  not fit the browser took the difference out of THEM instead of letting the
+  box scroll, down to the minimum target size where they stopped.
+
+  Measured on one component in two stories: five options rendered at 37px and
+  forty rendered at 28px, from the same code. It had been shipping since the
+  lists existed and was invisible because the squeeze was a single pixel — 29
+  into 28 — until the padding above made it nine. `Menu` had it too, at fifteen
+  rows in a panel five pixels shorter than they needed. The rows do not shrink
+  now; the list scrolls, which is what the scrollbar was for.
+
+- **A `ComboBox`'s list panel had 2px of padding where a `Select`'s had 4px**,
+  with identical rows inside both. `Select`'s own comment records why 2px is
+  wrong — at that distance the rows nearly touch the panel's border and the
+  list reads as having overflowed its box — and its sibling was still on the
+  value that argument rejects.
 
 - **A `Checkbox` had no edge, no hover response and no red border while
   invalid.** An edit dropped a `*/`, so the comment above the box swallowed the
