@@ -78,8 +78,9 @@ test('and the content scrolls rather than the panel overflowing the window', asy
   expect(box.y).toBeGreaterThanOrEqual(0);
   expect(box.y + box.height).toBeLessThanOrEqual(viewport.height + 1);
 
-  const sheet = panel.getByRole('dialog');
-  const metrics = await sheet.evaluate(node => ({
+  /* The body is the scroller since 2026-09-14 — doc 08 §4.1. */
+  const body = panel.locator('.bb-layer-body');
+  const metrics = await body.evaluate(node => ({
     scrollHeight: node.scrollHeight,
     clientHeight: node.clientHeight
   }));
@@ -90,25 +91,26 @@ test('the header and footer are still reachable at this size', async ({
   page
 }) => {
   /*
-   * The pinned pieces are what a small window puts under pressure: a header
-   * and a footer that are `sticky` inside the scroller keep their place, and
-   * one that had become a row of a grid would be pushed off instead.
+   * The two ends are what a small window puts under pressure: a header and a
+   * footer that hold their place while the content between them moves.
    *
-   * Asserted by pressing a key rather than by reading a style, because the
-   * failure this guards against — the scroll container not being the focused
-   * element — is invisible to everything that does not.
+   * Asserted by pressing a key rather than by reading a style, because what
+   * this guards against is the scroll region being unreachable — which is
+   * invisible to everything that does not press one. Doc 08 §4.1 records why
+   * the region has to be focused first at all: it is a descendant of the
+   * element the base focuses, so it carries a tab stop of its own.
    */
   await gotoStory(page, 'components-popover--scrolling');
   const panel = await settled(page);
-  const sheet = panel.getByRole('dialog');
+  const body = panel.locator('.bb-layer-body');
 
   const heading = panel.getByRole('heading');
   const before = (await heading.boundingBox())!.y;
 
-  await sheet.focus();
+  await body.focus();
   await page.keyboard.press('End');
   await expect
-    .poll(async () => sheet.evaluate(node => node.scrollTop))
+    .poll(async () => body.evaluate(node => node.scrollTop))
     .toBeGreaterThan(0);
 
   const after = (await heading.boundingBox())!.y;

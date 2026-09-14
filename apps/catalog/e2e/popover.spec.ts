@@ -497,7 +497,16 @@ test.describe('the panel', () => {
     await expect(panel).toBeVisible();
     await expect(panel).not.toHaveAttribute('data-entering', /.*/);
 
+    /*
+     * THE BODY IS THE SCROLLER, and it was the sheet until 2026-09-14. Doc 08
+     * §4.1 has the swap: the bar now spans the content rather than running the
+     * full height of the panel past a pinned header and a pinned footer.
+     *
+     * What this check asks is unchanged — the content scrolls and the two ends
+     * stay put — and the element it asks about is not.
+     */
     const sheet = panel.getByRole('dialog');
+    const body = panel.locator('.bb-layer-body');
     /*
      * The width is asserted here too, for the same reason the check above
      * gained a floor: `scrollHeight > clientHeight` is trivially true of a 2px
@@ -507,21 +516,25 @@ test.describe('the panel', () => {
      */
     expect((await panel.boundingBox())!.width).toBeGreaterThan(100);
 
-    const metrics = await sheet.evaluate(node => ({
+    const metrics = await body.evaluate(node => ({
       scrollHeight: node.scrollHeight,
       clientHeight: node.clientHeight
     }));
     expect(metrics.scrollHeight).toBeGreaterThan(metrics.clientHeight);
 
+    /* And the panel itself does NOT, which is the other half of the swap. */
+    expect(
+      await sheet.evaluate(node => node.scrollHeight - node.clientHeight <= 1)
+    ).toBe(true);
+
     const titleBefore = (await panel.getByRole('heading').boundingBox())!.y;
-    await sheet.evaluate(node => {
+    await body.evaluate(node => {
       node.scrollTop = node.scrollHeight;
     });
     const titleAfter = (await panel.getByRole('heading').boundingBox())!.y;
 
-    // Sticky inside the scroller, not a row of a grid — because the element
-    // that scrolls has to be the one the base focuses (doc 08, and the
-    // package guide).
+    // Rows of a column now, above and below the one that scrolls — so content
+    // moving under them must not move them (doc 08 §4.1).
     expect(Math.abs(titleAfter - titleBefore)).toBeLessThanOrEqual(1);
   });
 });

@@ -14,7 +14,7 @@
  */
 import { expect, test } from '@playwright/test';
 import { travelTo } from './pointer';
-import { painted } from './settle';
+import { animationsSettled, painted } from './settle';
 import { gotoStory } from './story';
 import { watchWheels, wheelsSeen } from './wheel';
 
@@ -287,36 +287,66 @@ test.describe('scroll', () => {
       .toBeGreaterThan(0);
   });
 
-  test('the dialog scrolls from the keyboard the moment it opens', async ({
+  test('the keyboard reaches the scroll region, and how far away it is', async ({
     page
   }) => {
     /*
-     * The reason the scrolling element and the element the base focuses are
-     * the same one.
+     * REWRITTEN 2026-09-14, AND THE OLD ASSERTION IS WORTH READING BEFORE
+     * CHANGING THIS BACK.
      *
-     * A browser scrolls the nearest scrollable ANCESTOR of whatever has focus.
-     * The obvious structure — a three-row grid with the middle row scrolling —
-     * makes the scroll container a DESCENDANT of the focused panel, and then
-     * no key reaches it: the arrows look for a scrollable ancestor, find the
-     * clipped panel and the locked page, and move nothing.
+     * It used to say: focus the panel the way opening does, press `PageDown`,
+     * the panel scrolls. That was true because the scrolling element and the
+     * element the base focuses were the same one, and a browser scrolls the
+     * nearest scrollable ANCESTOR of whatever has focus.
      *
-     * That exact failure has already happened in this repository, on the
-     * catalog's own resizable panel, and it is invisible to every check that
-     * does not press a key. Which is why this presses one.
+     * The scroll moved to the body so the bar spans the content rather than
+     * the whole panel (doc 08 §4.1), which makes the scroller a DESCENDANT of
+     * the focused element — so the keys do nothing until something inside is
+     * reached. The route is bought back with a tab stop on the region, which
+     * is what WCAG 2.1.1 asks for, and the COST is the thing this check now
+     * pins: it is no longer immediate.
+     *
+     * Measured rather than asserted loosely, because "reachable" is the kind
+     * of claim that stays true while quietly getting worse. Two stops, in
+     * order: the close button, then the region. If a third ever appears
+     * between them this goes red, which is the point.
      */
     await gotoStory(page, 'components-dialog--scrolling');
+    await painted(page);
+    await animationsSettled(page);
 
     const panel = page.getByRole('dialog').first();
     await expect(panel).toBeVisible();
 
+    /* The panel itself no longer scrolls, and that is half of the change. */
+    expect(
+      await panel.evaluate(node => node.scrollHeight - node.clientHeight <= 1)
+    ).toBe(true);
+
     // Focus it the way opening does, then use the keyboard and nothing else.
     await panel.evaluate(node => (node as HTMLElement).focus());
-    const before = await panel.evaluate(node => node.scrollTop);
-    expect(before).toBe(0);
+
+    const stops: string[] = [];
+    for (let i = 0; i < 4; i++) {
+      await page.keyboard.press('Tab');
+      stops.push(
+        await page.evaluate(() => {
+          const el = document.activeElement;
+          if (!(el instanceof HTMLElement)) return 'nothing';
+          if (el.classList.contains('bb-layer-body')) return 'the region';
+          return el.getAttribute('aria-label') ?? el.tagName;
+        })
+      );
+      if (stops.at(-1) === 'the region') break;
+    }
+    expect(stops).toEqual(['Close', 'the region']);
+
+    const body = page.locator('.bb-layer-body');
+    expect(await body.evaluate(node => node.scrollTop)).toBe(0);
 
     await page.keyboard.press('PageDown');
     await expect
-      .poll(() => panel.evaluate(node => node.scrollTop), { timeout: 1000 })
+      .poll(() => body.evaluate(node => node.scrollTop), { timeout: 1000 })
       .toBeGreaterThan(0);
   });
 });
@@ -483,4 +513,82 @@ test.describe('stacking', () => {
     expect(measured?.token).not.toBe('');
     expect(measured?.applied).toBe(measured?.token);
   });
+});
+
+/*
+ * THE SCROLL IS ON THE BODY, AND THE KEYBOARD STILL REACHES IT.
+ *
+ * Doc 08 §4.1: the scroll moved off the element the base focuses on
+ * 2026-09-14, so the bar spans the content rather than the whole panel. The
+ * reason that was not free is that a browser scrolls the nearest scrollable
+ * ANCESTOR of whatever has focus — an inner scroller is a DESCENDANT of the
+ * focused element, and no key reaches it.
+ *
+ * `internal/useScrollableRegion` buys the route back, and this is the check
+ * that it is a route rather than an intention: it presses the key. Every
+ * assertion here fails if the `tabIndex` is dropped, and the first one fails
+ * if the scroll goes back on the sheet.
+ */
+test('a layer scrolls its body, not its panel, and a key still moves it', async ({
+  page
+}) => {
+  await gotoStory(page, 'components-dialog--scrolling');
+  await painted(page);
+  await animationsSettled(page);
+
+  const read = () =>
+    page.evaluate(() => {
+      const sheet = document.querySelector('[role="dialog"]');
+      const body = sheet?.querySelector('.bb-layer-body');
+      const header = sheet?.querySelector('header');
+      const footer = sheet?.querySelector('footer');
+      /* A sentinel rather than a throw: `expect.poll` does not retry a
+         callback that throws, and neither does a reader used twice. */
+      if (!(sheet instanceof HTMLElement) || !(body instanceof HTMLElement))
+        return null;
+      return {
+        sheetOverflows: sheet.scrollHeight - sheet.clientHeight > 1,
+        bodyOverflows: body.scrollHeight - body.clientHeight > 1,
+        tabIndex: body.getAttribute('tabindex'),
+        scrollTop: Math.round(body.scrollTop),
+        headerTop: header
+          ? Math.round(header.getBoundingClientRect().top)
+          : null,
+        footerBottom: footer
+          ? Math.round(footer.getBoundingClientRect().bottom)
+          : null
+      };
+    });
+
+  const before = await read();
+  expect(before).not.toBeNull();
+
+  /*
+   * THE PANEL DOES NOT SCROLL AND THE BODY DOES. Both halves, because either
+   * alone is true of an arrangement nobody wants: a panel that scrolls with a
+   * body that also does is two bars, and neither scrolling is a story with
+   * nothing to scroll.
+   */
+  expect(before?.sheetOverflows).toBe(false);
+  expect(before?.bodyOverflows).toBe(true);
+
+  /* A tab stop, because it has somewhere to go. */
+  expect(before?.tabIndex).toBe('0');
+  expect(before?.scrollTop).toBe(0);
+
+  await page.locator('.bb-layer-body').focus();
+  await page.keyboard.press('PageDown');
+
+  await expect
+    .poll(async () => (await read())?.scrollTop ?? 0)
+    .toBeGreaterThan(100);
+
+  /*
+   * And the two ends stayed where they were, which is the whole point of the
+   * change: the header and the footer are siblings of the scroller now rather
+   * than sticky inside it, so content moving under them must not move them.
+   */
+  const after = await read();
+  expect(after?.headerTop).toBe(before?.headerTop);
+  expect(after?.footerBottom).toBe(before?.footerBottom);
 });

@@ -112,10 +112,14 @@ hand-written `<h2>` in the same place leaves the layer with no accessible name
 at all, because the id `aria-labelledby` points at comes from the slot. So the
 element is the base's and the level comes with it.
 
-**2. The pattern requires no heading. Render none, and have no prop.** A
-`Preview`'s title names the panel through `aria-labelledby` and is not a
-heading; a guessed `<h2>` would put an entry in the page outline for something
-that exists while a pointer rests on a word.
+**2. The pattern requires no heading. Render none, and have no prop.** The
+example was a `Preview`, whose title named its panel through `aria-labelledby`
+and was not a heading — a guessed `<h2>` would have put an entry in the page
+outline for something that exists while a pointer rests on a word. **That
+component was removed on 2026-09-14** (catalog §7) and the case has no instance
+in the library today, which is worth saying rather than quietly dropping: the
+rule is about a PATTERN's requirements, and the next thing whose name comes
+from `aria-labelledby` rather than from a heading will meet it again.
 
 **3. The pattern requires one and nothing supplies it. It arrives from the
 project, and it is required.** An accordion is this case: the accordion pattern

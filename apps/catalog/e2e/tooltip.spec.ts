@@ -219,8 +219,10 @@ test.describe('doc 06 and WCAG 1.4.13, which the report left open', () => {
      * component was planned, and this is the measurement.
      *
      * The answer decides something real. If the pointer cannot reach it, then
-     * nothing selectable or long belongs in a tooltip — which is the argument
-     * for `Preview` existing as a separate component rather than a variant.
+     * nothing selectable or long belongs in a tooltip at all, and the thing
+     * that holds it is a `Popover`. It was the argument for `Preview` being a
+     * component of its own until that one was removed (catalog §7); the
+     * measurement is what outlived it.
      */
     await gotoStory(page, OVERVIEW);
     const tooltip = await openOn(page, 'trigger');

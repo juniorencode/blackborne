@@ -121,6 +121,14 @@ export const SCRIM = cx(
  * window edges and only one of its edges is free.
  */
 export const PANEL = cx(
+  /*
+   * A stable handle for the thing a person sees the edge of. A check about
+   * where a layer LANDS has to measure the painted box: the element inside it
+   * is a proxy that holds only while the padding between them does, and one
+   * such check went red the day a menu's padding moved from the panel to its
+   * rows — reporting a 2px misalignment of a panel that had not moved.
+   */
+  'bb-layer-panel',
   'bb:box-border',
   'bb:flex bb:flex-col',
   'bb:bg-surface-raised bb:text-surface-raised-on',
@@ -172,34 +180,59 @@ export const PANEL = cx(
 export const ANCHORED = cx('bb:box-border bb:flex bb:flex-col');
 
 /**
- * The sheet: the element that carries `role="dialog"`, and the one that
- * SCROLLS. Those two being the same element is not incidental.
+ * The sheet: the element that carries `role="dialog"`. It no longer scrolls —
+ * the BODY does — and the swap is doc 08 §4.1, written before this line
+ * changed.
  *
- * The base moves focus to this element when the layer opens (doc 08 §4), and a
- * browser scrolls the nearest scrollable ANCESTOR of whatever has focus. So
- * with the scroll here, the arrow keys and `PageDown` work from the moment it
- * appears. Put the scroll on an inner body element instead — the obvious
- * three-row grid — and the scroll container becomes a DESCENDANT of the
- * focused element, which no key reaches: the arrows would look for a
- * scrollable ancestor, find the clipped panel, then the locked page, and move
- * nothing at all.
+ * ## What it used to be, and why that was right at the time
  *
- * That failure has already happened once in this repository, on the catalog's
- * own resizable panel, and it is invisible to every check that does not press
- * a key.
+ * The base moves focus to this element when a layer opens, and a browser
+ * scrolls the nearest scrollable ANCESTOR of whatever has focus. With the
+ * scroll here, the arrows and `PageDown` worked from the moment it appeared,
+ * with nothing to wire — and an inner scroller is a DESCENDANT of the focused
+ * element, which no key reaches.
+ *
+ * ## What it costs to be here, which is what moved it
+ *
+ * The scrollbar belongs to the scroll container, so it spanned the whole
+ * panel: a bar running the full height with a pinned header and a pinned
+ * footer beside it, over content that occupies neither. The header and footer
+ * were `sticky` INSIDE it for the same reason — they had to travel with the
+ * content and pin themselves, which is machinery in aid of a bar in the wrong
+ * place.
+ *
+ * ## And the keyboard is bought back rather than given up
+ *
+ * `internal/useScrollableRegion` makes the body a tab stop WHILE it has
+ * somewhere to go, which is what WCAG 2.1.1 asks of a scrollable region and
+ * what axe's `scrollable-region-focusable` rule checks. `layer.spec.ts`
+ * presses the key rather than trusting any of this.
  */
 export const SHEET = cx(
   'bb:box-border bb:flex bb:flex-col',
   /*
+   * IT FILLS THE PANEL, and this is the half of "the footer sits at the
+   * bottom" that the body's own `flex-auto` does not buy.
+   *
+   * Measured on a `Drawer`, which is the only layer with a panel taller than
+   * its contents: the panel was 900px and the sheet 316, so the footer came to
+   * rest at 316 with 584px of panel under it. The body growing inside the
+   * sheet cannot help — it distributes the sheet's space, and the sheet had
+   * taken none.
+   *
+   * `flex-auto` rather than `flex-1` for the reason the body gives: a basis of
+   * zero would stop a content-sized layer contributing its own height, and a
+   * `Dialog`'s panel IS content-sized. Where there is no spare room this grows
+   * into nothing, which is why one line serves both.
+   */
+  'bb:flex-auto',
+  /*
    * `min-h-0` and not `max-h-full`. A flex item's automatic minimum size is
    * its content, so without this it refuses to shrink and overflows the panel
    * however low the panel's ceiling is — the same failure from the other
-   * direction. `overflow-y-auto` then has something to do.
+   * direction. The body's `overflow-y-auto` then has something to do.
    */
-  'bb:min-h-0 bb:overflow-y-auto',
-  // The scrim is not the page: a wheel gesture reaching the bottom of the
-  // layer must not start scrolling whatever is behind it (doc 09 §7).
-  'bb:overscroll-contain',
+  'bb:min-h-0',
   // The focus ring belongs on interactive things. This element is focused
   // programmatically on open, as a container, and ringing the whole panel
   // says "you are here" about something nobody chose to focus.
@@ -207,18 +240,22 @@ export const SHEET = cx(
 );
 
 /*
- * Header, body and footer.
+ * Header, body and footer — three rows of the sheet's column, with the middle
+ * one scrolling.
  *
- * The header and footer are `sticky` INSIDE the scroll container rather than
- * siblings outside it, which follows from the decision above: one scrolling
- * element means they travel with the content and pin themselves.
+ * They were sticky inside one scroller until 2026-09-14 and are ordinary
+ * siblings now. `flex-none` on the two ends is not decoration: a flex item's
+ * default `flex-shrink` is 1, so a long body would have taken the difference
+ * out of the header and the footer rather than out of itself — the same defect
+ * this library found in every scrolling list a wave earlier, arriving in the
+ * place where it would have squashed a title.
  *
- * They carry the panel's own background because nothing paints over a sticky
- * element — content scrolls behind it, and a transparent header would show the
- * body sliding underneath the title.
+ * They keep the panel's own background. It is no longer load-bearing — nothing
+ * scrolls behind them now — and it costs nothing, while a transparent band
+ * over a panel is one refactor away from showing whatever the panel is over.
  */
 export const HEADER = cx(
-  'bb:sticky bb:top-0 bb:z-1',
+  'bb:flex-none',
   'bb:box-border bb:flex bb:items-start bb:gap-(--bb-space-3)',
   'bb:bg-surface-raised',
   'bb:border-b bb:border-border',
@@ -238,13 +275,80 @@ export const TITLE = cx(
   'bb:[overflow-wrap:break-word]'
 );
 
-export const BODY = cx('bb:box-border bb:p-(--bb-space-5)');
+export const BODY = cx(
+  /*
+   * A stable handle, like `bb-select-option` and the rest. The checks have to
+   * find the scroll region to press a key at it, and every other class on this
+   * element is a utility that could be shared with anything.
+   */
+  'bb-layer-body',
+  'bb:box-border bb:p-(--bb-space-5)',
+  /*
+   * `flex-auto` rather than `flex-1`, and the difference is the whole
+   * behaviour of a content-sized layer. `flex-1` is `flex: 1 1 0%` — a basis
+   * of ZERO, so the body would contribute nothing to the panel's intrinsic
+   * height and a dialog sized by its contents would collapse to its header and
+   * footer. `flex-auto` is `flex: 1 1 auto`: it still contributes its content,
+   * it still takes the leftover room, and it can still shrink.
+   *
+   * Taking the leftover room is also what pins a `Drawer`'s footer to the
+   * bottom of a full-height panel, which used to be a question of its own.
+   */
+  'bb:flex-auto bb:min-h-0 bb:overflow-y-auto',
+  // The scrim is not the page: a wheel gesture reaching the bottom of the
+  // layer must not start scrolling whatever is behind it (doc 09 §7).
+  'bb:overscroll-contain',
+  /*
+   * No ring on the region itself. It becomes a tab stop while it scrolls
+   * (`internal/useScrollableRegion`), and a focused scroll container ringing
+   * its whole box says "you are here" about a box rather than a control —
+   * the same argument the sheet makes one level up. The scrollbar and the
+   * content moving are what answer the key.
+   */
+  'bb:outline-none'
+);
 
 export const FOOTER = cx(
-  'bb:sticky bb:bottom-0 bb:z-1',
+  'bb:flex-none',
   'bb:box-border bb:flex bb:flex-wrap bb:items-center bb:justify-end',
   'bb:gap-(--bb-space-3)',
   'bb:bg-surface-raised',
   'bb:border-t bb:border-border',
-  'bb:p-(--bb-space-5)'
+  /*
+   * LESS AIR VERTICALLY, THE SAME HORIZONTALLY, and the asymmetry is the
+   * point rather than an oversight.
+   *
+   * A footer is a bar of controls that are already 36px tall, so 16px above
+   * and below made it the tallest band in the layer for the least content.
+   * Twelve is the step below it.
+   *
+   * The INLINE padding stays at 16 because it is not this element's to
+   * choose: the header and the body use the same step, so the way out on the
+   * leading edge lines up with the title above it and with the first word of
+   * the body. Trimming it here would leave three edges in a column that do
+   * not agree, which is what §4.6's rhythm is about and is far more visible
+   * than the height ever was.
+   */
+  'bb:px-(--bb-space-5) bb:py-(--bb-space-4)',
+  /*
+   * THE FIRST ACTION IS PUSHED TO THE LEADING EDGE, and only when it is not
+   * the only one.
+   *
+   * A footer holds a way THROUGH and a way OUT, and they are not a pair of
+   * equals to be grouped: the way out belongs at the opposite end, where
+   * nobody reaches for it by accident on the way to the primary action. It
+   * is the first child because it is already first in the reading order —
+   * `ConfirmDialog` says why in as many words, and doc 09 §5.5 requires it.
+   *
+   * `:not(:last-child)` is load-bearing. A footer holding a single button
+   * would otherwise fling it to the leading edge, which is where nothing
+   * belongs on its own: a lone action is the primary one and stays with the
+   * rest of its kind. Measured the obvious way — a `Popover` with one
+   * "Done".
+   *
+   * The library imposes this on content a consumer passes, which is the
+   * exception doc 02 §6 allows: a slot's LAYOUT is the component's, and only
+   * what goes in it is the consumer's.
+   */
+  'bb:[&>*:first-child:not(:last-child)]:me-auto'
 );
