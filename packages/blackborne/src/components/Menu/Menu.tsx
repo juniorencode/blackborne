@@ -81,6 +81,12 @@ const MENU_LIST = cx(
 const ITEM_BASE = cx(
   'bb-menu-item',
   'bb:box-border bb:flex bb:min-h-hit bb:items-center',
+  /* A row in a scrolling list must not shrink — see `Select`'s own option.
+     Measured here too, on the long-list story: fifteen rows in a panel five
+     pixels shorter than they need, so every one of them was giving up a
+     third of a pixel. The same defect as the one that was visible next
+     door, at the size that makes it invisible. */
+  'bb:flex-none',
   'bb:gap-x-(--bb-space-3) bb:px-(--bb-space-3) bb:py-(--bb-space-2)',
   'bb:rounded-md bb:cursor-pointer bb:select-none',
   'bb:outline-hidden',

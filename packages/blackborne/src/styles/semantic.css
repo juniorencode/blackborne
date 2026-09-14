@@ -46,13 +46,35 @@
 [data-bb-base] {
   /* --- Surfaces ------------------------------------------------------ */
   /*
-   * Step 1, and it was the literal `#fff` for a day. White is not part of the
-   * grey scale, so the page stopped following `[data-bb-base]` — measured by
-   * `palette.spec.ts`: a `stone` scope moved every grey in the library except
-   * the largest one, which is the page. Decision 0029 promises that scope
-   * moves the greys, and the page is the biggest grey there is.
+   * WHITE, AND IT IS THE ONE PLACE IN THIS FILE WHERE A PROMISE WAS CHANGED TO
+   * FIT A VALUE RATHER THAN THE OTHER WAY ROUND. Read doc 03 §3 before moving
+   * it back.
+   *
+   * It was step 1, and it was `#fff` for a day before that: white is not part
+   * of the grey scale, so the page stops following `[data-bb-base]` — measured
+   * by `palette.spec.ts`, where a `stone` scope moved every grey in the
+   * library except the largest one. That was treated as a defect and reverted,
+   * because decision 0029 promised a base scope moves the greys and the page
+   * is the biggest grey there is.
+   *
+   * The promise is what moved this time, deliberately and in writing first:
+   * doc 03 §3 and decision 0029 now carry the exception, and it is stated as a
+   * cost rather than smoothed over. A base scope still reaches every panel,
+   * every control's fill, every border and every divider in light; it no
+   * longer reaches the ground they sit on, and a project that wants a tinted
+   * page sets this token, which needs no `data-bb-theme` because it is
+   * semantic.
+   *
+   * THE DARK BLOCK IS UNCHANGED and still takes step 3. There is no white to
+   * reach for at that end of the scale, so nothing is given up there — which
+   * is also why this line is not a symmetric decision and should not be made
+   * into one.
+   *
+   * The cost that has no check: the grey scale can move underneath this line
+   * without it following. It is the second colour token here that is not a
+   * scale step, after `--bb-danger-text`, and both carry the same warning.
    */
-  --bb-surface: var(--bb-x-gray-1);
+  --bb-surface: #fff;
   --bb-surface-on: var(--bb-x-gray-12);
   /*
    * The surface of something that FLOATS: a dialog, a drawer, a popover, a

@@ -208,8 +208,43 @@ const OPTION = cx(
   // not the field: the root is a group too and never carries it.
   'bb:group',
   'bb:box-border bb:flex bb:min-h-hit bb:items-center',
+  /*
+   * A ROW IN A SCROLLING LIST MUST NOT SHRINK, and until 2026-09-14 every one
+   * in this library did.
+   *
+   * The list is a flex column with a ceiling on its height, so its rows are
+   * flex items and a flex item's default `flex-shrink` is 1. When the rows do
+   * not fit, the browser takes the difference out of THEM rather than letting
+   * the box scroll — down to `min-h-hit`, which is where they stopped and which
+   * is why this looked like a deliberate row height.
+   *
+   * Measured on one component, two stories: five options rendered at 37px and
+   * forty rendered at 28px. Nothing in the source said so, and before the
+   * padding went to one step on both axes the squeeze was 29px into 28 — one
+   * pixel, invisible, and the same defect.
+   *
+   * `min-h-hit` stays: it is the promise about the target (doc 06 §3), and it
+   * is now a floor rather than the thing setting the height.
+   */
+  'bb:flex-none',
   'bb:justify-between bb:gap-x-(--bb-space-3)',
-  'bb:px-(--bb-space-3) bb:py-(--bb-space-2)',
+  /*
+   * ONE STEP ON BOTH AXES, and it was two horizontally against one vertically.
+   * Nobody decided that: they were two different steps of the scale written on
+   * one line — 8px of padding beside 4px of it — and the row read as a
+   * squeezed band rather than as a row with air round it.
+   *
+   * `min-h-hit` ABOVE is what governed the height before this, which is why
+   * the vertical value looked smaller than it was: the row came out at exactly
+   * the 28px minimum target, so the 4px was not the thing setting it and
+   * lowering it would have changed nothing. The floor stays — it is a promise
+   * about the TARGET (doc 06 §3) rather than about the look — and it is
+   * simply no longer the binding constraint at either density.
+   *
+   * `ComboBox` carries the same line twice, on its rows and on its "nothing
+   * matched" row, and the reasoning lives here.
+   */
+  'bb:px-(--bb-space-3) bb:py-(--bb-space-3)',
   'bb:rounded-md bb:cursor-pointer bb:select-none bb:outline-hidden',
   'bb:text-text',
   'bb:transition-[background-color,color]',

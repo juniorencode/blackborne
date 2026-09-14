@@ -216,7 +216,17 @@ const LIST_PANEL = cx(
    */
   'bb:shadow-none',
 
-  'bb:p-(--bb-space-1)'
+  /*
+   * Step 2, matching `Select`'s panel, and it was step 1 — the value that
+   * component's own comment rejects in as many words: at 2px the rows nearly
+   * touch the panel's border, which reads as a list that has overflowed its
+   * box rather than as one sitting inside it.
+   *
+   * Two components with identical rows had different values for the box round
+   * them, which is the shape of defect this library keeps finding: one moved
+   * and its sibling did not. Found by measuring the two, not by looking.
+   */
+  'bb:p-(--bb-space-2)'
 );
 
 const LIST = cx(
@@ -240,8 +250,11 @@ const OPTION = cx(
   'bb-combobox-option',
   'bb:group',
   'bb:box-border bb:flex bb:min-h-hit bb:items-center',
+  /* A row in a scrolling list must not shrink — see `Select`'s own option. */
+  'bb:flex-none',
   'bb:justify-between bb:gap-x-(--bb-space-3)',
-  'bb:px-(--bb-space-3) bb:py-(--bb-space-2)',
+  /* One step on both axes — the reasoning is on `Select`'s own option. */
+  'bb:px-(--bb-space-3) bb:py-(--bb-space-3)',
   'bb:rounded-md bb:cursor-pointer bb:select-none bb:outline-hidden',
   'bb:text-text',
   'bb:transition-[background-color,color]',
@@ -300,7 +313,11 @@ const OPTION = cx(
 const EMPTY = cx(
   'bb-combobox-empty',
   'bb:box-border bb:flex bb:min-h-hit bb:items-center',
-  'bb:px-(--bb-space-3) bb:py-(--bb-space-2)',
+  /* A row in a scrolling list must not shrink — see `Select`'s own option. */
+  'bb:flex-none',
+  /* The geometry of the rows this replaces, so a list that matched nothing is
+     not a shorter row than a list that did. See `Select`'s option. */
+  'bb:px-(--bb-space-3) bb:py-(--bb-space-3)',
   'bb:text-text-muted'
 );
 
