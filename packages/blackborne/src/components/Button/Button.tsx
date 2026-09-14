@@ -161,7 +161,13 @@ const BASE = cx(
   'bb:rounded-md bb:border bb:border-solid',
   'bb:font-sans bb:font-strong bb:leading-tight',
   'bb:cursor-pointer bb:select-none bb:whitespace-nowrap',
-  'bb:transition-[background-color,color,box-shadow]',
+  /*
+   * `border-color` is in this list because it was NOT, and every variant here
+   * draws a border: measured, a secondary button's edge snapped to its hover
+   * colour while the fill underneath glided, which is a single control moving
+   * in two speeds. The fill was the only thing anyone had looked at.
+   */
+  'bb:transition-[background-color,border-color,color,box-shadow]',
   'bb:duration-(--bb-duration-fast) bb:ease-standard',
   'bb:outline-hidden',
   /*

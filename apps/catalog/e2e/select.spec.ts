@@ -85,24 +85,29 @@ test('the chosen option is marked by more than the highlight', async ({
   await expect(chosen).toHaveAttribute('aria-selected', 'true');
 
   /*
-   * A tick as well as weight, and neither of them is the highlight. When a
-   * list opens, the highlight and the selection are on the same row — and the
+   * A BAND and weight, and neither of them is the highlight. When a list
+   * opens, the highlight and the selection are on the same row — and the
    * moment an arrow key moves, they are not. A selection shown only by the
    * highlight would disappear at that point.
    *
-   * EVERY option has a tick and only one of them shows it, which is asserted
-   * as visibility rather than as presence: the glyph is always in the DOM so
-   * the rows do not shift as the selection moves, and a check on the count
-   * would pass on a component that had stopped hiding them.
+   * It was a tick until 2026-09-13, always rendered and merely hidden so the
+   * rows did not shift. The band replaces it and cannot shift anything, so
+   * what is asserted now is the paint: the chosen row carries a background
+   * where an unchosen one is transparent.
+   *
+   * WEIGHT IS THE SECOND CHANNEL and it is load-bearing rather than
+   * decorative now: with no glyph, it is what survives greyscale and what
+   * separates "chosen" from "where the keyboard is" (doc 06 §3).
    */
-  const visibility = (name: string) =>
+  const background = (name: string) =>
     page
       .getByRole('option', { name })
-      .locator('svg')
-      .evaluate(element => getComputedStyle(element).visibility);
+      .evaluate(element => getComputedStyle(element).backgroundColor);
 
-  expect(await visibility('US dollar')).toBe('visible');
-  expect(await visibility('Euro')).toBe('hidden');
+  const chosenFill = await background('US dollar');
+  const otherFill = await background('Euro');
+  expect(chosenFill).not.toBe(otherFill);
+  expect(otherFill).toBe('rgba(0, 0, 0, 0)');
 
   const weight = await chosen.evaluate(
     element => getComputedStyle(element).fontWeight
@@ -147,9 +152,17 @@ test('the highlight leaves the chosen row as soon as an arrow moves', async ({
 
   await page.keyboard.press('ArrowDown');
 
-  // The tick stays where the selection is; the highlight has moved on.
+  /*
+   * The BAND stays where the selection is; the highlight has moved on. This
+   * is the moment the whole arrangement exists for, and the moment a
+   * selection drawn only by the highlight would vanish.
+   */
   await expect(chosen).not.toHaveAttribute('data-focused', /.*/);
-  await expect(chosen.locator('svg')).toHaveCount(1);
+  await expect(chosen).toHaveAttribute('data-selected', 'true');
+  const stillPainted = await chosen.evaluate(
+    element => getComputedStyle(element).backgroundColor
+  );
+  expect(stillPainted).not.toBe('rgba(0, 0, 0, 0)');
   await expect(page.getByRole('option', { name: 'Euro' })).toHaveAttribute(
     'data-focused',
     'true'

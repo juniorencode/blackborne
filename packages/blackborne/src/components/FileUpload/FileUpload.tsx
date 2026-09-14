@@ -11,11 +11,13 @@ import { filesFromDrop, formatBytes } from '../../internal/files';
 const ROOT = cx(
   'bb-file-upload',
   'bb:box-border bb:flex bb:w-full bb:flex-col',
-  'bb:gap-(--bb-field-gap-inner) bb:font-sans bb:text-md bb:text-text'
+  'bb:font-sans bb:text-md bb:text-text'
 );
 
 const LABEL = cx(
   'bb-file-upload-label',
+  /* The field's one inner gap — see the note on the root. */
+  'bb:mb-(--bb-field-gap-inner)',
   'bb:w-fit bb:text-md bb:font-strong bb:text-text'
 );
 
@@ -55,9 +57,17 @@ const ZONE = cx(
    *
    * One variable recolours the edge AND the halo, so they cannot drift apart
    * — which is exactly what `controlBox` does with it.
+   *
+   * AND IT IS `--bb-border-invalid`, NOT `--bb-danger`. The invalid edge is its
+   * own token because an edge and a fill answer different questions: doc 03 §5
+   * rule 2 asks 3:1 of a graphical element and 4.5:1 of text, and the solid
+   * step is chosen to carry `--bb-danger-on`. This component kept the solid
+   * for a day after the edge moved and drew a `#CA011F` dash round a field
+   * whose siblings were on `#CC0007` — two reds in one form, found by opening
+   * the picture.
    */
-  'bb:data-invalid:border-danger',
-  'bb:data-invalid:[--bb-focus-ring:var(--bb-danger)]',
+  'bb:data-invalid:border-border-invalid',
+  'bb:data-invalid:[--bb-focus-ring:var(--bb-border-invalid)]',
   /*
    * SWITCHED OFF IS THE FILL GOING AWAY, not the whole box dimmed.
    *

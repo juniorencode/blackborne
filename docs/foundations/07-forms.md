@@ -308,6 +308,48 @@ So the test tightened rather than loosening. A field keeps two controls only
 where emptying has no route at all AND cannot be observed — and if the field
 owns a list, it has a route by construction.
 
+### 2.2b The start of a field, which was never counted
+
+**Date:** 2026-09-13. §2.2 counted the seven things that want a field's
+TRAILING edge and ordered them. Nothing was ever written about the other end,
+because until now only one thing stood there: a numeric field's `−`.
+
+A second arrived — **an icon, at the start, decorative, offered on every field
+whose box is a frame**. It is a different kind of thing from both the affix and
+the control beside it, and the distinction is what decides the order:
+
+| What            | Whose it is    | Is it a target? |
+| --------------- | -------------- | --------------- |
+| The stepper `−` | The field's    | Yes             |
+| An icon         | The consumer's | No              |
+| A prefix affix  | The consumer's | No              |
+
+**The order is `[control] [icon] [affix] [value]`, and the control keeps the
+edge.** §2.2 rule 3 already decided the principle at the other end — an affix
+moves ahead of the control that shares its side, because a target at the edge
+is the one that has to be easy to hit and text can sit anywhere. An icon is
+text's kind of thing rather than a target's, so it takes the same place.
+
+**The icon is hidden from assistive technology**, like the affix beside it and
+for the reason §2.2's affix rule gives: the label is always present, so the
+icon can never be the only carrier of meaning. Something a person NEEDS in
+order to answer belongs in the label or the description (doc 02 §11.3).
+
+**It is not offered at the trailing edge**, and that is a decision rather than
+an omission. Six of the seven fields own that edge permanently or
+conditionally — a clear cross, a stepper, a reveal toggle, a chevron — so an
+icon there would be a prop that appears and disappears with the configuration.
+§2.2's table stays at seven.
+
+**And it is not offered on a text area at all.** That field's control IS its
+box: the border, the background and the radius are on the `<textarea>` itself,
+where every other field draws them on a frame around it. An icon beside it
+means moving the box out to a wrapper, which is the move `ControlFrame` exists
+for — and the autosizing writes a measured height onto the element that would
+stop being the box. The cost is larger than the other six put together and the
+case is weaker: a mark aligned to the first line of a growing block is a
+decision nobody has needed yet.
+
 ## 3. The core is controlled
 
 Every field works with a value and a change callback, depending on no form

@@ -460,6 +460,16 @@ that breaks one does not merge.
    size and colour come from the slot, and there is no `iconStart` prop and no
    `icon="save"` string. The convention is doc 02 §11.
 
+   **A field is the exception the rule already allowed for, and it is worth
+   reading before assuming this forbids one.** What is forbidden is an icon
+   arriving by NAME — a string the library resolves against a set it ships —
+   and a pair of positional props where ordering children would have done. A
+   field has no children slot at all: its control is the value. So doc 02 §11's
+   own sentence applies — a named slot is for a place the consumer could not
+   have reached by ordering children — and the six fields whose box is a frame
+   take one `icon`, at the START only, sized and coloured by the slot like any
+   other. Doc 07 §2.2b has the order and why there is no trailing one.
+
 Most of these are enforced by the project's own lint rules, in
 `eslint.rules.js`, which run as part of `pnpm lint`. A rule you can argue with
 in review is a rule that yields to the first deadline, so they are errors.

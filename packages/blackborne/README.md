@@ -197,7 +197,7 @@ at `0.2.0` with nothing reading them, and on 2026-09-10 `dist/styles.css` was
 | What               | Ceiling                |
 | ------------------ | ---------------------- |
 | `dist/index.js`    | structural — see below |
-| `dist/styles.css`  | 80 kB raw / 13 kB gzip |
+| `dist/styles.css`  | 82 kB raw / 13 kB gzip |
 | `dist/palette.css` | 45 kB raw / 7 kB gzip  |
 | Published tarball  | 220 kB                 |
 
@@ -251,8 +251,25 @@ The new number keeps roughly the slack the old one was set with — about 1 kB a
 fifty-three components — and the raw half still has 4 kB spare, so gzip remains
 the binding one on purpose.
 
-**The CSS raw ceiling was raised from 60 kB to 80 kB, with the data doc 10 §7
-asks for.** 60 kB was set when the library had eight components and 26.3 kB of
+**The CSS raw ceiling was raised from 80 kB to 82 kB on 2026-09-13**, with the
+data doc 10 §7 asks for, and after the cheaper answer was taken first: a
+`::-webkit-scrollbar` fallback written that same day came back out, because the
+standard `scrollbar-width`/`scrollbar-color` pair is in every current engine and
+two mechanisms for one result is what doc 01 §7 warns about. That bought 0.4 kB
+and the pass still ended over.
+
+What spent it is work rather than waste: an `icon` slot on six fields, a second
+hover colour for rows that sit on a raised panel, an invalid EDGE separated from
+the invalid MESSAGE because no single red clears both floors on a dark scale, a
+scrollbar the browser was otherwise painting light inside a dark panel, and the
+stacked state rules that stop a pointer taking a control's focus ring away.
+
+**The gzip half was NOT raised and is still the binding one**: 12.1 kB against
+13 kB. That is what crosses the wire, and the raw figure moving 2 kB while gzip
+moves 0.1 is the shape of adding declarations that compress well.
+
+**And the ceiling before that was raised from 60 kB to 80 kB**, with the same
+data. 60 kB was set when the library had eight components and 26.3 kB of
 CSS. There are fifty-one now, and the growth is real work rather than waste.
 The gzip half was not raised at the time and is the one that binds: 10.8 kB
 against 12 kB, which is what actually crosses the wire, and it had 1.2 kB left

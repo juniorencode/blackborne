@@ -172,9 +172,12 @@ const CURVE = [0, 0.25, 0.5, 0.75];
 /**
  * How much slower than real time the animation clock runs for this one check.
  *
- * A fiftieth, which turns a 160ms transition into eight seconds of wall clock
- * without changing a single thing about the component: the transition still
- * declares the duration its token says, and the check asserts that below.
+ * A fiftieth, which gives the 300ms this token now declares fifteen seconds of
+ * animation clock to be caught in, without changing a single thing about the
+ * component: the transition still declares the duration its token says, and
+ * the check asserts that below. No wall clock is spent on it — the check SEEKS
+ * `currentTime` rather than waiting — so the number the fraction is applied to
+ * can move without this check getting slower.
  */
 const SLOW = 0.02;
 

@@ -295,30 +295,33 @@ test('and a field given no options says that instead', async ({ page }) => {
   );
 });
 
-test('the tick marks the chosen option without moving the rows', async ({
+test('the chosen option is a band, and the rows do not move', async ({
   page
 }) => {
   await gotoStory(page, OPEN);
 
-  const ticks = page.locator('.bb-combobox-option svg:last-of-type');
-  const count = await ticks.count();
+  /*
+   * It was a tick until 2026-09-13 — one per row, all but the chosen one
+   * `visibility: hidden` so that nothing moved as the highlight walked down.
+   * The band replaces it, and the second half of that old argument is the
+   * half worth keeping: a mark that APPEARS takes its width with it, and
+   * every label below steps sideways (doc 09 §7, in a list somebody is moving
+   * through with the arrows). A background cannot do that, and this asserts
+   * it rather than assuming it.
+   */
+  const rows = page.locator('.bb-combobox-option');
+  const count = await rows.count();
   expect(count).toBeGreaterThan(1);
 
-  /*
-   * Every row has one, and all but the chosen one are `visibility: hidden` —
-   * NOT absent. A tick that appeared would take its width with it, so every
-   * label would step sideways as the highlight walked down the list (doc 09
-   * §7, in a list somebody is moving through with the arrows).
-   */
-  const visibility = await ticks.evaluateAll(elements =>
-    elements.map(element => getComputedStyle(element).visibility)
+  const fills = await rows.evaluateAll(elements =>
+    elements.map(element => getComputedStyle(element).backgroundColor)
   );
-  expect(visibility.filter(value => value === 'visible')).toHaveLength(1);
-  expect(visibility.filter(value => value === 'hidden').length).toBe(count - 1);
+  const painted = fills.filter(fill => fill !== 'rgba(0, 0, 0, 0)');
+  expect(painted).toHaveLength(1);
 
-  const widths = await page
-    .locator('.bb-combobox-option')
-    .evaluateAll(rows => rows.map(row => row.getBoundingClientRect().width));
+  const widths = await rows.evaluateAll(list =>
+    list.map(row => row.getBoundingClientRect().width)
+  );
   expect(new Set(widths.map(Math.round)).size).toBe(1);
 });
 

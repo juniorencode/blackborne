@@ -15,6 +15,7 @@ import {
   ClearDate,
   ControlFrame,
   DateSegments,
+  EDGE_BUTTON,
   Field
 } from '../../internal/Field';
 import { ChevronGlyph } from '../../internal/ChevronGlyph';
@@ -84,16 +85,8 @@ const TOGGLE = cx(
   'bb-date-range-picker-toggle',
   /* `bb:group` here and not on the root: the `aria-expanded` is the trigger's. */
   'bb:group',
-  'bb:box-border bb:flex bb:min-h-hit bb:min-w-hit bb:flex-none',
-  'bb:items-center bb:justify-center bb:rounded-md',
-  'bb:cursor-pointer bb:border-0 bb:bg-transparent bb:text-text-muted',
-  'bb:transition-[background-color,color]',
-  'bb:duration-(--bb-duration-fast) bb:ease-standard',
-  'bb:data-hovered:bg-surface-hover bb:data-hovered:text-text',
-  'bb:data-pressed:bg-surface-active',
-  'bb:outline-hidden',
-  'bb:data-focus-visible:bg-surface-hover bb:data-focus-visible:text-text',
-  'bb:data-disabled:cursor-not-allowed bb:data-disabled:text-text-disabled'
+  /* The same verbatim copy of `EDGE_BUTTON` the picker carried; see there. */
+  EDGE_BUTTON
 );
 
 const CHEVRON = cx(

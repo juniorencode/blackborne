@@ -72,11 +72,9 @@ const SIZE: Record<SearchFieldSize, SizeClasses> = {
 } satisfies Record<SearchFieldSize, SizeClasses>;
 
 /*
- * The control's appearance is TextField's, class for class, down to the
- * border moving on hover where the small controls move their fill. Two
- * sibling fields that differ gratuitously is drift, and these two are meant
- * to be indistinguishable until one is asked to do something the other
- * cannot.
+ * The control's appearance is TextField's, class for class. Two sibling
+ * fields that differ gratuitously is drift, and these two are meant to be
+ * indistinguishable until one is asked to do something the other cannot.
  *
  * It is repeated rather than shared because nothing in src/internal owns a
  * field's input styling yet, and an abstraction drawn from the second case is
@@ -117,6 +115,20 @@ export interface SearchFieldProps extends Omit<
   /** Height and type size. Aligns with a Button or TextField of the same size. */
   size?: SearchFieldSize;
   placeholder?: string;
+  /**
+   * A decorative mark at the START of the field.
+   *
+   * Doc 07 §2.2b and decision 0031. It arrives as a node you wrote — the
+   * library ships no icons and resolves no names — and the slot gives it its
+   * size and its colour.
+   *
+   * **Hidden from assistive technology**, because the label is always there
+   * and a mark can never be the only carrier of meaning. Something a person
+   * NEEDS in order to answer belongs in the label or the description.
+   *
+   * There is no trailing counterpart: that edge belongs to the field.
+   */
+  icon?: React.ReactNode;
   className?: string;
 }
 
@@ -150,6 +162,7 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(
       isSaving = false,
       size = 'md',
       placeholder,
+      icon,
       className,
       ...ariaProps
     },
@@ -203,6 +216,7 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(
           isSaving={isSaving}
         >
           <ControlFrame
+            {...(icon === undefined ? {} : { icon })}
             trailing={<ClearButton />}
             /*
              * Doc 07 §2.2 rule 1: unreachable, not absent. The cross holds its

@@ -80,28 +80,90 @@ test.describe('mode', () => {
     await painted(page, button).toBe(CONTROL_DARK);
   });
 
-  test('the control is lighter than its panel in dark mode', async ({
+  /*
+   * A CONTROL IS A WELL, AND IT IS ONE IN BOTH MODES. Rewritten 2026-09-13,
+   * and the version it replaces is worth reading before changing it back.
+   *
+   * It used to assert the opposite in dark — that a control is LIGHTER than
+   * its panel — with the reason beside it: "a control darker than its
+   * container reads as a hole punched in the panel rather than something
+   * sitting on it. That was the reported bug."
+   *
+   * That reason was about a control that was darker while everything around it
+   * said raised-is-lighter, so it read as a hole because it disagreed with its
+   * own system. The system changed: the dark page moved up the scale and the
+   * control moved down, so a field is now a well you type into and every
+   * control surface is darker than its ground IN BOTH MODES. Consistency is
+   * what stops it reading as a hole, not the direction.
+   *
+   * So the rule is stronger than the one it replaces, rather than looser: it
+   * asserts the SAME direction twice instead of one direction once. A library
+   * where light sinks its controls and dark lifts them would pass the old test
+   * and be the thing the old test was written to prevent.
+   */
+  test('a control is darker than its panel, in both modes', async ({
     page
   }) => {
-    // A control darker than its container reads as a hole punched in the
-    // panel rather than something sitting on it. That was the reported bug.
-    const button = page
-      .locator(panel('Dark'))
-      .getByRole('button', { name: 'secondary' });
+    /*
+     * Resolved through a canvas rather than by reading the digits out of the
+     * string, and that is not tidying: the version this replaces summed the
+     * first three numbers it found, which for `oklch(0.213 0.042 257.4)` is
+     * the LIGHTNESS and for `rgb(255, 255, 255)` is 765. It compared them to
+     * each other and was right only while both happened to be oklch. The page
+     * became `#fff` and the check started reading 981 against 765 for two
+     * colours that differ by a hair.
+     */
+    const brightness = (label: string) =>
+      page
+        .locator(panel(label))
+        .getByRole('button', { name: 'secondary' })
+        .evaluate(el => {
+          const canvas = document.createElement('canvas');
+          canvas.width = canvas.height = 1;
+          const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+          const luminance = (colour: string) => {
+            ctx.clearRect(0, 0, 1, 1);
+            ctx.fillStyle = '#000';
+            ctx.fillStyle = colour;
+            ctx.fillRect(0, 0, 1, 1);
+            /* Indexed with a floor rather than destructured: the pixel
+               buffer is typed as possibly-undefined at every index under
+               `noUncheckedIndexedAccess`, and a canvas that was just painted
+               has four bytes. */
+            const pixel = ctx.getImageData(0, 0, 1, 1).data;
+            const r = pixel[0] ?? 0;
+            const g = pixel[1] ?? 0;
+            const b = pixel[2] ?? 0;
+            const channel = (value: number) => {
+              const v = value / 255;
+              return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+            };
+            return (
+              0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b)
+            );
+          };
+          const container = el.closest('.catalog-panel') as HTMLElement;
+          return {
+            control: luminance(getComputedStyle(el).backgroundColor),
+            panel: luminance(getComputedStyle(container).backgroundColor)
+          };
+        });
 
-    const brightness = await button.evaluate(el => {
-      const sum = (colour: string) =>
-        (colour.match(/\d+/g) ?? [])
-          .slice(0, 3)
-          .reduce((a, b) => a + Number(b), 0);
-      const container = el.closest('.catalog-panel') as HTMLElement;
-      return {
-        control: sum(getComputedStyle(el).backgroundColor),
-        panel: sum(getComputedStyle(container).backgroundColor)
-      };
-    });
+    const light = await brightness('Light');
+    const dark = await brightness('Dark');
 
-    expect(brightness.control).toBeGreaterThan(brightness.panel);
+    expect(light.control).toBeLessThan(light.panel);
+    expect(dark.control).toBeLessThan(dark.panel);
+
+    /*
+     * And SEPARATED, not merely different. A difference of one part in a
+     * thousand satisfies the direction and is invisible, which is the failure
+     * this pair exists to catch — the fill is what says "you can type here".
+     * The floor is in relative luminance, where the two currently differ by
+     * 0.026 in light and 0.005 in dark.
+     */
+    expect(light.panel - light.control).toBeGreaterThan(0.002);
+    expect(dark.panel - dark.control).toBeGreaterThan(0.002);
   });
 
   test('ghost text is legible in dark mode', async ({ page }) => {

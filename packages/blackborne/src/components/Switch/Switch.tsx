@@ -31,13 +31,17 @@ import { cx } from '../../internal/cx';
 
 const TRACK = cx(
   'bb:box-border bb:relative bb:flex bb:h-switch bb:w-switch bb:flex-none bb:items-center',
-  'bb:rounded-full bb:border bb:border-solid bb:border-border-control',
-  /*
-   * surface-control, not surface-sunken. Nobody chose the difference: the
-   * checkbox and the radio rest on the control surface and the switch rested
-   * one step darker, which only became visible on touching all three at once.
-   */
-  'bb:bg-surface-control',
+  /* The field's edge at rest, the small-control one on hover — see the note
+     in Checkbox.tsx, which carries the measurement. */
+  'bb:rounded-full bb:border bb:border-solid bb:border-border',
+  /* The SAME step the field's box moves to on hover, not the small-control
+     one — a checkbox and the text field beside it answer a pointer with the
+     same colour or they read as two libraries. In light the small-control
+     token is an alias of the resting one, so the old rule did nothing there
+     at all. */
+  'bb:group-data-hovered:border-border-strong',
+  /* surface-sunken, with the other two — see the note in Checkbox.tsx. */
+  'bb:bg-surface-sunken',
   'bb:transition-[background-color,border-color,box-shadow]',
   'bb:duration-(--bb-duration-fast) bb:ease-standard',
   'bb:group-data-selected:border-accent bb:group-data-selected:bg-accent',
@@ -61,12 +65,14 @@ const TRACK = cx(
    * and feedback that fired only over twenty pixels would teach people the
    * text is not pressable when it is.
    */
-  'bb:group-data-hovered:bg-surface-hover',
+  /* The fill does not move on hover — see the note in Checkbox.tsx. */
   'bb:group-data-pressed:bg-surface-active',
-  'bb:group-data-selected:group-data-hovered:border-accent-hover bb:group-data-selected:group-data-hovered:bg-accent-hover',
+  'bb:group-data-selected:group-data-hovered:border-accent-hover',
   'bb:group-data-selected:group-data-pressed:border-accent-active bb:group-data-selected:group-data-pressed:bg-accent-active',
   'bb:group-data-focused:border-focus-ring bb:group-data-focused:shadow-[0_0_0_4px_color-mix(in_oklab,var(--bb-focus-ring)_var(--bb-focus-ring-halo-strength),transparent)]',
-  'bb:group-data-disabled:border-border-control bb:group-data-disabled:bg-surface-disabled'
+  /* The resting edge, not the hover one: a switched-off control may not be
+     LOUDER than a live one, which it became when rest moved down a step. */
+  'bb:group-data-disabled:border-border bb:group-data-disabled:bg-surface-disabled'
 );
 
 const LABEL = cx(
@@ -144,7 +150,9 @@ export const Switch = forwardRef<HTMLLabelElement, SwitchProps>(function Switch(
   return (
     <div
       className={cx(
-        'bb:flex bb:flex-col bb:gap-(--bb-field-gap-inner)',
+        /* No gap: nothing sits above the control here, so the messages hug
+             it. `Field` carries the rule. */
+        'bb:flex bb:flex-col',
         className
       )}
     >

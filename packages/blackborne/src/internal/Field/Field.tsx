@@ -79,14 +79,23 @@ export function Field({
 
   return (
     /*
-     * `gap-(--bb-field-gap-inner)` is the SMALL gap, between label, control and
-     * message. The larger gap between fields belongs to whatever lays the form
-     * out. Two values, decided once — doc 03 §4.6c is explicit that six gaps is
-     * how a form starts looking untidy without anyone knowing why.
+     * THE GAP IS ABOVE THE CONTROL AND NOT BELOW IT.
+     *
+     * It used to be one `gap` on the column, so the same space sat between the
+     * label and the control and between the control and whatever is under it —
+     * and measured, that put the message twice as far from the control as the
+     * label was, because a message also carries its own line-height above the
+     * glyphs. A description belongs to the control it explains; floating it
+     * halfway to the next field is what made a form of mixed fields look
+     * ragged.
+     *
+     * So the column has no gap and the LABEL carries a bottom margin. The
+     * larger gap between fields belongs to whatever lays the form out — two
+     * values, decided once, which is doc 03 §4.6c's whole point.
      */
     <div
       className={cx(
-        'bb:flex bb:flex-col bb:gap-(--bb-field-gap-inner)',
+        'bb:flex bb:flex-col',
         'bb:font-sans bb:text-md',
         className
       )}
@@ -104,7 +113,14 @@ export function Field({
                * look calmer without anything shrinking.
                */
               'bb:text-md bb:font-strong bb:text-text',
-          'bb:w-fit'
+          'bb:w-fit',
+          /*
+           * The field's one inner gap, carried here rather than by the column
+           * — see the note above. A hidden label is out of flow, so its margin
+           * collapses to nothing and the control sits at the top, which is
+           * what a field with no visible label should do.
+           */
+          'bb:mb-(--bb-field-gap-inner)'
         )}
       >
         {label}
@@ -182,6 +198,16 @@ export function Field({
        * Rendered by the base only while the field is invalid, and referenced by
        * the control. The text itself is the second channel alongside the border
        * colour, which is what keeps the state readable in greyscale (doc 06 §3).
+       */}
+      {/*
+       * START-ALIGNED, like the description above it — and it was `text-end`
+       * for an afternoon.
+       *
+       * What settles it is the COUNTER. A field with `isCounterVisible` puts
+       * its count at the trailing end of the row above, so an error aligned
+       * the same way sits directly under it and the two read as one column of
+       * right-hand numbers and words. Dropping straight down from the label is
+       * also where a message is looked for.
        */}
       <FieldError className="bb:text-xs bb:text-danger-text">
         {errorMessage}

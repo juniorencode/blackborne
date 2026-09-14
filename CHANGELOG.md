@@ -12,6 +12,43 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **A field takes one icon, and it is at the start.** `TextField`,
+  `NumberField`, `SearchField`, `PasswordField`, `Select` and `ComboBox` take
+  an `icon`, rendered in a slot of its own at the LEADING edge — beside a
+  prefix rather than instead of one, so `S/` and a mark can share a field.
+  Doc 07 gained **§2.2b**, which orders the leading edge the way §2.2 has
+  always ordered the trailing one, and
+  [decision 0031](./docs/decisions/0031-a-field-takes-one-icon-and-it-is-at-the-start.md)
+  records why there is exactly one and why it is at the start: a trailing icon
+  would be a slot whose contents vanish when an unrelated prop is set, because
+  four of the six fields own that edge permanently and the other two own it
+  whenever a cross or a stepper is asked for.
+
+  It is an icon RECEIVED, which is hard rule 9 — the slot gives it its size and
+  its colour, and the library still ships no icons. And the slot sizes what
+  ARRIVES in it: an svg carrying only a `viewBox` has no intrinsic size, so the
+  first story of one rendered at 0 by 0, which is `Avatar`'s fallback trap in
+  the second slot in this library to meet it.
+
+- **`--bb-border-invalid`**, the edge of a field in error — a separate token
+  from `--bb-danger-text` because the two floors are different and no step of
+  the dark scale clears both. Doc 03 §5 rule 2 asks 3:1 of a graphical element
+  and 4.5:1 of text: in dark, step 10 is 3.79:1 and fails as a message, and
+  step 11 is 7.48:1 and is a pale pink no border wants. The edge takes 10 and
+  the message takes 11. In light they land on the same value, which is why one
+  token looked sufficient for an afternoon.
+
+- **`--bb-surface-raised-hover`**, a row hovered INSIDE a raised panel. It
+  exists because `--bb-surface-hover` is chosen against the PAGE: with a panel
+  now a step above the page, a menu row and a select's option were being
+  hovered in a colour that had been judged against something else. In dark the
+  direction inverted as well — a table row on the page lit up while a menu row
+  in a panel went out, on one screen.
+
+- **[`docs/guides/tokens.md`](./docs/guides/tokens.md)** — every semantic
+  token, what it is for and which components read it, with the "used by" counts
+  read out of the source rather than written from memory.
+
 - **Every colour changed.** The palette is this library's own now, not
   `@radix-ui/colors` — which is gone from the dependency tree — and it ships in
   `oklch`, so a screen that can show more than sRGB shows the colour that was
@@ -313,6 +350,64 @@ minor versions. Every break is listed here with its migration.
 
 ### Changed
 
+- **A pass over the fields, the controls and the two lists, done with the
+  pictures open.** Nothing in it is a new capability; it is the appearance of
+  what already shipped, reviewed component by component and changed where a
+  measurement or an eye said so.
+
+  **Surfaces.** A raised panel is a step above the page in both modes rather
+  than the same colour as it — light `gray-2`, dark `gray-4` — so a menu, a
+  dialog and a select's list are distinguishable from what they sit on without
+  leaning on a shadow. The dark page itself is `gray-3`, and `--bb-border` in
+  dark moved to `gray-6`: a field's edge is the only thing drawing its box in
+  that mode, and it had got quieter exactly where it had least to spare.
+
+  **The chosen row in a `Select` and a `ComboBox` is a soft brand fill, and the
+  tick is gone.** Hovering it changes nothing, because it is already the row
+  the field is on. Its label keeps the ordinary text colour — black in light,
+  white in dark — so the fill says "this one" and the type says nothing.
+
+  **An open list no longer takes the page's scrollbar away.** A select's
+  popover is `isNonModal`, so opening one does not lock the document: the page
+  scrollbar vanishing under an open list moved everything beside it by its own
+  width. The list's own scrollbar is `.bb-scroller` — thin, no arrows, and a
+  track the colour of the panel — which also corrects something measured
+  rather than noticed: dark mode is an ATTRIBUTE here, so `color-scheme`
+  computes to `normal` and a browser was painting its LIGHT scrollbar inside a
+  dark panel. `e2e/scroller.spec.ts` is what holds that, because no picture
+  can: measured in the container the baselines are taken in, the bar takes no
+  layout space at all and is not painted at rest, so the two declarations are
+  asserted as computed values in both modes instead — verified by pointing the
+  comparison one step along the same scale and watching all four go red.
+
+  **A control's hover moves its EDGE, not its fill.** A checkbox, a radio and a
+  switch keep their background and darken their border, which is what every
+  field already did — one rule where there were two.
+
+  **Focus wins over hover**, as stacked variants: `data-hovered:data-focused:`
+  is heavier than either alone, so the outcome no longer depends on the order
+  Tailwind happened to emit two rules in. The house pattern was already in
+  `Switch`; it is in `controlBox` now, where every field reads it.
+
+  **A field has one inner gap.** It was one `gap` on the column, which put the
+  message twice as far from the control as the label was — a message carries
+  its own line-height above its glyphs. The label carries the margin now and
+  the column has none, so a description sits against the control it explains.
+  Doc 03 §4.6c's two vertical gaps are unchanged.
+
+  **Transitions are 200ms and 300ms**, from 100 and 160. At 100 the eye gets
+  about six frames — enough to avoid a flicker and not enough to register as
+  movement — and once a state change cost 200, the token called `normal` was
+  FASTER than the one called `fast`. Doc 09 §2 held one band for both and now
+  holds two, in a new **§2.0**: a colour does not travel a distance and a panel
+  does. `Skeleton`'s pulse keeps its own budget — its multiplier moved from
+  eight to four so the cycle stays at 1200ms, inside the 700–1300ms that
+  section asks of a loop.
+
+  **And the browser's own affordances inside a field are suppressed** — the
+  WebKit search cancel button, `-ms-clear` and `-ms-reveal` — because each of
+  them is a second control at an edge this library has already decided.
+
 - **The page-size selector row was re-asked, and half of it changed.** It was
   answered before the table suite existed, and its own sentence handed the
   listing to that suite. The control stays composed — its whole body would be a
@@ -355,12 +450,56 @@ minor versions. Every break is listed here with its migration.
 
 ### Removed
 
+- **`--bb-border-control`**, which had no readers left. It was a field's edge
+  when a field's edge differed from every other border; the two are one colour
+  now, and a token nothing reads is a second name for a value, which is how
+  three near-identical greys start.
+
 - **`split-button-variants`**, a strict subset of `split-button-states`.
   Verified before deleting: it renders primary beside secondary in a row, and
   the "Default" scope of the states picture renders the same two, the component
   defaulting to `primary`.
 
 ### Fixed
+
+- **A `Checkbox` had no edge, no hover response and no red border while
+  invalid.** An edit dropped a `*/`, so the comment above the box swallowed the
+  class that drew its border — still valid TypeScript, which is why the types,
+  the lint, 494 behaviour checks and 515 accessibility checks all passed over a
+  control with no box. Found by opening the picture, which is what that layer
+  is for. Every source file was swept for an unbalanced comment afterwards.
+
+- **`FileUpload` and a `RadioGroup` card drew a different red from the control
+  inside them.** Both were still on `--bb-danger`, the SOLID step, while every
+  other invalid edge had moved to `--bb-border-invalid` — so an invalid radio
+  card showed `#CA011F` round a circle drawn in `#CC0007`.
+
+  **And the uploader's own check agreed with it**, which is worth more than
+  the defect. `file-upload.spec.ts` asserts that an invalid zone's edge is the
+  danger token, resolved through a probe rather than remembered — and it named
+  the same token the component did, so it went on passing while the component
+  disagreed with every sibling in the library. A check that compares a
+  component to itself cannot see a component drifting away from its family. It
+  names the edge token now — and the way the stale one surfaced was the
+  component being fixed first: the check went red on the next full run, with
+  the two reds printed one under the other.
+
+- **A `ComboBox`'s toggle was as tall as its frame**, so the one field in this
+  library whose frame grows made a square as wide as four chips were tall. It
+  is the frame's content height now, spelled as a `calc` — and the first
+  attempt at that spelling compiled to nothing, because Tailwind turns an
+  underscore in an arbitrary value into a space and `calc()` needs whitespace
+  around its `-`. The fifth utility in this repository found to produce no rule
+  at all while looking right in the source.
+
+- **Two of this catalog's own checks were passing for the wrong reason.**
+  `theme-axes` compared colours by summing the digits of an `oklch()` string,
+  which reads a lightness as a red channel; it resolves colour through a canvas
+  now and computes relative luminance, and the rule it asserts was inverted as
+  well as unmeasured. And `form-rhythm` read the space above a message by
+  walking up for a `rowGap`, which found the FORM's gap rather than the
+  field's; it measures the distance between two boxes now, skipping the
+  zero-height `aria-live` span that was the reading before.
 
 - **Every sortable `Table` described itself as "sorted by column&nbsp;&nbsp;in
   ascending order"** — with no column in it. The base builds that description

@@ -15,6 +15,7 @@ import {
   ClearDate,
   ControlFrame,
   DateSegments,
+  EDGE_BUTTON,
   Field,
   type ControlAlign
 } from '../../internal/Field';
@@ -61,16 +62,13 @@ const TOGGLE = cx(
    * is what the first screenshot of this component showed.
    */
   'bb:group',
-  'bb:box-border bb:flex bb:min-h-hit bb:min-w-hit bb:flex-none',
-  'bb:items-center bb:justify-center bb:rounded-md',
-  'bb:cursor-pointer bb:border-0 bb:bg-transparent bb:text-text-muted',
-  'bb:transition-[background-color,color]',
-  'bb:duration-(--bb-duration-fast) bb:ease-standard',
-  'bb:data-hovered:bg-surface-hover bb:data-hovered:text-text',
-  'bb:data-pressed:bg-surface-active',
-  'bb:outline-hidden',
-  'bb:data-focus-visible:bg-surface-hover bb:data-focus-visible:text-text',
-  'bb:data-disabled:cursor-not-allowed bb:data-disabled:text-text-disabled'
+  /*
+   * `EDGE_BUTTON`, where this was a verbatim copy of it. The copy was written
+   * before the shared one existed and then drifted by standing still: the
+   * shared shape became a full-height square flush to the edge and this stayed
+   * a floating rounded box, so a picker showed one of each in the same row.
+   */
+  EDGE_BUTTON
 );
 
 /* Turns over while the layer is open, the way a select's does. */

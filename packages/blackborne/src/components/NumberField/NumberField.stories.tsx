@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { DemoIcon } from '../../catalog/demoIcon';
 import { Button } from '../Button';
 import { ConfigProvider } from '../../config';
 import { NumberField, type NumberFieldSize } from './NumberField';
@@ -463,6 +464,36 @@ export const Clearing: Story = {
           />
         </div>
       </div>
+    </div>
+  )
+};
+
+/*
+ * THE `icon` SLOT. Decision 0031 and doc 07 §2.2b: one mark, at the START,
+ * because six of the seven fields own their trailing edge permanently or
+ * conditionally and a slot that empties itself is worse than no slot.
+ *
+ * The glyph carries only a `viewBox`, which is the case that rendered at 0 by
+ * 0 until the slot was taught to size what arrives in it.
+ */
+export const WithIcon: Story = {
+  render: args => (
+    <div className="catalog-stack" style={{ maxWidth: 320 }}>
+      <NumberField
+        {...args}
+        label="Quantity"
+        icon={DemoIcon}
+        defaultValue={3}
+      />
+      {/* With the stepper, which owns that edge: the control keeps it and the
+          icon sits inside it. */}
+      <NumberField
+        {...args}
+        label="With the stepper"
+        icon={DemoIcon}
+        defaultValue={3}
+        isStepperVisible
+      />
     </div>
   )
 };

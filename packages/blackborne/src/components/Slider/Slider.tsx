@@ -312,13 +312,20 @@ export const Slider = forwardRef<HTMLDivElement, SliderProps>(function Slider(
       className={cx(
         'bb-slider',
         'bb:group bb:box-border bb:flex bb:w-full bb:flex-col',
-        'bb:gap-(--bb-field-gap-inner) bb:font-sans bb:text-md bb:text-text',
+        'bb:font-sans bb:text-md bb:text-text',
         className
       )}
       {...ariaProps}
       {...(onChangeEnd === undefined ? {} : { onChangeEnd })}
     >
-      <div className={cx(HEADER, isLabelHidden && isValueHidden && NO_HEADER)}>
+      <div
+        className={cx(
+          HEADER,
+          /* The field's one inner gap — see the note on the root. */
+          'bb:mb-(--bb-field-gap-inner)',
+          isLabelHidden && isValueHidden && NO_HEADER
+        )}
+      >
         {/*
          * THE BASE'S `Label`, ALWAYS RENDERED, and hidden with a class rather
          * than left out. `Progress` shipped the other way round in its first

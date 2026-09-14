@@ -36,6 +36,7 @@
 @import '../internal/Field/controlBox.css';
 @import '../internal/Layer/arrow.css';
 @import '../internal/checkerboard.css';
+@import '../internal/scrollbar.css';
 @import '../components/ButtonGroup/ButtonGroup.css';
 @import '../components/Checkbox/Checkbox.css';
 @import '../components/Dialog/Dialog.css';
@@ -90,6 +91,7 @@
   --color-surface-control: var(--bb-surface-control);
   --color-surface-control-on: var(--bb-surface-control-on);
   --color-surface-hover: var(--bb-surface-hover);
+  --color-surface-raised-hover: var(--bb-surface-raised-hover);
   --color-surface-active: var(--bb-surface-active);
   --color-surface-selected: var(--bb-surface-selected);
   --color-surface-selected-on: var(--bb-surface-selected-on);
@@ -105,8 +107,8 @@
 
   --color-border: var(--bb-border);
   --color-border-strong: var(--bb-border-strong);
-  --color-border-control: var(--bb-border-control);
   --color-border-focus: var(--bb-border-focus);
+  --color-border-invalid: var(--bb-border-invalid);
   /* The focus ring's own edge colour, so a control can put it on its border
      rather than drawing a second ring outside itself. */
   --color-focus-ring: var(--bb-focus-ring);

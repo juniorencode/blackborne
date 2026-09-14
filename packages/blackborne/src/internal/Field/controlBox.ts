@@ -35,14 +35,17 @@ export const CONTROL_BOX = cx(
   'bb:transition-[border-color,box-shadow,background-color]',
   'bb:duration-(--bb-duration-fast) bb:ease-standard',
   /*
-   * A field moves its BORDER on hover, where the small controls move their
-   * fill. The exception is deliberate and it is about size: a field is a large
-   * surface the pointer crosses constantly in a dense form, and repainting its
-   * interior every time would make the form shimmer. The border says "this is
-   * a target" without touching the area you are about to read.
+   * HOVER MOVES THE BORDER, and since 2026-09-13 that is true of every control
+   * in the library rather than of fields alone.
    *
-   * Same reasoning already accepted for --bb-border-control: the size of a
-   * thing changes what reads correctly on it.
+   * A field is a large surface the pointer crosses constantly in a dense form,
+   * and repainting its interior every time makes the form shimmer; the border
+   * says "this is a target" without touching the area you are about to read.
+   * A checkbox, a radio and a switch used to move their FILL instead, on the
+   * argument that the size of a thing changes what reads correctly on it —
+   * and looked at side by side in one form, the two answers read as two
+   * libraries. They keep their background and darken their edge now, which is
+   * one rule where there were two.
    */
   'bb:data-hovered:border-border-strong',
   /*
@@ -63,9 +66,42 @@ export const CONTROL_BOX = cx(
   'bb:data-focused:border-focus-ring bb:data-focus-within:border-focus-ring',
   'bb:data-focused:shadow-[0_0_0_4px_color-mix(in_oklab,var(--bb-focus-ring)_var(--bb-focus-ring-halo-strength),transparent)]',
   'bb:data-focus-within:shadow-[0_0_0_4px_color-mix(in_oklab,var(--bb-focus-ring)_var(--bb-focus-ring-halo-strength),transparent)]',
-  'bb:data-invalid:border-danger',
+  /*
+   * A POINTER OVER A FOCUSED FIELD USED TO TAKE ITS FOCUS BORDER AWAY.
+   *
+   * Measured on a text field: at rest the edge is `border`, hovered it is
+   * `border-strong`, focused it is the ring colour with the halo — and
+   * focused AND hovered it went back to `border-strong` while the halo
+   * stayed. So the field kept its halo and lost its edge under the one
+   * pointer that is always there while you type.
+   *
+   * `data-hovered:` and `data-focused:` are single variants at equal
+   * specificity, so which one wins is decided by the order Tailwind emits
+   * them and not by anything written here. The note above about source order
+   * being load-bearing is about two rules with the SAME variant; it cannot
+   * settle an argument between two different ones.
+   *
+   * The stacked variant is what settles it, and it is the shape `Switch`
+   * already uses for selected-and-hovered: two attributes carry higher
+   * specificity than either one alone, so the outcome stops depending on
+   * emission order. Focus outranks hover because focus says where the
+   * keyboard is and hover only says where the pointer passed.
+   */
+  'bb:data-hovered:data-focused:border-focus-ring',
+  'bb:data-hovered:data-focus-within:border-focus-ring',
+  /*
+   * `border-invalid`, which is a token of its own and not the message's.
+   * An edge needs 3:1 and a message needs 4.5:1, and on a dark scale no single
+   * red clears both — measured, the one that reads as red is 2.95:1 on a
+   * raised panel. In light the two resolve to the same value anyway. The full
+   * argument is on the token in `semantic.css`.
+   */
+  'bb:data-invalid:border-border-invalid',
+  /* Same argument, same fix: a pointer over an invalid field was taking the
+     danger edge away too. */
+  'bb:data-hovered:data-invalid:border-border-invalid',
   // One variable recolours the edge AND the halo, so they cannot drift apart.
-  'bb:data-invalid:[--bb-focus-ring:var(--bb-danger)]',
+  'bb:data-invalid:[--bb-focus-ring:var(--bb-border-invalid)]',
   /*
    * Read-only and disabled deliberately look different. Read-only shows a
    * value you can read, select and copy; disabled says this does not apply
@@ -200,15 +236,43 @@ export const EDGE_CONTROL = cx(
 );
 
 /**
- * The two edge controls that float inside the frame rather than spanning it.
+ * The edge controls at the frame's TRAILING edge: a clear cross, a reveal
+ * toggle, a combo box's chevron.
  *
- * The hit area is the part of a control like this that is usually wrong: a
- * cross drawn at 14px is a 14px target unless something says otherwise, and
- * doc 06 §3 wants the minimum at EVERY density. Both axes take the token, so
- * compact trims the mark and never the target.
+ * A SQUARE that spans the frame's height, flush against the edge. It used to
+ * float: `min-h-hit` and `min-w-hit` with `rounded-md`, which the frame's
+ * stretch turned into 28 by 42 — a target whose two axes disagree, reading as
+ * a strip of the field rather than as a button.
+ *
+ * The height is the frame's and the WIDTH follows it. Squaring the other way
+ * would have shrunk a target that was already at the minimum; this way the
+ * minimum is cleared by a wide margin, because the frame is 44 where the hit
+ * token is 28, and it follows density for free.
+ *
+ * `aspect-square` off the stretched height, never a `w-*` token: the theme has
+ * `--height-hit` and no `--width-hit`, so a width utility compiles to nothing
+ * and leaves a box with a height and no width. Written down as a trap because
+ * it has already shipped once.
+ *
+ * The start corners are square — that side faces the value — and the end
+ * corners follow the frame's own. A full-height control in a rounded box has
+ * to finish the box's curve, or its highlight spills past the corner.
+ * Logical sides, so it mirrors with the direction.
+ *
+ * NO RADIUS HERE, and that is the part worth reading. The first version put
+ * `rounded-e-md` on the control and said "every caller is alone at this edge,
+ * because doc 07 §2.2 rule 4 gives it to one control" — which is false, and
+ * the exception is written in this repository: §2.2a is a bounded exception
+ * for the date family, the only thing here with TWO controls at one edge. The
+ * cross came out with a finished corner in the middle of the row.
+ *
+ * `last:` did not rescue it either: each control is wrapped separately by
+ * `KeepsItsRoom`, so `:last-child` is true of BOTH — measured, both ends were
+ * still round. The corner is finished on the SLOT instead, in
+ * `controlBox.css`, which is the one element that knows which edge it is and
+ * how many things are standing on it.
  */
 export const EDGE_BUTTON = cx(
   EDGE_CONTROL,
-  'bb:min-h-hit bb:min-w-hit',
-  'bb:rounded-md'
+  'bb:aspect-square bb:flex-none bb:self-stretch'
 );

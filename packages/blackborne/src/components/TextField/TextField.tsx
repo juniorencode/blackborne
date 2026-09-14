@@ -144,6 +144,20 @@ export interface TextFieldProps extends Omit<
    * does.
    */
   isClearable?: boolean;
+  /**
+   * A decorative mark at the START of the field.
+   *
+   * Doc 07 §2.2b and decision 0031. It arrives as a node you wrote — the
+   * library ships no icons and resolves no names — and the slot gives it its
+   * size and its colour.
+   *
+   * **Hidden from assistive technology**, because the label is always there
+   * and a mark can never be the only carrier of meaning. Something a person
+   * NEEDS in order to answer belongs in the label or the description.
+   *
+   * There is no trailing counterpart: that edge belongs to the field.
+   */
+  icon?: React.ReactNode;
   className?: string;
 }
 
@@ -181,6 +195,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
       normalize,
       isCounterVisible = false,
       isClearable = false,
+      icon,
       className,
       ...ariaProps
     },
@@ -263,6 +278,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
           {...(counter === undefined ? {} : { counter })}
         >
           <ControlFrame
+            {...(icon === undefined ? {} : { icon })}
             {...(prefix === undefined ? {} : { prefix })}
             {...(suffix === undefined ? {} : { suffix })}
             /*

@@ -345,15 +345,23 @@ test('an invalid field says so on its edge, not only underneath it', async ({
       invalid: one.getAttribute('data-invalid') === 'true',
       border: getComputedStyle(one).borderTopColor,
       /*
-       * THE TOKEN, RESOLVED THE WAY THE BORDER IS. Reading `--bb-danger`
-       * straight off the element gives the hex as authored (`#ce2c31`) while
-       * a computed border colour is `rgb(206, 44, 49)` — the same colour and
-       * a failing comparison. A probe carrying the variable comes back
-       * through the same serialisation.
+       * THE TOKEN, RESOLVED THE WAY THE BORDER IS. Reading the variable
+       * straight off the element gives the value as authored while a computed
+       * border colour comes back serialised — the same colour and a failing
+       * comparison. A probe carrying the variable comes back through the same
+       * serialisation.
+       *
+       * AND IT IS `--bb-border-invalid`, NOT `--bb-danger`. It was the solid
+       * step until 2026-09-13, and this check is how the component's own
+       * omission was caught: the token split in two — an EDGE is held to 3:1
+       * and a MESSAGE to 4.5:1, and no step of the dark scale clears both —
+       * and `FileUpload` was left behind on the fill, drawing `#CA011F` round
+       * a field whose siblings were on `#CC0007`. The check went red on the
+       * next full run with the two values one beside the other.
        */
-      danger: (() => {
+      invalidEdge: (() => {
         const probe = document.createElement('span');
-        probe.style.color = 'var(--bb-danger)';
+        probe.style.color = 'var(--bb-border-invalid)';
         one.append(probe);
         const resolved = getComputedStyle(probe).color;
         probe.remove();
@@ -373,14 +381,14 @@ test('an invalid field says so on its edge, not only underneath it', async ({
    * while the message says "required" is the frame lying by omission.
    *
    * Asserted against the TOKEN rather than against a remembered colour, and in
-   * both modes: the danger step is defined per mode rather than derived.
+   * both modes: the invalid edge is defined per mode rather than derived.
    */
   expect(invalid).toHaveLength(2);
   for (const one of invalid) {
-    expect(one.danger).not.toBe('');
-    expect(one.border).toBe(one.danger);
+    expect(one.invalidEdge).not.toBe('');
+    expect(one.border).toBe(one.invalidEdge);
   }
-  for (const one of ordinary) expect(one.border).not.toBe(one.danger);
+  for (const one of ordinary) expect(one.border).not.toBe(one.invalidEdge);
 });
 
 test('a disabled field offers no route in at all', async ({

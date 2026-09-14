@@ -7,6 +7,7 @@
  * and the only way to check it is to see the two side by side.
  */
 import { useState } from 'react';
+import { DemoIcon } from '../../catalog/demoIcon';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ConfigProvider } from '../../config';
 import { SearchField, type SearchFieldSize } from './SearchField';
@@ -386,3 +387,24 @@ function Listing() {
  * this is not a TextField with a cross on the end.
  */
 export const InAListing: Story = { render: () => <Listing /> };
+
+/*
+ * THE `icon` SLOT. Decision 0031 and doc 07 §2.2b: one mark, at the START,
+ * because six of the seven fields own their trailing edge permanently or
+ * conditionally and a slot that empties itself is worse than no slot.
+ *
+ * The glyph carries only a `viewBox`, which is the case that rendered at 0 by
+ * 0 until the slot was taught to size what arrives in it.
+ */
+export const WithIcon: Story = {
+  render: args => (
+    <div className="catalog-stack" style={{ maxWidth: 320 }}>
+      <SearchField
+        {...args}
+        label="Search"
+        icon={DemoIcon}
+        defaultValue="Lovelace"
+      />
+    </div>
+  )
+};
