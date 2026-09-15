@@ -17,23 +17,50 @@ const TONES = [
   'info',
   'success',
   'warning',
-  'danger'
+  'danger',
+  'neutral'
 ] as const satisfies readonly AlertTone[];
 
 /*
  * Fails to compile if a tone is added to the component and not to TONES.
  *
  * A plain `AlertTone[]` annotation only checks that every entry IS a tone, not
- * that every tone is an entry — so a fifth tone would silently drop out of
- * every story that walks this list, and out of the screenshots guarding them.
- * A catalog that quietly covers less than it appears to is worse than one that
+ * that every tone is an entry — so a tone would silently drop out of every
+ * story that walks this list, and out of the screenshots guarding them. A
+ * catalog that quietly covers less than it appears to is worse than one that
  * covers nothing, because it is trusted.
+ *
+ * AND THE FIRST VERSION OF THIS GUARD DID NOT GUARD. It read
+ * `const MISSING: Exclude<AlertTone, (typeof TONES)[number]>[] = []`, and an
+ * empty array is assignable to `never[]` AND to `'neutral'[]` — so it was
+ * equally happy whether or not anything was missing. Measured the only way it
+ * could be: a fifth tone was added to the component on 2026-09-14 and this
+ * line said nothing at all.
+ *
+ * A CONDITIONAL TYPE is what actually fails. When nothing is missing the
+ * conditional resolves to `true` and the assignment compiles; when something
+ * is, it resolves to a tuple carrying the missing member's NAME, and `true` is
+ * not assignable to it. The error names the tone.
+ *
+ * Verified in both directions, which is what the first one never was: with
+ * `neutral` removed from TONES the build fails with `Type 'true' is not
+ * assignable to type '["a tone is missing from TONES", "neutral"]'`, and with
+ * it present the build passes.
  */
-const MISSING: Exclude<AlertTone, (typeof TONES)[number]>[] = [];
-void MISSING;
+type EveryToneIsCovered =
+  Exclude<AlertTone, (typeof TONES)[number]> extends never
+    ? true
+    : [
+        'a tone is missing from TONES',
+        Exclude<AlertTone, (typeof TONES)[number]>
+      ];
+
+const COVERED: EveryToneIsCovered = true;
+void COVERED;
 
 /** Real management-application messages: what happened, and what to do. */
 const TITLE: Record<AlertTone, string> = {
+  neutral: 'This account is on the annual plan',
   info: 'Scheduled maintenance on Sunday',
   success: 'Import finished',
   warning: 'Three rows were skipped',
@@ -41,6 +68,8 @@ const TITLE: Record<AlertTone, string> = {
 };
 
 const BODY: Record<AlertTone, string> = {
+  neutral:
+    'It renews on 3 March. Nothing needs doing before then, and nothing changes if you do nothing.',
   info: 'The system will be read-only between 02:00 and 04:00. Anything you save before then is kept.',
   success: '1,248 customers were added and 12 were updated.',
   warning:

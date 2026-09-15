@@ -197,7 +197,7 @@ at `0.2.0` with nothing reading them, and on 2026-09-10 `dist/styles.css` was
 | What               | Ceiling                |
 | ------------------ | ---------------------- |
 | `dist/index.js`    | structural — see below |
-| `dist/styles.css`  | 82 kB raw / 13 kB gzip |
+| `dist/styles.css`  | 84 kB raw / 13 kB gzip |
 | `dist/palette.css` | 45 kB raw / 7 kB gzip  |
 | Published tarball  | 220 kB                 |
 
@@ -264,7 +264,24 @@ the invalid MESSAGE because no single red clears both floors on a dark scale, a
 scrollbar the browser was otherwise painting light inside a dark panel, and the
 stacked state rules that stop a pointer taking a control's focus ring away.
 
-**The gzip half was NOT raised and is still the binding one**: 12.1 kB against
+**Raised again, 82 kB to 84 kB, on 2026-09-14**, and the cheaper answer was
+looked for first: there was nothing to take back. The pass that spent it
+REMOVED css in two places — a notice lost its shadow, and a `data-entering`
+rule that had never matched anything went with it — and still finished 0.3 kB
+over, at 82.3.
+
+What it bought is an axis rather than a detail. `ToastRegion` gained eight
+PLACEMENTS and the four arrival directions they choose between, a second
+surface variant, and a fifth tone that reaches `Alert` as well as `Toast` —
+each of which is a set of classes that must exist once per member. A countdown
+that used to be one pixel of bar is now a ring with a track behind it.
+
+**The gzip half was NOT raised and is still the binding one**: 12.3 kB against
+13 kB, up 0.2 from the wave before. Eight placements cost almost nothing
+compressed, because they are six utilities recombined — which is the
+measurement saying the raw figure is the wrong one to read this by.
+
+**And the earlier note, kept**: 12.1 kB against
 13 kB. That is what crosses the wire, and the raw figure moving 2 kB while gzip
 moves 0.1 is the shape of adding declarations that compress well.
 

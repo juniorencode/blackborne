@@ -21,11 +21,11 @@
  * the two boxes coincide.
  */
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '../Button';
 import { Dialog } from '../Dialog';
 import { LayerPage as Page } from '../../catalog/layerPage';
-import { ToastRegion } from './ToastRegion';
+import { ToastRegion, type ToastPlacement } from './ToastRegion';
 import { useToasts } from './useToasts';
 
 const meta = {
@@ -382,6 +382,186 @@ export const LongText: Story = {
             }}
           >
             Save
+          </Button>
+          <ToastRegion queue={toasts} />
+        </Page>
+      );
+    }
+
+    return <Demo />;
+  }
+};
+
+/*
+ * THE EIGHT PLACEMENTS, ONE STORY EACH, AND ONE PICTURE BETWEEN THEM.
+ *
+ * The first version of this put all eight regions on one page, to get the
+ * whole axis into a single baseline. axe refused it, correctly and for the
+ * reason this component's own props document: a region is a LANDMARK, and
+ * eight landmarks with one role and one name is `landmark-unique`. The rule
+ * that says a page has one toast region is not a style guideline, and a
+ * catalog that models a broken arrangement to save a screenshot is teaching
+ * the wrong thing.
+ *
+ * So the axis is covered the way an axis should be: by a CHECK that walks all
+ * eight and measures where each box lands (`toast.spec.ts`), and by ONE
+ * picture — `top`, the placement most unlike the default — so the feature is
+ * visible in the catalog without eight near-identical baselines of one card in
+ * eight corners.
+ */
+/*
+ * THE ANNOTATION ON EACH EXPORT IS LOAD-BEARING, not decoration.
+ *
+ * This catalog finds its stories by matching `export const X: Story` across
+ * the source, in two places: `check:claims`, which counts them without a
+ * build, and the accessibility suite's guard that the built index and the
+ * files agree. A factory export with the type inferred is invisible to both —
+ * measured, these eight were in `index.json` and absent from the scan, and
+ * the guard reported them as stories the catalog had invented.
+ *
+ * Which is the guard working: the two sides disagreed and it said so.
+ */
+const placed = (placement: ToastPlacement): Story => ({
+  render: () => {
+    function Demo() {
+      const toasts = useToasts();
+      /* On mount: a press per story is a press that can be missed. */
+      useEffect(() => {
+        toasts.add({ tone: 'neutral', title: placement, isPersistent: true });
+      }, [toasts]);
+      return (
+        <Page label={`A region placed at ${placement}.`}>
+          <ToastRegion queue={toasts} placement={placement} />
+        </Page>
+      );
+    }
+
+    return <Demo />;
+  }
+});
+
+export const PlacedTopStart: Story = placed('top start');
+export const PlacedTop: Story = placed('top');
+export const PlacedTopEnd: Story = placed('top end');
+export const PlacedMiddleStart: Story = placed('middle start');
+export const PlacedMiddleEnd: Story = placed('middle end');
+export const PlacedBottomStart: Story = placed('bottom start');
+export const PlacedBottom: Story = placed('bottom');
+export const PlacedBottomEnd: Story = placed('bottom end');
+
+/*
+ * THE TINTED VARIANT, which is the other way a notice can carry its tone: the
+ * whole card in the tone's own surface rather than a neutral card with the
+ * tone on its edge.
+ *
+ * A story of its own rather than a second scope inside `Tones`, because a
+ * region is `position: fixed` and two of them in one story would stack in the
+ * same corner rather than sit side by side.
+ */
+export const Tinted: Story = {
+  render: () => {
+    function Demo() {
+      const toasts = useToasts();
+
+      return (
+        <Page label="The same five tones, filled." mode="light">
+          <Button
+            data-testid="send"
+            onPress={() => {
+              toasts.add({
+                tone: 'danger',
+                title: 'Could not save the invoice'
+              });
+              toasts.add({
+                tone: 'warning',
+                title: 'Two lines have no tax code'
+              });
+              toasts.add({ tone: 'success', title: 'Invoice INV-4821 sent' });
+            }}
+          >
+            Show three
+          </Button>
+          <ToastRegion queue={toasts} variant="tinted" />
+        </Page>
+      );
+    }
+
+    return <Demo />;
+  }
+};
+
+export const TintedDark: Story = {
+  render: () => {
+    function Demo() {
+      const toasts = useToasts();
+
+      return (
+        <Page label="The same five tones, filled." mode="dark">
+          <Button
+            data-testid="send"
+            onPress={() => {
+              toasts.add({
+                tone: 'danger',
+                title: 'Could not save the invoice'
+              });
+              toasts.add({
+                tone: 'warning',
+                title: 'Two lines have no tax code'
+              });
+              toasts.add({ tone: 'success', title: 'Invoice INV-4821 sent' });
+            }}
+          >
+            Show three
+          </Button>
+          <ToastRegion queue={toasts} variant="tinted" />
+        </Page>
+      );
+    }
+
+    return <Demo />;
+  }
+};
+
+/*
+ * `neutral`, and WHETHER A NOTICE STAYS, which are the two things that are
+ * easiest to believe without looking.
+ *
+ * A neutral notice has no badge at all — there is no outcome for a silhouette
+ * to carry — so this is where that absence is visible beside four that have
+ * one.
+ *
+ * And persistence is no longer the tone's: the `danger` here leaves on a timer
+ * because it was told to, and the `success` stays because it was told to. Doc
+ * 09 §4.1 separates the two questions, and a picture of a ring on one card and
+ * none on the other is what makes the separation checkable.
+ */
+export const NeutralAndPersistence: Story = {
+  render: () => {
+    function Demo() {
+      const toasts = useToasts();
+
+      return (
+        <Page label="No state, and two notices with the default reversed.">
+          <Button
+            data-testid="send"
+            onPress={() => {
+              toasts.add({
+                tone: 'success',
+                title: 'The export is ready — it stays until dismissed',
+                isPersistent: true
+              });
+              toasts.add({
+                tone: 'danger',
+                title: 'Nothing matched — this one leaves',
+                isPersistent: false
+              });
+              toasts.add({
+                tone: 'neutral',
+                title: 'The plan renews on 3 March'
+              });
+            }}
+          >
+            Show three
           </Button>
           <ToastRegion queue={toasts} />
         </Page>

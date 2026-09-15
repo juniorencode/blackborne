@@ -13,40 +13,44 @@
  * leaves on a timer has to show the time it has left, because a countdown
  * somebody can see is a countdown they can beat.
  *
- * It shrinks from the full width of the notice to nothing over exactly the
- * timeout the queue was given. The duration is a custom property because it is
- * per notice — 6s ordinarily, 10s when there is an action to take — and the
- * number comes from the same constant the timer does. A bar running for six
- * seconds beside a timer that fires at ten is worse than no bar at all.
+ * A RING THAT COMPLETES, drawn round the close button, and it was a hairline
+ * bar along the bottom edge until 2026-09-14. The bar was honest and easy to
+ * miss: one pixel at the far edge of the card from the thing it is about.
+ *
+ * It closes over exactly the timeout the queue was given. The duration is a
+ * custom property because it is per notice — 6s ordinarily, 10s when there is
+ * an action to take — and the number comes from the same constant the timer
+ * does. A ring running for six seconds beside a timer that fires at ten is
+ * worse than no ring at all.
  *
  * `--bb-toast-timeout` has no fallback on purpose. A missing value makes the
- * animation invalid and the bar simply sits at full width, which is visibly
- * wrong; a fallback of some plausible duration would be a bar counting down to
- * a moment nothing happens at.
+ * animation invalid and the ring simply sits empty, which is visibly wrong; a
+ * fallback of some plausible duration would be a countdown to a moment nothing
+ * happens at.
  *
  * `linear`, and this is the one place in the library where an ease would be a
  * lie: the thing being animated IS elapsed time.
+ *
+ * THE GEOMETRY IS WRITTEN RATHER THAN MEASURED. The circle has r=16 in a 36
+ * unit box, so its circumference is 2πr = 100.53 — and the dash array is that
+ * number exactly. Rounding it to 100 leaves a half-unit gap at the end of a
+ * ring whose whole job is to look complete when it is. The element carries
+ * `-rotate-90` so the ring starts at the top rather than at three o'clock,
+ * which is where a clock face starts and where an eye looks for one.
+ *
+ * It needs no RTL rule. A ring has no reading direction, unlike the bar it
+ * replaces — which had to flip its transform origin with `dir`, because
+ * `transform-origin` takes no logical keyword. One physical exception fewer.
  */
-.bb-toast-countdown {
-  inline-size: 100%;
-  transform-origin: left center;
+.bb-toast-countdown circle:last-of-type {
+  stroke-dasharray: 100.53;
+  stroke-dashoffset: 100.53;
   animation: bb-toast-countdown var(--bb-toast-timeout) linear forwards;
-}
-
-/*
- * RTL: the bar empties from the side the text starts on, so the origin flips
- * with the direction. `transform-origin` takes no logical keyword — doc 05 §4
- * records that there is no logical `translate` either — so this is the
- * measured exception where a physical value is correct and reading `dir` is
- * the only way to know which.
- */
-[dir='rtl'] .bb-toast-countdown {
-  transform-origin: right center;
 }
 
 @keyframes bb-toast-countdown {
   to {
-    transform: scaleX(0);
+    stroke-dashoffset: 0;
   }
 }
 
@@ -59,13 +63,32 @@
  * So the bar reads the same two signals the timer does, and the two cannot
  * disagree: there is no second source of truth about whether time is passing.
  */
-.bb-toast-region[data-hovered] .bb-toast-countdown,
-.bb-toast-region[data-focused] .bb-toast-countdown {
+.bb-toast-region[data-hovered] .bb-toast-countdown circle:last-of-type,
+.bb-toast-region[data-focused] .bb-toast-countdown circle:last-of-type {
   animation-play-state: paused;
 }
 
 /*
- * THE ENTRY.
+ * THE ENTRY, AND IT HAD NEVER RUN.
+ *
+ * It was written as `.bb-toast[data-entering]`, on the pattern every other
+ * layer in this library follows — and measured on 2026-09-14, that attribute
+ * never appears on a notice. The base's toast publishes no entering state at
+ * all: read in `react-aria-components` 1.21.0, its `UNSTABLE_Toast` has no
+ * `data-entering`, no `data-exiting` and no `data-animation`, and the element
+ * reported ZERO running animations the moment it mounted. A selector that
+ * matches nothing is not a subtle failure — it is a feature that shipped and
+ * did nothing, invisible to every check because a check that waits for an
+ * animation to finish passes fastest when there is none.
+ *
+ * So it runs on the element itself. A CSS animation declared on a node plays
+ * once when that node is inserted, which is exactly the event this wants, and
+ * a notice is never re-rendered into existence a second time.
+ *
+ * It is also more than it was: 8px over 200ms was measurable and not
+ * noticeable, and the point of doc 09 §2's exception is that a fourth notice
+ * arriving out of a backlog must be distinguishable from one that had been
+ * there all along.
  *
  * Doc 09 §2 allows an animation that communicates something, and this one says
  * where the notice came from: it slides in from the edge it is pinned to and
@@ -82,29 +105,54 @@
  * underneath — and a notice is the one layer that can be on screen while a
  * dialog is open (doc 08 §1), so it is exactly the case that trap was found in.
  */
-.bb-toast[data-entering] {
-  animation: bb-toast-in var(--bb-duration-fast) var(--bb-ease);
+.bb-toast {
+  animation: bb-toast-in var(--bb-duration-normal) var(--bb-ease);
+}
+
+/*
+ * FOUR DIRECTIONS, CHOSEN BY THE PLACEMENT rather than by a prop of their own.
+ *
+ * A notice sliding in from the right while its stack sits at the top left is
+ * telling you it came from somewhere it did not. `ToastRegion` maps each of
+ * the eight placements onto one of these, so the two cannot disagree.
+ *
+ * `translate` takes no logical keyword, so the inline pair is written twice
+ * and switched on `dir` — the same measured exception doc 05 §4 records for
+ * the rest of the library. The block pair needs no such thing: a screen has no
+ * "reading direction" from top to bottom.
+ */
+.bb-toast-from-end {
+  --bb-toast-from: 1.5rem 0;
+}
+
+[dir='rtl'] .bb-toast-from-end {
+  --bb-toast-from: -1.5rem 0;
+}
+
+.bb-toast-from-start {
+  --bb-toast-from: -1.5rem 0;
+}
+
+[dir='rtl'] .bb-toast-from-start {
+  --bb-toast-from: 1.5rem 0;
+}
+
+.bb-toast-from-top {
+  --bb-toast-from: 0 -1.5rem;
+}
+
+.bb-toast-from-bottom {
+  --bb-toast-from: 0 1.5rem;
 }
 
 @keyframes bb-toast-in {
   from {
     opacity: 0;
     /*
-     * The inline end, which is where the region is pinned. Written as a
-     * logical property so it comes from the right side in Arabic with no
-     * second keyframe.
+     * A fallback of the inline end, so a notice rendered outside the region —
+     * or one whose placement class has been lost to a refactor — still arrives
+     * from somewhere rather than appearing.
      */
-    translate: 0.5rem 0;
-  }
-}
-
-[dir='rtl'] .bb-toast[data-entering] {
-  animation-name: bb-toast-in-rtl;
-}
-
-@keyframes bb-toast-in-rtl {
-  from {
-    opacity: 0;
-    translate: -0.5rem 0;
+    translate: var(--bb-toast-from, 1.5rem 0);
   }
 }

@@ -272,6 +272,32 @@
    * it, which is what the rule of pairs is for (§4.0).
    */
   --bb-danger: var(--bb-x-danger-11);
+  /*
+   * THE MARK ON A TONE'S SOLID, and it is not `--bb-<tone>-on`.
+   *
+   * Added 2026-09-14 for the filled tone badge, and it is a deliberate step
+   * around the pairing rule with the measurement that permits it.
+   *
+   * Every `--bb-X-on` is chosen so a run of TEXT clears 4.5:1 on that fill.
+   * For amber that forces a dark brown: white on this library's warning solid
+   * is **3.12:1**, and white on the dark scale's success is 3.28. So a badge
+   * obeying the pairing rule came out as three white glyphs and one brown one,
+   * which reads as a mistake rather than as a family.
+   *
+   * A MARK INSIDE A BADGE IS NOT TEXT. Doc 03 §5 rule 2 asks 3:1 of a
+   * graphical element carrying information, and all four clear it — 3.12 being
+   * the worst, which is why this is a token with a note rather than a literal
+   * written four times.
+   *
+   * THE MARGIN IS THIN AND IS CHECKED. 3.12 against a floor of 3 leaves almost
+   * nothing, so `toast.spec.ts` measures the mark against every solid in both
+   * modes. If the palette's amber ever moves, that goes red rather than the
+   * badge quietly dropping under the floor.
+   *
+   * White in both modes on purpose: a tone's solid is saturated in both, so
+   * the thing drawn on it does not change with the page behind the card.
+   */
+  --bb-tone-mark: #fff;
   --bb-danger-on: #fff;
   /*
    * Step 9 is the SOLID colour — meant for a filled background, where its
@@ -650,6 +676,9 @@
    * running. Every number here came from a measurement, not from a preference.
    */
   --bb-danger: var(--bb-x-danger-9);
+  /* Restated for §6's rule that every semantic token is declared per mode,
+     and it is the same white: see the note in the light block. */
+  --bb-tone-mark: #fff;
   --bb-danger-on: #fff;
   /*
    * STEP 11, AND THE SPLIT BELOW IT IS THE REASON. This is the measurement

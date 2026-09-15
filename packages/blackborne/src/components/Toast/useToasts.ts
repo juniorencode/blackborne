@@ -15,13 +15,30 @@ export type ToastTone = Tone;
  */
 export interface ToastMessage {
   /**
-   * Which of the four kinds this is. Defaults to `info`.
+   * Which of the five kinds this is. Defaults to `neutral`, which draws no
+   * badge at all: a notice that declares no tone is reporting no outcome, and
+   * a blue `information` glyph would be claiming one on its behalf.
    *
    * `danger` carries one behaviour of its own: it does not go away on a timer
    * (doc 09 §4.1). A message about something going wrong that removes itself
    * leaves somebody with a broken state and no explanation.
    */
   tone?: ToastTone;
+  /**
+   * Stay until somebody dismisses it, instead of leaving on a timer.
+   *
+   * **The tone sets the default and this overrides it, in either direction.**
+   * A `danger` notice stays unless told not to; every other tone leaves unless
+   * told to stay. Doc 09 §4.1 separates the two questions and says why: an
+   * error somebody can safely miss has no business holding a corner of the
+   * screen, and a success about something irreversible may have every business
+   * doing so. Persistence is a property of the MESSAGE, not of its colour.
+   *
+   * What this does NOT open is how long a timed notice lasts. Six seconds and
+   * ten remain the library's, for §3.1's reason — per-instance timings are what
+   * make two screens in one application feel like two applications.
+   */
+  isPersistent?: boolean;
   /**
    * What happened, in a line. Doc 09 §4: what happened and what to do, with no
    * codes, no apologies and no jokes.
@@ -163,17 +180,21 @@ export function useToasts(): ToastQueue {
     const queue: ToastQueue = {
       add(message) {
         /*
-         * The timeout is decided HERE rather than by the caller, from the
-         * message itself: doc 09 §4.1 owns the numbers, and both of them
-         * follow from what the notice is. `danger` gets none at all, and the
-         * base treats a missing timeout as "stays until closed".
+         * WHETHER there is a timer is the message's, and HOW LONG is the
+         * library's. Doc 09 §4.1 draws the line exactly there.
+         *
+         * The tone supplies the default — `danger` stays, everything else
+         * leaves — and `isPersistent` overrides it either way. The base treats
+         * a missing timeout as "stays until closed", so persisting is the
+         * absence of a number rather than a flag it carries.
          */
-        const timeout =
-          message.tone === 'danger'
-            ? undefined
-            : message.action === undefined
-              ? TOAST_TIMEOUT
-              : TOAST_ACTION_TIMEOUT;
+        const persists = message.isPersistent ?? message.tone === 'danger';
+
+        const timeout = persists
+          ? undefined
+          : message.action === undefined
+            ? TOAST_TIMEOUT
+            : TOAST_ACTION_TIMEOUT;
 
         return base.add(message, timeout === undefined ? {} : { timeout });
       },

@@ -627,6 +627,13 @@ const STATES: Array<[string, string]> = [
   ['components-combobox--several-states', 'combobox-several-states'],
   ['components-combobox--several-in-a-narrow-panel', 'combobox-several-narrow'],
   ['components-menu--long-list', 'menu-long-list'],
+  /*
+   * ONE of the eight placements, and the one most unlike the default: the
+   * region's own stories cover the rest, and `toast.spec.ts` measures where
+   * all eight land. Eight baselines of one card in eight corners would be
+   * eight chances to approve a picture nobody looked at.
+   */
+  ['components-toast--placed-top', 'toast-placed-top'],
   ['components-menu--long-label', 'menu-long-label'],
   ['components-pagination--positions', 'pagination-positions'],
   ['components-cursorpagination--states', 'cursor-pagination-states'],
@@ -1068,6 +1075,16 @@ const AFTER_PRESS: Array<[string, string, string]> = [
   ['components-toast--light', 'toast-light', 'send'],
   ['components-toast--dark', 'toast-dark', 'send'],
   ['components-toast--tones', 'toast-tones', 'send'],
+  /*
+   * The second surface variant, in both modes, because which of the two a
+   * project picks is the whole of the choice and a tinted card in dark is not
+   * the same decision as a tinted card in light.
+   */
+  ['components-toast--tinted', 'toast-tinted', 'send'],
+  ['components-toast--tinted-dark', 'toast-tinted-dark', 'send'],
+  /* `neutral`, which draws no badge, beside two notices whose default for
+     staying has been reversed — one ring and one none, in one picture. */
+  ['components-toast--neutral-and-persistence', 'toast-neutral', 'send'],
   ['components-toast--long-text', 'toast-long-text', 'send'],
   ['components-toast--overflow', 'toast-overflow', 'send'],
   /*

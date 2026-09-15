@@ -5,7 +5,7 @@ import { cx } from '../cx';
  * `AlertTone`; a component that needs only some of them narrows the union
  * rather than inventing its own words (doc 02 §3.1).
  */
-export type Tone = 'info' | 'success' | 'warning' | 'danger';
+export type Tone = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
 
 /*
  * INTERNAL. The glyph that carries a tone, drawn rather than received.
@@ -42,37 +42,104 @@ export type Tone = 'info' | 'success' | 'warning' | 'danger';
  * re-derive the same way — the greyscale argument above is the reason each one
  * looks as it does, and it survives exactly as long as there is one of them.
  */
-const GLYPH: Record<Tone, React.ReactNode> = {
+/*
+ * SPLIT INTO A SHAPE AND A MARK on 2026-09-14, and the split is what lets one
+ * set of paths be drawn two ways.
+ *
+ * Outline: the shape is stroked and the mark is stroked, both in
+ * `currentColor` — which is `Alert`, unchanged, and the reason the mark's
+ * paint is a variable that FALLS BACK to `currentColor` rather than a second
+ * colour passed in. Nobody sets the variable there, so nothing about that
+ * component's drawing moved; all four of its baselines came out identical,
+ * which is the proof this was a refactor and not a redesign wearing one.
+ *
+ * Filled: the shape becomes a solid disc — or a solid triangle — and the mark
+ * is drawn in the colour paired with it. That is `Toast`, where a notice sits
+ * on a neutral surface and the tone is carried by a badge rather than by the
+ * whole card.
+ *
+ * The shape stays per tone in both. Doc 06 §3 asks that the silhouette carry
+ * the tone in greyscale, and a warning's triangle is the one that does most of
+ * that work — turning it into a fourth disc would leave "!" against "×" as the
+ * whole difference between a caution and a failure.
+ */
+const SHAPE: Record<Tone, string> = {
+  /*
+   * NEUTRAL HAS NO SHAPE, and that is the honest drawing rather than a gap.
+   *
+   * Every other tone's silhouette says which outcome this is, because doc 06
+   * §3 forbids colour being the only channel. Neutral is the absence of an
+   * outcome — "here is a line of text" — so there is nothing for a silhouette
+   * to carry, and a disc invented to fill the slot would be a fifth shape
+   * meaning nothing, competing with four that mean something.
+   *
+   * The callers render no badge at all for it. An empty string keeps the map
+   * total, so adding a tone still fails to compile until every map has it.
+   */
+  neutral: '',
+  info: 'M8 1.75 A6.25 6.25 0 1 1 8 14.25 A6.25 6.25 0 1 1 8 1.75 Z',
+  success: 'M8 1.75 A6.25 6.25 0 1 1 8 14.25 A6.25 6.25 0 1 1 8 1.75 Z',
+  warning: 'M8 2.2 L14.6 13.4 L1.4 13.4 Z',
+  danger: 'M8 1.75 A6.25 6.25 0 1 1 8 14.25 A6.25 6.25 0 1 1 8 1.75 Z'
+} satisfies Record<Tone, string>;
+
+/*
+ * `--bb-tone-mark` with a fallback, so an unset variable is exactly today's
+ * drawing rather than a missing one.
+ */
+const MARK: Record<Tone, React.ReactNode> = {
+  neutral: null,
   info: (
     <>
-      <circle cx="8" cy="8" r="6.25" />
-      <circle cx="8" cy="4.9" r="0.9" fill="currentColor" stroke="none" />
-      <path d="M8 7.4 L8 11.4" />
+      <circle
+        cx="8"
+        cy="4.9"
+        r="0.9"
+        fill="var(--bb-tone-mark, currentColor)"
+        stroke="none"
+      />
+      <path d="M8 7.4 L8 11.4" stroke="var(--bb-tone-mark, currentColor)" />
     </>
   ),
   success: (
-    <>
-      <circle cx="8" cy="8" r="6.25" />
-      <path d="M5.1 8.2 L7.1 10.2 L10.9 6" strokeLinejoin="round" />
-    </>
+    <path
+      d="M5.1 8.2 L7.1 10.2 L10.9 6"
+      strokeLinejoin="round"
+      stroke="var(--bb-tone-mark, currentColor)"
+    />
   ),
   warning: (
     <>
-      <path d="M8 2.2 L14.6 13.4 L1.4 13.4 Z" strokeLinejoin="round" />
-      <path d="M8 6.6 L8 9.9" />
-      <circle cx="8" cy="11.7" r="0.9" fill="currentColor" stroke="none" />
+      <path d="M8 6.6 L8 9.9" stroke="var(--bb-tone-mark, currentColor)" />
+      <circle
+        cx="8"
+        cy="11.7"
+        r="0.9"
+        fill="var(--bb-tone-mark, currentColor)"
+        stroke="none"
+      />
     </>
   ),
   danger: (
-    <>
-      <circle cx="8" cy="8" r="6.25" />
-      <path d="M5.8 5.8 L10.2 10.2 M10.2 5.8 L5.8 10.2" />
-    </>
+    <path
+      d="M5.8 5.8 L10.2 10.2 M10.2 5.8 L5.8 10.2"
+      stroke="var(--bb-tone-mark, currentColor)"
+    />
   )
 } satisfies Record<Tone, React.ReactNode>;
 
 export interface ToneGlyphProps {
   tone: Tone;
+  /**
+   * Draw the shape as a solid rather than as an outline, with the mark in
+   * `--bb-tone-mark`.
+   *
+   * The caller sets that variable alongside the colour it pairs with —
+   * `TONE_SOLID` beside this file is the one map that does both, for doc 03
+   * §4.0's reason: a background and the thing drawn on it are taken together
+   * or not at all.
+   */
+  isFilled?: boolean;
   /**
    * Sizing and placement. The default is the library's one icon size on a
    * one-line-tall box, which centres the glyph against the FIRST line of the
@@ -90,6 +157,7 @@ export interface ToneGlyphProps {
  */
 export function ToneGlyph({
   tone,
+  isFilled = false,
   className
 }: ToneGlyphProps): React.ReactNode {
   return (
@@ -111,7 +179,13 @@ export function ToneGlyph({
       strokeLinecap="round"
       aria-hidden="true"
     >
-      {GLYPH[tone]}
+      <path
+        d={SHAPE[tone]}
+        {...(isFilled
+          ? { fill: 'currentColor', stroke: 'none' }
+          : { strokeLinejoin: 'round' as const })}
+      />
+      {MARK[tone]}
     </svg>
   );
 }

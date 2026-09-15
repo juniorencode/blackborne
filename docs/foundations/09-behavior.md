@@ -212,11 +212,11 @@ A notice that removes itself is a timing decision, and like the hover delays in
 §3.1 it is **one decision for the library and not a prop**. Unlike them it has
 an exception, and the exception is the important half.
 
-| The notice                    | How long       |
-| ----------------------------- | -------------- |
-| Ordinary — what happened      | **6 seconds**  |
-| Carrying an action, like undo | **10 seconds** |
-| `danger`                      | **it stays**   |
+| The notice                    | How long                 |
+| ----------------------------- | ------------------------ |
+| Ordinary — what happened      | **6 seconds**            |
+| Carrying an action, like undo | **10 seconds**           |
+| `danger`                      | **it stays**, by default |
 
 **Six seconds** is long enough to notice something appear, look at it and read
 a line, and short enough that a sequence of saves does not build a wall. It is
@@ -228,10 +228,25 @@ the preferred half of §5's pair, and a window that closes before somebody has
 decided to use it hands them the discouraged half by accident. Four extra
 seconds is the difference between noticing and acting.
 
-**A `danger` notice does not leave on its own, ever.** Something has gone
-wrong, the person may not have been looking, and a message that removes itself
-leaves them with a broken state and no explanation — which is the one outcome
-§4 exists to prevent. It goes when it is dismissed, and not before.
+**A `danger` notice does not leave on its own** — by default, and the default
+is the whole of what the tone decides. Something has gone wrong, the person may
+not have been looking, and a message that removes itself leaves them with a
+broken state and no explanation, which is the one outcome §4 exists to prevent.
+
+**And staying is a property of the MESSAGE rather than of its colour.**
+Changed 2026-09-14. The table above reads as though persistence followed from
+the tone, and it does not: an error a person can safely miss — a search that
+found nothing, a retry that will happen anyway — has no business holding a
+corner of the screen until it is dismissed, and a SUCCESS about something
+irreversible may have every business doing so. Two different questions were
+being answered by one value.
+
+So the tone sets the default and a notice may say otherwise, in either
+direction. What is **not** adjustable is still not adjustable: the six and the
+ten are the library's, for the reason §3.1 gives — per-instance timings are
+what make two screens in one application feel like two applications. What a
+notice may choose is whether there is a timer at all, which is a question about
+consequences rather than about taste.
 
 **What makes a timed dismissal honest**, and this is a requirement rather than
 decoration: the remaining time is **visible**, and it **pauses**. A countdown
