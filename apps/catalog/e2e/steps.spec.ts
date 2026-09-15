@@ -2,8 +2,11 @@
  * The reporting half of a stepper, and what only a browser answers.
  *
  * THE TWO STRUCTURES, which is doc 04 §6's hook and cannot be asked in jsdom
- * at all. THE CONNECTORS ARE ONE LENGTH, which the first baseline is what
- * found — they were flexible and came out 110px, 28px and 85px in one row.
+ * at all. THE CHAIN IS UNBROKEN — the halves either side of a marker meet at
+ * the step boundary, and the two on the outside are hidden without leaving
+ * the layout, or the first title stops being centred under its own marker.
+ * THE CONNECTOR IS ONE FIXED LENGTH BESIDE A TITLE, which the first baseline
+ * is what found — it was flexible and came out 110px, 28px and 85px in a row.
  * THE FOUR STATES DIFFER IN GREYSCALE, which doc 06 §3 requires and which no
  * automated layer checks, because a filled circle is not text. And THE NUMBERS
  * COME FROM A COUNTER, which exists only where a stylesheet does.
@@ -17,6 +20,7 @@ const STRUCTURES = 'components-steps--structures';
 const OPTIONAL = 'components-steps--an-optional-step';
 const TOGETHER = 'components-steps--together';
 const RTL = 'components-steps--direction';
+const BESIDE = 'components-steps--titles-beside';
 
 test('the container decides whether the titles are shown', async ({ page }) => {
   await gotoStory(page, STRUCTURES);
@@ -110,35 +114,116 @@ test('the hidden titles are out of sight and still in the tree', async ({
   }
 });
 
-test('the connectors are one length, and the first step has none', async ({
+test('the chain is unbroken, and it ends without reflowing', async ({
   page
 }) => {
   await gotoStory(page, STATES);
 
-  const seen = await page.locator('.bb-step-connector').evaluateAll(lines =>
-    lines.map(line => ({
-      drawn: getComputedStyle(line).display !== 'none',
-      width: Math.round(line.getBoundingClientRect().width)
-    }))
+  const seen = await page.locator('.bb-step').evaluateAll(steps =>
+    steps.map(step => {
+      const read = (className: string) => {
+        const line = step.querySelector(className);
+        if (!line) return null;
+        const box = line.getBoundingClientRect();
+        return {
+          visibility: getComputedStyle(line).visibility,
+          display: getComputedStyle(line).display,
+          start: Math.round(box.left),
+          end: Math.round(box.right),
+          width: Math.round(box.width)
+        };
+      };
+      return {
+        lead: read('.bb-step-connector-lead'),
+        tail: read('.bb-step-connector-tail')
+      };
+    })
   );
 
   expect(seen).toHaveLength(4);
 
   /*
-   * THE FIRST BASELINE IS WHAT FOUND THIS. The connector was `flex-1`, sharing
-   * each step's leftover with the title — and since the steps are equal width
-   * and the titles are not, one row came out with lines of 110px, 28px and
-   * 85px. Nothing was wrong with any of them and the row read as an accident.
+   * A HALF ON EACH SIDE OF THE MARKER, and both grow — which is the opposite
+   * of what the `beside` layout needs and is measured separately below.
+   *
+   * Here the connector shares its row with the MARKER rather than with the
+   * title, and every marker is the same width, so every half comes out the
+   * same length by construction. That is what makes the row read as one
+   * chain: a fixed length here would leave a short dash floating in the
+   * middle of a wide gap.
+   */
+  const halves = seen.flatMap(step => [step.lead!, step.tail!]);
+  expect(halves).toHaveLength(8);
+  expect(new Set(halves.map(one => one.width)).size).toBe(1);
+
+  /*
+   * AND THE HALVES MEET. The chain looked broken before the lead existed,
+   * because a single connector per step left the marker off-centre and the
+   * line stopped at the step's own edge. Measured here: the tail of one step
+   * ends exactly where the next step's lead begins.
+   */
+  for (let at = 0; at < seen.length - 1; at++) {
+    expect(seen[at]!.tail!.end).toBe(seen[at + 1]!.lead!.start);
+  }
+
+  /*
+   * THE OUTER TWO ARE HIDDEN AND STILL OCCUPY THEIR BOX, which is the whole
+   * reason this is `visibility` rather than `display`. Dropping them from the
+   * layout makes the first step's marker row `[marker][tail]` — so the marker
+   * stops being centred in its own step while the title below goes on
+   * centring against the whole of it, and the first title reads as nudged
+   * sideways. Nothing in `Steps` is focusable, so neither choice costs a
+   * reader anything; this one costs no alignment either.
+   */
+  expect(seen[0]!.lead!.visibility).toBe('hidden');
+  expect(seen[0]!.lead!.display).not.toBe('none');
+  expect(seen[3]!.tail!.visibility).toBe('hidden');
+  expect(seen[3]!.tail!.display).not.toBe('none');
+
+  for (const one of [seen[0]!.tail!, seen[1]!.lead!, seen[3]!.lead!]) {
+    expect(one.visibility).toBe('visible');
+  }
+});
+
+test('beside the titles the connector is one fixed length', async ({
+  page
+}) => {
+  await gotoStory(page, BESIDE);
+
+  const seen = await page
+    .locator('[data-bb-mode="light"] .bb-step')
+    .evaluateAll(steps =>
+      steps.map(step => {
+        const line = step.querySelector('.bb-step-connector-lead')!;
+        return {
+          visibility: getComputedStyle(line).visibility,
+          width: Math.round(line.getBoundingClientRect().width),
+          tail: step.querySelector('.bb-step-connector-tail') !== null
+        };
+      })
+    );
+
+  expect(seen).toHaveLength(4);
+
+  /*
+   * THE FIRST BASELINE IS WHAT FOUND THIS, and the rule survived the layout
+   * change by moving rather than by being kept. The connector was `flex-1`,
+   * sharing each step's leftover with the title — and since the steps are
+   * equal width and the titles are not, one row came out with lines of 110px,
+   * 28px and 85px. Nothing was wrong with any of them and the row read as an
+   * accident.
    *
    * A fixed length makes it a chain, and the leftover goes to the titles,
-   * which is where a wider container should spend it.
+   * which is where a wider container should spend it. It applies HERE, where
+   * the connector shares a row with a title of unknown width, and not to the
+   * layout above, where it shares one with a marker.
    */
-  const drawn = seen.filter(one => one.drawn);
-  expect(drawn).toHaveLength(3);
-  expect(new Set(drawn.map(one => one.width)).size).toBe(1);
+  expect(new Set(seen.map(one => one.width)).size).toBe(1);
 
-  /* And it belongs to the step that FOLLOWS it, dropped on the first. */
-  expect(seen[0]!.drawn).toBe(false);
+  /* One half per step here, and it belongs to the step that FOLLOWS it. */
+  for (const one of seen) expect(one.tail).toBe(false);
+  expect(seen[0]!.visibility).toBe('hidden');
+  for (const one of seen.slice(1)) expect(one.visibility).toBe('visible');
 });
 
 /** WCAG relative luminance of an already-clipped sRGB triple. */

@@ -50,9 +50,21 @@ export const TONE_SOLID: Record<Tone, string> = {
 } satisfies Record<Tone, string>;
 
 export const TONE_SURFACE: Record<Tone, string> = {
-  neutral: 'bb:bg-surface-sunken bb:text-text',
-  info: 'bb:bg-info-subtle bb:text-info-subtle-on',
-  success: 'bb:bg-success-subtle bb:text-success-subtle-on',
-  warning: 'bb:bg-warning-subtle bb:text-warning-subtle-on',
-  danger: 'bb:bg-danger-subtle bb:text-danger-subtle-on'
+  /*
+   * AND THE EDGE IS PART OF THE ENTRY, added 2026-09-15 with the step the fill
+   * gave up. A surface and its border travel together for the same reason a
+   * background and its text do: taken from two places they can come from two
+   * families, and a card tinted green outlined in amber is a mistake nobody
+   * would make deliberately and nothing would catch.
+   *
+   * The callers draw the border; this says what colour it is. `neutral` takes
+   * the ordinary grey, because it has no family of its own.
+   */
+  neutral: 'bb:bg-surface-sunken bb:text-text bb:border-border',
+  info: 'bb:bg-info-subtle bb:text-info-subtle-on bb:border-info-border',
+  success:
+    'bb:bg-success-subtle bb:text-success-subtle-on bb:border-success-border',
+  warning:
+    'bb:bg-warning-subtle bb:text-warning-subtle-on bb:border-warning-border',
+  danger: 'bb:bg-danger-subtle bb:text-danger-subtle-on bb:border-danger-border'
 } satisfies Record<Tone, string>;

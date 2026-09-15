@@ -1,5 +1,6 @@
 import { forwardRef, useState } from 'react';
 import { cx } from '../../internal/cx';
+import { identityIndex } from './identity';
 
 export type AvatarSize = 'sm' | 'md' | 'lg';
 
@@ -47,7 +48,14 @@ const ROOT = cx(
   'bb:box-border bb:flex bb:aspect-square bb:flex-none bb:items-center',
   'bb:justify-center',
   'bb:overflow-hidden bb:rounded-full bb:border bb:border-solid',
-  'bb:border-border bb:bg-surface-control bb:text-surface-control-on',
+  /*
+   * No surface here. `surfaceFor` supplies it per avatar, and putting a
+   * default one on the shared class as well would be two `background-color`
+   * utilities at one specificity — resolved by the order Tailwind emits them
+   * rather than by the order they are written, which is the coin toss a
+   * notice's tinted variant lost a day earlier.
+   */
+  'bb:border-border',
   'bb:font-sans bb:font-strong bb:leading-none bb:select-none'
 );
 
@@ -78,6 +86,71 @@ const FALLBACK = cx(
   'bb:truncate bb:px-0.5',
   'bb:[&>svg]:h-[1.5em] bb:[&>svg]:w-[1.5em] bb:[&>svg]:flex-none'
 );
+
+/*
+ * THE BACKGROUND WHEN THERE IS NO PICTURE, and there are two answers because
+ * there are two kinds of fallback.
+ *
+ * **Letters get a colour of their own**, from the name, so the same person is
+ * the same colour in every list they appear in — which is what makes a face
+ * findable before its initials are read. `identityIndex` is the pure function
+ * that decides, and `--bb-identity-N` are the six it chooses between.
+ *
+ * **A glyph gets the accent**, because it is not a person. An avatar showing a
+ * silhouette is saying "somebody, unspecified", and giving it one of six
+ * identity colours would be asserting an identity it does not have — six
+ * different unknown people in six different colours, all of them nobody.
+ *
+ * THE TEST IS WHETHER THE CHILDREN ARE A STRING, which is the same test
+ * `Select` uses to decide whether it can derive a `textValue`. An svg is not a
+ * string; "CR" is. A project passing an element that happens to contain text
+ * gets the accent, which is the safe half of the two.
+ */
+const IDENTITY: string[] = [
+  'bb:bg-identity-1 bb:text-identity-on',
+  'bb:bg-identity-2 bb:text-identity-on',
+  'bb:bg-identity-3 bb:text-identity-on',
+  'bb:bg-identity-4 bb:text-identity-on',
+  'bb:bg-identity-5 bb:text-identity-on',
+  'bb:bg-identity-6 bb:text-identity-on'
+];
+
+/*
+ * A GLYPH GETS THE NEUTRAL SURFACE, and it was the accent for an afternoon.
+ *
+ * The argument for the accent was that a silhouette is not a person, so it
+ * must not take one of the identity colours. That half stands. What it got
+ * wrong is the other half: the accent is the colour this library uses for the
+ * thing a person should ACT on, and a row of unknown faces is the least
+ * actionable thing on a page. Six saturated blue circles saying "nobody" is
+ * the loudest way to say the quietest thing.
+ *
+ * Grey says it without asserting anything, which is what `neutral` means
+ * everywhere else here — and it is `--bb-identity-none` rather than a surface
+ * token, so it carries the same WEIGHT as the six. A pale disc among six mid
+ * tones reads as an avatar that failed to load; one of the same depth with no
+ * hue reads as a face nobody has named yet.
+ */
+const GLYPH_SURFACE = 'bb:bg-identity-none bb:text-identity-on';
+
+const surfaceFor = (name: string, children: React.ReactNode): string => {
+  /*
+   * NO NAME, NO IDENTITY — and this is a runtime guard on a required prop
+   * rather than defensive habit. `name` is typed as a string and the component
+   * warns in development when it is missing, which means the case exists: a
+   * consumer without types, or the test that exercises that very warning. An
+   * avatar nobody has named has nothing to hash and no identity to assert, so
+   * it takes the same neutral a silhouette does.
+   *
+   * Found by the unit test for the warning, which passed `undefined` and got a
+   * TypeError out of a function that had assumed its own signature.
+   */
+  if (typeof name !== 'string' || name.trim() === '') return GLYPH_SURFACE;
+
+  return typeof children === 'string'
+    ? (IDENTITY[identityIndex(name)] ?? GLYPH_SURFACE)
+    : GLYPH_SURFACE;
+};
 
 export interface AvatarProps {
   /**
@@ -181,11 +254,23 @@ export const Avatar = forwardRef<HTMLSpanElement, AvatarProps>(function Avatar(
    */
   const [failed, setFailed] = useState<string | null>(null);
   const shows = src !== undefined && src !== '' && failed !== src;
+  const surface = surfaceFor(name, children);
 
   return (
     <span
       ref={ref}
-      className={cx(ROOT, SIZE[size], className)}
+      className={cx(
+        ROOT,
+        SIZE[size],
+        /*
+         * Only while the picture is not showing. An image fills the box, so a
+         * colour behind it is a colour nobody sees — except for the instant
+         * before it loads, where a saturated circle flashing to a photograph
+         * is worse than a quiet one.
+         */
+        shows ? 'bb:bg-surface-control bb:text-surface-control-on' : surface,
+        className
+      )}
       data-size={size}
       /*
        * `role="img"` ON THE BOX, with the name on it, and the reason is the

@@ -271,6 +271,18 @@ const STATES: Array<[string, string]> = [
   ['components-separator--orientations', 'separator-orientations'],
   ['components-skeleton--variants', 'skeleton-variants'],
   /*
+   * AND THE SKELETON EARNS A SECOND, WHICH IS THE ONE THAT WOULD HAVE CAUGHT
+   * IT. Its fill is a `color-mix` against a surface rather than a colour of
+   * its own, so what it looks like is a fact about the MODE — and `Variants`
+   * is light only. The fill was 1.012:1 against the dark page, which is a
+   * paragraph of loading lines rendering as a blank screen, and this suite saw
+   * nothing: measured afterwards, the same change moved the light capture by
+   * less than the per-pixel bar, so the only run that could have gone red was
+   * one that never existed. Doc 10 §11.9 — count which cells of a matrix the
+   * fixtures visit.
+   */
+  ['components-skeleton--modes', 'skeleton-modes'],
+  /*
    * A SPINNER EARNS ONE, and it is the colour rather than the sizes.
    *
    * It had none at all until its catalog was written, because it had no story

@@ -32,9 +32,14 @@ export type AlertTone = Tone;
  * - The radius matches a control rather than a card. An Alert usually sits
  *   directly above the form it is about, and two neighbouring corners at
  *   different radii is what doc 03 §4.3 is about.
- * - No border. The tint is the boundary, and the only border colour available
+ * - A border, one step of its own, and it was NO border until 2026-09-15. The
+ *   old reasoning is worth reading because it was right and its premise is
+ *   gone: "the tint is the boundary, and the only border colour available
  *   inside these families is the solid step, which on a step-3 ground draws a
- *   frame heavy enough to compete with the message.
+ *   frame heavy enough to compete with the message." Both halves moved — the
+ *   ground is step 2 now, and `--bb-<tone>-border` exists at step 6 for
+ *   exactly this. The fill gave up a step and the edge took over the job of
+ *   separating the card from the page, which is what an edge is for.
  * - Nothing sets a width: the Alert fills whatever it is put in, and doc 03
  *   §5 forbids sizing anything to fit one particular sentence.
  */
@@ -43,6 +48,9 @@ const BASE = cx(
   // would be added to any width a consumer sets through className.
   'bb:box-border',
   'bb:flex bb:items-start bb:gap-x-(--bb-space-3)',
+  /* The colour comes from `TONE_SURFACE`, which carries the fill and the edge
+     as one entry so the two cannot be taken from different families. */
+  'bb:border bb:border-solid',
   'bb:rounded-md bb:p-(--bb-space-4)',
   'bb:font-sans bb:text-md bb:leading-normal'
 );

@@ -27,15 +27,37 @@
    * Mixing a little --bb-text into it corrects both modes with one line,
    * because that token moves the opposite way per mode: dark on a light page,
    * light on a dark one. So the mix always moves AWAY from the page, and the
-   * component never learns which mode it is in. Measured at 6%: 1.26:1 in
-   * light, 1.21:1 in dark. Present in both, and still fainter than any border
-   * in the system, because it is about to be replaced by the thing it is
-   * holding space for and must not compete with it (doc 09 §1).
+   * component never learns which mode it is in.
+   *
+   * THE BASE IS `surface-raised`, AND IT WAS `surface-sunken` UNTIL
+   * 2026-09-15 — a correction the numbers above led to rather than an
+   * improvement. Sunken at 6% measured 1.26:1 in light and 1.21:1 in dark when
+   * it was written, and both were true. Then the dark PAGE moved up the scale,
+   * from step 1 to step 3, and the gap it had been relying on closed: measured
+   * again, **1.302:1 in light and 1.012:1 in dark** — which is the fill and
+   * the page being the same colour to within a rounding error. A paragraph of
+   * skeleton lines was a blank screen, the one thing doc 09 §6 says a loading
+   * state must not be.
+   *
+   * Raised is the surface that is a step ABOVE the page in both modes, which
+   * is what a block resting on the page wants; sunken is a well, and a well in
+   * dark is now a page. At 10% the two modes come out level — **1.314:1 in
+   * light, 1.397:1 in dark** — where the whole candidate grid was measured
+   * before the value was picked, not after.
+   *
+   * Still fainter than any border in the system, because it is about to be
+   * replaced by the thing it is holding space for and must not compete with it
+   * (doc 09 §1).
+   *
+   * THE COST, stated because nothing will catch it: this is a ratio against
+   * the PAGE, and the page has moved once already. If it moves again,
+   * re-measure — both numbers above are facts about a pair, not about this
+   * component.
    */
   background-color: color-mix(
     in oklab,
-    var(--bb-surface-sunken),
-    var(--bb-text) 6%
+    var(--bb-surface-raised),
+    var(--bb-text) 10%
   );
 
   /*

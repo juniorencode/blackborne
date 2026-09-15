@@ -84,49 +84,48 @@ const SHAPE: Record<Tone, string> = {
 } satisfies Record<Tone, string>;
 
 /*
- * `--bb-tone-mark` with a fallback, so an unset variable is exactly today's
- * drawing rather than a missing one.
+ * THE MARKS PAINT IN `currentColor`, AND THE FILLED CASE OVERRIDES IT ON THE
+ * GROUP — which is the shape this had to become after the first attempt
+ * shipped a defect.
+ *
+ * That version had each mark name `var(--bb-tone-mark, currentColor)`, on the
+ * reasoning that nobody would set the variable outside a filled badge so the
+ * fallback would keep `Alert` exactly as it was. The reasoning was sound and
+ * the premise stopped being true three commits later, when `--bb-tone-mark`
+ * became a semantic token declared on `:root`: it is defined EVERYWHERE now,
+ * so the fallback never applies, and every outline glyph in the library
+ * painted its mark WHITE on a pale card. Measured in the baselines it had
+ * already moved — an `Alert` showing a bare circle where an "i" belongs, and
+ * a completed `Steps` marker with no tick in it.
+ *
+ * A fallback is not a conditional. The condition is `isFilled`, so that is
+ * what decides, once, on the element that owns both.
  */
-const MARK: Record<Tone, React.ReactNode> = {
-  neutral: null,
-  info: (
+const MARK: Record<Tone, (paint: string) => React.ReactNode> = {
+  neutral: () => null,
+  info: paint => (
     <>
-      <circle
-        cx="8"
-        cy="4.9"
-        r="0.9"
-        fill="var(--bb-tone-mark, currentColor)"
-        stroke="none"
-      />
-      <path d="M8 7.4 L8 11.4" stroke="var(--bb-tone-mark, currentColor)" />
+      <circle cx="8" cy="4.9" r="0.9" fill={paint} stroke="none" />
+      <path d="M8 7.4 L8 11.4" stroke={paint} />
     </>
   ),
-  success: (
+  success: paint => (
     <path
       d="M5.1 8.2 L7.1 10.2 L10.9 6"
       strokeLinejoin="round"
-      stroke="var(--bb-tone-mark, currentColor)"
+      stroke={paint}
     />
   ),
-  warning: (
+  warning: paint => (
     <>
-      <path d="M8 6.6 L8 9.9" stroke="var(--bb-tone-mark, currentColor)" />
-      <circle
-        cx="8"
-        cy="11.7"
-        r="0.9"
-        fill="var(--bb-tone-mark, currentColor)"
-        stroke="none"
-      />
+      <path d="M8 6.6 L8 9.9" stroke={paint} />
+      <circle cx="8" cy="11.7" r="0.9" fill={paint} stroke="none" />
     </>
   ),
-  danger: (
-    <path
-      d="M5.8 5.8 L10.2 10.2 M10.2 5.8 L5.8 10.2"
-      stroke="var(--bb-tone-mark, currentColor)"
-    />
+  danger: paint => (
+    <path d="M5.8 5.8 L10.2 10.2 M10.2 5.8 L5.8 10.2" stroke={paint} />
   )
-} satisfies Record<Tone, React.ReactNode>;
+} satisfies Record<Tone, (paint: string) => React.ReactNode>;
 
 export interface ToneGlyphProps {
   tone: Tone;
@@ -174,6 +173,11 @@ export function ToneGlyph({
       className={cx('bb:w-4 bb:h-[1lh] bb:flex-none', className)}
       viewBox="0 0 16 16"
       fill="none"
+      /*
+       * The marks inherit this, and the shape overrides it below when filled.
+       * `--bb-tone-mark` is only reached in that case, which is the only case
+       * where there is a solid behind the mark to need it.
+       */
       stroke="currentColor"
       strokeWidth="1.5"
       strokeLinecap="round"
@@ -185,7 +189,12 @@ export function ToneGlyph({
           ? { fill: 'currentColor', stroke: 'none' }
           : { strokeLinejoin: 'round' as const })}
       />
-      {MARK[tone]}
+      {/*
+       * The paint is passed rather than inherited, because two of the marks
+       * are FILLED dots and three are stroked paths — one inherited value
+       * cannot serve both without filling the outline of a tick.
+       */}
+      {MARK[tone](isFilled ? 'var(--bb-tone-mark)' : 'currentColor')}
     </svg>
   );
 }

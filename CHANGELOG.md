@@ -12,6 +12,47 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **`Steps` takes a `titlePlacement`**, `below` or `beside`, and the default
+  changed to `below`. A marker over its title is what a row across a page
+  wants: the titles centre under evenly spaced circles, the chain between them
+  is unbroken, and a long title grows downward instead of pushing the next step
+  sideways. `beside` is what the component shipped as and it earns its place
+  rather than being kept for compatibility — a step list down the side of a
+  form is a column, and a marker with its title to the right is the shape that
+  reads in one line. It travels by CONTEXT, carrying one primitive, which is
+  doc 02 §3.1.1's rule for a property belonging to the set: a row where one
+  title is under its marker and the next is beside it is not an arrangement
+  anybody wants, so it is not one a consumer can write.
+
+- **Six identity colours, `--bb-identity-1` to `--bb-identity-6`**, with one
+  `--bb-identity-on` for the text all six carry, and `--bb-identity-none` for a
+  face that is nobody. Two things about them are unusual and both are
+  deliberate. They are LITERALS, because every family here is designed per mode
+  rather than inverted, so one index is two different colours — right for a
+  surface, which has to sit on the page it is in, and wrong for identity. And
+  they are the SAME COLOUR IN BOTH MODES for that reason: a person is not a
+  different person in dark mode. `oklch` at 50% lightness and 0.18 chroma, six
+  hues evenly spread, with the worst of the six measuring **4.87:1 against
+  white** — the floor for text, since initials are text. Two points of lightness
+  are the whole difference: at 52% the same chroma measures 4.45.
+
+  `--bb-identity-none` is the one that does NOT follow that rule. A silhouette
+  makes no claim about which person it is, so it takes the base family —
+  whatever `[data-bb-base]` is set to — and it is therefore restated per mode,
+  because following the base means following the base's scale. Step 11 in light
+  and 9 in dark, at 5.93 and 5.12, because no single step carries white in
+  both.
+
+- **`--bb-info-border` through `--bb-danger-border`**, the edge of a tinted
+  surface, one per tone, at step 6. A subtle card that gave up a step of fill
+  needs something to separate it from the page. Not `--bb-border`: that is the
+  grey every ordinary box is drawn in, and a tinted card outlined in grey looks
+  like a card that failed to pick a side.
+
+- **`--bb-surface-inverse` and `--bb-surface-inverse-on`**, one declaration
+  that inverts itself — the darkest grey and the lightest, which swap when the
+  mode does because the scale does. A tooltip is what needed it.
+
 - **A fifth tone, `neutral`, on `Alert` and `Toast`.** Grey, for a notice that
   reports no outcome — a plan renewal, a total, a note. It draws **no badge at
   all**: every other tone's silhouette says which outcome this is, because doc
@@ -381,6 +422,48 @@ minor versions. Every break is listed here with its migration.
 
 ### Changed
 
+- **A tooltip is the page inverted**, with no border and no shadow. It is the
+  one layer that is never operated, never scrolled and never contains
+  anything — a label that follows the pointer — so it does not need the
+  furniture the other six share. Black on white and white on black is the
+  strongest thing a 12px chip can be, and it stops a tooltip over a card from
+  looking like a smaller card.
+
+- **Every `-subtle` surface moved from step 3 to step 2**, which makes a tinted
+  background lighter and gives the tone's own border somewhere to sit. **This
+  includes `--bb-accent-subtle`**, so `Button variant="subtle"` at rest, a
+  selected table row and a calendar's range band are all a shade lighter — a
+  wider reach than the tinted notices that prompted it, and deliberate:
+  `-subtle` names one role across every axis, and a family with one member at a
+  different step is how a token layer decays.
+
+- **An avatar with initials takes a colour from the NAME.** A pure `djb2` hash
+  over the trimmed, lowercased name, modulo six — so the same person is the
+  same colour in every list, on every machine, with no state anywhere and
+  nothing to configure. The hash is a pure function tested without rendering,
+  which is hard rule 7. An avatar showing a SILHOUETTE takes
+  `--bb-identity-none` instead, because a silhouette is the absence of an
+  identity rather than one of them.
+
+- **A step's marker is 32px with a 2px ring**, and the number inside stops being
+  cramped. At 24px with a hairline it read as a bullet beside its own label
+  rather than as a station on a line. The completed and error markers are the
+  tone's subtle fill with the tone's SOLID as the ring and the glyph, rather
+  than `TONE_SURFACE`'s `-subtle-on`: that step is 12, correct for a paragraph
+  on a tinted card and, on a 32px disc, a tick so close to black that the tone
+  was carried by the fill alone — 15.59:1 in light, where the solid is 5.64. An
+  active step's title is `--bb-link` rather than the accent, because the accent
+  as TEXT measures 3.08:1 in dark.
+
+- **A skeleton's fill is built on `surface-raised` rather than
+  `surface-sunken`**, at 10%. The old pair was measured when it was written and
+  was true then: sunken at 6% read 1.26:1 in light and 1.21 in dark. Then the
+  dark page moved up the scale, from step 1 to step 3, and the gap it relied on
+  closed — **1.012:1 in dark**, which is the fill and the page being the same
+  colour to within a rounding error. Raised is the surface a step ABOVE the page
+  in both modes, which is what a block resting on the page wants; a well in dark
+  is now a page.
+
 - **A notice is redrawn.** Three zones that meet rather than a padded row: a
   full-height badge cell, the message with its own padding, and a full-height
   cell for the cross. No shadow — a notice arrives in a corner over whatever is
@@ -609,6 +692,37 @@ minor versions. Every break is listed here with its migration.
   defaulting to `primary`.
 
 ### Fixed
+
+- **The mark inside every tone badge had been invisible since the notice
+  landed.** Making `--bb-tone-mark` a global broke the fallback it was written
+  with: the marks are drawn with `currentColor` where the badge is an outline
+  and with the pair's own colour where it is filled, and a variable that always
+  resolves turned every one of them into the filled case. So an `Alert`'s
+  circle, tick, exclamation and cross were painted white on white, leaving four
+  tones telling themselves apart by an empty ring. `ToneGlyph` passes the paint
+  in rather than inheriting it now, which is why the shapes and the marks are
+  two maps instead of one.
+
+- **A tooltip's caret was broken on the left and right placements.** The arrow
+  is one svg turned a quarter turn per edge, and a CSS transform does not change
+  a layout box — so a 10-by-5 caret rotated onto a vertical edge still occupied
+  10 by 5, and the panel overlapped the half of it that had moved outside. The
+  wrapper carries the rotated dimensions and the svg is centred in it.
+
+- **The first step's title sat off-centre**, which is the defect that arrives
+  when a row is built out of halves. The outer connector halves were
+  `display: none`, so the first step's marker row became `[marker][tail]` and
+  the marker stopped being centred in its own step — while the title below went
+  on centring against the whole of it. They are `visibility: hidden` now, and
+  the marker and the title agree to the pixel at every step: 112, 252, 392 and
+  532 in both readings.
+
+- **A skeleton was invisible in dark, and the suite that should have caught it
+  had no picture of the cell.** Its only capture was light-only, and measured
+  afterwards the same change moved that capture by less than the per-pixel
+  bar — so the run that could have gone red never existed. There is a
+  `skeleton-modes` baseline now. Doc 10 §11.9: count which cells of a matrix the
+  fixtures visit, not how many checks there are.
 
 - **A notice's entry animation had never run.** It was written as
   `.bb-toast[data-entering]`, on the pattern every other layer follows — and

@@ -224,3 +224,35 @@ export const Together: Story = {
     </div>
   )
 };
+
+/*
+ * THE OTHER LAYOUT, which is what this component shipped as until 2026-09-15.
+ *
+ * A marker with its title beside it is the shape a step list down the side of
+ * a form wants — a column where each row reads in one line. `below` is the
+ * default because a row across a page is the commoner arrangement and the one
+ * the titles need room for.
+ */
+export const TitlesBeside: Story = {
+  render: () => (
+    <div className="catalog-pair">
+      {(['light', 'dark'] as const).map(mode => (
+        <Room
+          key={mode}
+          width={520}
+          label={mode === 'light' ? 'Light' : 'Dark'}
+          mode={mode}
+        >
+          <Steps label="Onboarding" titlePlacement="beside">
+            <Step status="completed">Details</Step>
+            <Step status="active">Documents</Step>
+            <Step status="error" description="Two pages missing">
+              Review
+            </Step>
+            <Step>Signature</Step>
+          </Steps>
+        </Room>
+      ))}
+    </div>
+  )
+};
