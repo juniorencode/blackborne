@@ -19,8 +19,40 @@
  * component's own class, so a new layer with an arrow needs no CSS of its own —
  * it renders `LayerArrow` and the rotation follows.
  */
+/*
+ * A CSS TRANSFORM DOES NOT CHANGE A LAYOUT BOX, and that is the whole of the
+ * defect this file had until 2026-09-15.
+ *
+ * The drawing is 10 wide and 5 tall. On a side placement it is turned a
+ * quarter turn, so what a person SEES is 5 wide and 10 tall — and the
+ * element's box stayed 10 by 5, because `rotate()` paints somewhere else and
+ * lays out nowhere else. The base centres the arrow by translating it half its
+ * BOX, so it moved 2.5px where the drawing needed 5, and the triangle came to
+ * rest off-centre with its tip overhanging a panel edge it was supposed to
+ * meet. Measured across all twelve placements: the six on the block axis
+ * agreed to the pixel and the six on the inline axis were out by 2.5.
+ *
+ * So the box is told what the rotation did. The drawing is centred inside it
+ * rather than laid out from its corner, which is what makes the two agree: a
+ * 10×5 svg centred in a 5×10 box and turned about its own centre lands exactly
+ * on that box.
+ */
+.bb-layer-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .bb-layer-arrow svg {
   display: block;
+  /* It overflows its box before the rotation puts it back. */
+  flex: none;
+}
+
+[data-placement='left'] .bb-layer-arrow,
+[data-placement='right'] .bb-layer-arrow {
+  inline-size: 5px;
+  block-size: 10px;
 }
 
 [data-placement='bottom'] .bb-layer-arrow svg {

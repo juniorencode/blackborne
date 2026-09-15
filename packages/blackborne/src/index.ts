@@ -159,7 +159,12 @@ export type { DateFieldProps, DateFieldSize } from './components/DateField';
 export type { CalendarProps } from './components/Calendar';
 export { Progress } from './components/Progress';
 export { Step, Steps } from './components/Steps';
-export type { StepProps, StepsProps, StepStatus } from './components/Steps';
+export type {
+  StepProps,
+  StepsProps,
+  StepStatus,
+  StepTitlePlacement
+} from './components/Steps';
 export type { ProgressProps, ProgressSize } from './components/Progress';
 export { RangeCalendar } from './components/RangeCalendar';
 export type { DateRange, RangeCalendarProps } from './components/RangeCalendar';

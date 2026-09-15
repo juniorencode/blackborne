@@ -181,6 +181,123 @@
   --bb-surface-overlay: rgb(0 0 0 / 0.45);
 
   /* --- Content — three levels, no fourth (doc 03 §4.7) --------------- */
+  /*
+   * THE INVERTED SURFACE, and it inverts ITSELF.
+   *
+   * Added 2026-09-15 for `Tooltip`, which was deliberately NOT an inverted
+   * chip until then — its own comment gave two reasons, and both are answered
+   * here rather than ignored.
+   *
+   * The first was that the library has one elevation story and a tooltip is
+   * not an exception to it. That was a design decision and it was changed on
+   * purpose: a tooltip is the one floating thing that is not a surface a
+   * person works on. It is a label for the control under the pointer, it
+   * cannot be reached by a keyboard, and nothing in it can be pressed — so
+   * reading as a chip rather than as a small panel is what it IS.
+   *
+   * The second was that an inverse pair would be a token defined for one
+   * component, which doc 03 §4.4 restricts the vocabulary to avoid. It has one
+   * reader today and that is stated rather than hidden; what makes it a token
+   * instead of two literals in a component is hard rule 1, and what makes it
+   * cheap is the line below.
+   *
+   * ONE DECLARATION, NOT TWO. Step 12 is the darkest end of the light scale
+   * and the LIGHTEST end of the dark one, because these scales are designed
+   * per mode rather than inverted — so "the far end from the page" is one
+   * value that means black on a white page and white on a dark one. The dark
+   * block restates nothing here, and that is the whole reason the pair is
+   * affordable.
+   */
+  /*
+   * THE IDENTITY COLOURS, six of them, and two things about them are unusual
+   * enough to say first: they are LITERALS, and they are the SAME COLOUR IN
+   * BOTH MODES.
+   *
+   * An avatar with no picture needs a background, and the useful thing for it
+   * to be is the same colour every time for the same person — so a face in a
+   * list of thirty is found by its colour before its letters are read.
+   *
+   * ## Why they are not taken from the scales
+   *
+   * Every family in this library is designed PER MODE rather than inverted, so
+   * one index is two different colours: the subtle steps these started as came
+   * out a near-white pink in light and a deep maroon in dark. That is right for
+   * a surface, which has to sit on the page it is in — and wrong for identity,
+   * which is the one thing here that must not change when somebody switches
+   * the lights off. A person is not a different person in dark mode.
+   *
+   * So the six are written, declared once, and NOT restated in the dark block.
+   * Hard rule 1 forbids a literal colour in a COMPONENT; the token layer is
+   * where a value like this belongs, and `--bb-danger-text` and `--bb-surface`
+   * are already here on the same terms.
+   *
+   * ## Why these values
+   *
+   * Mid tones, deliberately short of full strength and deliberately not pale:
+   * at full strength six of them down the side of a listing is a column of
+   * traffic lights, and pale ones stop telling two people apart at all.
+   * `oklch` at **50% lightness and 0.18 chroma**, six hues evenly spread. It
+   * went 0.10, then 0.13, and both read as washed out — the lightness came
+   * down two points to pay for the last increase, which is the trade worth
+   * remembering: chroma costs contrast with white, and lightness buys it back.
+   *
+   * Measured against white, which is what the initials are drawn in — and they
+   * ARE text, so the floor is doc 03 §5 rule 2's 4.5:1 rather than the 3:1 a
+   * graphical element gets. The worst of the six is teal at **4.87:1**.
+   *
+   * Three grids were measured before a value was picked, and the last is why
+   * this pair rather than the obvious one: at 52% lightness, 0.18 chroma
+   * measures **4.45** — under the floor — while at 50% the same chroma
+   * measures 4.87. Two points of lightness are the whole difference between a
+   * colour that can carry its initials and one that cannot.
+   *
+   * ## The cost, stated because nothing will catch it
+   *
+   * These do not follow `[data-bb-base]`, `[data-bb-accent]` or the mode. A
+   * project whose brand is red gets the same six faces as everybody else,
+   * which is the correct answer — identity is not branding — but it is a
+   * decision rather than an oversight. And if the text they carry ever stops
+   * being white, re-measure: the numbers above are facts about a pair.
+   */
+  --bb-identity-1: oklch(50% 0.18 25.3);
+  --bb-identity-2: oklch(50% 0.18 70);
+  --bb-identity-3: oklch(50% 0.18 150);
+  --bb-identity-4: oklch(50% 0.18 195);
+  --bb-identity-5: oklch(50% 0.18 262);
+  --bb-identity-6: oklch(50% 0.18 305);
+  /*
+   * THE SEVENTH, FOR A FACE THAT IS NOBODY — and it is the ONE that follows
+   * the axes rather than standing outside them.
+   *
+   * A silhouette makes no claim about which person it is, so it takes the
+   * BASE family: whatever `[data-bb-base]` is set to, which is slate by
+   * default and stone or any other by a scope. That is the opposite decision
+   * from the six above and the right one for the same reason — identity must
+   * not move with a project's palette, and the absence of an identity is not
+   * an identity, it is the system's own neutral.
+   *
+   * IT IS RESTATED IN DARK, AND THE SIX ARE NOT. Following the base means
+   * following the base's scale, and that scale runs the other way per mode.
+   * Measured across `default`, `stone` and `slate`, white on the base family:
+   *
+   *     step   light   dark
+   *     9      3.29    5.12
+   *     10     3.80    4.25
+   *     11     5.93    2.08
+   *
+   * No single step carries white in both — step 11 is the deep end in light
+   * and nearly white in dark. So it is 11 here and 9 in the dark block, which
+   * is 5.93 and 5.12 against the initials' 4.5:1 floor.
+   */
+  --bb-identity-none: var(--bb-x-gray-11);
+  /*
+   * ONE text colour for all six, because all six were chosen so that one would
+   * work. A per-colour pairing would be six more values to keep true and six
+   * more chances for one to drift under the floor unnoticed.
+   */
+  --bb-identity-on: #fff;
+  --bb-surface-inverse: var(--bb-x-gray-12);
+  --bb-surface-inverse-on: var(--bb-x-gray-1);
   --bb-text: var(--bb-x-gray-12);
   --bb-text-muted: var(--bb-x-gray-11);
   --bb-text-disabled: var(--bb-x-gray-9);
@@ -235,7 +352,25 @@
   --bb-accent-on: #fff;
   --bb-accent-hover: var(--bb-x-brand-10);
   --bb-accent-active: var(--bb-x-brand-11);
-  --bb-accent-subtle: var(--bb-x-brand-3);
+  /*
+   * STEP 2, AND IT WAS STEP 3 UNTIL 2026-09-15.
+   *
+   * A tinted card is a background for a message rather than a block of colour,
+   * and at step 3 four of them stacked in a column read as four slabs. One
+   * step down is quieter in light and closer to the page in dark, which is
+   * where the tint was doing least work anyway — a dark card a shade off the
+   * page says "this is a section" while step 3 said "this is an alert about
+   * something".
+   *
+   * WHAT REPLACES THE WEIGHT IT GAVE UP is the edge below, not more colour: a
+   * visible border does the separating, which is what a border is for, and it
+   * costs the same in greyscale as a fill does.
+   *
+   * The `-subtle-on` steps did NOT move with it. They were chosen against step
+   * 3, and against step 2 they can only read better — measured after the
+   * change: 11.2 to 12.1:1 in light where step 3 gave 10.47 to 11.26.
+   */
+  --bb-accent-subtle: var(--bb-x-brand-2);
   /*
    * Step 12, not 11, and this is a measured correction rather than taste.
    *
@@ -367,7 +502,7 @@
    * invisible there and why it was not obvious to begin with.
    */
   --bb-border-invalid: oklch(51.5% 0.235 25.3);
-  --bb-danger-subtle: var(--bb-x-danger-3);
+  --bb-danger-subtle: var(--bb-x-danger-2);
   /*
    * Step 12, not 11, and this is the same finding --bb-accent-subtle-on
    * already carries: step 11 is the scale's low-contrast TEXT step, measured
@@ -396,20 +531,39 @@
    */
   --bb-warning: var(--bb-x-warning-9);
   --bb-warning-on: var(--bb-x-warning-12);
-  --bb-warning-subtle: var(--bb-x-warning-3);
+  --bb-warning-subtle: var(--bb-x-warning-2);
   --bb-warning-subtle-on: var(--bb-x-warning-12);
   --bb-warning-text: var(--bb-x-warning-11);
 
   --bb-success: var(--bb-x-success-11);
   --bb-success-on: #fff;
-  --bb-success-subtle: var(--bb-x-success-3);
+  --bb-success-subtle: var(--bb-x-success-2);
   --bb-success-subtle-on: var(--bb-x-success-12);
   --bb-success-text: var(--bb-x-success-11);
 
   --bb-info: var(--bb-x-info-11);
   --bb-info-on: #fff;
-  --bb-info-subtle: var(--bb-x-info-3);
+  --bb-info-subtle: var(--bb-x-info-2);
   --bb-info-subtle-on: var(--bb-x-info-12);
+
+  /*
+   * THE EDGE OF A TINTED SURFACE, one per tone.
+   *
+   * Added 2026-09-15, with the step above: a subtle card that gave up a step
+   * of fill needs something to separate it from the page, and a border is the
+   * thing whose whole job that is. Step 6 — far enough from the step 2 fill to
+   * be seen, far enough from the step 9 solid not to read as a second badge.
+   *
+   * NOT `--bb-border`. That one is the grey every ordinary box is drawn in,
+   * and a tinted card outlined in grey looks like a card that failed to pick a
+   * side. The edge belongs to the same family as the fill, which is the same
+   * argument `--bb-surface-selected` makes one axis over.
+   */
+  --bb-info-border: var(--bb-x-info-6);
+  --bb-success-border: var(--bb-x-success-6);
+  --bb-warning-border: var(--bb-x-warning-6);
+  --bb-danger-border: var(--bb-x-danger-6);
+
   --bb-info-text: var(--bb-x-info-11);
 
   /* --- Focus — ONE ring for the whole library (doc 03 §4) ----------- */
@@ -679,6 +833,9 @@
   /* Restated for §6's rule that every semantic token is declared per mode,
      and it is the same white: see the note in the light block. */
   --bb-tone-mark: #fff;
+  /* Step 9 here where light takes 11 — the base scale runs the other way, and
+     the note on the token in the light block has the measurements. */
+  --bb-identity-none: var(--bb-x-gray-9);
   --bb-danger-on: #fff;
   /*
    * STEP 11, AND THE SPLIT BELOW IT IS THE REASON. This is the measurement

@@ -63,8 +63,22 @@
   display: block;
 }
 
-.bb-step:first-child .bb-step-connector {
-  display: none;
+/*
+ * HIDDEN, NOT REMOVED — and the difference is where the titles end up.
+ *
+ * `display: none` took the half-line out of the layout, so the first marker
+ * stopped being centred in its own step: the row became
+ * `[indicator][tail]` while the title below it went on centring against the
+ * whole step. Measured as a title that looked right-aligned under its circle,
+ * and the mirror of it on the last step.
+ *
+ * Keeping the box and hiding the ink costs half a gap of padding at each end
+ * of the row, symmetric, and buys every title landing under the marker it
+ * belongs to.
+ */
+.bb-step:last-child .bb-step-connector-tail,
+.bb-step:first-child .bb-step-connector-lead {
+  visibility: hidden;
 }
 
 /*

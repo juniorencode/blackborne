@@ -91,6 +91,19 @@
   --color-surface-control-on: var(--bb-surface-control-on);
   --color-surface-hover: var(--bb-surface-hover);
   --color-surface-raised-hover: var(--bb-surface-raised-hover);
+  /* The far end from the page, and its text. One reader: `Tooltip`. */
+  --color-surface-inverse: var(--bb-surface-inverse);
+  /* The six an avatar's identity is spread across, and the one text they all
+     carry. See the note in semantic.css: same colour in both modes. */
+  --color-identity-1: var(--bb-identity-1);
+  --color-identity-2: var(--bb-identity-2);
+  --color-identity-3: var(--bb-identity-3);
+  --color-identity-4: var(--bb-identity-4);
+  --color-identity-5: var(--bb-identity-5);
+  --color-identity-6: var(--bb-identity-6);
+  --color-identity-none: var(--bb-identity-none);
+  --color-identity-on: var(--bb-identity-on);
+  --color-surface-inverse-on: var(--bb-surface-inverse-on);
   --color-surface-active: var(--bb-surface-active);
   --color-surface-selected: var(--bb-surface-selected);
   --color-surface-selected-on: var(--bb-surface-selected-on);
@@ -123,6 +136,12 @@
 
   --color-danger: var(--bb-danger);
   --color-danger-on: var(--bb-danger-on);
+  /* The edge of a tinted surface, one per tone (doc 03 §4). */
+  --color-info-border: var(--bb-info-border);
+  --color-success-border: var(--bb-success-border);
+  --color-warning-border: var(--bb-warning-border);
+  --color-danger-border: var(--bb-danger-border);
+
   --color-danger-subtle: var(--bb-danger-subtle);
   --color-danger-subtle-on: var(--bb-danger-subtle-on);
   --color-danger-text: var(--bb-danger-text);

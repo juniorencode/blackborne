@@ -11,12 +11,26 @@ import { cx } from '../../internal/cx';
 /*
  * The bubble.
  *
- * The same surface as every other floating thing in the library —
- * `surface-raised`, a border and a shadow — rather than the inverted dark chip
- * the convention would suggest. Two reasons, in order of weight: there is one
- * elevation story and a tooltip is not an exception to it, and an inverse
+ * THE INVERTED CHIP, since 2026-09-15, and it was the opposite until then.
+ *
+ * It used to take the same surface as every other floating thing —
+ * `surface-raised`, a border and a shadow — on two arguments: the library has
+ * one elevation story and a tooltip is not an exception to it, and an inverse
  * surface would be a new token pair defined for one component, which doc 03
  * §4.4 restricts the vocabulary precisely to avoid.
+ *
+ * Both were answered rather than dropped, and the answer is in the token's own
+ * note in `semantic.css`. The short version: a tooltip is the one floating
+ * thing that is not a surface a person works on — no keyboard reaches it,
+ * nothing in it can be pressed, and it is a label for the control under the
+ * pointer — so a chip is what it is rather than an exception to what it is.
+ * And the pair costs one declaration rather than two, because step 12 is the
+ * far end from the page in BOTH modes.
+ *
+ * NO BORDER AND NO SHADOW. A chip at the opposite end of the scale from the
+ * page separates itself; an outline round it would be a second boundary drawn
+ * over one that is already unmissable, and a shadow under a near-black box on
+ * a white page is a smudge.
  *
  * `rounded-md`, the control radius, because a tooltip is always pointing at a
  * control and two neighbouring corners at different radii is what doc 03 §4.3
@@ -36,8 +50,8 @@ const BUBBLE = cx(
   // would be added to the maximum width rather than fitting inside it.
   'bb:box-border bb:max-w-narrow',
   'bb:z-(--bb-layer-popover)',
-  'bb:bg-surface-raised bb:text-surface-raised-on',
-  'bb:border bb:border-border bb:rounded-md bb:shadow-md',
+  'bb:bg-surface-inverse bb:text-surface-inverse-on',
+  'bb:rounded-md',
   'bb:px-(--bb-space-3) bb:py-(--bb-space-2)',
   'bb:font-sans bb:text-sm bb:leading-normal',
   // A long unbroken token — a reference code, a path — must wrap rather than
@@ -183,7 +197,18 @@ export function Tooltip({
          */
         offset={LAYER_OFFSET}
       >
-        <LayerArrow />
+        {/*
+         * The arrow takes the chip's own colours, and the two are passed
+         * together because they have to agree: the fill IS the bubble's
+         * background, and there is no border to trace, so the stroke is the
+         * fill as well. Left at its defaults it would have drawn a pale
+         * triangle with a grey outline under a near-black bubble — which is
+         * the coincidence the prop exists to prevent.
+         */}
+        <LayerArrow
+          fill="var(--bb-surface-inverse)"
+          stroke="var(--bb-surface-inverse)"
+        />
         {content}
       </AriaTooltip>
     </TooltipTrigger>

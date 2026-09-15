@@ -2340,12 +2340,14 @@ type StepProps
   description? (own)
   status? (own)
 type StepStatus = "active" | "completed" | "error" | "pending"
+type StepTitlePlacement = "below" | "beside"
 value Steps: ForwardRefExoticComponent<StepsProps & RefAttributes<HTMLDivElement>>
 type StepsProps
   children (own)
   className? (own)
   isLabelHidden? (own)
   label (own)
+  titlePlacement? (own)
 value Switch: ForwardRefExoticComponent<SwitchProps & RefAttributes<HTMLLabelElement>>
 type SwitchProps
   aria-controls? (base)
