@@ -12,6 +12,37 @@ minor versions. Every break is listed here with its migration.
 
 ### Added
 
+- **A fifth tone, `neutral`, on `Alert` and `Toast`.** Grey, for a notice that
+  reports no outcome — a plan renewal, a total, a note. It draws **no badge at
+  all**: every other tone's silhouette says which outcome this is, because doc
+  06 §3 forbids colour being the only channel, and there is nothing for a
+  silhouette to carry when there is none. A fifth shape invented to fill the
+  slot would mean nothing while competing with four that mean something.
+
+- **`ToastRegion` takes a `placement`**, one of eight: `top start`, `top`,
+  `top end`, `middle start`, `middle end`, `bottom start`, `bottom`,
+  `bottom end`. The vocabulary `Popover` already uses, logical rather than
+  physical, so `start` is the left in English and the right in Arabic. It also
+  decides which edge a notice arrives from, so there is no second prop for that
+  and no way for the two to disagree. There is deliberately no plain `middle`:
+  the centre of the screen is where the work is, and a notice is not an
+  interruption to be answered.
+
+- **`ToastRegion` takes a `variant`**: `plain`, a neutral card carrying the
+  tone on its leading edge and in its badge, or `tinted`, the whole card in the
+  tone's own surface. On the REGION rather than on the message, because an
+  application has one way of showing a notice — §3.1's argument against
+  per-instance timings applied to the other axis.
+
+- **`--bb-tone-mark`**, the colour of the mark inside a filled tone badge, and
+  a deliberate step around doc 03 §4.0's pairing with the measurement that
+  permits it. Every `--bb-X-on` is chosen so a run of TEXT clears 4.5:1, which
+  for amber forces a dark brown — so a badge following the pairing came out as
+  three white glyphs and one brown one. A mark in a badge is a graphical
+  element held to 3:1, and all four clear it. The worst clears it by **0.12**,
+  which is why `toast.spec.ts` measures all eight cases rather than leaving it
+  to a note in a stylesheet.
+
 - **A field takes one icon, and it is at the start.** `TextField`,
   `NumberField`, `SearchField`, `PasswordField`, `Select` and `ComboBox` take
   an `icon`, rendered in a slot of its own at the LEADING edge — beside a
@@ -350,6 +381,34 @@ minor versions. Every break is listed here with its migration.
 
 ### Changed
 
+- **A notice is redrawn.** Three zones that meet rather than a padded row: a
+  full-height badge cell, the message with its own padding, and a full-height
+  cell for the cross. No shadow — a notice arrives in a corner over whatever is
+  there, already carrying a saturated edge and a badge, and the shadow made it
+  the heaviest object on a page it is only visiting. The tone lives on the
+  leading edge and in a FILLED badge rather than tinting the whole card, which
+  is what `variant="tinted"` is now for.
+
+  **The countdown is a ring round the cross**, with a track behind it, where it
+  was a hairline along the bottom edge. The bar was honest and easy to miss:
+  one pixel at the far edge of the card from the thing it is about. The ring
+  puts the time left around the control that spends it, and the track is not
+  decoration — a ring drawn only where time has passed is invisible in the
+  first second, and invisible in every baseline, because a screenshot freezes
+  animations at their start.
+
+- **Whether a notice stays is the message's, not its colour's.**
+  `isPersistent` overrides the tone's default in either direction: a `danger`
+  stays unless told not to, everything else leaves unless told to. Doc 09 §4.1
+  separates the two questions and says why — an error somebody can safely miss
+  has no business holding a corner of the screen, and a success about something
+  irreversible may have every business doing so. What stays closed is HOW LONG:
+  six seconds and ten remain the library's.
+
+- **A notice with no tone is `neutral`, and was `info`.** **Breaking** for
+  anybody relying on the old default. A notice that declares no tone reports no
+  outcome, and a blue `information` badge asserted one on its behalf.
+
 - **A layer's footer is shorter, and its way out sits at the far end.** The
   padding is 12px vertically where it was 16 — a bar of 36px controls was the
   tallest band in the panel for the least content — and it stays at 16
@@ -550,6 +609,34 @@ minor versions. Every break is listed here with its migration.
   defaulting to `primary`.
 
 ### Fixed
+
+- **A notice's entry animation had never run.** It was written as
+  `.bb-toast[data-entering]`, on the pattern every other layer follows — and
+  measured, that attribute never appears on one: read in the installed
+  `react-aria-components`, the base's toast publishes no entering state, no
+  exiting state and no `data-animation`, and the element reported **zero
+  running animations** the moment it mounted. A selector matching nothing is
+  not a subtle failure; it is a feature that shipped and did nothing. It runs
+  on the element now, which is what a CSS animation does when a node is
+  inserted.
+
+  Nothing caught it, and the reason is worth keeping: a check that waits for an
+  animation to finish passes fastest when there is none.
+
+- **`variant="tinted"` was not tinting**, and the picture is what said so: a
+  success card came out white, a warning faintly amber and a danger white.
+  `bg-surface-raised` and `bg-<tone>-subtle` are the same property at the same
+  specificity, so the winner is whichever Tailwind EMITS later — a coin toss
+  that lands differently per family. Each variant declares its own surface now,
+  which removes the race rather than trying to win it.
+
+- **A guard in `Alert`'s stories claimed to fail and did not.** It read
+  `const MISSING: Exclude<AlertTone, (typeof TONES)[number]>[] = []`, and an
+  empty array is assignable to `never[]` AND to `'neutral'[]` — so it was
+  equally happy whether or not a tone was missing from the matrix. Found the
+  only way it could be: a fifth tone was added and the line said nothing. It is
+  a conditional type now, verified in both directions — with the tone removed
+  the build fails NAMING it, and with it present the build passes.
 
 - **The accessibility suite was measuring colour while the page was still
   moving.** `painted()` guarantees a frame has been painted and says nothing

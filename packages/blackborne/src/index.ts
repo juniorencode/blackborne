@@ -302,9 +302,11 @@ export type { PopoverProps } from './components/Popover';
 export { ToastRegion, useToasts } from './components/Toast';
 export type {
   ToastMessage,
+  ToastPlacement,
   ToastQueue,
   ToastRegionProps,
-  ToastTone
+  ToastTone,
+  ToastVariant
 } from './components/Toast';
 
 export { Radio, RadioGroup } from './components/RadioGroup';

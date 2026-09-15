@@ -17,7 +17,7 @@ type AlertProps
   style? (own)
   title? (own)
   tone? (own)
-type AlertTone = "danger" | "info" | "success" | "warning"
+type AlertTone = "danger" | "info" | "neutral" | "success" | "warning"
 type AsyncOptions
   error (own)
   isLoading (own)
@@ -3050,16 +3050,21 @@ type TimePickerSize = "lg" | "md" | "sm"
 type TimePrecision = "minute" | "second"
 type ToastMessage
   action? (own)
+  isPersistent? (own)
   title (own)
   tone? (own)
+type ToastPlacement = "bottom end" | "bottom start" | "bottom" | "middle end" | "middle start" | "top end" | "top start" | "top"
 type ToastQueue
   add (own)
   clear (own)
   close (own)
 value ToastRegion: ForwardRefExoticComponent<ToastRegionProps & RefAttributes<HTMLDivElement>>
 type ToastRegionProps
+  placement? (own)
   queue (own)
-type ToastTone = "danger" | "info" | "success" | "warning"
+  variant? (own)
+type ToastTone = "danger" | "info" | "neutral" | "success" | "warning"
+type ToastVariant = "plain" | "tinted"
 value Tooltip: ({ content, children, placement, isDisabled }: TooltipProps) => ReactNode
 type TooltipProps
   children (own)

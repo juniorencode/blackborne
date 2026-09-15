@@ -37,12 +37,26 @@ const sendFrom = async (page: Page, testId: string): Promise<Locator> => {
   return notice;
 };
 
-/** How far the countdown has run, as the fraction of the bar still left. */
+/**
+ * How far the countdown has left to run, as a fraction.
+ *
+ * IT READS THE RING, and it read the bar's width until 2026-09-14. The
+ * countdown moved from a hairline along the bottom edge to a ring round the
+ * close button, so the quantity moved with it: the arc is drawn by animating
+ * `stroke-dashoffset` from the full circumference down to zero, which means
+ * the offset IS the fraction remaining and needs no geometry of its own.
+ *
+ * The array is read rather than assumed for the same reason the old one
+ * divided by its parent's width: a check that hard-codes 100.53 passes on a
+ * ring of any size and fails to notice one of the wrong size.
+ */
 const remaining = (notice: Locator) =>
-  notice.locator('.bb-toast-countdown').evaluate(node => {
-    const bar = node.getBoundingClientRect();
-    const parent = (node.parentElement as HTMLElement).getBoundingClientRect();
-    return bar.width / parent.width;
+  notice.locator('.bb-toast-countdown circle:last-of-type').evaluate(node => {
+    const style = getComputedStyle(node);
+    const total = Number.parseFloat(style.strokeDasharray);
+    const left = Number.parseFloat(style.strokeDashoffset);
+    if (!Number.isFinite(total) || total === 0) return -1;
+    return left / total;
   });
 
 /* ------------------------------------------------------------------ *
@@ -338,33 +352,241 @@ test.describe('the notice', () => {
     expect(width).toBeGreaterThan(150);
   });
 
-  test('the countdown is painted, not merely positioned', async ({ page }) => {
+  test('the countdown is inside the card, and does not swallow the press', async ({
+    page
+  }) => {
     /*
      * `Popover`'s arrow shipped invisible with a correct box and a correct
-     * computed style, so anything drawn in this library now gets hit-tested
-     * (doc 08 §9). The countdown sits inside a notice that clips, at the very
-     * edge of it, which is the same shape of risk.
+     * computed style, so anything drawn in this library gets checked against
+     * something other than its own style (doc 08 §9).
+     *
+     * IT USED TO HIT-TEST THE MIDDLE OF THE BAR, and that stopped being the
+     * right instrument when the bar became a ring on 2026-09-14. The ring is
+     * `pointer-events-none` on purpose — the cross underneath is the target,
+     * and a countdown that swallowed the press would be one you could not beat,
+     * which is the opposite of doc 09 §4.1. So a hit test at its centre must
+     * return the BUTTON, and that is now the assertion rather than the
+     * obstacle.
+     *
+     * The clipping risk the old check carried is real and is measured
+     * separately: the card clips to its radius, so a ring wider than the cell
+     * it sits in would be cut. Geometry answers that, and it answers it for
+     * every point at once rather than for the one that was sampled.
      */
     await gotoStory(page, OVERVIEW);
     const notice = await sendFrom(page, 'send');
 
-    const hit = await notice.evaluate(node => {
-      const bar = node.querySelector('.bb-toast-countdown');
-      if (!bar) return 'no countdown element';
-      const box = bar.getBoundingClientRect();
-      /*
-       * The MIDDLE of the bar, not near its end. 4px in from the start hits
-       * the page behind, and that is correct rather than a bug: the notice
-       * clips its children to its own radius, so the bar's bottom corner is
-       * cut away by the curve — which is the reason the clip is there.
-       * Measured at four offsets before this line was settled.
-       */
+    const measured = await notice.evaluate(node => {
+      const ring = node.querySelector('.bb-toast-countdown');
+      if (!ring) return null;
+      const box = ring.getBoundingClientRect();
+      const card = node.getBoundingClientRect();
       const at = document.elementFromPoint(
         box.x + box.width / 2,
         box.y + box.height / 2
       );
-      return at === null ? 'nothing' : at.className.toString() || at.tagName;
+      const arc = ring.querySelector('circle:last-of-type');
+      return {
+        /* What a press at the ring's centre actually reaches. */
+        hit:
+          at === null
+            ? 'nothing'
+            : (at.closest('button')?.getAttribute('aria-label') ?? at.tagName),
+        /* Every edge inside the card that clips it. */
+        inside:
+          box.left >= card.left - 0.5 &&
+          box.right <= card.right + 0.5 &&
+          box.top >= card.top - 0.5 &&
+          box.bottom <= card.bottom + 0.5,
+        /*
+         * A real path with a real length, AND a dash array that agrees with
+         * it — which is the invariant rather than either number alone. The
+         * array is written by hand in `Toast.css` as 2πr at r=16; if the
+         * radius ever moves and that constant does not, the ring stops short
+         * of closing or closes early, and nothing else in the suite would say
+         * so.
+         */
+        length: arc instanceof SVGGeometryElement ? arc.getTotalLength() : 0,
+        dashArray:
+          arc === null
+            ? 0
+            : Number.parseFloat(getComputedStyle(arc).strokeDasharray),
+        box: [Math.round(box.width), Math.round(box.height)]
+      };
     });
-    expect(hit).toContain('bb-toast-countdown');
+
+    expect(measured).not.toBeNull();
+    expect(measured?.hit).toBe('Close');
+    expect(measured?.inside).toBe(true);
+    /*
+     * Chromium reports 100.0 for a circle whose exact circumference is 100.53
+     * — it flattens the arc to compute a length — so the assertion is that the
+     * two AGREE to within a unit rather than that either equals a constant.
+     * Pinning the browser's own approximation would be asserting the engine.
+     */
+    expect(
+      Math.abs((measured?.length ?? 0) - (measured?.dashArray ?? 0))
+    ).toBeLessThan(1);
+    expect(measured?.length ?? 0).toBeGreaterThan(50);
+    expect(measured?.box).toEqual([28, 28]);
   });
 });
+
+/*
+ * THE MARK IN A BADGE, AGAINST EVERY SOLID IT IS DRAWN ON.
+ *
+ * `--bb-tone-mark` is white on all four tones and in both modes, which steps
+ * around doc 03 §4.0's pairing on purpose: `--bb-X-on` is chosen so TEXT
+ * clears 4.5:1, and for amber that forces a dark brown — a badge obeying it
+ * came out as three white glyphs and one brown one.
+ *
+ * A mark inside a badge is a graphical element, so doc 03 §5 rule 2 asks 3:1
+ * of it rather than 4.5. All four clear that, and the WORST clears it by
+ * 0.12 — which is the entire reason this check exists. A margin that thin is
+ * not something to leave resting on a note in a stylesheet: the palette is
+ * generated, and the day amber moves this goes red instead of the badge
+ * quietly dropping under the floor.
+ *
+ * Measured with a canvas rather than by parsing, for the reason `theme-axes`
+ * records: `oklch()` does not serialise to `rgb()`, and summing the digits of
+ * one reads its lightness as a red channel.
+ */
+test('a badge mark clears the floor on every tone, in both modes', async ({
+  page
+}) => {
+  await gotoStory(page, OVERVIEW);
+
+  const measured = await page.evaluate(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = 1;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+    const luminance = (colour: string) => {
+      ctx.clearRect(0, 0, 1, 1);
+      ctx.fillStyle = '#000';
+      ctx.fillStyle = colour;
+      ctx.fillRect(0, 0, 1, 1);
+      const pixel = ctx.getImageData(0, 0, 1, 1).data;
+      const channel = (value: number) => {
+        const v = (value ?? 0) / 255;
+        return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+      };
+      return (
+        0.2126 * channel(pixel[0] ?? 0) +
+        0.7152 * channel(pixel[1] ?? 0) +
+        0.0722 * channel(pixel[2] ?? 0)
+      );
+    };
+    const ratio = (a: string, b: string) => {
+      const x = luminance(a);
+      const y = luminance(b);
+      const [hi, lo] = x > y ? [x, y] : [y, x];
+      return Math.round(((hi + 0.05) / (lo + 0.05)) * 100) / 100;
+    };
+
+    const rows: { where: string; ratio: number }[] = [];
+    for (const mode of ['light', 'dark']) {
+      const host = document.createElement('div');
+      host.setAttribute('data-bb-mode', mode);
+      document.body.append(host);
+      const style = getComputedStyle(host);
+      const mark = style.getPropertyValue('--bb-tone-mark').trim();
+      /* `neutral` has no solid and draws no badge, so it is not in this list. */
+      for (const tone of ['info', 'success', 'warning', 'danger']) {
+        const solid = style.getPropertyValue(`--bb-${tone}`).trim();
+        rows.push({ where: `${mode}/${tone}`, ratio: ratio(mark, solid) });
+      }
+      host.remove();
+    }
+    return rows;
+  });
+
+  expect(measured).toHaveLength(8);
+
+  const under = measured.filter(row => row.ratio < 3);
+  expect(
+    under,
+    `a badge mark below doc 03 §5 rule 2's 3:1 floor:\n  ${under
+      .map(row => `${row.where} at ${row.ratio}:1`)
+      .join('\n  ')}`
+  ).toEqual([]);
+});
+
+/*
+ * WHERE EACH OF THE EIGHT PLACEMENTS PUTS THE STACK.
+ *
+ * The catalog photographs ONE of them. Eight baselines of one small card in
+ * eight corners would be eight chances to approve a picture nobody looked at,
+ * and the question here is geometry rather than appearance — which is what a
+ * check answers better than a screenshot.
+ *
+ * Measured against the WINDOW rather than against remembered coordinates, so
+ * the assertions survive a different viewport: a region at the start hugs the
+ * left edge in a left-to-right page, one at the end hugs the right, and a
+ * centred one is centred to within a pixel.
+ *
+ * And it walks eight STORIES rather than eight regions on one page. The first
+ * version of the fixture put all eight in one story and axe refused it:
+ * `landmark-unique`, because a region is a landmark and eight of them share
+ * one role and one name. The component's own props say a page has one region;
+ * a fixture that breaks that to save a screenshot teaches the wrong thing.
+ */
+const PLACED: [
+  string,
+  'start' | 'centre' | 'end',
+  'top' | 'middle' | 'bottom'
+][] = [
+  ['placed-top-start', 'start', 'top'],
+  ['placed-top', 'centre', 'top'],
+  ['placed-top-end', 'end', 'top'],
+  ['placed-middle-start', 'start', 'middle'],
+  ['placed-middle-end', 'end', 'middle'],
+  ['placed-bottom-start', 'start', 'bottom'],
+  ['placed-bottom', 'centre', 'bottom'],
+  ['placed-bottom-end', 'end', 'bottom']
+];
+
+for (const [story, inline, block] of PLACED) {
+  test(`a region placed ${story.replace('placed-', '').replace('-', ' ')} lands there`, async ({
+    page
+  }) => {
+    await gotoStory(page, `components-toast--${story}`);
+
+    const notice = page.locator('.bb-toast').first();
+    await expect(notice).toBeVisible();
+
+    const measured = await page.locator('.bb-toast-region').evaluate(node => {
+      const box = node.getBoundingClientRect();
+      return {
+        left: Math.round(box.left),
+        right: Math.round(box.right),
+        top: Math.round(box.top),
+        bottom: Math.round(box.bottom),
+        centreX: Math.round(box.left + box.width / 2),
+        width: Math.round(box.width),
+        viewport: {
+          width: document.documentElement.clientWidth,
+          height: document.documentElement.clientHeight
+        }
+      };
+    });
+
+    const { viewport } = measured;
+
+    if (inline === 'start') expect(measured.left).toBe(0);
+    if (inline === 'end') expect(measured.right).toBe(viewport.width);
+    if (inline === 'centre') {
+      expect(
+        Math.abs(measured.centreX - viewport.width / 2)
+      ).toBeLessThanOrEqual(1);
+      /* And not by being full width, which would centre anything. */
+      expect(measured.width).toBeLessThan(viewport.width);
+    }
+
+    if (block === 'top') expect(measured.top).toBe(0);
+    if (block === 'bottom') expect(measured.bottom).toBe(viewport.height);
+    if (block === 'middle') {
+      const centreY = (measured.top + measured.bottom) / 2;
+      expect(Math.abs(centreY - viewport.height / 2)).toBeLessThanOrEqual(1);
+    }
+  });
+}
